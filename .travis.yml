@@ -12,6 +12,10 @@ services:
 env:
   - MIX_ENV=test
 
+before_install:
+  - sudo apt-get install build-essential
+  - sudo apt-get install erlang-dev
+
 before_script:
   - mix do ecto.create, ecto.migrate
 
