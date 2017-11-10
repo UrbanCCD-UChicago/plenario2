@@ -7,6 +7,6 @@ defmodule Plenario2.Core.Schemas.VirtualPointField do
     field :latitude_field,  :string
     field :location_field,  :string
 
-    belongs_to :meta, Core.Schemas.Meta
+    belongs_to :meta, Plenario2.Core.Schemas.Meta
   end
 end

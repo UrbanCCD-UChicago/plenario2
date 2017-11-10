@@ -22,12 +22,13 @@ defmodule Plenario2.Core.Schemas.Meta do
 
     timestamps()
 
-    belongs_to  :user,                  Core.Schemas.User
-    has_many    :data_set_fields,       Core.Schemas.DataSetField
-    has_many    :data_set_constraints,  Core.Schemas.DataSetConstraint
-    has_many    :virtual_date_fields,   Core.Schemas.VirtualDateField
-    has_many    :virtual_point_fields,  Core.Schemas.VirtualPointField
-    has_many    :etl_jobs,              Core.Schemas.EtlJob
-    has_many    :data_set_diffs,        Core.Schemas.DataSetDiff
+    belongs_to  :user,                  Plenario2.Core.Schemas.User
+    has_many    :data_set_fields,       Plenario2.Core.Schemas.DataSetField
+    has_many    :data_set_constraints,  Plenario2.Core.Schemas.DataSetConstraint
+    has_many    :virtual_date_fields,   Plenario2.Core.Schemas.VirtualDateField
+    has_many    :virtual_point_fields,  Plenario2.Core.Schemas.VirtualPointField
+    has_many    :etl_jobs,              Plenario2.Core.Schemas.EtlJob
+    has_many    :data_set_diffs,        Plenario2.Core.Schemas.DataSetDiff
+    has_many    :export_jobs,           Plenario2.Core.Schemas.ExportJob
   end
 end

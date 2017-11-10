@@ -1,5 +1,6 @@
 defmodule Plenario2.Core.Changesets.MetaChangeset do
   import Ecto.Changeset
+  alias Plenario2.Core.Tokens
 
   def create(struct, params) do
     struct
@@ -19,7 +20,7 @@ defmodule Plenario2.Core.Changesets.MetaChangeset do
   ##
   # operations
 
-  defp _set_slug(changeset), do: changeset |> put_change(:slug, Core.Tokens.generate_token())
+  defp _set_slug(changeset), do: changeset |> put_change(:slug, Tokens.generate_token())
 
   ##
   # validations

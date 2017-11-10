@@ -8,8 +8,8 @@ defmodule Plenario2.Core.Schemas.DataSetDiff do
     field :changed_on,        :utc_datetime
     field :constraint_values, :map
 
-    belongs_to :meta,                 Core.Schemas.Meta
-    belongs_to :data_set_constraint,  Core.Schemas.DataSetConstraint
-    belongs_to :etl_job,              Core.Schemas.EtlJob
+    belongs_to :meta,                 Plenario2.Core.Schemas.Meta
+    belongs_to :data_set_constraint,  Plenario2.Core.Schemas.DataSetConstraint
+    belongs_to :etl_job,              Plenario2.Core.Schemas.EtlJob
   end
 end

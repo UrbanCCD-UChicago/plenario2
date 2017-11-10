@@ -27,6 +27,11 @@ config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
+# Configure s3 buckets
+config :plenario2, :s3_export_bucket, "plenario_exports_#{Mix.env}"
+
+config :plenario2, :s3_export_ttl, days: 5
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"

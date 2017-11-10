@@ -47,7 +47,8 @@ defmodule Plenario2.Mixfile do
       {:poison, "~> 3.1"},
       {:comeonin, "~> 4.0"},
       {:bcrypt_elixir, "~> 1.0"},
-      {:excoveralls, "~> 0.7", only: :test}
+      {:excoveralls, "~> 0.7", only: :test},
+      {:timex, "~> 3.1"}
     ]
   end
 

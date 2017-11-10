@@ -15,6 +15,7 @@ defmodule Plenario2.Core.Schemas.User do
 
     timestamps()
 
-    has_many :metas, Core.Schemas.Meta
+    has_many :metas,        Plenario2.Core.Schemas.Meta
+    has_many :export_jobs,  Plenario2.Core.Schemas.ExportJob
   end
 end

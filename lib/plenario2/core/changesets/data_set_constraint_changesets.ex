@@ -1,5 +1,6 @@
 defmodule Plenario2.Core.Changesets.DataSetConstraintChangeset do
   import Ecto.Changeset
+  alias Plenario2.Core.Actions.MetaActions
 
   def create(struct, params) do
     struct
@@ -15,8 +16,8 @@ defmodule Plenario2.Core.Changesets.DataSetConstraintChangeset do
   defp _set_name(changeset) do
     table_name =
       get_field(changeset, :meta_id)
-      |> Plenario2.Core.Actions.MetaActions.get_meta_from_pk!()
-      |> Plenario2.Core.Actions.MetaActions.get_table_name()
+      |> MetaActions.get_meta_from_pk!()
+      |> MetaActions.get_table_name()
     field_names = get_field(changeset, :field_names)
     pieces = ["unique_constraint"] ++ [table_name] ++ [field_names]
     constraint_name = Enum.join(pieces, "_")

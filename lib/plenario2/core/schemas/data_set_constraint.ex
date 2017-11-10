@@ -5,7 +5,7 @@ defmodule Plenario2.Core.Schemas.DataSetConstraint do
     field :field_names,     {:array, :string}
     field :constraint_name, :string
 
-    belongs_to  :meta,            Core.Schemas.Meta
-    has_many    :data_set_diffs,  Core.Schemas.DataSetDiff
+    belongs_to  :meta,            Plenario2.Core.Schemas.Meta
+    has_many    :data_set_diffs,  Plenario2.Core.Schemas.DataSetDiff
   end
 end

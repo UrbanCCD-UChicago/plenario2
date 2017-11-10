@@ -6,6 +6,6 @@ defmodule Plenario2.Core.Schemas.DataSetField do
     field :type,  :string
     field :opts,  :string
 
-    belongs_to :meta, Core.Schemas.Meta
+    belongs_to :meta, Plenario2.Core.Schemas.Meta
   end
 end
