@@ -1,0 +1,24 @@
+defmodule Plenario2.Core.Changesets.DataSetFieldChangeset do
+  import Ecto.Changeset
+
+  def create(struct, params) do
+    struct
+    |> cast(params, [:name, :type, :opts, :meta_id])
+    |> validate_required([:name, :type, :opts, :meta_id])
+    |> cast_assoc(:meta)
+    |> _check_name()
+  end
+
+  ##
+  # operations
+
+  defp _check_name(changeset) do
+    name =
+      get_field(changeset, :name)
+      |> String.split(~r/\s/, trim: true)
+      |> Enum.map(&(String.downcase(&1)))
+      |> Enum.join("_")
+
+    changeset |> put_change(:name, name)
+  end
+end
