@@ -6,7 +6,10 @@ defmodule Plenario2.Etl.Worker do
   with `:sys.get_state/1`.
   """
 
+  import Ecto.Migration, only: [create: 2, table: 1, timestamps: 0]
   use GenServer
+
+  @create_table_template "lib/plenario2/etl/templates/create_table.sql.eex"
 
   @doc """
   Entrypoint for the `Worker` `GenServer`. Saves you the hassle of writing out
@@ -34,5 +37,28 @@ defmodule Plenario2.Etl.Worker do
   """
   def init(state) do
     {:ok, state}
+  end
+
+  @doc """
+  Downloads the file located at the `source_url` for our `state`. Updates
+  `state` to include a `worker_downloaded_file_path` key with the location
+  of the downloaded file.
+  """
+  def download(state) do
+    %HTTPoison.Response{body: body} = HTTPoison.get!(state[:source_url])
+    path = "/tmp/#{state[:name]}.csv"
+    File.write!(path, body)
+    Map.merge(state, %{worker_downloaded_file_path: path})
+  end
+
+  @doc """
+  Stages a table for ingest. If the table does not exist, create the table with
+  a schema defined by the `dataset_set_fields` key in our `state`. If it does
+  exist but columns have been added, modify the table accordingly.
+  """
+  def stage(state) do
+    sql = EEx.eval_file(@create_table_template, [state: state])
+    Ecto.Adapters.SQL.query!(Plenario2.Repo, sql, [])
+    state
   end
 end

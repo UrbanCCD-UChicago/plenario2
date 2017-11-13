@@ -48,7 +48,8 @@ defmodule Plenario2.Mixfile do
       {:comeonin, "~> 4.0"},
       {:bcrypt_elixir, "~> 1.0"},
       {:excoveralls, "~> 0.7", only: :test},
-      {:timex, "~> 3.1"}
+      {:timex, "~> 3.1"},
+      {:httpoison, "~> 0.13.0"}
     ]
   end
 

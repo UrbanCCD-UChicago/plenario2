@@ -1,0 +1,5 @@
+create table <%= state[:name] %> (
+  <%= for {field, type} <- state[:fields] do %>
+    <%= field %> <%= type %>,
+  <% end %>
+)
