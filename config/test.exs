@@ -13,7 +13,7 @@ config :logger, level: :warn
 config :plenario2, Plenario2.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
-  password: "",
+  password: "password",
   database: "plenario2_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
