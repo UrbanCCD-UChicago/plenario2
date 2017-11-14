@@ -39,3 +39,30 @@ Elixir from their `master` branch and run:
 ```bash
 mix format
 ```
+
+#### A Note on 1.6
+
+In it's current state (on 2017.11.14) - the branch is still in development.
+This means that you probably do not want it to be your main installation of
+Elixir. A quick and dirty remedy for this is to overwrite the `PREFIX`
+variable in the Elixir source's `Makefile` so that it does not overwrite
+your current installation. You can then symlink the executables you want
+to keep them distinctly separate. For example:
+
+##### Makefile Head
+```bash
+REBAR ?= "$(CURDIR)/rebar"
+PREFIX ?= /home/jesse/Downloads/elixir
+SHARE_PREFIX ?= $(PREFIX)/share
+CANONICAL := master/
+ELIXIRC := bin/elixirc --verbose --ignore-module-conflict
+ERLC := erlc -I lib/elixir/include
+ERL := erl -I lib/elixir/include -noshell -pa lib/elixir/ebin
+VERSION := $(strip $(shell cat VERSION))
+Q := @
+LIBDIR := lib
+```
+
+```bash
+ln --symbolic /home/jesse/Downloads/elixir/bin/mix /usr/local/bin/mix1.6
+```
