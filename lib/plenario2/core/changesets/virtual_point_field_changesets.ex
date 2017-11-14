@@ -32,6 +32,7 @@ defmodule Plenario2.Core.Changesets.VirtualPointFieldChangeset do
 
   defp _validate_longlat_or_loc(changeset) do
     loc = get_field(changeset, :location_field)
+
     if loc do
       changeset
       |> put_change(:longitude_field, nil)
@@ -39,6 +40,7 @@ defmodule Plenario2.Core.Changesets.VirtualPointFieldChangeset do
     else
       long = get_field(changeset, :longitude_field)
       lat = get_field(changeset, :latitude_field)
+
       if long != nil and lat != nil do
         changeset
       else

@@ -3,7 +3,15 @@ defmodule Plenario2.Core.Changesets.VirtualDateFieldChangeset do
 
   def create(struct, params) do
     struct
-    |> cast(params, [:year_field, :month_field, :day_field, :hour_field, :minute_field, :second_field, :meta_id])
+    |> cast(params, [
+         :year_field,
+         :month_field,
+         :day_field,
+         :hour_field,
+         :minute_field,
+         :second_field,
+         :meta_id
+       ])
     |> validate_required([:year_field, :meta_id])
     |> cast_assoc(:meta)
     |> _set_name()
@@ -22,12 +30,23 @@ defmodule Plenario2.Core.Changesets.VirtualDateFieldChangeset do
 
     name =
       cond do
-        yr != nil and mo != nil and day != nil and hr != nil and min != nil and sec != nil -> "_meta_date_#{yr}_#{mo}_#{day}_#{hr}_#{min}_#{sec}"
-        yr != nil and mo != nil and day != nil and hr != nil and min != nil -> "_meta_date_#{yr}_#{mo}_#{day}_#{hr}_#{min}"
-        yr != nil and mo != nil and day != nil and hr != nil -> "_meta_date_#{yr}_#{mo}_#{day}_#{hr}"
-        yr != nil and mo != nil and day != nil -> "_meta_date_#{yr}_#{mo}_#{day}"
-        yr != nil and mo != nil -> "_meta_date_#{yr}_#{mo}"
-        yr != nil -> "_meta_date_#{yr}"
+        yr != nil and mo != nil and day != nil and hr != nil and min != nil and sec != nil ->
+          "_meta_date_#{yr}_#{mo}_#{day}_#{hr}_#{min}_#{sec}"
+
+        yr != nil and mo != nil and day != nil and hr != nil and min != nil ->
+          "_meta_date_#{yr}_#{mo}_#{day}_#{hr}_#{min}"
+
+        yr != nil and mo != nil and day != nil and hr != nil ->
+          "_meta_date_#{yr}_#{mo}_#{day}_#{hr}"
+
+        yr != nil and mo != nil and day != nil ->
+          "_meta_date_#{yr}_#{mo}_#{day}"
+
+        yr != nil and mo != nil ->
+          "_meta_date_#{yr}_#{mo}"
+
+        yr != nil ->
+          "_meta_date_#{yr}"
       end
 
     changeset |> put_change(:name, name)

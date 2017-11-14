@@ -6,21 +6,17 @@
 use Mix.Config
 
 # Configure the database
-config :plenario2, Plenario2.Repo,
-  types: Plenario2.PostGISTypes
-
+config :plenario2, Plenario2.Repo, types: Plenario2.PostGISTypes
 
 # General application configuration
-config :plenario2,
-  ecto_repos: [Plenario2.Repo]
+config :plenario2, ecto_repos: [Plenario2.Repo]
 
 # Configures the endpoint
 config :plenario2, Plenario2Web.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "jCp/RnOfjaRob73dORfNI9QvsP5719peAhXoo6SP2N41Kw+5Ofq9N0Zu6cyzqGI4",
   render_errors: [view: Plenario2Web.ErrorView, accepts: ~w(html json)],
-  pubsub: [name: Plenario2.PubSub,
-           adapter: Phoenix.PubSub.PG2]
+  pubsub: [name: Plenario2.PubSub, adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger
 config :logger, :console,
@@ -28,10 +24,10 @@ config :logger, :console,
   metadata: [:request_id]
 
 # Configure s3 buckets
-config :plenario2, :s3_export_bucket, "plenario_exports_#{Mix.env}"
+config :plenario2, :s3_export_bucket, "plenario_exports_#{Mix.env()}"
 
 config :plenario2, :s3_export_ttl, days: 5
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
-import_config "#{Mix.env}.exs"
+import_config "#{Mix.env()}.exs"

@@ -18,6 +18,7 @@ defmodule Plenario2.Core.Changesets.DataSetConstraintChangeset do
       get_field(changeset, :meta_id)
       |> MetaActions.get_meta_from_pk!()
       |> MetaActions.get_table_name()
+
     field_names = get_field(changeset, :field_names)
     pieces = ["unique_constraint"] ++ [table_name] ++ [field_names]
     constraint_name = Enum.join(pieces, "_")
