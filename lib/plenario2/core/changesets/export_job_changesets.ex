@@ -21,6 +21,7 @@ defmodule Plenario2.Core.Changesets.ExportJobChangeset do
       get_field(changeset, :meta_id)
       |> MetaActions.get_meta_from_pk()
       |> MetaActions.get_dataset_table_name()
+
     bucket = Application.get_env(:plenario2, :s3_export_bucket)
     file_name = "#{bucket}/#{table_name}.csv"
 
@@ -32,6 +33,7 @@ defmodule Plenario2.Core.Changesets.ExportJobChangeset do
       get_field(changeset, :meta_id)
       |> MetaActions.get_meta_from_pk()
       |> MetaActions.get_dataset_table_name()
+
     bucket = Application.get_env(:plenario2, :s3_export_bucket)
     file_name = "#{bucket}/#{table_name}_diffs.csv"
 
