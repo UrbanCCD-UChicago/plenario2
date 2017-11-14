@@ -1,5 +1,8 @@
 create table <%= state[:name] %> (
-  <%= for {field, type} <- state[:fields] do %>
-    <%= field %> <%= type %>,
+  <%= for {{field, type}, index} <- state[:fields] |> Enum.with_index |> Enum.reverse do %>
+    <%= case index do %>
+      <% 0 -> %> <%= field %> <%= type %>
+      <% _ -> %> <%= field %> <%= type %>,
+    <% end %>
   <% end %>
 )
