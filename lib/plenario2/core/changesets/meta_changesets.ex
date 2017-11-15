@@ -1,4 +1,4 @@
-defmodule Plenario2.Core.Changesets.MetaChangeset do
+defmodule Plenario2.Core.Changesets.MetaChangesets do
   import Ecto.Changeset
   alias Plenario2.Core.Tokens
 
@@ -21,12 +21,58 @@ defmodule Plenario2.Core.Changesets.MetaChangeset do
     |> validate_required([:name, :user_id, :source_url, :source_type])
     |> cast_assoc(:user)
     |> unique_constraint(:name)
+    |> unique_constraint(:source_url)
     |> _set_slug()
     |> _validate_refresh_rate()
     |> _validate_refresh_interval()
     |> _validate_refresh_ends_on()
     |> _validate_source_type()
+    |> put_change(:state, "new")
   end
+
+  def update_name(meta, params) do
+    meta
+    |> cast(params, [:name])
+    |> validate_required([:name])
+    |> unique_constraint(:name)
+  end
+
+  def update_user(meta, params) do
+    meta
+    |> cast(params, [:user_id])
+    |> validate_required([:user_id])
+    |> cast_assoc(:user)
+  end
+
+  def update_source_info(meta, params) do
+    meta
+    |> cast(params, [:source_url, :source_type])
+    |> unique_constraint(:source_url)
+    |> _validate_source_type()
+  end
+
+  def update_description_info(meta, params) do
+    meta
+    |> cast(params, [:description, :attribution])
+  end
+
+  def update_refresh_info(meta, params) do
+    meta
+    |> cast(params, [:refresh_rate, :refresh_interval, :refresh_starts_on, :refresh_ends_on])
+    |> _validate_refresh_rate()
+    |> _validate_refresh_interval()
+    |> _validate_refresh_ends_on()
+  end
+
+#  def update_bbox(meta, params) do
+#    meta
+#    |> cast(params, [:bbox])
+#  end
+
+#  def update_timerange(meta, params) do
+#    meta
+#    |> cast(params, [:timerange])
+#  end
 
   ##
   # operations
@@ -52,13 +98,7 @@ defmodule Plenario2.Core.Changesets.MetaChangeset do
     if rr == nil do
       changeset |> put_change(:refresh_interval, nil)
     else
-      ri = get_field(changeset, :refresh_interval)
-
-      if is_integer(ri) and ri > 0 do
-        changeset
-      else
-        changeset |> add_error(:refresh_interval, "Invalid value `#{ri}`")
-      end
+      changeset
     end
   end
 
