@@ -1,5 +1,5 @@
 defmodule UserActionsTests do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   alias Plenario2.Core.Actions.UserActions
   alias Plenario2.Repo
 
