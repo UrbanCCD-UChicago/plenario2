@@ -1,0 +1,11 @@
+insert into 
+  "<%= schema[:table] %>" (<%= Enum.join schema[:columns], "," %>)
+values
+  <%= for {row, index} <- rows |> Enum.with_index |> Enum.reverse do %>
+    <%= case index do %>
+      <% 0 -> %> ('<%= Enum.join(row, "', '") %>')
+      <% _ -> %> ('<%= Enum.join(row, "', '") %>'),
+    <% end %>
+  <% end %>
+on conflict (<%= schema[:pk] %>)
+  do nothing

@@ -11,6 +11,7 @@ defmodule Plenario2.Etl.Worker do
   use GenServer
 
   @create_table_template "lib/plenario2/etl/templates/create_table.sql.eex"
+  @upsert_template "lib/plenario2/etl/templates/upsert.sql.eex"
 
   @doc """
   Entrypoint for the `Worker` `GenServer`. Saves you the hassle of writing out
@@ -85,8 +86,9 @@ defmodule Plenario2.Etl.Worker do
   @doc """
   Upsert a chunk of rows.
   """
-  @spec upsert(rows :: list) :: :ok
-  def upsert(rows) do
-    :ok
+  @spec upsert!(schema :: map, rows :: list) :: :ok
+  def upsert!(schema, rows) do
+    sql = EEx.eval_file(@upsert_template, schema: schema, rows: rows)
+    query!(Plenario2.Repo, sql, [])
   end
 end

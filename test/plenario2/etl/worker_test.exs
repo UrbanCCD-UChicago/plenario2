@@ -30,7 +30,37 @@ defmodule Plenario2.Etl.WorkerTest do
     %Postgrex.Result{columns: columns, rows: rows} =
       query!(Plenario2.Repo, ~s{select * from "hello"}, [])
 
-    assert columns === ["bar", "foo"]
+    assert columns === ["id", "foo", "bar"]
     assert rows === []
+  end
+
+  test "Worker inserts a chunk of rows" do
+    Worker.stage(%{
+      name: "hello",
+      fields: [
+        foo: "text",
+        bar: "integer"
+      ]
+    })
+
+    fixture_rows = [
+      ["hello", 1000],
+      ["world", 2000],
+      ["itsa me", 3000],
+      ["mario", 4000]
+    ]
+
+    Worker.upsert!(%{table: "hello", pk: "id", columns: ["foo", "bar"]}, fixture_rows)
+    %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, ~s{select * from "hello"}, [])
+
+    expected_rows = fixture_rows
+    |> Enum.reverse
+    |> Enum.with_index
+    |> Enum.map(fn row ->
+      {[text, int], index} = row
+      [index + 1, text, int]
+    end)
+
+    assert rows === expected_rows
   end
 end
