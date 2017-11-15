@@ -1,4 +1,4 @@
-defmodule VirtualDateFieldTests do
+defmodule VirtualDateFieldActionsTests do
   use ExUnit.Case, async: true
   alias Plenario2.Core.Actions.{VirtualDateFieldActions, MetaActions, UserActions}
   alias Plenario2.Repo

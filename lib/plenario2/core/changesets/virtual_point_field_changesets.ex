@@ -1,53 +1,35 @@
-defmodule Plenario2.Core.Changesets.VirtualPointFieldChangeset do
+defmodule Plenario2.Core.Changesets.VirtualPointFieldChangesets do
   import Ecto.Changeset
 
-  def create(struct, params) do
+  def create_from_loc(struct, params) do
     struct
-    |> cast(params, [:longitude_field, :latitude_field, :location_field, :meta_id])
-    |> validate_required([:meta_id])
-    |> _validate_longlat_or_loc()
+    |> cast(params, [:location_field, :meta_id])
+    |> validate_required([:location_field, :meta_id])
     |> cast_assoc(:meta)
-    |> _set_name()
+    |> _set_name_loc()
+  end
+
+  def create_long_lat(struct, params) do
+    struct
+    |> cast(params, [:longitude_field, :latitude_field, :meta_id])
+    |> validate_required([:longitude_field, :latitude_field, :meta_id])
+    |> cast_assoc(:meta)
+    |> _set_name_long_lat()
   end
 
   ##
   # operations
 
-  defp _set_name(changeset) do
-    loc = get_field(changeset, :location_field)
+  defp _set_name_long_lat(changeset) do
     long = get_field(changeset, :longitude_field)
-    lat = get_field(changeset, :longitude_field)
+    lat = get_field(changeset, :latitude_field)
 
-    name =
-      cond do
-        loc -> "_meta_point_#{loc}"
-        long and lat -> "_meta_point_#{long}_#{lat}"
-      end
-
-    changeset |> put_change(:name, name)
+    changeset |> put_change(:name, "_meta_point_#{long}_#{lat}")
   end
 
-  ##
-  # validation
-
-  defp _validate_longlat_or_loc(changeset) do
+  defp _set_name_loc(changeset) do
     loc = get_field(changeset, :location_field)
 
-    if loc do
-      changeset
-      |> put_change(:longitude_field, nil)
-      |> put_change(:latitude_field, nil)
-    else
-      long = get_field(changeset, :longitude_field)
-      lat = get_field(changeset, :latitude_field)
-
-      if long != nil and lat != nil do
-        changeset
-      else
-        changeset
-        |> add_error(:longitude_field, "Missing longitude and latitude")
-        |> add_error(:latitude_field, "Missing longitude and latitude")
-      end
-    end
+    changeset |> put_change(:name, "_meta_point_#{loc}")
   end
 end
