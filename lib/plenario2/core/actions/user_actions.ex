@@ -5,7 +5,7 @@ defmodule Plenario2.Core.Actions.UserActions do
   alias Plenario2.Core.Schemas.User
   alias Plenario2.Repo
 
-  def create_user(name, password, email, organization \\ nil, role \\ nil) do
+  def create(name, password, email, organization \\ nil, role \\ nil) do
     params = %{
       name: name,
       organization: organization,
@@ -21,26 +21,26 @@ defmodule Plenario2.Core.Actions.UserActions do
     |> Repo.insert()
   end
 
-  def list_users(), do: Repo.all(User)
+  def list(), do: Repo.all(User)
 
-  def get_user_from_pk(pk), do: Repo.one(from(u in User, where: u.id == ^pk))
+  def get_from_pk(pk), do: Repo.one(from(u in User, where: u.id == ^pk))
 
-  def archive_user(user) do
+  def archive(user) do
     UserChangesets.set_active_flag(user, %{is_active: false})
     |> Repo.update()
   end
 
-  def activate_archived_user(user) do
+  def activate_archived(user) do
     UserChangesets.set_active_flag(user, %{is_active: true})
     |> Repo.update()
   end
 
-  def trust_user(user) do
+  def trust(user) do
     UserChangesets.set_trusted_flag(user, %{is_trusted: true})
     |> Repo.update()
   end
 
-  def untrust_user(user) do
+  def untrust(user) do
     UserChangesets.set_trusted_flag(user, %{is_trusted: false})
     |> Repo.update()
   end
@@ -55,22 +55,22 @@ defmodule Plenario2.Core.Actions.UserActions do
     |> Repo.update()
   end
 
-  def update_user_name(user, new_name) do
+  def update_name(user, new_name) do
     UserChangesets.update_name(user, %{name: new_name})
     |> Repo.update()
   end
 
-  def update_user_password(user, new_plaintext) do
+  def update_password(user, new_plaintext) do
     UserChangesets.update_password(user, %{plaintext_password: new_plaintext})
     |> Repo.update()
   end
 
-  def update_user_email_address(user, new_email) do
+  def update_email_address(user, new_email) do
     UserChangesets.update_email_address(user, %{email_address: new_email})
     |> Repo.update()
   end
 
-  def update_user_org_info(user, options \\ []) do
+  def update_org_info(user, options \\ []) do
     defaults = [org: :unchanged, role: :unchanged]
     options = Keyword.merge(defaults, options) |> Enum.into(%{})
     %{org: org, role: role} = options
