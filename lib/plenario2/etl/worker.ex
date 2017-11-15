@@ -60,11 +60,11 @@ defmodule Plenario2.Etl.Worker do
   a schema defined by the `dataset_set_fields` key in our `state`. If it does
   exist but columns have been added, modify the table accordingly.
   """
-  @spec stage(state :: map) :: map
-  def stage(state) do
-    sql = EEx.eval_file(@create_table_template, state: state)
+  @spec stage(schema :: map) :: map
+  def stage(schema) do
+    sql = EEx.eval_file(@create_table_template, schema: schema)
     query!(Plenario2.Repo, sql, [])
-    state
+    schema
   end
 
   @doc """
@@ -84,11 +84,27 @@ defmodule Plenario2.Etl.Worker do
   end
 
   @doc """
-  Upsert a chunk of rows.
+  Upsert a chunk of rows. It's worth nothing that because Postgres wants
+  you to be explicit about what you update, this method updates all fields
+  with the exception of the table's primary key.
   """
   @spec upsert!(schema :: map, rows :: list) :: :ok
   def upsert!(schema, rows) do
-    sql = EEx.eval_file(@upsert_template, schema: schema, rows: rows)
+    %{
+      table: table,
+      columns: columns,
+      pk: {pk, _}
+    } = schema
+
+    sql =
+      EEx.eval_file(
+        @upsert_template,
+        table: table,
+        columns: columns,
+        rows: rows,
+        pk: pk
+      )
+
     query!(Plenario2.Repo, sql, [])
   end
 end

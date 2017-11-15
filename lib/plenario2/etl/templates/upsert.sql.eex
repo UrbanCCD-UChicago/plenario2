@@ -1,15 +1,19 @@
 insert into 
-  "<%= schema[:table] %>" as t (<%= Enum.join schema[:columns], "," %>)
+  "<%= table %>" as t (<%= Enum.join(columns, ", ") %>)
 values
-  <%= for {row, index} <- rows |> Enum.with_index |> Enum.reverse do %>
+  <%= for {row, index} <- rows 
+    |> Enum.with_index()
+    |> Enum.reverse() do %>
     <%= case index do %>
       <% 0 -> %> ('<%= Enum.join(row, "', '") %>')
       <% _ -> %> ('<%= Enum.join(row, "', '") %>'),
     <% end %>
   <% end %>
-on conflict (<%= schema[:pk] %>)
+on conflict (<%= pk %>)
   do update set
-  <%= for {column, index} <- schema[:columns] |> Enum.with_index |> Enum.reverse do %>
+  <%= for {column, index} <- columns
+    |> Enum.with_index 
+    |> Enum.reverse do %>
     <%= case index do %>
       <% 0 -> %> <%= column %> = excluded.<%= column %>
       <% _ -> %> <%= column %> = excluded.<%= column %>,
