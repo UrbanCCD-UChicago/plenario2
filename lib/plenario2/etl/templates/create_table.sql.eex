@@ -1,5 +1,5 @@
-create table <%= state[:name] %> (
-  id serial unique primary key,
+create table <%= state[:table] %> (
+  id serial primary key,
   <%= for {{field, type}, index} <- state[:fields] |> Enum.reverse |> Enum.with_index |> Enum.reverse do %>
     <%= case index do %>
       <% 0 -> %> <%= field %> <%= type %>

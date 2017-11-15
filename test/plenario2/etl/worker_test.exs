@@ -3,64 +3,83 @@ defmodule Plenario2.Etl.WorkerTest do
   import Ecto.Adapters.SQL, only: [query!: 3]
   use Plenario2.DataCase
 
-  @fixture_name "calendars"
-  @fixture_source_url "http://insight.dev.schoolwires.com/HelpAssets/C2Assets/C2Files/C2ImportCalEventSample.csv"
-  @fixture_tmp_path "/tmp/calendars.csv"
+  @stage_name "test"
+  @stage_source "http://insight.dev.schoolwires.com/HelpAssets/
+  C2Assets/C2Files/C2ImportCalEventSample.csv"
+  @stage_path "/tmp/#{@stage_name}.csv"
 
   test "Worker downloads file to correct location" do
     state =
       Worker.download(%{
-        name: @fixture_name,
-        source_url: @fixture_source_url
+        name: @stage_name,
+        source_url: @stage_source
       })
 
-    assert state[:worker_downloaded_file_path] === @fixture_tmp_path
-    assert File.exists?(@fixture_tmp_path)
+    assert state[:worker_downloaded_file_path] === @stage_path
+    assert File.exists?(@stage_path)
   end
 
+  @stage_schema %{
+    table: @stage_name,
+    pk: "id",
+    columns: ["foo", "bar"],
+    fields: [
+      foo: "text",
+      bar: "integer"
+    ]
+  }
+
+  @select_query "select * from #{@stage_schema[:table]}"
+
   test "Worker stages table correctly" do
-    Worker.stage(%{
-      name: "hello",
-      fields: [
-        foo: "text",
-        bar: "integer"
-      ]
-    })
+    Worker.stage(@stage_schema)
+    %Postgrex.Result{columns: columns, rows: rows} = query!(Plenario2.Repo, @select_query, [])
 
-    %Postgrex.Result{columns: columns, rows: rows} =
-      query!(Plenario2.Repo, ~s{select * from "hello"}, [])
-
-    assert columns === ["id", "foo", "bar"]
+    assert columns === ["id" | @stage_schema[:columns]]
     assert rows === []
   end
 
+  @insert_rows [
+    ["hello", 1000],
+    ["world", 2000],
+    ["itsa me", 3000],
+    ["mario", 4000]
+  ]
+
+  @insert_args [@stage_schema, @insert_rows]
+
   test "Worker inserts a chunk of rows" do
-    Worker.stage(%{
-      name: "hello",
-      fields: [
-        foo: "text",
-        bar: "integer"
-      ]
-    })
+    Worker.stage(@stage_schema)
+    apply(Worker, :upsert!, @insert_args)
+    %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
 
-    fixture_rows = [
-      ["hello", 1000],
-      ["world", 2000],
-      ["itsa me", 3000],
-      ["mario", 4000]
-    ]
-
-    Worker.upsert!(%{table: "hello", pk: "id", columns: ["foo", "bar"]}, fixture_rows)
-    %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, ~s{select * from "hello"}, [])
-
-    expected_rows = fixture_rows
-    |> Enum.reverse
-    |> Enum.with_index
-    |> Enum.map(fn row ->
-      {[text, int], index} = row
-      [index + 1, text, int]
-    end)
+    expected_rows =
+      @insert_rows
+      |> Enum.reverse()
+      |> Enum.with_index()
+      |> Enum.map(fn row ->
+           {[text, int], index} = row
+           [index + 1, text, int]
+         end)
 
     assert rows === expected_rows
+  end
+
+  @upsert_rows [[1, "I changed!", 9999]]
+  @upsert_schema %{
+    table: @stage_name,
+    pk: "id",
+    columns: ["id", "foo", "bar"]
+  }
+
+  @upsert_args [@upsert_schema, @upsert_rows]
+
+  test "Worker inserts and updates a chunk of rows" do
+    Worker.stage(@stage_schema)
+    apply(Worker, :upsert!, @insert_args)
+    apply(Worker, :upsert!, @upsert_args)
+    %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
+    expected_rows = Enum.take(rows, -1)
+    assert expected_rows === [[1, "I changed!", 9999]]
   end
 end

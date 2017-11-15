@@ -1,5 +1,5 @@
 insert into 
-  "<%= schema[:table] %>" (<%= Enum.join schema[:columns], "," %>)
+  "<%= schema[:table] %>" as t (<%= Enum.join schema[:columns], "," %>)
 values
   <%= for {row, index} <- rows |> Enum.with_index |> Enum.reverse do %>
     <%= case index do %>
@@ -8,4 +8,12 @@ values
     <% end %>
   <% end %>
 on conflict (<%= schema[:pk] %>)
-  do nothing
+  do update set
+  <%= for {column, index} <- schema[:columns] |> Enum.with_index |> Enum.reverse do %>
+    <%= case index do %>
+      <% 0 -> %> <%= column %> = excluded.<%= column %>
+      <% _ -> %> <%= column %> = excluded.<%= column %>,
+    <% end %>
+  <% end %>
+  where
+    t.id = excluded.id
