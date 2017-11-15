@@ -12,7 +12,12 @@ defmodule Plenario2.Mixfile do
       aliases: aliases(),
       deps: deps(),
       test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: ["coveralls": :test, "coveralls.detail": :test, "coveralls.post": :test, "coveralls.html": :test]
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
+      ]
     ]
   end
 
@@ -28,7 +33,7 @@ defmodule Plenario2.Mixfile do
 
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
-  defp elixirc_paths(_),     do: ["lib"]
+  defp elixirc_paths(_), do: ["lib"]
 
   # Specifies your project dependencies.
   #
@@ -62,7 +67,7 @@ defmodule Plenario2.Mixfile do
     [
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      "test": ["ecto.create --quiet", "ecto.migrate", "test"]
+      test: ["ecto.create --quiet", "ecto.migrate", "test"]
     ]
   end
 end

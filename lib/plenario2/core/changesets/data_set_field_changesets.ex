@@ -16,7 +16,7 @@ defmodule Plenario2.Core.Changesets.DataSetFieldChangeset do
     name =
       get_field(changeset, :name)
       |> String.split(~r/\s/, trim: true)
-      |> Enum.map(&(String.downcase(&1)))
+      |> Enum.map(&String.downcase(&1))
       |> Enum.join("_")
 
     changeset |> put_change(:name, name)

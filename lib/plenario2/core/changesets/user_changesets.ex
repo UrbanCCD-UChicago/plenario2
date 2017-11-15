@@ -4,7 +4,16 @@ defmodule Plenario2.Core.Changesets.UserChangesets do
 
   def create(struct, params) do
     struct
-    |> cast(params, [:name, :organization, :org_role, :plaintext_password, :email_address, :is_active, :is_trusted, :is_admin])
+    |> cast(params, [
+         :name,
+         :organization,
+         :org_role,
+         :plaintext_password,
+         :email_address,
+         :is_active,
+         :is_trusted,
+         :is_admin
+       ])
     |> validate_required([:name, :email_address, :plaintext_password])
     |> unique_constraint(:email_address)
     |> validate_format(:email_address, ~r/.+@.+\..+/)

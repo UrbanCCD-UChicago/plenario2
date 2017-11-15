@@ -7,15 +7,23 @@ defmodule Plenario2.Core.Actions.UserActions do
 
   def create_user(name, password, email, organization \\ nil, role \\ nil) do
     params = %{
-      name: name, organization: organization, org_role: role, plaintext_password:
-        password, email_address: email, is_active: true, is_trusted: false, is_admin: false}
+      name: name,
+      organization: organization,
+      org_role: role,
+      plaintext_password: password,
+      email_address: email,
+      is_active: true,
+      is_trusted: false,
+      is_admin: false
+    }
+
     UserChangesets.create(%User{}, params)
     |> Repo.insert()
   end
 
   def list_users(), do: Repo.all(User)
 
-  def get_user_from_pk(pk), do: Repo.one(from u in User, where: u.id == ^pk)
+  def get_user_from_pk(pk), do: Repo.one(from(u in User, where: u.id == ^pk))
 
   def archive_user(user) do
     UserChangesets.set_active_flag(user, %{is_active: false})
@@ -66,19 +74,22 @@ defmodule Plenario2.Core.Actions.UserActions do
     defaults = [org: :unchanged, role: :unchanged]
     options = Keyword.merge(defaults, options) |> Enum.into(%{})
     %{org: org, role: role} = options
+
     params =
       cond do
         org != :unchanged and role != :unchanged -> %{organization: org, org_role: role}
         org != :unchanged -> %{organization: org}
         role != :unchanged -> %{org_role: role}
       end
+
     UserChangesets.update_org_info(user, params)
     |> Repo.update()
   end
 
   def authenticate(email_address, plaintext_password) do
     error = {:error, "Email address or password is incorrect"}
-    user = Repo.one(from u in User, where: u.email_address == ^email_address)
+    user = Repo.one(from(u in User, where: u.email_address == ^email_address))
+
     if user == nil do
       error
     else
