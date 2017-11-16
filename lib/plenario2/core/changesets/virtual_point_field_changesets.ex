@@ -1,10 +1,12 @@
 defmodule Plenario2.Core.Changesets.VirtualPointFieldChangesets do
   import Ecto.Changeset
+  alias Plenario2.Core.Actions.{MetaActions, DataSetFieldActions}
 
   def create_from_loc(struct, params) do
     struct
     |> cast(params, [:location_field, :meta_id])
     |> validate_required([:location_field, :meta_id])
+    |> _validate_loc()
     |> cast_assoc(:meta)
     |> _set_name_loc()
   end
@@ -13,6 +15,7 @@ defmodule Plenario2.Core.Changesets.VirtualPointFieldChangesets do
     struct
     |> cast(params, [:longitude_field, :latitude_field, :meta_id])
     |> validate_required([:longitude_field, :latitude_field, :meta_id])
+    |> _validate_long_lat()
     |> cast_assoc(:meta)
     |> _set_name_long_lat()
   end
@@ -31,5 +34,41 @@ defmodule Plenario2.Core.Changesets.VirtualPointFieldChangesets do
     loc = get_field(changeset, :location_field)
 
     changeset |> put_change(:name, "_meta_point_#{loc}")
+  end
+
+  ##
+  # validation
+
+  defp _validate_loc(changeset) do
+    meta_id = get_field(changeset, :meta_id)
+    loc = get_field(changeset, :location_field)
+
+    meta = MetaActions.get_from_pk(meta_id)
+    fields = DataSetFieldActions.list_for_meta(meta)
+    known_field_names = for f <- fields, do: f.name
+    if Enum.member?(known_field_names, loc) do
+      changeset
+    else
+      changeset |> add_error(:fields, "Field names must exist as registered fields of the dataset")
+    end
+  end
+
+  defp _validate_long_lat(changeset) do
+    meta_id = get_field(changeset, :meta_id)
+    long = get_field(changeset, :longitude_field)
+    lat = get_field(changeset, :latitude_field)
+
+    field_names = [long, lat]
+
+    meta = MetaActions.get_from_pk(meta_id)
+    fields = DataSetFieldActions.list_for_meta(meta)
+    known_field_names = for f <- fields, do: f.name
+
+    is_subset = field_names |> Enum.all?(fn (name) -> Enum.member?(known_field_names, name) end)
+    if is_subset do
+      changeset
+    else
+      changeset |> add_error(:fields, "Field names must exist as registered fields of the dataset")
+    end
   end
 end
