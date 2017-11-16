@@ -8,17 +8,17 @@ defmodule MetaActionsTests do
   end
 
   test "create a meta" do
-    {:ok, user} = UserActions.create_user("Test User", "password", "test@example.com")
+    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
     {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 
     assert meta.slug != nil
   end
 
   test "list all metas" do
-    {:ok, user} = UserActions.create_user("Test User", "password", "test@example.com")
+    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
     MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 
-    {:ok, user2} = UserActions.create_user("Test User", "password", "test2@example.com")
+    {:ok, user2} = UserActions.create("Test User", "password", "test2@example.com")
     MetaActions.create("Chicago Pothole Fills", user2.id, "https://www.example.com/chicago-pothole-fills")
 
     metas = MetaActions.list()
@@ -27,10 +27,10 @@ defmodule MetaActionsTests do
   end
 
   test "list metas for a single user" do
-    {:ok, user} = UserActions.create_user("Test User", "password", "test@example.com")
+    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
     MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 
-    {:ok, user2} = UserActions.create_user("Test User", "password", "test2@example.com")
+    {:ok, user2} = UserActions.create("Test User", "password", "test2@example.com")
     MetaActions.create("Chicago Pothole Fills", user2.id, "https://www.example.com/chicago-pothole-fills")
 
     metas = MetaActions.list_for_user(user)
@@ -38,7 +38,7 @@ defmodule MetaActionsTests do
   end
 
   test "get a meta from a pk" do
-    {:ok, user} = UserActions.create_user("Test User", "password", "test@example.com")
+    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
     {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 
     found = MetaActions.get_from_pk(meta.id)
@@ -46,7 +46,7 @@ defmodule MetaActionsTests do
   end
 
   test "get a meta from a slug" do
-    {:ok, user} = UserActions.create_user("Test User", "password", "test@example.com")
+    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
     {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 
     found = MetaActions.get_from_slug(meta.slug)
@@ -54,7 +54,7 @@ defmodule MetaActionsTests do
   end
 
   test "update name" do
-    {:ok, user} = UserActions.create_user("Test User", "password", "test@example.com")
+    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
     {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 
     MetaActions.update_name(meta, "Chicago Tree Trimming - 2017")
@@ -63,8 +63,8 @@ defmodule MetaActionsTests do
   end
 
   test "update owner" do
-    {:ok, user} = UserActions.create_user("Test User", "password", "test@example.com")
-    {:ok, user2} = UserActions.create_user("Test User2", "password", "test2@example.com")
+    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+    {:ok, user2} = UserActions.create("Test User2", "password", "test2@example.com")
     {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 
     MetaActions.update_user(meta, user2.id)
@@ -73,7 +73,7 @@ defmodule MetaActionsTests do
   end
 
   test "update source info" do
-    {:ok, user} = UserActions.create_user("Test User", "password", "test@example.com")
+    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
     {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 
     MetaActions.update_source_info(meta, [source_url: "https://example.com/tree-trim.json", source_type: "json"])
@@ -83,7 +83,7 @@ defmodule MetaActionsTests do
   end
 
   test "update description info" do
-    {:ok, user} = UserActions.create_user("Test User", "password", "test@example.com")
+    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
     {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 
     MetaActions.update_description_info(meta, [description: "blah blah blah", attribution: "City of Chicago"])
@@ -93,7 +93,7 @@ defmodule MetaActionsTests do
   end
 
   test "update refresh info" do
-    {:ok, user} = UserActions.create_user("Test User", "password", "test@example.com")
+    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
     {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 
     changes = [
@@ -111,17 +111,17 @@ defmodule MetaActionsTests do
   end
 
 #  test "update bbox" do
-#    {:ok, user} = UserActions.create_user("Test User", "password", "test@example.com")
+#    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
 #    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 #  end
 
 #  test "update timerange" do
-#    {:ok, user} = UserActions.create_user("Test User", "password", "test@example.com")
+#    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
 #    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 #  end
 
   test "delete a meta" do
-    {:ok, user} = UserActions.create_user("Test User", "password", "test@example.com")
+    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
     {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 
     MetaActions.delete(meta)
@@ -130,7 +130,7 @@ defmodule MetaActionsTests do
   end
 
   test "bad refresh info" do
-    {:ok, user} = UserActions.create_user("Test User", "password", "test@example.com")
+    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
 
     {:error, changeset} = MetaActions.create(
       "Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming",
