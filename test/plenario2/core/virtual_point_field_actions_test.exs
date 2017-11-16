@@ -1,6 +1,6 @@
 defmodule VirtualPointFieldActionsTests do
   use ExUnit.Case, async: true
-  alias Plenario2.Core.Actions.{VirtualPointFieldActions, MetaActions, UserActions}
+  alias Plenario2.Core.Actions.{DataSetFieldActions, VirtualPointFieldActions, MetaActions, UserActions}
   alias Plenario2.Repo
 
   setup do
@@ -8,6 +8,9 @@ defmodule VirtualPointFieldActionsTests do
 
     {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
     {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
+    DataSetFieldActions.create(meta.id, "location", "text")
+    DataSetFieldActions.create(meta.id, "longitude", "float")
+    DataSetFieldActions.create(meta.id, "latitude", "float")
 
     [meta: meta]
   end
@@ -20,6 +23,12 @@ defmodule VirtualPointFieldActionsTests do
   test "create virutal point field from location", context do
     {:ok, field} = VirtualPointFieldActions.create_from_loc(context.meta.id, "location")
     assert field.name == "_meta_point_location"
+  end
+
+  test "creating a virtual field with a field name not registered to the meta fails", context do
+    {:error, _} = VirtualPointFieldActions.create_from_loc(context.meta.id, "some_made_up_field")
+
+    {:error, _} = VirtualPointFieldActions.create_from_long_lat(context.meta.id, "long", "lat")
   end
 
   test "list virtual point fields for meta", context do
