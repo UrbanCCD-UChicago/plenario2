@@ -16,9 +16,7 @@ defmodule Plenario2.Core.Actions.DataSetFieldActions do
     |> Repo.insert()
   end
 
-  def list_for_meta(meta) do
-    Repo.all(from f in DataSetField, where: f.meta_id == ^meta.id)
-  end
+  def list_for_meta(meta), do: Repo.all(from f in DataSetField, where: f.meta_id == ^meta.id)
 
   def make_primary_key(field) do
     DataSetFieldChangesets.make_primary_key(field)

@@ -11,7 +11,7 @@ defmodule Plenario2.Core.Actions.VirtualPointFieldActions do
       latitude_field: latitude
     }
 
-    VirtualPointFieldChangesets.create_long_lat(%VirtualPointField{}, params)
+    VirtualPointFieldChangesets.create_from_long_lat(%VirtualPointField{}, params)
     |> Repo.insert()
   end
 

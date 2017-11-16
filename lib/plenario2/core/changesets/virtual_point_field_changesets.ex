@@ -9,7 +9,7 @@ defmodule Plenario2.Core.Changesets.VirtualPointFieldChangesets do
     |> _set_name_loc()
   end
 
-  def create_long_lat(struct, params) do
+  def create_from_long_lat(struct, params) do
     struct
     |> cast(params, [:longitude_field, :latitude_field, :meta_id])
     |> validate_required([:longitude_field, :latitude_field, :meta_id])
