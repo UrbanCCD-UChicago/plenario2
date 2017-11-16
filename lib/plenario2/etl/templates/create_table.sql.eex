@@ -1,15 +1,11 @@
 create table <%= schema[:table] %> (
-  <%= if schema[:pk] do %>
-    <% {field, type} = schema[:pk] %>
-    <%= field %> <%= type %> primary key<%= if schema[:fields] do %>,<% end %>
-  <% end %>
   <%= for {{field, type}, index} <- schema[:fields] 
     |> Enum.reverse 
     |> Enum.with_index 
     |> Enum.reverse do %>
     <%= case index do %>
-      <% 0 -> %> <%= field %> <%= type %>
-      <% _ -> %> <%= field %> <%= type %>,
+      <% 0 -> %> <%= field %> <%= type %> <%= if field == schema[:pk] do %> primary key <% end %>
+      <% _ -> %> <%= field %> <%= type %> <%= if field == schema[:pk] do %> primary key <% end %>,
     <% end %>
   <% end %>
 )

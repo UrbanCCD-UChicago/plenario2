@@ -57,14 +57,14 @@ defmodule Plenario2.Etl.Worker do
 
   @doc """
   Stages a table for ingest. If the table does not exist, create the table with
-  a schema defined by the `dataset_set_fields` key in our `state`. If it does
+  a schema defined by the `fields` key in our `state`. If it does
   exist but columns have been added, modify the table accordingly.
   """
-  @spec stage(schema :: map) :: map
-  def stage(schema) do
-    sql = EEx.eval_file(@create_table_template, schema: schema)
+  @spec stage(state :: map) :: map
+  def stage(state) do
+    sql = EEx.eval_file(@create_table_template, schema: state)
     query!(Plenario2.Repo, sql, [])
-    schema
+    state
   end
 
   @doc """
@@ -74,8 +74,10 @@ defmodule Plenario2.Etl.Worker do
   @spec load(state :: map) :: map
   def load(state) do
     File.stream!(state[:worker_downloaded_file_path])
+    |> Stream.drop(1)
+    |> CSV.decode!()
     |> Stream.chunk_every(100)
-    |> Enum.map(fn chunk -> spawn(__MODULE__, :upsert, [chunk]) end)
+    |> Enum.map(fn chunk -> spawn(__MODULE__, :upsert!, [state, chunk]) end)
     |> Enum.map(fn pid ->
          receive do
            {^pid, result} -> result
@@ -93,10 +95,10 @@ defmodule Plenario2.Etl.Worker do
     %{
       table: table,
       columns: columns,
-      pk: {pk, _}
+      pk: pk
     } = schema
 
-    sql =
+    IO.puts sql =
       EEx.eval_file(
         @upsert_template,
         table: table,

@@ -5,8 +5,7 @@ defmodule Plenario2.Etl.WorkerTest do
   use Plenario2.DataCase
 
   @stage_name "test"
-  @stage_source "http://insight.dev.schoolwires.com/HelpAssets/
-    C2Assets/C2Files/C2ImportCalEventSample.csv"
+  @stage_source "http://insight.dev.schoolwires.com/HelpAssets/C2Assets/C2Files/C2ImportCalEventSample.csv"
   @stage_path "/tmp/#{@stage_name}.csv"
 
   test "Worker downloads file to correct location" do
@@ -22,9 +21,10 @@ defmodule Plenario2.Etl.WorkerTest do
 
   @stage_schema %{
     table: @stage_name,
-    pk: {:id, "integer"},
+    pk: "id",
     columns: ["id", "foo", "bar"],
     fields: [
+      id: "integer",
       foo: "text",
       bar: "integer"
     ]
@@ -85,6 +85,34 @@ defmodule Plenario2.Etl.WorkerTest do
       %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
       expected_rows = Enum.take(rows, -1)
       assert expected_rows === [[1, "I changed!", 9999]]
+    end
+  end
+
+  def state_fixture do
+    columns = 
+      File.stream!(@stage_path)
+      |> CSV.decode!()
+      |> Enum.take(1)
+
+    %{
+      table: @stage_name,
+      source_url: @stage_source,
+      pk: "event_title",
+      columns: columns,
+      fields: Enum.map(columns, fn column ->
+        {String.to_atom(column), "text"}
+      end)
+    }
+  end
+
+  describe "load/1" do
+    test "ingests the sample data" do
+      state = state_fixture()
+
+      state
+      |> Worker.download()
+      |> Worker.stage()
+      |> Worker.load()
     end
   end
 end
