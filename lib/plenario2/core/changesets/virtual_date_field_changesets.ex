@@ -1,4 +1,4 @@
-defmodule Plenario2.Core.Changesets.VirtualDateFieldChangeset do
+defmodule Plenario2.Core.Changesets.VirtualDateFieldChangesets do
   import Ecto.Changeset
 
   def create(struct, params) do
