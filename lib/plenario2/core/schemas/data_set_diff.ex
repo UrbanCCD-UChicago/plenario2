@@ -4,7 +4,7 @@ defmodule Plenario2.Core.Schemas.DataSetDiff do
   schema "data_set_diffs" do
     field(:column, :string)
     field(:original, :string)
-    field(:updated, :string)
+    field(:update, :string)
     field(:changed_on, :utc_datetime)
     field(:constraint_values, :map)
 
