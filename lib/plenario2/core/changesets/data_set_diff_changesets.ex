@@ -1,4 +1,4 @@
-defmodule Plenario2.Core.Changesets.DataSetDiffChangeset do
+defmodule Plenario2.Core.Changesets.DataSetDiffChangesets do
   import Ecto.Changeset
 
   def create(struct, params) do
@@ -6,20 +6,22 @@ defmodule Plenario2.Core.Changesets.DataSetDiffChangeset do
     |> cast(params, [
          :column,
          :original,
-         :updated,
+         :update,
          :changed_on,
+         :constraint_values,
          :meta_id,
-         :datasetconstraint_id,
-         :etljob_id
+         :data_set_constraint_id,
+         :etl_job_id
        ])
     |> validate_required([
          :column,
          :original,
-         :updated,
+         :update,
          :changed_on,
+         :constraint_values,
          :meta_id,
-         :datasetconstraint_id,
-         :etljob_id
+         :data_set_constraint_id,
+         :etl_job_id
        ])
     |> cast_assoc(:meta)
     |> cast_assoc(:data_set_constraint)

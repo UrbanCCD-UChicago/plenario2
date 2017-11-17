@@ -3,8 +3,9 @@ defmodule Plenario2.Core.Schemas.EtlJob do
 
   schema "etl_jobs" do
     field(:state, :string)
-    field(:started_on, :string)
-    field(:ended_on, :string)
+    field(:started_on, :utc_datetime)
+    field(:completed_on, :utc_datetime)
+    field(:error_message, :string)
 
     belongs_to(:meta, Plenario2.Core.Schemas.Meta)
     has_many(:data_set_diffs, Plenario2.Core.Schemas.DataSetDiff)
