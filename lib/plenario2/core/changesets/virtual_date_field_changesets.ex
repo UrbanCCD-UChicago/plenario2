@@ -1,5 +1,6 @@
-defmodule Plenario2.Core.Changesets.VirtualDateFieldChangeset do
+defmodule Plenario2.Core.Changesets.VirtualDateFieldChangesets do
   import Ecto.Changeset
+  alias Plenario2.Core.Actions.{MetaActions, DataSetFieldActions}
 
   def create(struct, params) do
     struct
@@ -13,6 +14,7 @@ defmodule Plenario2.Core.Changesets.VirtualDateFieldChangeset do
          :meta_id
        ])
     |> validate_required([:year_field, :meta_id])
+    |> _validate_fields()
     |> cast_assoc(:meta)
     |> _set_name()
   end
@@ -50,5 +52,31 @@ defmodule Plenario2.Core.Changesets.VirtualDateFieldChangeset do
       end
 
     changeset |> put_change(:name, name)
+  end
+
+  ##
+  # validations
+
+  defp _validate_fields(changeset) do
+    meta_id = get_field(changeset, :meta_id)
+    year = get_field(changeset, :year_field)
+    month = get_field(changeset, :month_field)
+    day = get_field(changeset, :day_field)
+    hour = get_field(changeset, :hour_field)
+    minute = get_field(changeset, :minute_field)
+    second = get_field(changeset, :second_field)
+    _field_names = [year, month, day, hour, minute, second]
+
+    meta = MetaActions.get_from_pk(meta_id)
+    fields = DataSetFieldActions.list_for_meta(meta)
+    known_field_names = for f <- fields, do: f.name
+
+    field_names = Enum.filter(_field_names, fn (name) -> name != nil end)
+    is_subset = field_names |> Enum.all?(fn (name) -> Enum.member?(known_field_names, name) end)
+    if is_subset do
+      changeset
+    else
+      changeset |> add_error(:fields, "Field names must exist as registered fields of the dataset")
+    end
   end
 end

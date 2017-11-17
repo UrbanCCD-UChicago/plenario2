@@ -1,4 +1,4 @@
-defmodule Plenario2.Core.Changesets.DataSetFieldChangeset do
+defmodule Plenario2.Core.Changesets.DataSetFieldChangesets do
   import Ecto.Changeset
 
   def create(struct, params) do
@@ -7,6 +7,12 @@ defmodule Plenario2.Core.Changesets.DataSetFieldChangeset do
     |> validate_required([:name, :type, :opts, :meta_id])
     |> cast_assoc(:meta)
     |> _check_name()
+  end
+
+  def make_primary_key(field) do
+    field
+    |> cast(%{}, [])
+    |> put_change(:opts, "not null primary key")
   end
 
   ##

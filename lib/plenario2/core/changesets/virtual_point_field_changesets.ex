@@ -1,53 +1,74 @@
-defmodule Plenario2.Core.Changesets.VirtualPointFieldChangeset do
+defmodule Plenario2.Core.Changesets.VirtualPointFieldChangesets do
   import Ecto.Changeset
+  alias Plenario2.Core.Actions.{MetaActions, DataSetFieldActions}
 
-  def create(struct, params) do
+  def create_from_loc(struct, params) do
     struct
-    |> cast(params, [:longitude_field, :latitude_field, :location_field, :meta_id])
-    |> validate_required([:meta_id])
-    |> _validate_longlat_or_loc()
+    |> cast(params, [:location_field, :meta_id])
+    |> validate_required([:location_field, :meta_id])
+    |> _validate_loc()
     |> cast_assoc(:meta)
-    |> _set_name()
+    |> _set_name_loc()
+  end
+
+  def create_from_long_lat(struct, params) do
+    struct
+    |> cast(params, [:longitude_field, :latitude_field, :meta_id])
+    |> validate_required([:longitude_field, :latitude_field, :meta_id])
+    |> _validate_long_lat()
+    |> cast_assoc(:meta)
+    |> _set_name_long_lat()
   end
 
   ##
   # operations
 
-  defp _set_name(changeset) do
-    loc = get_field(changeset, :location_field)
+  defp _set_name_long_lat(changeset) do
     long = get_field(changeset, :longitude_field)
-    lat = get_field(changeset, :longitude_field)
+    lat = get_field(changeset, :latitude_field)
 
-    name =
-      cond do
-        loc -> "_meta_point_#{loc}"
-        long and lat -> "_meta_point_#{long}_#{lat}"
-      end
+    changeset |> put_change(:name, "_meta_point_#{long}_#{lat}")
+  end
 
-    changeset |> put_change(:name, name)
+  defp _set_name_loc(changeset) do
+    loc = get_field(changeset, :location_field)
+
+    changeset |> put_change(:name, "_meta_point_#{loc}")
   end
 
   ##
   # validation
 
-  defp _validate_longlat_or_loc(changeset) do
+  defp _validate_loc(changeset) do
+    meta_id = get_field(changeset, :meta_id)
     loc = get_field(changeset, :location_field)
 
-    if loc do
+    meta = MetaActions.get_from_pk(meta_id)
+    fields = DataSetFieldActions.list_for_meta(meta)
+    known_field_names = for f <- fields, do: f.name
+    if Enum.member?(known_field_names, loc) do
       changeset
-      |> put_change(:longitude_field, nil)
-      |> put_change(:latitude_field, nil)
     else
-      long = get_field(changeset, :longitude_field)
-      lat = get_field(changeset, :latitude_field)
+      changeset |> add_error(:fields, "Field names must exist as registered fields of the dataset")
+    end
+  end
 
-      if long != nil and lat != nil do
-        changeset
-      else
-        changeset
-        |> add_error(:longitude_field, "Missing longitude and latitude")
-        |> add_error(:latitude_field, "Missing longitude and latitude")
-      end
+  defp _validate_long_lat(changeset) do
+    meta_id = get_field(changeset, :meta_id)
+    long = get_field(changeset, :longitude_field)
+    lat = get_field(changeset, :latitude_field)
+
+    field_names = [long, lat]
+
+    meta = MetaActions.get_from_pk(meta_id)
+    fields = DataSetFieldActions.list_for_meta(meta)
+    known_field_names = for f <- fields, do: f.name
+
+    is_subset = field_names |> Enum.all?(fn (name) -> Enum.member?(known_field_names, name) end)
+    if is_subset do
+      changeset
+    else
+      changeset |> add_error(:fields, "Field names must exist as registered fields of the dataset")
     end
   end
 end

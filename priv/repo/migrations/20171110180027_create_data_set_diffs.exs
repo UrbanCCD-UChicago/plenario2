@@ -12,8 +12,8 @@ defmodule Plenario2.Repo.Migrations.CreateDataSetDiffs do
 
       # belongs to a meta entry and happens during an etl job
       add :meta_id,               references(:metas)
-      add :datasetconstraint_id,  references(:data_set_constraints)
-      add :etljob_id,             references(:etl_jobs)
+      add :data_set_constraint_id,  references(:data_set_constraints)
+      add :etl_job_id,             references(:etl_jobs)
     end
   end
 end
