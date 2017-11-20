@@ -1,5 +1,5 @@
 insert into 
-  "<%= table %>" as t (<%= Enum.join(columns, ", ") %>)
+  "<%= table %>" as t ("<%= Enum.join(columns, ~s{", "}) %>")
 values
   <%= for {row, index} <- rows 
     |> Enum.with_index()
@@ -9,15 +9,17 @@ values
       <% _ -> %> ('<%= Enum.join(row, "', '") %>'),
     <% end %>
   <% end %>
-on conflict (<%= pk %>)
+on conflict ("<%= pk %>")
   do update set
   <%= for {column, index} <- columns
     |> Enum.with_index 
     |> Enum.reverse do %>
     <%= case index do %>
-      <% 0 -> %> <%= column %> = excluded.<%= column %>
-      <% _ -> %> <%= column %> = excluded.<%= column %>,
+      <% 0 -> %> "<%= column %>" = excluded."<%= column %>"
+      <% _ -> %> "<%= column %>" = excluded."<%= column %>",
     <% end %>
   <% end %>
   where
-    t.id = excluded.id
+    t."<%= pk %>" = excluded."<%= pk %>"
+  returning 
+    t.*

@@ -21,7 +21,7 @@ defmodule Plenario2.Etl.WorkerTest do
 
   @stage_schema %{
     table: @stage_name,
-    pk: "id",
+    pk: :id,
     columns: ["id", "foo", "bar"],
     fields: [
       id: "integer",
@@ -33,15 +33,6 @@ defmodule Plenario2.Etl.WorkerTest do
   @select_query "select * from #{@stage_schema[:table]}"
 
   describe "stage/1" do
-    @stage_schema_no_pk %{@stage_schema | pk: nil, columns: ["foo", "bar"]}
-
-    test "creates table without primary key" do
-      Worker.stage(@stage_schema_no_pk)
-      %Result{columns: columns} = query!(Plenario2.Repo, @select_query, [])
-
-      assert columns === @stage_schema_no_pk[:columns]
-    end
-
     test "creates table with primary key" do
       Worker.stage(@stage_schema)
       %Result{columns: columns} = query!(Plenario2.Repo, @select_query, [])
@@ -57,7 +48,7 @@ defmodule Plenario2.Etl.WorkerTest do
     [4, "mario", 4000]
   ]
 
-  @insert_args [@stage_schema, @insert_rows]
+  @insert_args [self(), @stage_schema, @insert_rows]
 
   describe "upsert/2" do
     setup do
@@ -73,11 +64,11 @@ defmodule Plenario2.Etl.WorkerTest do
     @upsert_rows [[1, "I changed!", 9999]]
     @upsert_schema %{
       table: @stage_name,
-      pk: {:id, "integer"},
+      pk: :id, 
       columns: ["id", "foo", "bar"]
     }
 
-    @upsert_args [@upsert_schema, @upsert_rows]
+    @upsert_args [self(), @upsert_schema, @upsert_rows]
 
     test "inserts and updates new and existing records" do
       apply(Worker, :upsert!, @insert_args)
@@ -89,7 +80,7 @@ defmodule Plenario2.Etl.WorkerTest do
   end
 
   def state_fixture do
-    columns = 
+    [ columns | _ ] = 
       File.stream!(@stage_path)
       |> CSV.decode!()
       |> Enum.take(1)
@@ -97,7 +88,7 @@ defmodule Plenario2.Etl.WorkerTest do
     %{
       table: @stage_name,
       source_url: @stage_source,
-      pk: "event_title",
+      pk: :"Event Title ",
       columns: columns,
       fields: Enum.map(columns, fn column ->
         {String.to_atom(column), "text"}

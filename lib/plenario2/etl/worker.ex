@@ -77,7 +77,7 @@ defmodule Plenario2.Etl.Worker do
     |> Stream.drop(1)
     |> CSV.decode!()
     |> Stream.chunk_every(100)
-    |> Enum.map(fn chunk -> spawn(__MODULE__, :upsert!, [state, chunk]) end)
+    |> Enum.map(fn chunk -> spawn(__MODULE__, :upsert!, [self(), state, chunk]) end)
     |> Enum.map(fn pid ->
          receive do
            {^pid, result} -> result
@@ -90,23 +90,24 @@ defmodule Plenario2.Etl.Worker do
   you to be explicit about what you update, this method updates all fields
   with the exception of the table's primary key.
   """
-  @spec upsert!(schema :: map, rows :: list) :: :ok
-  def upsert!(schema, rows) do
+  @spec upsert!(sender :: pid, schema :: map, rows :: list) :: :ok
+  def upsert!(sender, schema, rows) do
     %{
       table: table,
       columns: columns,
       pk: pk
     } = schema
 
-    IO.puts sql =
+    sql =
       EEx.eval_file(
         @upsert_template,
         table: table,
         columns: columns,
         rows: rows,
-        pk: pk
-      )
+        pk: pk)
 
-    query!(Plenario2.Repo, sql, [])
+    result = query!(Plenario2.Repo, sql, [])
+
+    send(sender, {self(), result})
   end
 end
