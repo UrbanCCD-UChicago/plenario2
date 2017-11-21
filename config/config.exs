@@ -28,6 +28,17 @@ config :plenario2, :s3_export_bucket, "plenario_exports_#{Mix.env()}"
 
 config :plenario2, :s3_export_ttl, days: 5
 
+# configure quantum scheduler
+
+config :plenario2, :refresh_offest, [minutes: 1]
+
+config :plenario2, Plenario2.Scheduler,
+  global: true,
+  jobs: [
+    # run the find refreshable metas every minute (offset is 1 minute above)
+      {"* * * * *", {Plenario2.Etl.ScheduledJobs, :find_refreshable_metas, []}}
+  ]
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"
