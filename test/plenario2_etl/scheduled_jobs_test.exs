@@ -1,8 +1,8 @@
 defmodule ScheduledJobsTest do
   use ExUnit.Case, async: true
   alias Plenario2.Core.Actions.{MetaActions, UserActions}
-  alias Plenario2.Etl.ScheduledJobs
   alias Plenario2.Repo
+  alias Plenario2Etl.ScheduledJobs
 
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)

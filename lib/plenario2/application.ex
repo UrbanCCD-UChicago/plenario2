@@ -17,7 +17,7 @@ defmodule Plenario2.Application do
       # worker(Plenario2.Worker, [arg1, arg2, arg3]),
 
       # Start the quantum scheduler
-      supervisor(Plenario2.Scheduler, [])
+      supervisor(Plenario2Etl.Scheduler, [])
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

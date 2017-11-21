@@ -1,4 +1,4 @@
-defmodule Plenario2.Etl.ScheduledJobs do
+defmodule Plenario2Etl.ScheduledJobs do
   import Ecto.Query
   alias Plenario2.Core.Schemas.Meta
   alias Plenario2.Repo
