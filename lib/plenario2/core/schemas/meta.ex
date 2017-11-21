@@ -15,6 +15,7 @@ defmodule Plenario2.Core.Schemas.Meta do
     field(:refresh_interval, :integer)
     field(:refresh_starts_on, :utc_datetime)
     field(:refresh_ends_on, :utc_datetime)
+    field(:next_refresh, :utc_datetime)
     field(:srid, :integer)
     field(:bbox, Geo.Polygon)
     field(:timezone, :string)

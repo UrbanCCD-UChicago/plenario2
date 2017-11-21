@@ -65,13 +65,13 @@ defmodule Plenario2.Core.Changesets.VirtualDateFieldChangesets do
     hour = get_field(changeset, :hour_field)
     minute = get_field(changeset, :minute_field)
     second = get_field(changeset, :second_field)
-    _field_names = [year, month, day, hour, minute, second]
+    field_namez = [year, month, day, hour, minute, second]
 
     meta = MetaActions.get_from_pk(meta_id)
     fields = DataSetFieldActions.list_for_meta(meta)
     known_field_names = for f <- fields, do: f.name
 
-    field_names = Enum.filter(_field_names, fn (name) -> name != nil end)
+    field_names = Enum.filter(field_namez, fn (name) -> name != nil end)
     is_subset = field_names |> Enum.all?(fn (name) -> Enum.member?(known_field_names, name) end)
     if is_subset do
       changeset

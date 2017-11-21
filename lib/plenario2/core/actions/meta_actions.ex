@@ -88,5 +88,22 @@ defmodule Plenario2.Core.Actions.MetaActions do
   # todo: implement after setting up ds table and get rows
   # def update_timerange(meta), do: meta
 
+  def update_next_refresh(meta) do
+    current =
+      case meta.next_refresh do
+        nil -> DateTime.utc_now()
+        _   -> meta.next_refresh
+      end
+
+    rate = meta.refresh_rate
+    interval = meta.refresh_interval
+
+    shifted = Timex.shift(current, [{String.to_atom(rate), interval}])
+    params = %{next_refresh: shifted}
+
+    MetaChangesets.update_next_refresh(meta, params)
+    |> Repo.update()
+  end
+
   def delete(meta), do: Repo.delete(meta)
 end

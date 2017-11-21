@@ -74,6 +74,11 @@ defmodule Plenario2.Core.Changesets.MetaChangesets do
 #    |> cast(params, [:timerange])
 #  end
 
+  def update_next_refresh(meta, params) do
+    meta
+    |> cast(params, [:next_refresh])
+  end
+
   ##
   # operations
 
@@ -85,7 +90,7 @@ defmodule Plenario2.Core.Changesets.MetaChangesets do
   defp _validate_refresh_rate(changeset) do
     rr = get_field(changeset, :refresh_rate)
 
-    if Enum.member?([nil, "hours", "days", "weeks", "months", "years"], rr) do
+    if Enum.member?([nil, "minutes", "hours", "days", "weeks", "months", "years"], rr) do
       changeset
     else
       changeset |> add_error(:refresh_rate, "Invalid value `#{rr}`")
@@ -110,7 +115,7 @@ defmodule Plenario2.Core.Changesets.MetaChangesets do
     else
       reo = get_field(changeset, :refresh_ends_on)
 
-      if reo > rso do
+      if reo > rso or reo == nil do
         changeset
       else
         changeset |> add_error(:refresh_ends_on, "Invalid: end date cannot precede start date")

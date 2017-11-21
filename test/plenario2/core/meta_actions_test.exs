@@ -120,6 +120,26 @@ defmodule MetaActionsTests do
 #    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 #  end
 
+  test "update next refresh" do
+    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+
+    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
+    {:ok, meta} = MetaActions.update_refresh_info(meta, [
+      refresh_starts_on: Timex.shift(DateTime.utc_now(), [years: -1]),
+      refresh_ends_on: nil,
+      refresh_rate: "minutes",
+      refresh_interval: 1
+    ])
+    {:ok, meta} = MetaActions.update_next_refresh(meta)
+
+    assert meta.next_refresh != nil
+
+    original = meta.next_refresh
+
+    {:ok, meta} = MetaActions.update_next_refresh(meta)
+    assert meta.next_refresh != original
+  end
+
   test "delete a meta" do
     {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
     {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
