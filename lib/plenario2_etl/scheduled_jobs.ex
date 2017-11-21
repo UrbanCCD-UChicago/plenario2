@@ -1,6 +1,6 @@
 defmodule Plenario2Etl.ScheduledJobs do
   import Ecto.Query
-  alias Plenario2.Core.Schemas.Meta
+  alias Plenario2.Schemas.Meta
   alias Plenario2.Repo
 
   def find_refreshable_metas() do

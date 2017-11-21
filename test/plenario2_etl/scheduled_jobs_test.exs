@@ -1,6 +1,6 @@
 defmodule ScheduledJobsTest do
   use ExUnit.Case, async: true
-  alias Plenario2.Core.Actions.{MetaActions, UserActions}
+  alias Plenario2.Actions.{MetaActions, UserActions}
   alias Plenario2.Repo
   alias Plenario2Etl.ScheduledJobs
 
