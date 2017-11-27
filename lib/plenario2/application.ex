@@ -10,10 +10,14 @@ defmodule Plenario2.Application do
     children = [
       # Start the Ecto repository
       supervisor(Plenario2.Repo, []),
+
       # Start the endpoint when the application starts
-      supervisor(Plenario2Web.Endpoint, [])
+      supervisor(Plenario2Web.Endpoint, []),
       # Start your own worker by calling: Plenario2.Worker.start_link(arg1, arg2, arg3)
       # worker(Plenario2.Worker, [arg1, arg2, arg3]),
+
+      # Start the quantum scheduler
+      supervisor(Plenario2Etl.Scheduler, [])
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
