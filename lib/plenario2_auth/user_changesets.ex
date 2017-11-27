@@ -19,7 +19,7 @@ defmodule Plenario2Auth.UserChangesets do
     |> validate_required([:name, :email_address, :plaintext_password])
     |> unique_constraint(:email_address)
     |> validate_format(:email_address, @email_regex)
-    |> hash_password(params.plaintext_password)
+    |> hash_password()
   end
 
   # def update_name(user, params) do
@@ -65,8 +65,10 @@ defmodule Plenario2Auth.UserChangesets do
   ##
   # operations
 
-  defp hash_password(changeset, plaintext) do
+  defp hash_password(%Ecto.Changeset{valid?: true, changes: %{plaintext_password: plaintext}} = changeset) do
     changeset
     |> put_change(:hashed_password, Bcrypt.hashpwsalt(plaintext))
   end
+
+  defp hash_password(changeset), do: changeset
 end

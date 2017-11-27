@@ -3,7 +3,7 @@ defmodule Plenario2Auth.Guardian do
   alias Plenario2Auth.UserActions
 
   def subject_for_token(user, _claims) do
-    {:ok, user.email}
+    {:ok, user.email_address}
   end
 
   def resource_from_claims(claims) do

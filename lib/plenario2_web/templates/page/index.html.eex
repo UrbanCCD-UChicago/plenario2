@@ -1,36 +1,26 @@
-<div class="jumbotron">
-  <h2><%= gettext "Welcome to %{name}!", name: "Phoenix" %></h2>
-  <p class="lead">A productive web framework that<br />does not compromise speed and maintainability.</p>
-</div>
+<h2>Login Page</h2>
 
-<div class="row marketing">
-  <div class="col-lg-6">
-    <h4>Resources</h4>
-    <ul>
-      <li>
-        <a href="http://phoenixframework.org/docs/overview">Guides</a>
-      </li>
-      <li>
-        <a href="https://hexdocs.pm/phoenix">Docs</a>
-      </li>
-      <li>
-        <a href="https://github.com/phoenixframework/phoenix">Source</a>
-      </li>
-    </ul>
-  </div>
+<%= if @maybe_user == nil do %>
+  <%= form_for @changeset, @action, fn f -> %>
 
-  <div class="col-lg-6">
-    <h4>Help</h4>
-    <ul>
-      <li>
-        <a href="http://groups.google.com/group/phoenix-talk">Mailing list</a>
-      </li>
-      <li>
-        <a href="http://webchat.freenode.net/?channels=elixir-lang">#elixir-lang on freenode IRC</a>
-      </li>
-      <li>
-        <a href="https://twitter.com/elixirphoenix">@elixirphoenix</a>
-      </li>
-    </ul>
-  </div>
-</div>
+    <div class="form-group">
+      <%= label f, "Email", class: "control-label" %>
+      <%= text_input f, :email_address, class: "form-control" %>
+      <%= error_tag f, :email_address %>
+    </div>
+
+    <div class="form-group">
+      <%= label f, "Password", class: "control-label" %>
+      <%= password_input f, :plaintext_password, class: "form-control" %>
+      <%= error_tag f, :plaintext_password %>
+    </div>
+
+    <div class="from-group">
+      <%= submit "Login", class: "btn btn-primary" %>
+    </div>
+
+  <% end %>
+<% else %>
+  <h1>Hello <%= @maybe_user.name %>!</h1>
+  <span><%= link "Logout", to: page_path(@conn, :logout), method: :post %></span>
+<% end %>
