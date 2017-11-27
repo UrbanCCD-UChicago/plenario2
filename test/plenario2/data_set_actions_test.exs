@@ -1,8 +1,9 @@
 defmodule DataSetActionsTest do
   use ExUnit.Case, async: true
-  alias Plenario2.Actions.{DataSetActions, DataSetFieldActions, DataSetConstraintActions, MetaActions, UserActions, VirtualPointFieldActions, VirtualDateFieldActions}
+  alias Plenario2.Actions.{DataSetActions, DataSetFieldActions, DataSetConstraintActions, MetaActions, VirtualPointFieldActions, VirtualDateFieldActions}
   alias Plenario2.Schemas.Meta
   alias Plenario2.Repo
+  alias Plenario2Auth.UserActions
 
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)

@@ -23,7 +23,7 @@ defmodule Plenario2.Schemas.Meta do
 
     timestamps()
 
-    belongs_to(:user, Plenario2.Schemas.User)
+    belongs_to(:user, Plenario2Auth.User)
     has_many(:data_set_fields, Plenario2.Schemas.DataSetField)
     has_many(:data_set_constraints, Plenario2.Schemas.DataSetConstraint)
     has_many(:virtual_date_fields, Plenario2.Schemas.VirtualDateField)

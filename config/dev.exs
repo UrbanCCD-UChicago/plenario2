@@ -62,3 +62,8 @@ config :plenario2, Plenario2.Repo,
   database: "plenario2_dev",
   hostname: "localhost",
   pool_size: 10
+
+# Configure Guardian
+config :plenario2, Plenario2Auth.Guardian,
+  issuer: "Plenario",
+  secret_key: "qwertyuiopASDFGHJKLzxcvbnm1234567890QWERTYUIOPasdfghjklZXCVBNM!@"
