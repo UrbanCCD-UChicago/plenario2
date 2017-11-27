@@ -1,109 +1,139 @@
 defmodule Plenario2.Etl.WorkerTest do
-  alias Plenario2.Etl.Worker
-  alias Postgrex.Result
-  import Ecto.Adapters.SQL, only: [query!: 3]
-  use Plenario2.DataCase
-
-  @stage_name "test"
-  @stage_source "http://insight.dev.schoolwires.com/HelpAssets/C2Assets/C2Files/C2ImportCalEventSample.csv"
-  @stage_path "/tmp/#{@stage_name}.csv"
-
-  test "Worker downloads file to correct location" do
-    state =
-      Worker.download(%{
-        name: @stage_name,
-        source_url: @stage_source
-      })
-
-    assert state[:worker_downloaded_file_path] === @stage_path
-    assert File.exists?(@stage_path)
-  end
-
-  @stage_schema %{
-    table: @stage_name,
-    pk: :id,
-    columns: ["id", "foo", "bar"],
-    fields: [
-      id: "integer",
-      foo: "text",
-      bar: "integer"
-    ]
+  alias Plenario2.Actions.{
+    DataSetActions,
+    DataSetFieldActions,
+    DataSetConstraintActions,
+    MetaActions,
+    UserActions,
+    VirtualPointFieldActions,
+    VirtualDateFieldActions
   }
 
-  @select_query "select * from #{@stage_schema[:table]}"
+  alias Plenario2.Etl.Worker
+  alias Plenario2.Schemas.Meta
+  alias Postgrex.Result
 
-  describe "stage/1" do
-    test "creates table with primary key" do
-      Worker.stage(@stage_schema)
-      %Result{columns: columns} = query!(Plenario2.Repo, @select_query, [])
+  import Ecto.Adapters.SQL, only: [query!: 3]
+  import Mock
 
-      assert columns === @stage_schema[:columns]
+  use Plenario2.DataCase
+
+  require HTTPoison
+
+  @stage_name "Chicago Tree Trimming"
+  @stage_source "https://example.com/chicago-tree-trimming"
+
+  setup do
+    {:ok, user} = UserActions.create("user", "password", "email@example.com")
+
+    {:ok, meta} =
+      MetaActions.create(
+        @stage_name,
+        user.id,
+        @stage_source
+      )
+
+    {:ok, pk} = DataSetFieldActions.create(meta.id, "pk", "integer")
+    DataSetFieldActions.create(meta.id, "datetime", "timestamptz")
+    DataSetFieldActions.create(meta.id, "location", "text")
+    DataSetFieldActions.create(meta.id, "data", "text")
+    DataSetFieldActions.make_primary_key(pk)
+    VirtualPointFieldActions.create_from_loc(meta.id, "location")
+    DataSetActions.create_dataset_table(meta)
+
+    %{
+      meta: meta,
+      table_name: Meta.get_dataset_table_name(meta)
+    }
+  end
+
+  @doc """
+  This helper function replaces the call to HTTPoison.get! made by a worker
+  process. It returns a generic set of csv data to ingest.
+
+  ## Example
+
+    iex> mock_csv_data_request("http://doesnt_matter.com")
+    %HTTPoison.Response{body: "csv data..."}
+
+  """
+  def mock_csv_data_request(_) do
+    %HTTPoison.Response{
+      body: """
+      pk, datetime, location, data
+      1, 2017-01-01T00:00:00, (-42, 81), crackers
+      2, 2017-02-02T00:00:00, (-43, 82), and
+      3, 2017-03-03T00:00:00, (-44, 84), cheese
+      """
+    }
+  end
+
+  test "Worker downloads file to correct location", context do
+    with_mock HTTPoison, get!: &mock_csv_data_request/1 do
+      %{meta: meta, table_name: table_name} = context
+
+      state =
+        Worker.download(%{
+          meta: meta,
+          table_name: table_name
+        })
+
+      assert state[:worker_downloaded_file_path] === "/tmp/#{table_name}.csv"
+      assert File.exists?("/tmp/#{table_name}.csv")
     end
   end
 
   @insert_rows [
-    [1, "hello", 1000],
-    [2, "world", 2000],
-    [3, "itsa me", 3000],
-    [4, "mario", 4000]
+    [1, "2017-01-01T00:00:00", "(0, 1)", "crackers"],
+    [2, "2017-01-02T00:00:00", "(0, 2)", "and"],
+    [3, "2017-01-03T00:00:00", "(0, 3)", "cheese"]
   ]
 
-  @insert_args [self(), @stage_schema, @insert_rows]
+  @upsert_rows [
+    [1, "2017-01-01T00:00:00", "(0, 1)", "biscuits"],
+    [4, "2017-01-04T00:00:00", "(0, 4)", "gromit"]
+  ]
 
-  describe "upsert/2" do
-    setup do
-      Worker.stage(@stage_schema)
-    end
+  test "inserts a set of new records", context do
+    %{meta: meta, table_name: table_name} = context
 
-    test "inserts a set of new records" do
-      apply(Worker, :upsert!, @insert_args)
-      %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
-      assert Enum.sort(rows) === @insert_rows
-    end
+    state =
+      Worker.upsert!(self(), %{
+        meta: meta,
+        table_name: table_name,
+        rows: @insert_rows
+      })
 
-    @upsert_rows [[1, "I changed!", 9999]]
-    @upsert_schema %{
-      table: @stage_name,
-      pk: :id, 
-      columns: ["id", "foo", "bar"]
-    }
-
-    @upsert_args [self(), @upsert_schema, @upsert_rows]
-
-    test "inserts and updates new and existing records" do
-      apply(Worker, :upsert!, @insert_args)
-      apply(Worker, :upsert!, @upsert_args)
-      %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
-      expected_rows = Enum.take(rows, -1)
-      assert expected_rows === [[1, "I changed!", 9999]]
-    end
+    %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, "select * from #{table_name}", [])
+    assert Enum.sort(rows) === @insert_rows
   end
 
-  def state_fixture do
-    [ columns | _ ] = 
-      File.stream!(@stage_path)
-      |> CSV.decode!()
-      |> Enum.take(1)
+  test "inserts and updates new and existing records", context do
+    # %{meta: meta, table_name: table_name} = context
 
-    %{
-      table: @stage_name,
-      source_url: @stage_source,
-      pk: :"Event Title ",
-      columns: columns,
-      fields: Enum.map(columns, fn column ->
-        {String.to_atom(column), "text"}
-      end)
-    }
+    # apply(Worker, :upsert!, [%{
+    #   meta: meta,
+    #   table_name: table_name,
+    #   rows: @insert_rows
+    # }])
+
+    # apply(Worker, :upsert!, [%{
+    #   meta: meta,
+    #   table_name: table_name,
+    #   rows: @insert_rows
+    # }])
+
+    # %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
+    # expected_rows = Enum.take(rows, -1)
+    # assert expected_rows === [[1, "I changed!", 9999]]
   end
 
   describe "load/1" do
     test "ingests the sample data" do
-      state = state_fixture()
-
-      state
-      |> Worker.download()
-      |> Worker.stage()
-      |> Worker.load()
+      # state
+      # |> Worker.download()
+      # |> Worker.stage()
+      # |> Worker.load()
     end
   end
 end

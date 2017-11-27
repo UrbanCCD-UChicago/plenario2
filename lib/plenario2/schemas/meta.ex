@@ -39,7 +39,7 @@ defmodule Plenario2.Schemas.Meta do
   def get_dataset_table_name(meta) do
     meta.name
     |> String.split(~r/\s/, trim: true)
-    |> Enum.map(&(String.downcase(&1)))
+    |> Enum.map(&String.downcase/1)
     |> Enum.join("_")
   end
 end

@@ -6,11 +6,16 @@ defmodule Plenario2.Etl.Worker do
   with `:sys.get_state/1`.
   """
 
+  alias Plenario2.Actions.{
+    DataSetFieldActions,
+    VirtualDateFieldActions,
+    VirtualPointFieldActions
+  }
+
   import Ecto.Adapters.SQL, only: [query!: 3]
   import Ecto.Migration, only: [create: 2, table: 1, timestamps: 0]
   use GenServer
 
-  @create_table_template "lib/plenario2/etl/templates/create_table.sql.eex"
   @upsert_template "lib/plenario2/etl/templates/upsert.sql.eex"
 
   @doc """
@@ -46,25 +51,26 @@ defmodule Plenario2.Etl.Worker do
   Downloads the file located at the `source_url` for our `state`. Updates
   `state` to include a `worker_downloaded_file_path` key with the location
   of the downloaded file.
+
+  ## Example
+
+    iex> download(%{
+    ...>   meta: %Meta{},
+    ...>   table_name: "chicago_tree_trimmings"
+    ...> })
+
   """
   @spec download(state :: map) :: map
   def download(state) do
-    %HTTPoison.Response{body: body} = HTTPoison.get!(state[:source_url])
-    path = "/tmp/#{state[:name]}.csv"
+    %{
+      meta: meta,
+      table_name: table_name
+    } = state
+
+    %HTTPoison.Response{body: body} = HTTPoison.get!(meta.source_url)
+    path = "/tmp/#{table_name}.csv"
     File.write!(path, body)
     Map.merge(state, %{worker_downloaded_file_path: path})
-  end
-
-  @doc """
-  Stages a table for ingest. If the table does not exist, create the table with
-  a schema defined by the `fields` key in our `state`. If it does
-  exist but columns have been added, modify the table accordingly.
-  """
-  @spec stage(state :: map) :: map
-  def stage(state) do
-    sql = EEx.eval_file(@create_table_template, schema: state)
-    query!(Plenario2.Repo, sql, [])
-    state
   end
 
   @doc """
@@ -89,25 +95,52 @@ defmodule Plenario2.Etl.Worker do
   Upsert a chunk of rows. It's worth nothing that because Postgres wants
   you to be explicit about what you update, this method updates all fields
   with the exception of the table's primary key.
+
+  ## Example
+
+    iex> download(%{
+    ...>   meta: %Meta{},
+    ...>   table_name: "chicago_tree_trimmings",
+    ...>   rows: [
+    ...>     [1, "2017-01-01T00:00:00", "(0, 0)"]
+    ...>   ]
+    ...> })
   """
-  @spec upsert!(sender :: pid, schema :: map, rows :: list) :: :ok
-  def upsert!(sender, schema, rows) do
+  @spec upsert!(sender :: pid, state :: map) :: :ok
+  def upsert!(sender, state) do
     %{
-      table: table,
-      columns: columns,
-      pk: pk
-    } = schema
+      meta: meta,
+      table_name: table_name,
+      rows: rows
+    } = state
+
+    # TODO(heyzoos) this will be moved to the process that spawns the upsert
+    # subprocesses so that the query for dataset metadata is performed only
+    # once
+    fields = DataSetFieldActions.list_for_meta(meta)
+    dtfields = VirtualDateFieldActions.list_for_meta(meta)
+    ptfields = VirtualPointFieldActions.list_for_meta(meta)
+
+    columns =
+      for field <- fields ++ dtfields ++ ptfields do
+        field.name
+      end
+
+    [pkfield | _] =
+      Enum.filter(fields, fn field ->
+        String.contains?(field.opts, "primary key")
+      end)
 
     sql =
       EEx.eval_file(
         @upsert_template,
-        table: table,
+        table: table_name,
         columns: columns,
         rows: rows,
-        pk: pk)
+        pk: pkfield.name
+      )
 
     result = query!(Plenario2.Repo, sql, [])
-
     send(sender, {self(), result})
   end
 end
