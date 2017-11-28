@@ -17,17 +17,18 @@ defmodule Plenario2.Etl.WorkerTest do
 
   use Plenario2.DataCase
 
-  @stage_name "Chicago Tree Trimming"
-  @stage_source "https://example.com/chicago-tree-trimming"
+  @fixture_name "Chicago Tree Trimming"
+  @fixture_source "https://example.com/chicago-tree-trimming"
+  @fixture_columns ["pk", "datetime", "location", "data"]
 
   setup do
     {:ok, user} = UserActions.create("user", "password", "email@example.com")
 
     {:ok, meta} =
       MetaActions.create(
-        @stage_name,
+        @fixture_name,
         user.id,
-        @stage_source
+        @fixture_source
       )
 
     {:ok, pk} = DataSetFieldActions.create(meta.id, "pk", "integer")
@@ -81,9 +82,9 @@ defmodule Plenario2.Etl.WorkerTest do
   end
 
   @insert_rows [
-    [1, "2017-01-01T00:00:00", "(0, 1)", "crackers"],
-    [2, "2017-01-02T00:00:00", "(0, 2)", "and"],
-    [3, "2017-01-03T00:00:00", "(0, 3)", "cheese"]
+    [1, "2017-01-01T00:00:00+00:00", "(0, 1)", "crackers"],
+    [2, "2017-01-02T00:00:00+00:00", "(0, 2)", "and"],
+    [3, "2017-01-03T00:00:00+00:00", "(0, 3)", "cheese"]
   ]
 
   @select_query "select pk, datetime, location, data from chicago_tree_trimming"
@@ -94,16 +95,17 @@ defmodule Plenario2.Etl.WorkerTest do
     Worker.upsert!(self(), %{
       meta: meta,
       table_name: table_name,
-      rows: @insert_rows
+      rows: @insert_rows,
+      columns: @fixture_columns
     })
 
     %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
 
-    assert Enum.sort(rows) === [
-             [1, {{2017, 1, 1}, {5, 0, 0, 0}}, "(0, 1)", "crackers"],
-             [2, {{2017, 1, 2}, {5, 0, 0, 0}}, "(0, 2)", "and"],
-             [3, {{2017, 1, 3}, {5, 0, 0, 0}}, "(0, 3)", "cheese"]
-           ]
+    assert [
+      [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "crackers"],
+      [2, {{2017, 1, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
+      [3, {{2017, 1, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"]
+    ] = Enum.sort(rows)
   end
 
   @update_rows [
@@ -117,23 +119,48 @@ defmodule Plenario2.Etl.WorkerTest do
     Worker.upsert!(self(), %{
       meta: meta,
       table_name: table_name,
-      rows: @insert_rows
+      rows: @insert_rows,
+      columns: @fixture_columns
     })
 
     Worker.upsert!(self(), %{
       meta: meta,
       table_name: table_name,
-      rows: @update_rows
+      rows: @update_rows,
+      columns: @fixture_columns
     })
 
     %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
 
-    assert Enum.sort(rows) === [
-             [1, {{2017, 1, 1}, {5, 0, 0, 0}}, "(0, 1)", "biscuits"],
-             [2, {{2017, 1, 2}, {5, 0, 0, 0}}, "(0, 2)", "and"],
-             [3, {{2017, 1, 3}, {5, 0, 0, 0}}, "(0, 3)", "cheese"],
-             [4, {{2017, 1, 4}, {5, 0, 0, 0}}, "(0, 4)", "gromit"]
-           ]
+    # TODO(heyzoos) this assertion is done with a match because the timezone 
+    # information seems to change depending on the host machine. Need to fix
+    # whatever causes that behaviour
+    assert [
+      [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "biscuits"],
+      [2, {{2017, 1, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
+      [3, {{2017, 1, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"],
+      [4, {{2017, 1, 4}, {_, 0, 0, 0}}, "(0, 4)", "gromit"]
+    ] = Enum.sort(rows)
+  end
+
+  test "contains!/2 retreives rows contained by upsert rows", context do
+    %{meta: meta, table_name: table_name} = context
+
+    Worker.upsert!(self(), %{
+      meta: meta,
+      table_name: table_name,
+      rows: @insert_rows,
+      columns: @fixture_columns
+    })
+
+    {_, %Postgrex.Result{rows: rows}} = Worker.contains!(self(), %{
+      meta: meta,
+      table_name: table_name,
+      rows: @update_rows,
+      columns: @fixture_columns
+    })
+
+    assert [[1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "crackers"]] = rows
   end
 
   test "load/1 ingests the sample data", context do

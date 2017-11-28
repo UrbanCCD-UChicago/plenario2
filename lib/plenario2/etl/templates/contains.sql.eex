@@ -1,0 +1,15 @@
+-- Template Variables
+-- ==================
+-- columns          list[string]
+-- table            string
+-- pk               *
+-- incoming_pks     list[*]
+
+SELECT 
+  "<%= Enum.join(columns, ~s{", "}) %>"
+FROM
+  "<%= table %>" AS t 
+WHERE
+  "<%= pk %>"
+IN
+  (<%= Enum.join(incoming_pks, ~s{,}) %>)

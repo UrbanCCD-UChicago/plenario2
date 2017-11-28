@@ -6,16 +6,12 @@ defmodule Plenario2.Etl.Worker do
   with `:sys.get_state/1`.
   """
 
-  alias Plenario2.Actions.{
-    DataSetFieldActions,
-    VirtualDateFieldActions,
-    VirtualPointFieldActions
-  }
+  alias Plenario2.Actions.DataSetFieldActions
 
   import Ecto.Adapters.SQL, only: [query!: 3]
-  import Ecto.Migration, only: [create: 2, table: 1, timestamps: 0]
   use GenServer
 
+  @contains_template "lib/plenario2/etl/templates/contains.sql.eex"
   @upsert_template "lib/plenario2/etl/templates/upsert.sql.eex"
 
   @doc """
@@ -80,12 +76,18 @@ defmodule Plenario2.Etl.Worker do
   """
   @spec load(state :: map) :: map
   def load(state) do
-    File.stream!(state[:worker_downloaded_file_path])
+    stream = File.stream!(state[:worker_downloaded_file_path]) |> CSV.decode!()
+
+    header =
+      Enum.take(stream, 1)
+      |> List.first()
+      |> Enum.map(&String.trim/1)
+
+    stream
     |> Stream.drop(1)
-    |> CSV.decode!()
     |> Stream.chunk_every(100)
     |> Enum.map(fn chunk ->
-         state = Map.merge(state, %{rows: chunk})
+         state = Map.merge(state, %{rows: chunk, columns: header})
          spawn(__MODULE__, :upsert!, [self(), state])
        end)
     |> Enum.map(fn pid ->
@@ -102,31 +104,29 @@ defmodule Plenario2.Etl.Worker do
 
   ## Example
 
-    iex> download(%{
+    iex> upsert!(%{
     ...>   meta: %Meta{},
     ...>   table_name: "chicago_tree_trimmings",
+    ...>   columns: ["pk", "datetime", "location", "data"]
     ...>   rows: [
-    ...>     [1, "2017-01-01T00:00:00", "(0, 0)"]
+    ...>     [1, "2017-01-01T00:00:00", "(0, 0)", "eh?"]
     ...>   ]
     ...> })
+
   """
   @spec upsert!(sender :: pid, state :: map) :: :ok
   def upsert!(sender, state) do
     %{
       meta: meta,
       table_name: table_name,
-      rows: rows
+      rows: rows,
+      columns: columns
     } = state
 
     # TODO(heyzoos) this will be moved to the process that spawns the upsert
     # subprocesses so that the query for dataset metadata is performed only
     # once
     fields = DataSetFieldActions.list_for_meta(meta)
-
-    columns =
-      for field <- fields do
-        field.name
-      end
 
     [pkfield | _] =
       Enum.filter(fields, fn field ->
@@ -140,6 +140,63 @@ defmodule Plenario2.Etl.Worker do
         columns: columns,
         rows: rows,
         pk: pkfield.name
+      )
+
+    result = query!(Plenario2.Repo, sql, [])
+    send(sender, {self(), result})
+  end
+
+  # TODO(heyzoos) this and upsert are really similar, refactor this
+  @doc """
+  Query all values whose primary key might clash with a candidate row.
+
+  ## Example
+
+    iex> contains!(%{
+    ...>   meta: %Meta{},
+    ...>   table_name: "chicago_tree_trimmings",
+    ...>   rows: [
+    ...>     [1, "2017-01-01T00:00:00", "(0, 0)"]
+    ...>   ]
+    ...> })
+
+  """
+  @spec contains!(sender :: pid, state :: map) :: :ok
+  def contains!(sender, state) do
+    %{
+      meta: meta,
+      table_name: table_name,
+      rows: rows,
+      columns: columns
+    } = state
+
+    # TODO(heyzoos) this will be moved to the process that spawns the upsert
+    # subprocesses so that the query for dataset metadata is performed only
+    # once
+    fields = DataSetFieldActions.list_for_meta(meta)
+
+    [pkfield | _] =
+      Enum.filter(fields, fn field ->
+        String.contains?(field.opts, "primary key")
+      end)
+
+    pkname = pkfield.name()
+
+    {^pkname, pkindex} =
+      Enum.with_index(columns)
+      |> Enum.filter(fn {column, _} -> column == pkname end)
+      |> List.first()
+    
+    incoming_pks = Enum.map(rows, & Enum.fetch!(&1, pkindex))
+
+    sql =
+      EEx.eval_file(
+        @contains_template,
+        table: table_name,
+        columns: columns,
+        rows: rows,
+        pk: pkname,
+        incoming_pks: incoming_pks
       )
     
     result = query!(Plenario2.Repo, sql, [])
