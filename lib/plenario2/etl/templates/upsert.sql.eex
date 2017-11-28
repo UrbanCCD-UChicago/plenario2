@@ -1,6 +1,6 @@
-insert into 
-  "<%= table %>" as t ("<%= Enum.join(columns, ~s{", "}) %>")
-values
+INSERT INTO 
+  "<%= table %>" AS t ("<%= Enum.join(columns, ~s{", "}) %>")
+VALUES
   <%= for {row, index} <- rows 
     |> Enum.with_index()
     |> Enum.reverse() do %>
@@ -9,8 +9,8 @@ values
       <% _ -> %> ('<%= Enum.join(row, "', '") %>'),
     <% end %>
   <% end %>
-on conflict ("<%= pk %>")
-  do update set
+ON CONFLICT ("<%= pk %>")
+  DO UPDATE SET
   <%= for {column, index} <- columns
     |> Enum.with_index 
     |> Enum.reverse do %>
@@ -19,7 +19,7 @@ on conflict ("<%= pk %>")
       <% _ -> %> "<%= column %>" = excluded."<%= column %>",
     <% end %>
   <% end %>
-  where
+  WHERE
     t."<%= pk %>" = excluded."<%= pk %>"
-  returning 
+  RETURNING 
     t.*

@@ -75,7 +75,8 @@ defmodule Plenario2.Etl.Worker do
 
   @doc """
   Upsert dataset rows from the file specified in `state`. Operations are
-  performed in parallel on chunks of the file stream.
+  performed in parallel on chunks of the file stream. The first line of 
+  the file is skipped, assumed to be a header.
   """
   @spec load(state :: map) :: map
   def load(state) do
@@ -83,7 +84,10 @@ defmodule Plenario2.Etl.Worker do
     |> Stream.drop(1)
     |> CSV.decode!()
     |> Stream.chunk_every(100)
-    |> Enum.map(fn chunk -> spawn(__MODULE__, :upsert!, [self(), state, chunk]) end)
+    |> Enum.map(fn chunk ->
+         state = Map.merge(state, %{rows: chunk})
+         spawn(__MODULE__, :upsert!, [self(), state])
+       end)
     |> Enum.map(fn pid ->
          receive do
            {^pid, result} -> result
@@ -118,11 +122,9 @@ defmodule Plenario2.Etl.Worker do
     # subprocesses so that the query for dataset metadata is performed only
     # once
     fields = DataSetFieldActions.list_for_meta(meta)
-    dtfields = VirtualDateFieldActions.list_for_meta(meta)
-    ptfields = VirtualPointFieldActions.list_for_meta(meta)
 
     columns =
-      for field <- fields ++ dtfields ++ ptfields do
+      for field <- fields do
         field.name
       end
 
@@ -139,7 +141,7 @@ defmodule Plenario2.Etl.Worker do
         rows: rows,
         pk: pkfield.name
       )
-
+    
     result = query!(Plenario2.Repo, sql, [])
     send(sender, {self(), result})
   end
