@@ -18,7 +18,7 @@
           <ul class="nav nav-pills pull-right">
             <%= if assigns[:current_user] == nil do %>
               <li><%= link "Sign In", to: auth_path(@conn, :login), method: :get %></li>
-              <li><a href="/register">Sign Up</a><li>
+              <li><%= link "Sign Up", to: auth_path(@conn, :register), method: :get %><li>
             <% else %>
               <li><a>Hi, <%= @current_user.name %>!</a></li>
               <li><%= link "Sign Out", to: auth_path(@conn, :logout), method: :post %></li>

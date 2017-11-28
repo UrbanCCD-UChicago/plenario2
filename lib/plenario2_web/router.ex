@@ -28,9 +28,11 @@ defmodule Plenario2Web.Router do
 
     get   "/",        PageController, :index
 
-    get   "/login",   AuthController, :index
-    post  "/login",   AuthController, :login
-    post  "/logout",  AuthController, :logout
+    get   "/login",     AuthController, :index
+    post  "/login",     AuthController, :login
+    post  "/logout",    AuthController, :logout
+    get   "/register",  AuthController, :register
+    post  "/register",  AuthController, :do_register
   end
 
   scope "/", Plenario2Web do
