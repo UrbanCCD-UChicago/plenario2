@@ -15,25 +15,26 @@ defmodule Plenario2Web.Router do
 
   pipeline :auth do
     plug Plenario2Auth.Pipeline
+    plug Plenario2Auth.CurrentUserPlug
   end
 
   pipeline :ensure_auth do
     plug Guardian.Plug.EnsureAuthenticated
+    plug Plenario2Auth.CurrentUserPlug
   end
 
   scope "/", Plenario2Web do
-    # Use the default browser stack
     pipe_through [:browser, :auth]
 
-    get("/", PageController, :index)
-    post("/", PageController, :login)
-    post("/logout", PageController, :logout)
+    get   "/",        PageController, :index
+
+    get   "/login",   AuthController, :index
+    post  "/login",   AuthController, :login
+    post  "/logout",  AuthController, :logout
   end
 
   scope "/", Plenario2Web do
     pipe_through [:browser, :auth, :ensure_auth]
-
-    get "/secret", PageController, :secret
   end
 
   # Other scopes may use custom stacks.
