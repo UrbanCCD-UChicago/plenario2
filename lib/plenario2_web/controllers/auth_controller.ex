@@ -7,6 +7,8 @@ defmodule Plenario2Web.AuthController do
     user = Guardian.Plug.current_resource(conn)
     action = auth_path(conn, :login)
 
+    # TODO: at some point this should just be redirected to "/" when the user is already logged in
+
     conn
     |>render("login.html", changeset: changeset, action: action, user: user)
   end
