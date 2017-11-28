@@ -54,7 +54,8 @@ defmodule Plenario2.Mixfile do
       {:bcrypt_elixir, "~> 1.0"},
       {:excoveralls, "~> 0.7", only: :test},
       {:timex, "~> 3.1"},
-      {:quantum, ">= 2.2.0"}
+      {:quantum, ">= 2.2.0"},
+      {:guardian, "~> 1.0"}
     ]
   end
 

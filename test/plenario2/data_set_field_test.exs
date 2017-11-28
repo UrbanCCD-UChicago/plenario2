@@ -1,7 +1,8 @@
 defmodule DataSetFieldTests do
   use ExUnit.Case, async: true
-  alias Plenario2.Actions.{DataSetFieldActions, MetaActions, UserActions}
+  alias Plenario2.Actions.{DataSetFieldActions, MetaActions}
   alias Plenario2.Repo
+  alias Plenario2Auth.UserActions
 
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)

@@ -1,7 +1,8 @@
 defmodule EtlJobActionsTests do
   use ExUnit.Case, async: true
-  alias Plenario2.Actions.{EtlJobActions, MetaActions, UserActions}
+  alias Plenario2.Actions.{EtlJobActions, MetaActions}
   alias Plenario2.Repo
+  alias Plenario2Auth.UserActions
 
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
