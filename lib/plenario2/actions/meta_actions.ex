@@ -6,8 +6,16 @@ defmodule Plenario2.Actions.MetaActions do
 
   def create(name, user_id, source_url, details \\ []) do
     defaults = [
-      source_type: "csv", description: nil, attribution: nil, refresh_rate: nil, refresh_interval: nil,
-      refresh_starts_on: nil, refresh_ends_on: nil, srid: 4326, timezone: "UTC"]
+      source_type: "csv",
+      description: nil,
+      attribution: nil,
+      refresh_rate: nil,
+      refresh_interval: nil,
+      refresh_starts_on: nil,
+      refresh_ends_on: nil,
+      srid: 4326,
+      timezone: "UTC"
+    ]
 
     named = [name: name, user_id: user_id, source_url: source_url]
 
@@ -19,11 +27,33 @@ defmodule Plenario2.Actions.MetaActions do
 
   def list(), do: Repo.all(Meta)
 
-  def list_for_user(user), do: Repo.all(from m in Meta, where: m.user_id == ^user.id)
+  def list_for_user(user), do: Repo.all(from(m in Meta, where: m.user_id == ^user.id))
 
-  def get_from_pk(pk), do: Repo.one(from m in Meta, where: m.id == ^pk)
+  def get_from_pk(pk), do: Repo.one(from(m in Meta, where: m.id == ^pk))
 
-  def get_from_slug(slug), do: Repo.one(from m in Meta, where: m.slug == ^slug)
+  @doc """
+  Get a single instance of `Meta` with any field specified by `preloads`
+  preloaded.
+
+  ## Examples
+
+    iex> get_by_pk_preload(1)
+    iex> get_by_pk_preload(1, [:data_set_constraints])
+    iex> get_by_pk_preload(1, [:data_set_constraints, :data_set_diffs])
+
+  """
+  @spec get_by_pk_preload(pk :: integer, preloads :: list) :: Meta
+  def get_by_pk_preload(pk, preloads \\ []) do
+    Repo.one(
+      from(
+        m in Meta,
+        where: m.id == ^pk,
+        preload: ^preloads
+      )
+    )
+  end
+
+  def get_from_slug(slug), do: Repo.one(from(m in Meta, where: m.slug == ^slug))
 
   def update_name(meta, new_name) do
     MetaChangesets.update_name(meta, %{name: new_name})
@@ -40,10 +70,11 @@ defmodule Plenario2.Actions.MetaActions do
       source_url: :unchanged,
       source_type: :unchanged
     ]
+
     options = Keyword.merge(defaults, options) |> Enum.into(%{})
 
     params =
-      Enum.filter(options, fn({_, value}) -> value != :unchanged end)
+      Enum.filter(options, fn {_, value} -> value != :unchanged end)
       |> Enum.into(%{})
 
     MetaChangesets.update_source_info(meta, params)
@@ -55,10 +86,11 @@ defmodule Plenario2.Actions.MetaActions do
       description: :unchanged,
       attribution: :unchanged
     ]
+
     options = Keyword.merge(defaults, options) |> Enum.into(%{})
 
     params =
-      Enum.filter(options, fn({_, value}) -> value != :unchanged end)
+      Enum.filter(options, fn {_, value} -> value != :unchanged end)
       |> Enum.into(%{})
 
     MetaChangesets.update_description_info(meta, params)
@@ -72,10 +104,11 @@ defmodule Plenario2.Actions.MetaActions do
       refresh_starts_on: :unchanged,
       refresh_ends_on: :unchanged
     ]
+
     options = Keyword.merge(defaults, options) |> Enum.into(%{})
 
     params =
-      Enum.filter(options, fn({_, value}) -> value != :unchanged end)
+      Enum.filter(options, fn {_, value} -> value != :unchanged end)
       |> Enum.into(%{})
 
     MetaChangesets.update_refresh_info(meta, params)
@@ -92,7 +125,7 @@ defmodule Plenario2.Actions.MetaActions do
     current =
       case meta.next_refresh do
         nil -> DateTime.utc_now()
-        _   -> meta.next_refresh
+        _ -> meta.next_refresh
       end
 
     rate = meta.refresh_rate
