@@ -1,0 +1,3 @@
+<h2><%= @meta.name %></h2>
+
+<em>Maintainer:</em> <%= @meta.user.name %>

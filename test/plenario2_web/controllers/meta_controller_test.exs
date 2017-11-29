@@ -3,7 +3,7 @@ defmodule Plenario2Web.MetaControllerTest do
   alias Plenario2.Actions.MetaActions
   alias Plenario2Auth.UserActions
 
-  describe "GET /metas/create" do
+  describe "GET /datasets/create" do
     test "when authenticated", %{conn: conn} do
       UserActions.create("Test User", "password", "test@example.com")
       conn = post(conn, auth_path(conn, :login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
@@ -25,7 +25,7 @@ defmodule Plenario2Web.MetaControllerTest do
     end
   end
 
-  describe "POST /metas/create" do
+  describe "POST /datasets/create" do
     test "with valid data", %{conn: conn} do
       UserActions.create("Test User", "password", "test@example.com")
       conn = post(conn, auth_path(conn, :login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
@@ -63,7 +63,7 @@ defmodule Plenario2Web.MetaControllerTest do
     end
   end
 
-  test "GET /metas/list", %{conn: conn} do
+  test "GET /datasets/list", %{conn: conn} do
     {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
     MetaActions.create("Test Data", user.id, "https://example.com/test-data")
 
@@ -74,5 +74,27 @@ defmodule Plenario2Web.MetaControllerTest do
     assert response =~ "Datasets"
     assert response =~ "Test Data"
     assert response =~ "Test User"
+  end
+
+  describe "GET /datasets/:slug" do
+    test "with a valid slug", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+
+      response = conn
+        |> get(meta_path(conn, :detail, meta.slug))
+        |> html_response(200)
+
+      assert response =~ meta.name
+      assert response =~ user.name
+    end
+
+    test "with a bad slug", %{conn: conn} do
+      response = conn
+        |> get(meta_path(conn, :detail, "nope"))
+        |> html_response(404)
+
+      assert response =~ "not found"
+    end
   end
 end

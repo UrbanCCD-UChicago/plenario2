@@ -38,6 +38,7 @@ defmodule Plenario2Web.Router do
 
     # meta paths
     get "/datasets/list", MetaController, :list
+    get "/datasets/:slug/detail", MetaController, :detail
   end
 
   scope "/", Plenario2Web do
