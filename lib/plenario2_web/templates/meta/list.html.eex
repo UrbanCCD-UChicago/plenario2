@@ -4,7 +4,8 @@
   <div>
     <p>
       <h4><%= meta.name %></h4>
-      <em>Maintainer:</em> <%= meta.user.name %>
+      <em>Maintainer:</em> <%= meta.user.name %><br>
+      <%= link "View Detailed Information", to: meta_path(@conn, :detail, meta.slug), method: :get %>
     </p>
   </div>
 <% end %>

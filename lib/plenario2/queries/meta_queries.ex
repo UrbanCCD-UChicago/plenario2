@@ -2,6 +2,8 @@ defmodule Plenario2.Queries.MetaQueries do
   import Ecto.Query
   alias Plenario2.Schemas.Meta
 
+  def from_slug(slug), do: (from m in Meta, where: m.slug == ^slug)
+
   def list(), do: (from m in Meta)
 
   def with_user(query), do: from m in query, preload: [user: :metas]

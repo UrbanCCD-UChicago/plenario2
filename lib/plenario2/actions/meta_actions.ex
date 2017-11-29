@@ -19,7 +19,7 @@ defmodule Plenario2.Actions.MetaActions do
     |> Repo.insert()
   end
 
-  def list(opts \\ []) do
+  defp handle_opts(base, opts \\ []) do
     defaults = [
       with_user: false,
       with_fields: false,
@@ -30,13 +30,18 @@ defmodule Plenario2.Actions.MetaActions do
     ]
     opts = Keyword.merge(defaults, opts)
 
-    MetaQueries.list()
+    base
     |> cond_compose(opts[:with_user], MetaQueries, :with_user)
     |> cond_compose(opts[:with_fields], MetaQueries, :with_data_set_fields)
     |> cond_compose(opts[:with_virtual_dates], MetaQueries, :with_virtual_date_fields)
     |> cond_compose(opts[:with_virtual_points], MetaQueries, :with_virtual_point_fields)
     |> cond_compose(opts[:with_constraints], MetaQueries, :with_data_set_constraints)
     |> cond_compose(opts[:with_diffs], MetaQueries, :with_data_set_diffs)
+  end
+
+  def list(opts \\ []) do
+    MetaQueries.list()
+    |> handle_opts(opts)
     |> Repo.all()
   end
 
@@ -44,7 +49,11 @@ defmodule Plenario2.Actions.MetaActions do
 
   def get_from_pk(pk), do: Repo.one(from m in Meta, where: m.id == ^pk)
 
-  def get_from_slug(slug), do: Repo.one(from m in Meta, where: m.slug == ^slug)
+  def get_from_slug(slug, opts \\ []) do
+    MetaQueries.from_slug(slug)
+    |> handle_opts(opts)
+    |> Repo.one()
+  end
 
   def update_name(meta, new_name) do
     MetaChangesets.update_name(meta, %{name: new_name})

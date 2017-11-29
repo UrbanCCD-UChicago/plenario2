@@ -4,6 +4,14 @@ defmodule Plenario2Web.MetaController do
   alias Plenario2.Schemas.Meta
   alias Plenario2.Actions.MetaActions
   alias Plenario2.Changesets.MetaChangesets
+  alias Plenario2Web.ErrorView
+
+  def detail(conn, %{"slug" => slug}) do
+    case MetaActions.get_from_slug(slug, [with_user: true]) do
+      nil  -> conn |> put_status(:not_found) |> put_view(ErrorView) |> render("404.html")
+      meta -> render(conn, "detail.html", meta: meta)
+    end
+  end
 
   def list(conn, _params) do
     metas = MetaActions.list([with_user: true])
