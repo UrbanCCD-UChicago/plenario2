@@ -1,0 +1,7 @@
+<h2>Metas</h2>
+
+<%= for meta <- @metas do %>
+  <div>
+    <%= meta.name %>
+  </div>
+<% end %>

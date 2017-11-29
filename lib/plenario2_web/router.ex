@@ -26,13 +26,20 @@ defmodule Plenario2Web.Router do
   scope "/", Plenario2Web do
     pipe_through [:browser, :auth]
 
+    # generic paths
     get   "/",        PageController, :index
 
+    # auth paths
     get   "/login",     AuthController, :index
     post  "/login",     AuthController, :login
     post  "/logout",    AuthController, :logout
     get   "/register",  AuthController, :register
     post  "/register",  AuthController, :do_register
+
+    # meta paths
+    get "/metas", MetaController, :list
+    get "/metas/create", MetaController, :create
+    post "/metas/create", MetaController, :do_create
   end
 
   scope "/", Plenario2Web do
