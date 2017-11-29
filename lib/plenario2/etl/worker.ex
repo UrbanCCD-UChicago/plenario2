@@ -6,7 +6,10 @@ defmodule Plenario2.Etl.Worker do
   with `:sys.get_state/1`.
   """
 
-  alias Plenario2.Actions.DataSetFieldActions
+  alias Plenario2.Actions.{
+    DataSetDiffActions,
+    DataSetFieldActions,
+  }
 
   import Ecto.Adapters.SQL, only: [query!: 3]
   use GenServer
@@ -186,8 +189,8 @@ defmodule Plenario2.Etl.Worker do
       Enum.with_index(columns)
       |> Enum.filter(fn {column, _} -> column == pkname end)
       |> List.first()
-    
-    incoming_pks = Enum.map(rows, & Enum.fetch!(&1, pkindex))
+
+    incoming_pks = Enum.map(rows, &Enum.fetch!(&1, pkindex))
 
     sql =
       EEx.eval_file(
@@ -198,8 +201,39 @@ defmodule Plenario2.Etl.Worker do
         pk: pkname,
         incoming_pks: incoming_pks
       )
-    
+
     result = query!(Plenario2.Repo, sql, [])
     send(sender, {self(), result})
+  end
+
+  @spec create_diffs(
+          meta_id :: integer,
+          constraint_id :: integer,
+          job_id :: integer,
+          columns :: list,
+          origin :: list,
+          updated :: list
+        ) :: list
+  def create_diffs(meta_id, constraint_id, job_id, columns, original, updated) do
+    List.zip([original, updated])
+    |> Enum.with_index()
+    |> Enum.map(fn {{original_value, updated_value}, index} ->
+         if original_value !== updated_value do
+           column = Enum.fetch!(columns, index)
+
+           {:ok, diff} = DataSetDiffActions.create(
+             meta_id,
+             constraint_id,
+             job_id,
+             column,
+             original_value,
+             updated_value,
+             DateTime.utc_now(),
+             %{event_id: "my-unique-id"}
+           )
+
+           diff
+         end
+       end)
   end
 end

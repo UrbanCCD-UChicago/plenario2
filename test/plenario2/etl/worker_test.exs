@@ -1,14 +1,21 @@
 defmodule Plenario2.Etl.WorkerTest do
   alias Plenario2.Actions.{
     DataSetActions,
+    DataSetConstraintActions,
     DataSetFieldActions,
+    EtlJobActions,
     MetaActions,
     UserActions,
     VirtualPointFieldActions,
   }
 
+  alias Plenario2.Schemas.{
+    DataSetDiff,
+    Meta
+  }
+
   alias Plenario2.Etl.Worker
-  alias Plenario2.Schemas.Meta
+  alias Plenario2.Repo
 
   import Ecto.Adapters.SQL, only: [query!: 3]
   import Mock
@@ -36,12 +43,16 @@ defmodule Plenario2.Etl.WorkerTest do
     DataSetFieldActions.create(meta.id, "location", "text")
     DataSetFieldActions.create(meta.id, "data", "text")
     DataSetFieldActions.make_primary_key(pk)
+    {:ok, constraint} = DataSetConstraintActions.create(meta.id, ["pk"])
+    {:ok, job} = EtlJobActions.create(meta.id)
     VirtualPointFieldActions.create_from_loc(meta.id, "location")
     DataSetActions.create_dataset_table(meta)
 
     %{
       meta: meta,
-      table_name: Meta.get_dataset_table_name(meta)
+      table_name: Meta.get_dataset_table_name(meta),
+      constraint: constraint,
+      job: job
     }
   end
 
@@ -170,6 +181,29 @@ defmodule Plenario2.Etl.WorkerTest do
       state
       |> Worker.download()
       |> Worker.load()
+    end
+  end
+
+  describe "create_diffs/6" do
+    test "creates diff database entries with arbitrary data", context do
+      meta = MetaActions.get_by_pk_preload(context[:meta].id(), [:data_set_fields])
+      columns = for field <- meta.data_set_fields() do field.name() end
+
+      row1 = ["original", "original", "original"]
+      row2 = ["original", "changed", "changed"]
+      Worker.create_diffs(
+        context[:meta].id(),
+        context[:constraint].id(),
+        context[:job].id(),
+        columns,
+        row1,
+        row2
+      )
+
+      # ** (Postgrex.Error) ERROR 42703 (undefined_column): column d0.data_set_constraint_id does not exist
+      diffs = Repo.all(DataSetDiff)
+      # IO.inspect(diffs)
+      assert Enum.count(diffs) === 2
     end
   end
 end
