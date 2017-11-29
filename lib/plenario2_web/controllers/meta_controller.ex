@@ -18,32 +18,16 @@ defmodule Plenario2Web.MetaController do
     render(conn, "create.html", changeset: changeset, action: action)
   end
 
-  def do_create(conn, %{"meta" => %{
-      "name" => name,
-      "source_url" => source_url,
-      "source_type" => source_type,
-      "description" => description,
-      "attribution" => attribution,
-      "refresh_rate" => refresh_rate,
-      "refresh_interval" => refresh_interval,
-      "refresh_starts_on" => refresh_starts_on,
-      "refresh_ends_on" => refresh_ends_on,
-      "srid" => srid,
-      "timezone" => timezone
-      }}) do
-    deatils = [
-      description: description,
-      attribution: attribution,
-      refresh_rate: refresh_rate,
-      refresh_interval: refresh_interval,
-      refresh_starts_on: refresh_starts_on,
-      refresh_ends_on: refresh_ends_on,
-      srid: srid,
-      timezone: timezone
-    ]
+  def do_create(conn, %{"meta" => %{"name" => name, "source_url" => source_url}} = params) do
     user = Guardian.Plug.current_resource(conn)
+    details =
+      Enum.map([
+        "source_type", "description", "attribution", "refresh_rate", "refresh_interval",
+        "refresh_starts_on", "refresh_ends_on", "srid", "timezone"
+      ], fn (key) -> {String.to_atom(key), Map.get(params["meta"], key, nil)} end)
+      |> Enum.filter(fn ({k, v}) -> if v do {k, v} end end)
 
-    MetaActions.create(name, user.id, source_url, deatils)
+    MetaActions.create(name, user.id, source_url, details)
     |> create_reply(conn)
   end
 

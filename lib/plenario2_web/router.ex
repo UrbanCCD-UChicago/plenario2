@@ -37,13 +37,15 @@ defmodule Plenario2Web.Router do
     post  "/register",  AuthController, :do_register
 
     # meta paths
-    get "/metas", MetaController, :list
-    get "/metas/create", MetaController, :create
-    post "/metas/create", MetaController, :do_create
+    get "/metas/list", MetaController, :list
   end
 
   scope "/", Plenario2Web do
     pipe_through [:browser, :auth, :ensure_auth]
+
+    # meta paths
+    get "/metas/create", MetaController, :create
+    post "/metas/create", MetaController, :do_create
   end
 
   # Other scopes may use custom stacks.
