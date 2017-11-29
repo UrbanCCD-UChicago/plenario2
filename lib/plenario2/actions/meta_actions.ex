@@ -1,5 +1,6 @@
 defmodule Plenario2.Actions.MetaActions do
   import Ecto.Query
+  import Plenario2.Queries.Utilities
   alias Plenario2.Changesets.MetaChangesets
   alias Plenario2.Schemas.Meta
   alias Plenario2.Queries.MetaQueries
@@ -18,14 +19,6 @@ defmodule Plenario2.Actions.MetaActions do
     |> Repo.insert()
   end
 
-  defp compose(query, condition, module, method) do
-    if condition do
-      apply(module, method, [query])
-    else
-      query
-    end
-  end
-
   def list(opts \\ []) do
     defaults = [
       with_user: false,
@@ -38,12 +31,12 @@ defmodule Plenario2.Actions.MetaActions do
     opts = Keyword.merge(defaults, opts)
 
     MetaQueries.list()
-    |> compose(opts[:with_user], MetaQueries, :with_user)
-    |> compose(opts[:with_fields], MetaQueries, :with_data_set_fields)
-    |> compose(opts[:with_virtual_dates], MetaQueries, :with_virtual_date_fields)
-    |> compose(opts[:with_virtual_points], MetaQueries, :with_virtual_point_fields)
-    |> compose(opts[:with_constraints], MetaQueries, :with_data_set_constraints)
-    |> compose(opts[:with_diffs], MetaQueries, :with_data_set_diffs)
+    |> cond_compose(opts[:with_user], MetaQueries, :with_user)
+    |> cond_compose(opts[:with_fields], MetaQueries, :with_data_set_fields)
+    |> cond_compose(opts[:with_virtual_dates], MetaQueries, :with_virtual_date_fields)
+    |> cond_compose(opts[:with_virtual_points], MetaQueries, :with_virtual_point_fields)
+    |> cond_compose(opts[:with_constraints], MetaQueries, :with_data_set_constraints)
+    |> cond_compose(opts[:with_diffs], MetaQueries, :with_data_set_diffs)
     |> Repo.all()
   end
 
