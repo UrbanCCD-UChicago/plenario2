@@ -1,7 +1,10 @@
-<h2>Metas</h2>
+<h2>Datasets</h2>
 
 <%= for meta <- @metas do %>
   <div>
-    <%= meta.name %>
+    <p>
+      <h4><%= meta.name %></h4>
+      <em>Maintainer:</em> <%= meta.user.name %>
+    </p>
   </div>
 <% end %>

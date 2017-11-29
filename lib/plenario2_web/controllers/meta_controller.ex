@@ -6,8 +6,7 @@ defmodule Plenario2Web.MetaController do
   alias Plenario2.Changesets.MetaChangesets
 
   def list(conn, _params) do
-    metas = MetaActions.list()
-
+    metas = MetaActions.list([with_user: true])
     render(conn, "list.html", metas: metas)
   end
 
