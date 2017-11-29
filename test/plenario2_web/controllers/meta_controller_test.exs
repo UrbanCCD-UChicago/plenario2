@@ -37,7 +37,7 @@ defmodule Plenario2Web.MetaControllerTest do
       conn = get(recycle(conn), redir_path)
       response = html_response(conn, 200)
 
-      assert response =~ "Metas"
+      assert response =~ "Datasets"
       assert response =~ "Test Data"
 
       assert length(MetaActions.list()) == 1
@@ -71,7 +71,8 @@ defmodule Plenario2Web.MetaControllerTest do
       |> get(meta_path(conn, :list))
       |> html_response(200)
 
-    assert response =~ "Metas"
+    assert response =~ "Datasets"
     assert response =~ "Test Data"
+    assert response =~ "Test User"
   end
 end

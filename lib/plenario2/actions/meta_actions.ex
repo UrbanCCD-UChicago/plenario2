@@ -2,6 +2,7 @@ defmodule Plenario2.Actions.MetaActions do
   import Ecto.Query
   alias Plenario2.Changesets.MetaChangesets
   alias Plenario2.Schemas.Meta
+  alias Plenario2.Queries.MetaQueries
   alias Plenario2.Repo
 
   def create(name, user_id, source_url, details \\ []) do
@@ -17,7 +18,34 @@ defmodule Plenario2.Actions.MetaActions do
     |> Repo.insert()
   end
 
-  def list(), do: Repo.all(Meta)
+  defp compose(query, condition, module, method) do
+    if condition do
+      apply(module, method, [query])
+    else
+      query
+    end
+  end
+
+  def list(opts \\ []) do
+    defaults = [
+      with_user: false,
+      with_fields: false,
+      with_virtual_dates: false,
+      with_virtual_points: false,
+      with_constraints: false,
+      with_diffs: false
+    ]
+    opts = Keyword.merge(defaults, opts)
+
+    MetaQueries.list()
+    |> compose(opts[:with_user], MetaQueries, :with_user)
+    |> compose(opts[:with_fields], MetaQueries, :with_data_set_fields)
+    |> compose(opts[:with_virtual_dates], MetaQueries, :with_virtual_date_fields)
+    |> compose(opts[:with_virtual_points], MetaQueries, :with_virtual_point_fields)
+    |> compose(opts[:with_constraints], MetaQueries, :with_data_set_constraints)
+    |> compose(opts[:with_diffs], MetaQueries, :with_data_set_diffs)
+    |> Repo.all()
+  end
 
   def list_for_user(user), do: Repo.all(from m in Meta, where: m.user_id == ^user.id)
 
