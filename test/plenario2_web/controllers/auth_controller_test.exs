@@ -76,12 +76,21 @@ defmodule Plenario2Web.AuthControllerTest do
     test "with an existing user's email address", %{conn: conn} do
       UserActions.create("Test User", "password", "test@example.com")
 
-        conn = post(conn, auth_path(conn, :do_register), %{"user" => %{"name" => "Test User", "email_address" => "test@example.com", "plaintext_password" => "password", "organization" => nil, "org_role" => nil}})
-        assert "/register" = redir_path = redirected_to(conn, 302)
-        conn = get(recycle(conn), redir_path)
-        response = html_response(conn, 200)
+      response = conn
+        |> post(auth_path(conn, :do_register), %{"user" => %{"name" => "Test User", "email_address" => "test@example.com", "plaintext_password" => "password", "organization" => nil, "org_role" => nil}})
+        |> html_response(200)
 
-        assert response =~ "Email address already registered"
+      assert response =~ "Please review and fix errors below."
+      assert response =~ "has already been taken"
+    end
+
+    test "with a bad email address", %{conn: conn} do
+      response = conn
+        |> post(auth_path(conn, :do_register), %{"user" => %{"name" => "Test User", "email_address" => "test@example", "plaintext_password" => "password", "organization" => nil, "org_role" => nil}})
+        |> html_response(200)
+
+      assert response =~ "Please review and fix errors below."
+      assert response =~ "has invalid format"
     end
   end
 end

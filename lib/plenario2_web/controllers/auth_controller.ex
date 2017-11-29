@@ -50,10 +50,10 @@ defmodule Plenario2Web.AuthController do
     |> register_reply(conn)
   end
 
-  defp register_reply({:error, _changeset}, conn) do
+  defp register_reply({:error, changeset}, conn) do
     conn
-    |> put_flash(:error, "Email address already registered.")
-    |> redirect(to: auth_path(conn, :register))
+    |> put_flash(:error, "Please review and fix errors below.")
+    |> render("register.html", changeset: changeset, action: auth_path(conn, :do_register))
   end
 
   defp register_reply({:ok, user}, conn) do
