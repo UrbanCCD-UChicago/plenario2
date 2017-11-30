@@ -1,3 +1,115 @@
-<h2><%= @meta.name %></h2>
+<style>
+div>div:first-child { font-weight: bold; }
+div.row { margin-bottom: 2em; }
+</style>
 
-<em>Maintainer:</em> <%= @meta.user.name %>
+<h1><%= @meta.name %></h1>
+
+<h3>Metadata<hr></h3>
+
+<div class="row">
+  <div class="col-md-3">Maintainer:</div>
+  <div class="col-md-6"><%= @meta.user.name %></div>
+  <%= if @owner do %>
+    <div class="col-md-3"><a>Change ownership of this dataset</a></div>
+  <% end %>
+</div>
+
+<hr>
+
+<div class="row">
+  <div class="col-md-3">Description:</div>
+  <div class="col-md-6"><%= @meta.description %></div>
+  <%= if @owner do %>
+    <div class="col-md-3"><a>Change description and attribution</a></div>
+  <% end %>
+</div>
+
+<div class="row">
+  <div class="col-md-3">Attribution:</div>
+  <div class="col-md-6"><%= @meta.attribution %></div>
+</div>
+
+<hr>
+
+<div class="row">
+  <div class="col-md-3">Source URL:</div>
+  <div class="col-md-6"><%= @meta.source_url %></div>
+  <%= if @owner do %>
+    <div class="col-md-3"><a>Change source information</a></div>
+  <% end %>
+</div>
+
+<hr>
+
+<div class="row">
+  <div class="col-md-3">First Import:</div>
+  <div class="col-md-6"><%= @meta.first_import %></div>
+  <%= if @owner do %>
+    <div class="col-md-3"><a>Change refresh information</a></div>
+  <% end %>
+</div>
+
+<div class="row">
+  <div class="col-md-3">Latest Import:</div>
+  <div class="col-md-6"><%= @meta.latest_import %></div>
+</div>
+
+<div class="row">
+  <div class="col-md-3">Next Refresh:</div>
+  <div class="col-md-6"><%= @meta.next_refresh %></div>
+</div>
+
+<div class="row">
+  <div class="col-md-3">Refresh Cadence:</div>
+  <div class="col-md-6">
+    <%= @meta.refresh_interval %> <%= @meta.refresh_rate %>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-3">Refresh Starts On:</div>
+  <div class="col-md-6"><%= @meta.refresh_starts_on %></div>
+</div>
+
+<div class="row">
+  <div class="col-md-3">Refresh Ends On:</div>
+  <div class="col-md-6"><%= @meta.refresh_ends_on %></div>
+</div>
+
+<hr>
+
+<div class="row">
+  <div class="col-md-3">Timezone:</div>
+  <div class="col-md-6"><%= @meta.timezone %></div>
+</div>
+
+<div class="row">
+  <div class="col-md-3">Timespan:</div>
+  <div class="col-md-6"><%= @meta.timerange %></div>
+</div>
+
+<hr>
+
+<div class="row">
+  <div class="col-md-3">SRID:</div>
+  <div class="col-md-6"><%= @meta.srid %></div>
+</div>
+
+<div class="row">
+  a map will go here to demonstrate the bbox
+</div>
+
+<h3>Field Information<hr></h3>
+
+<%= for {f, i} <- Enum.with_index(@meta.data_set_fields) do %>
+<div class="row">
+  <div class="col-md-3"><%= f.name %></div>
+  <div class="col-md-3"><%= f.type %></div>
+  <%= if i == 0 do %>
+    <div class="col-md-3">&nbsp;</div>
+    <div class="col-md-3">
+      <a>Update fields</a>
+    </div>
+  <% end %>
+<% end %>

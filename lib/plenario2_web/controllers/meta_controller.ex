@@ -6,9 +6,12 @@ defmodule Plenario2Web.MetaController do
   alias Plenario2Web.ErrorView
 
   def detail(conn, %{"slug" => slug}) do
-    case MetaActions.get_from_slug(slug, [with_user: true]) do
+    user = Guardian.Plug.current_resource(conn)
+    meta = MetaActions.get_from_slug(slug, [with_user: true, with_fields: true])
+    owner = user.email_address == meta.user.email_address
+    case meta do
       nil  -> conn |> put_status(:not_found) |> put_view(ErrorView) |> render("404.html")
-      meta -> render(conn, "detail.html", meta: meta)
+      _    -> render(conn, "detail.html", meta: meta, owner: owner)
     end
   end
 
