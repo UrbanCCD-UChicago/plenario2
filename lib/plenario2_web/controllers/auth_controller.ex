@@ -2,18 +2,19 @@ defmodule Plenario2Web.AuthController do
   use Plenario2Web, :controller
   alias Plenario2Auth.{UserChangesets, UserActions, User, Guardian}
 
-  def index(conn, _params) do
+  def get_login(conn, _params) do
     changeset = UserChangesets.create(%User{}, %{})
     user = Guardian.Plug.current_resource(conn)
-    action = auth_path(conn, :login)
+    action = auth_path(conn, :do_login)
 
-    # TODO: at some point this should just be redirected to "/" when the user is already logged in
-
-    conn
-    |>render("login.html", changeset: changeset, action: action, user: user)
+    if user do
+      redirect(conn, to: page_path(conn, :index))
+    else
+      render(conn, "login.html", changeset: changeset, action: action)
+    end
   end
 
-  def login(conn, %{"user" => %{"email_address" => email, "plaintext_password" => password}}) do
+  def do_login(conn, %{"user" => %{"email_address" => email, "plaintext_password" => password}}) do
     UserActions.authenticate(email, password)
     |> login_reply(conn)
   end
@@ -21,7 +22,7 @@ defmodule Plenario2Web.AuthController do
   defp login_reply({:error, message}, conn) do
     conn
     |> put_flash(:error, message)
-    |> redirect(to: auth_path(conn, :index))
+    |> redirect(to: auth_path(conn, :get_login))
   end
 
   defp login_reply({:ok, user}, conn) do
@@ -37,12 +38,11 @@ defmodule Plenario2Web.AuthController do
     |> redirect(to: page_path(conn, :index))
   end
 
-  def register(conn, _params) do
+  def get_register(conn, _params) do
     changeset = UserChangesets.create(%User{}, %{})
     action = auth_path(conn, :do_register)
 
-    conn
-    |> render("register.html", changeset: changeset, action: action)
+    render(conn, "register.html", changeset: changeset, action: action)
   end
 
   def do_register(conn, %{"user" => %{"email_address" => email, "name" => name, "plaintext_password" => password, "organization" => org, "org_role" => role}}) do

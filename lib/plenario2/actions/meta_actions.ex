@@ -1,67 +1,77 @@
 defmodule Plenario2.Actions.MetaActions do
-  import Ecto.Query
-  import Plenario2.Queries.Utilities
   alias Plenario2.Changesets.MetaChangesets
+  alias Plenario2.Queries.MetaQueries, as: Q
   alias Plenario2.Schemas.Meta
-  alias Plenario2.Queries.MetaQueries
   alias Plenario2.Repo
+
+  ##
+  # get one
+
+  def get_from_id(id, opts \\ []) do
+    Q.from_id(id)
+    |> Q.handle_opts(opts)
+    |> Repo.one()
+  end
+
+  def get_from_slug(slug, opts \\ []) do
+    Q.from_slug(slug)
+    |> Q.handle_opts(opts)
+    |> Repo.one()
+  end
+
+  ##
+  # get list
+
+  def list(opts \\ []) do
+    Q.list()
+    |> Q.handle_opts(opts)
+    |> Repo.all()
+  end
+
+  def list_for_user(user, opts \\ []) do
+    local_defaults = [with_user: true, for_user: user]
+    opts = Keyword.merge(local_defaults, opts)
+
+    Q.list()
+    |> Q.handle_opts(opts)
+    |> Repo.all()
+  end
+
+  ##
+  # create
 
   def create(name, user_id, source_url, details \\ []) do
     defaults = [
-      source_type: "csv", description: nil, attribution: nil, refresh_rate: nil, refresh_interval: nil,
-      refresh_starts_on: nil, refresh_ends_on: nil, srid: 4326, timezone: "UTC"]
-
+      source_type: "csv",
+      description: nil,
+      attribution: nil,
+      refresh_rate: nil,
+      refresh_interval: nil,
+      refresh_starts_on: nil,
+      refresh_ends_on: nil,
+      srid: 4326,
+      timezone: "UTC"
+    ]
     named = [name: name, user_id: user_id, source_url: source_url]
 
-    params = Keyword.merge(defaults, details) |> Keyword.merge(named) |> Enum.into(%{})
+    params = Keyword.merge(defaults, details)
+    |> Keyword.merge(named)
+    |> Enum.into(%{})
 
     MetaChangesets.create(%Meta{}, params)
     |> Repo.insert()
   end
 
-  defp handle_opts(base, opts \\ []) do
-    defaults = [
-      with_user: false,
-      with_fields: false,
-      with_virtual_dates: false,
-      with_virtual_points: false,
-      with_constraints: false,
-      with_diffs: false
-    ]
-    opts = Keyword.merge(defaults, opts)
-
-    base
-    |> cond_compose(opts[:with_user], MetaQueries, :with_user)
-    |> cond_compose(opts[:with_fields], MetaQueries, :with_data_set_fields)
-    |> cond_compose(opts[:with_virtual_dates], MetaQueries, :with_virtual_date_fields)
-    |> cond_compose(opts[:with_virtual_points], MetaQueries, :with_virtual_point_fields)
-    |> cond_compose(opts[:with_constraints], MetaQueries, :with_data_set_constraints)
-    |> cond_compose(opts[:with_diffs], MetaQueries, :with_data_set_diffs)
-  end
-
-  def list(opts \\ []) do
-    MetaQueries.list()
-    |> handle_opts(opts)
-    |> Repo.all()
-  end
-
-  def list_for_user(user), do: Repo.all(from m in Meta, where: m.user_id == ^user.id)
-
-  def get_from_pk(pk), do: Repo.one(from m in Meta, where: m.id == ^pk)
-
-  def get_from_slug(slug, opts \\ []) do
-    MetaQueries.from_slug(slug)
-    |> handle_opts(opts)
-    |> Repo.one()
-  end
+  ##
+  # update
 
   def update_name(meta, new_name) do
     MetaChangesets.update_name(meta, %{name: new_name})
     |> Repo.update()
   end
 
-  def update_user(meta, user_id) do
-    MetaChangesets.update_user(meta, %{user_id: user_id})
+  def update_user(meta, user) do
+    MetaChangesets.update_user(meta, %{user_id: user.id})
     |> Repo.update()
   end
 

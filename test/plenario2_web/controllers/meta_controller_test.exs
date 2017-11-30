@@ -6,10 +6,10 @@ defmodule Plenario2Web.MetaControllerTest do
   describe "GET /datasets/create" do
     test "when authenticated", %{conn: conn} do
       UserActions.create("Test User", "password", "test@example.com")
-      conn = post(conn, auth_path(conn, :login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
 
       response = conn
-        |> get(meta_path(conn, :create))
+        |> get(meta_path(conn, :get_create))
         |> html_response(200)
 
       assert response =~ "Dataset name"
@@ -18,7 +18,7 @@ defmodule Plenario2Web.MetaControllerTest do
 
     test "when not authenticated", %{conn: conn} do
       response = conn
-        |> get(meta_path(conn, :create))
+        |> get(meta_path(conn, :get_create))
         |> response(401)
 
       assert response =~ "unauthenticated"
@@ -28,7 +28,7 @@ defmodule Plenario2Web.MetaControllerTest do
   describe "POST /datasets/create" do
     test "with valid data", %{conn: conn} do
       UserActions.create("Test User", "password", "test@example.com")
-      conn = post(conn, auth_path(conn, :login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
 
       assert length(MetaActions.list()) == 0
 
@@ -45,7 +45,7 @@ defmodule Plenario2Web.MetaControllerTest do
 
     test "with bad data", %{conn: conn} do
       UserActions.create("Test User", "password", "test@example.com")
-      conn = post(conn, auth_path(conn, :login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
 
       response = conn
         |> post(meta_path(conn, :do_create), %{"meta" => %{"name" => "", "source_url" => ""}})

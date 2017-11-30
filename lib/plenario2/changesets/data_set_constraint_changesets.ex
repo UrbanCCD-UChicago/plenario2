@@ -7,18 +7,18 @@ defmodule Plenario2.Changesets.DataSetConstraintChangesets do
     struct
     |> cast(params, [:field_names, :meta_id])
     |> validate_required([:field_names, :meta_id])
-    |> _validate_field_names()
+    |> validate_field_names()
     |> cast_assoc(:meta)
-    |> _set_name()
+    |> set_name()
   end
 
   ##
   # operations
 
-  defp _set_name(changeset) do
+  defp set_name(changeset) do
     table_name =
       get_field(changeset, :meta_id)
-      |> MetaActions.get_from_pk()
+      |> MetaActions.get_from_id()
       |> Meta.get_dataset_table_name()
 
     field_names = get_field(changeset, :field_names) |> Enum.join("_")
@@ -31,11 +31,11 @@ defmodule Plenario2.Changesets.DataSetConstraintChangesets do
   ##
   # validation
 
-  defp _validate_field_names(changeset) do
+  defp validate_field_names(changeset) do
     meta_id = get_field(changeset, :meta_id)
     field_names = get_field(changeset, :field_names)
 
-    meta = MetaActions.get_from_pk(meta_id)
+    meta = MetaActions.get_from_id(meta_id)
     fields = DataSetFieldActions.list_for_meta(meta)
     known_field_names = for f <- fields, do: f.name
 
