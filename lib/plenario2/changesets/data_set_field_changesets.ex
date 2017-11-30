@@ -6,7 +6,7 @@ defmodule Plenario2.Changesets.DataSetFieldChangesets do
     |> cast(params, [:name, :type, :opts, :meta_id])
     |> validate_required([:name, :type, :opts, :meta_id])
     |> cast_assoc(:meta)
-    |> _check_name()
+    |> check_name()
   end
 
   def make_primary_key(field) do
@@ -18,7 +18,7 @@ defmodule Plenario2.Changesets.DataSetFieldChangesets do
   ##
   # operations
 
-  defp _check_name(changeset) do
+  defp check_name(changeset) do
     name =
       get_field(changeset, :name)
       |> String.split(~r/\s/, trim: true)

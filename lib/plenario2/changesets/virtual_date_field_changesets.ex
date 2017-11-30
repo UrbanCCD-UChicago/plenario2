@@ -14,15 +14,15 @@ defmodule Plenario2.Changesets.VirtualDateFieldChangesets do
          :meta_id
        ])
     |> validate_required([:year_field, :meta_id])
-    |> _validate_fields()
+    |> validate_fields()
     |> cast_assoc(:meta)
-    |> _set_name()
+    |> set_name()
   end
 
   ##
   # operations
 
-  defp _set_name(changeset) do
+  defp set_name(changeset) do
     yr = get_field(changeset, :year_field)
     mo = get_field(changeset, :month_field)
     day = get_field(changeset, :day_field)
@@ -57,7 +57,7 @@ defmodule Plenario2.Changesets.VirtualDateFieldChangesets do
   ##
   # validations
 
-  defp _validate_fields(changeset) do
+  defp validate_fields(changeset) do
     meta_id = get_field(changeset, :meta_id)
     year = get_field(changeset, :year_field)
     month = get_field(changeset, :month_field)
@@ -67,7 +67,7 @@ defmodule Plenario2.Changesets.VirtualDateFieldChangesets do
     second = get_field(changeset, :second_field)
     field_namez = [year, month, day, hour, minute, second]
 
-    meta = MetaActions.get_from_pk(meta_id)
+    meta = MetaActions.get_from_id(meta_id)
     fields = DataSetFieldActions.list_for_meta(meta)
     known_field_names = for f <- fields, do: f.name
 

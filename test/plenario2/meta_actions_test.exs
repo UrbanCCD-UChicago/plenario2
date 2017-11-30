@@ -42,7 +42,7 @@ defmodule MetaActionsTests do
     {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
     {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 
-    found = MetaActions.get_from_pk(meta.id)
+    found = MetaActions.get_from_id(meta.id)
     assert found.slug == meta.slug
   end
 
@@ -59,7 +59,7 @@ defmodule MetaActionsTests do
     {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 
     MetaActions.update_name(meta, "Chicago Tree Trimming - 2017")
-    updated = MetaActions.get_from_pk(meta.id)
+    updated = MetaActions.get_from_id(meta.id)
     assert updated.name == "Chicago Tree Trimming - 2017"
   end
 
@@ -68,8 +68,8 @@ defmodule MetaActionsTests do
     {:ok, user2} = UserActions.create("Test User2", "password", "test2@example.com")
     {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 
-    MetaActions.update_user(meta, user2.id)
-    updated = MetaActions.get_from_pk(meta.id)
+    MetaActions.update_user(meta, user2)
+    updated = MetaActions.get_from_id(meta.id)
     assert updated.user_id == user2.id
   end
 
@@ -78,7 +78,7 @@ defmodule MetaActionsTests do
     {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 
     MetaActions.update_source_info(meta, [source_url: "https://example.com/tree-trim.json", source_type: "json"])
-    updated = MetaActions.get_from_pk(meta.id)
+    updated = MetaActions.get_from_id(meta.id)
     assert updated.source_url == "https://example.com/tree-trim.json"
     assert updated.source_type == "json"
   end
@@ -88,7 +88,7 @@ defmodule MetaActionsTests do
     {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 
     MetaActions.update_description_info(meta, [description: "blah blah blah", attribution: "City of Chicago"])
-    updated = MetaActions.get_from_pk(meta.id)
+    updated = MetaActions.get_from_id(meta.id)
     assert updated.description == "blah blah blah"
     assert updated.attribution == "City of Chicago"
   end
@@ -104,7 +104,7 @@ defmodule MetaActionsTests do
       refresh_ends_on: %{year: 2017, month: 12, day: 1, hour: 23, minute: 59}
     ]
     MetaActions.update_refresh_info(meta, changes)
-    updated = MetaActions.get_from_pk(meta.id)
+    updated = MetaActions.get_from_id(meta.id)
     assert updated.refresh_rate == "days"
     assert updated.refresh_interval == 1
     assert updated.refresh_starts_on != nil
@@ -146,7 +146,7 @@ defmodule MetaActionsTests do
     {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 
     MetaActions.delete(meta)
-    found = MetaActions.get_from_pk(meta.id)
+    found = MetaActions.get_from_id(meta.id)
     assert found == nil
   end
 

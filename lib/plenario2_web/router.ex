@@ -30,10 +30,10 @@ defmodule Plenario2Web.Router do
     get   "/",        PageController, :index
 
     # auth paths
-    get   "/login",     AuthController, :index
-    post  "/login",     AuthController, :login
+    get   "/login",     AuthController, :get_login
+    post  "/login",     AuthController, :do_login
     post  "/logout",    AuthController, :logout
-    get   "/register",  AuthController, :register
+    get   "/register",  AuthController, :get_register
     post  "/register",  AuthController, :do_register
 
     # meta paths
@@ -45,7 +45,7 @@ defmodule Plenario2Web.Router do
     pipe_through [:browser, :auth, :ensure_auth]
 
     # meta paths
-    get "/datasets/create", MetaController, :create
+    get "/datasets/create", MetaController, :get_create
     post "/datasets/create", MetaController, :do_create
   end
 
