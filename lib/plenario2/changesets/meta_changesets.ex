@@ -47,6 +47,7 @@ defmodule Plenario2.Changesets.MetaChangesets do
   def update_source_info(meta, params) do
     meta
     |> cast(params, [:source_url, :source_type])
+    |> validate_required([:source_url, :source_type])
     |> unique_constraint(:source_url)
     |> validate_source_type()
   end

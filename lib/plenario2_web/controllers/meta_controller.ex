@@ -8,7 +8,10 @@ defmodule Plenario2Web.MetaController do
   def detail(conn, %{"slug" => slug}) do
     user = Guardian.Plug.current_resource(conn)
     meta = MetaActions.get_from_slug(slug, [with_user: true, with_fields: true])
-    owner = user.email_address == meta.user.email_address
+    owner = case user do
+      nil -> false
+      _   -> user.id == meta.user.id
+    end
     case meta do
       nil  -> conn |> put_status(:not_found) |> put_view(ErrorView) |> render("404.html")
       _    -> render(conn, "detail.html", meta: meta, owner: owner)
@@ -49,6 +52,7 @@ defmodule Plenario2Web.MetaController do
 
   defp create_reply({:ok, meta}, conn) do
     conn
+    |> put_status(:created)
     |> put_flash(:success, "#{meta.name} Created!")
     |> redirect(to: meta_path(conn, :list))
   end
@@ -56,6 +60,7 @@ defmodule Plenario2Web.MetaController do
   defp create_reply({:error, changeset}, conn) do
     action = meta_path(conn, :do_create)
     conn
+    |> put_status(:bad_request)
     |> put_flash(:error, "Please review and fix errors below.")
     |> render("create.html", changeset: changeset, action: action)
   end
@@ -64,9 +69,9 @@ defmodule Plenario2Web.MetaController do
     meta = MetaActions.get_from_slug(slug, [with_user: true])
     user = Guardian.Plug.current_resource(conn)
 
-    if user.id != meta.user.id do
+    if user == nil or user.id != meta.user.id do
       conn
-      |> send_resp(401, "unauthorized")
+      |> send_resp(:unauthorized, "unauthorized")
       |> halt()
     else
       changeset = MetaChangesets.update_name(meta, %{})
@@ -79,9 +84,9 @@ defmodule Plenario2Web.MetaController do
     meta = MetaActions.get_from_slug(slug, [with_user: true])
     user = Guardian.Plug.current_resource(conn)
 
-    if user.id != meta.user.id do
+    if user == nil or user.id != meta.user.id do
       conn
-      |> send_resp(401, "unauthorized")
+      |> send_resp(:unauthorized, "unauthorized")
       |> halt()
     else
       MetaActions.update_name(meta, name)
@@ -93,6 +98,7 @@ defmodule Plenario2Web.MetaController do
     action = meta_path(conn, :do_update_name, meta.slug)
     conn
     |> put_flash(:error, "Please view and fix errors below.")
+    |> put_status(:bad_request)
     |> render("update_name.html", changeset: changeset, action: action)
   end
 
@@ -106,9 +112,9 @@ defmodule Plenario2Web.MetaController do
     meta = MetaActions.get_from_slug(slug, [with_user: true])
     user = Guardian.Plug.current_resource(conn)
 
-    if user.id != meta.user.id do
+    if user == nil or user.id != meta.user.id do
       conn
-      |> send_resp(401, "unauthorized")
+      |> send_resp(:unauthorized, "unauthorized")
       |> halt()
     else
       changeset = MetaChangesets.update_description_info(meta, %{})
@@ -121,7 +127,7 @@ defmodule Plenario2Web.MetaController do
     meta = MetaActions.get_from_slug(slug, [with_user: true])
     user = Guardian.Plug.current_resource(conn)
 
-    if user.id != meta.user.id do
+    if user == nil or user.id != meta.user.id do
       conn
       |> send_resp(401, "unauthorized")
       |> halt()
@@ -135,6 +141,7 @@ defmodule Plenario2Web.MetaController do
     action = meta_path(conn, :do_update_description, meta.slug)
     conn
     |> put_flash(:error, "Please view and fix errors below.")
+    |> put_status(:bad_request)
     |> render("update_description.html", changeset: changeset, action: action)
   end
 
@@ -148,7 +155,7 @@ defmodule Plenario2Web.MetaController do
     meta = MetaActions.get_from_slug(slug, [with_user: true])
     user = Guardian.Plug.current_resource(conn)
 
-    if user.id != meta.user.id do
+    if user == nil or user.id != meta.user.id do
       conn
       |> send_resp(401, "unauthorized")
       |> halt()
@@ -163,7 +170,7 @@ defmodule Plenario2Web.MetaController do
     meta = MetaActions.get_from_slug(slug, [with_user: true])
     user = Guardian.Plug.current_resource(conn)
 
-    if user.id != meta.user.id do
+    if user == nil or user.id != meta.user.id do
       conn
       |> send_resp(401, "unauthorized")
       |> halt()
@@ -177,6 +184,7 @@ defmodule Plenario2Web.MetaController do
     action = meta_path(conn, :do_update_source_info, meta.slug)
     conn
     |> put_flash(:error, "Please view and fix errors below.")
+    |> put_status(:bad_request)
     |> render("update_source_info.html", changeset: changeset, action: action)
   end
 
@@ -190,7 +198,7 @@ defmodule Plenario2Web.MetaController do
     meta = MetaActions.get_from_slug(slug, [with_user: true])
     user = Guardian.Plug.current_resource(conn)
 
-    if user.id != meta.user.id do
+    if user == nil or user.id != meta.user.id do
       conn
       |> send_resp(401, "unauthorized")
       |> halt()
@@ -205,7 +213,7 @@ defmodule Plenario2Web.MetaController do
     meta = MetaActions.get_from_slug(slug, [with_user: true])
     user = Guardian.Plug.current_resource(conn)
 
-    if user.id != meta.user.id do
+    if user == nil or user.id != meta.user.id do
       conn
       |> send_resp(401, "unauthorized")
       |> halt()
@@ -219,6 +227,7 @@ defmodule Plenario2Web.MetaController do
     action = meta_path(conn, :do_update_refresh_info, meta.slug)
     conn
     |> put_flash(:error, "Please view and fix errors below.")
+    |> put_status(:bad_request)
     |> render("update_refresh_info.html", changeset: changeset, action: action)
   end
 

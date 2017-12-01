@@ -10,7 +10,7 @@ defmodule Plenario2Web.MetaControllerTest do
 
       response = conn
         |> get(meta_path(conn, :get_create))
-        |> html_response(200)
+        |> html_response(:ok)
 
       assert response =~ "Dataset name"
       assert response =~ "Source url"
@@ -19,7 +19,7 @@ defmodule Plenario2Web.MetaControllerTest do
     test "when not authenticated", %{conn: conn} do
       response = conn
         |> get(meta_path(conn, :get_create))
-        |> response(401)
+        |> response(:unauthorized)
 
       assert response =~ "unauthenticated"
     end
@@ -33,9 +33,9 @@ defmodule Plenario2Web.MetaControllerTest do
       assert length(MetaActions.list()) == 0
 
       conn = post(conn, meta_path(conn, :do_create), %{"meta" => %{"name" => "Test Data", "source_url" => "https://example.com/test-data"}})
-      assert "/datasets/list" = redir_path = redirected_to(conn, 302)
+      assert "/datasets/list" = redir_path = redirected_to(conn, :created)
       conn = get(recycle(conn), redir_path)
-      response = html_response(conn, 200)
+      response = html_response(conn, :ok)
 
       assert response =~ "Datasets"
       assert response =~ "Test Data"
@@ -49,7 +49,7 @@ defmodule Plenario2Web.MetaControllerTest do
 
       response = conn
         |> post(meta_path(conn, :do_create), %{"meta" => %{"name" => "", "source_url" => ""}})
-        |> html_response(200)
+        |> html_response(:bad_request)
 
       assert response =~ "Please review and fix errors below"
     end
@@ -57,7 +57,7 @@ defmodule Plenario2Web.MetaControllerTest do
     test "when not authenticated", %{conn: conn} do
       response = conn
         |> post(meta_path(conn, :do_create), %{"user" => %{"name" => "", "source_url" => ""}})
-        |> response(401)
+        |> response(:unauthorized)
 
       assert response =~ "unauthenticated"
     end
@@ -69,7 +69,7 @@ defmodule Plenario2Web.MetaControllerTest do
 
     response = conn
       |> get(meta_path(conn, :list))
-      |> html_response(200)
+      |> html_response(:ok)
 
     assert response =~ "Datasets"
     assert response =~ "Test Data"
@@ -83,7 +83,7 @@ defmodule Plenario2Web.MetaControllerTest do
 
       response = conn
         |> get(meta_path(conn, :detail, meta.slug))
-        |> html_response(200)
+        |> html_response(:ok)
 
       assert response =~ meta.name
       assert response =~ user.name
@@ -95,6 +95,351 @@ defmodule Plenario2Web.MetaControllerTest do
         |> html_response(404)
 
       assert response =~ "not found"
+    end
+  end
+
+  describe "GET /datasets/:slug/update/name" do
+    test "when authenticated and owner", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
+
+      response = conn
+        |> get(meta_path(conn, :get_update_name, meta.slug))
+        |> html_response(:ok)
+
+      assert response =~ "Update Name"
+    end
+
+    test "when authenticated but not owner", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      UserActions.create("Test User 2", "password", "test2@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test2@example.com", "plaintext_password" => "password"}}))
+
+      response = conn
+        |> get(meta_path(conn, :get_update_name, meta.slug))
+        |> response(:unauthorized)
+
+      assert response =~ "unauthorized"
+    end
+
+    test "when anonymous user", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+
+      response = conn
+        |> get(meta_path(conn, :get_update_name, meta.slug))
+        |> response(:unauthorized)
+
+      assert response =~ "unauthenticated"
+    end
+  end
+
+  describe "PUT /datasets/:slug/update/name" do
+    test "when authenticated and owner with good data", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
+
+      conn = put(conn, meta_path(conn, :do_update_name, meta.slug), %{"slug" => meta.slug, "meta" => %{"name" => "Some new name"}})
+      redir_path = "/datasets/#{meta.slug}/detail"
+      assert redir_path == redirected_to(conn, :found)
+      conn = get(recycle(conn), redir_path)
+      response = html_response(conn, :ok)
+
+      assert response =~ "Some new name"
+    end
+
+    test "when authenticated and owner with bad data", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
+
+      response = conn
+        |> put(meta_path(conn, :do_update_name, meta.slug), %{"slug" => meta.slug, "meta" => %{"name" => ""}})
+        |> html_response(:bad_request)
+
+      assert response =~ "Please view and fix errors below."
+    end
+
+    test "when authenticated but not owner", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      UserActions.create("Test User 2", "password", "test2@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test2@example.com", "plaintext_password" => "password"}}))
+
+      response = conn
+        |> put(meta_path(conn, :do_update_name, meta.slug), %{"slug" => meta.slug, "meta" => %{"name" => "Some new name"}})
+        |> response(:unauthorized)
+
+      assert response =~ "unauthorized"
+    end
+
+    test "when anonymous user", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+
+      response = conn
+        |> put(meta_path(conn, :do_update_name, meta.slug), %{"slug" => meta.slug, "meta" => %{"name" => "Some new name"}})
+        |> response(:unauthorized)
+
+      assert response =~ "unauthenticated"
+    end
+  end
+
+  describe "GET /datasets/:slug/update/description" do
+    test "when authenticated and owner", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
+
+      response = conn
+        |> get(meta_path(conn, :get_update_description, meta.slug))
+        |> html_response(:ok)
+
+      assert response =~ "Update Description"
+    end
+
+    test "when authenticated but not owner", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      UserActions.create("Test User 2", "password", "test2@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test2@example.com", "plaintext_password" => "password"}}))
+
+      response = conn
+        |> get(meta_path(conn, :get_update_description, meta.slug))
+        |> response(:unauthorized)
+
+      assert response =~ "unauthorized"
+    end
+
+    test "when anonymous user", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+
+      response = conn
+        |> get(meta_path(conn, :get_update_description, meta.slug))
+        |> response(:unauthorized)
+
+      assert response =~ "unauthenticated"
+    end
+  end
+
+  describe "PUT /datasets/:slug/update/description" do
+    test "when authenticated and owner with good data", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
+
+      conn = put(conn, meta_path(conn, :do_update_description, meta.slug), %{"slug" => meta.slug, "meta" => %{"description" => "I am a description", "attribution" => "I am attributing this"}})
+      redir_path = "/datasets/#{meta.slug}/detail"
+      assert redir_path == redirected_to(conn, :found)
+      conn = get(recycle(conn), redir_path)
+      response = html_response(conn, :ok)
+
+      assert response =~ "I am a description"
+      assert response =~ "I am attributing this"
+    end
+
+    test "when authenticated but not owner", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      UserActions.create("Test User 2", "password", "test2@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test2@example.com", "plaintext_password" => "password"}}))
+
+      response = conn
+        |> put(meta_path(conn, :do_update_description, meta.slug), %{"slug" => meta.slug, "meta" => %{"description" => "I'm a description", "attribution" => "I'm attributing this"}})
+        |> response(:unauthorized)
+
+      assert response =~ "unauthorized"
+    end
+
+    test "when anonymous user", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+
+      response = conn
+        |> put(meta_path(conn, :do_update_description, meta.slug), %{"slug" => meta.slug, "meta" => %{"description" => "I'm a description", "attribution" => "I'm attributing this"}})
+        |> response(:unauthorized)
+
+      assert response =~ "unauthenticated"
+    end
+  end
+
+  describe "GET /datasets/:slug/update/source" do
+    test "when authenticated and owner", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
+
+      response = conn
+        |> get(meta_path(conn, :get_update_source_info, meta.slug))
+        |> html_response(:ok)
+
+      assert response =~ "Update Source Information"
+    end
+
+    test "when authenticated but not owner", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      UserActions.create("Test User 2", "password", "test2@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test2@example.com", "plaintext_password" => "password"}}))
+
+      response = conn
+        |> get(meta_path(conn, :get_update_source_info, meta.slug))
+        |> response(:unauthorized)
+
+      assert response =~ "unauthorized"
+    end
+
+    test "when anonymous user", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+
+      response = conn
+        |> get(meta_path(conn, :get_update_source_info, meta.slug))
+        |> response(:unauthorized)
+
+      assert response =~ "unauthenticated"
+    end
+  end
+
+  describe "PUT /datasets/:slug/update/source" do
+    test "when authenticated and owner with good data", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
+
+      conn = put(conn, meta_path(conn, :do_update_source_info, meta.slug), %{"slug" => meta.slug, "meta" => %{"source_url" => "https://example.com/different-data", "source_type" => "csv"}})
+      redir_path = "/datasets/#{meta.slug}/detail"
+      assert redir_path == redirected_to(conn, :found)
+      conn = get(recycle(conn), redir_path)
+      response = html_response(conn, :ok)
+
+      assert response =~ "different-data"
+    end
+
+    test "when authenticated and owner with bad data", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
+
+      response = conn
+        |> put(meta_path(conn, :do_update_source_info, meta.slug), %{"slug" => meta.slug, "meta" => %{"source_url" => "", "source_type" => "csv"}})
+        |> html_response(:bad_request)
+
+      assert response =~ "Please view and fix errors below."
+    end
+
+    test "when authenticated but not owner", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      UserActions.create("Test User 2", "password", "test2@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test2@example.com", "plaintext_password" => "password"}}))
+
+      response = conn
+        |> put(meta_path(conn, :do_update_source_info, meta.slug), %{"slug" => meta.slug, "meta" => %{"source_url" => "", "source_type" => "csv"}})
+        |> response(:unauthorized)
+
+      assert response =~ "unauthorized"
+    end
+
+    test "when anonymous user", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+
+      response = conn
+        |> put(meta_path(conn, :do_update_source_info, meta.slug), %{"slug" => meta.slug, "meta" => %{"source_url" => "", "source_type" => "csv"}})
+        |> response(:unauthorized)
+
+      assert response =~ "unauthenticated"
+    end
+  end
+
+  describe "GET /datasets/:slug/update/refresh" do
+    test "when authenticated and owner", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
+
+      response = conn
+        |> get(meta_path(conn, :get_update_refresh_info, meta.slug))
+        |> html_response(:ok)
+
+      assert response =~ "Update Refresh Information"
+    end
+
+    test "when authenticated but not owner", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      UserActions.create("Test User 2", "password", "test2@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test2@example.com", "plaintext_password" => "password"}}))
+
+      response = conn
+        |> get(meta_path(conn, :get_update_refresh_info, meta.slug))
+        |> response(:unauthorized)
+
+      assert response =~ "unauthorized"
+    end
+
+    test "when anonymous user", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+
+      response = conn
+        |> get(meta_path(conn, :get_update_refresh_info, meta.slug))
+        |> response(:unauthorized)
+
+      assert response =~ "unauthenticated"
+    end
+  end
+
+  describe "PUT /datasets/:slug/update/refresh" do
+    test "when authenticated and owner with good data", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
+
+      conn = put(conn, meta_path(conn, :do_update_refresh_info, meta.slug), %{"slug" => meta.slug, "meta" => %{"refresh_rate" => "weeks", "refresh_interval" => "2", "refresh_starts_on" => "", "refresh_ends_on" => ""}})
+      redir_path = "/datasets/#{meta.slug}/detail"
+      assert redir_path == redirected_to(conn, :found)
+      conn = get(recycle(conn), redir_path)
+      response = html_response(conn, :ok)
+
+      assert response =~ "2 weeks"
+    end
+
+    test "when authenticated but not owner", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      UserActions.create("Test User 2", "password", "test2@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test2@example.com", "plaintext_password" => "password"}}))
+
+      response = conn
+        |> put(meta_path(conn, :do_update_refresh_info, meta.slug), %{"slug" => meta.slug, "meta" => %{"refresh_rate" => "weeks", "refresh_interval" => "2", "refresh_starts_on" => "", "refresh_ends_on" => ""}})
+        |> response(:unauthorized)
+
+      assert response =~ "unauthorized"
+    end
+
+    test "when anonymous user", %{conn: conn} do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
+
+      response = conn
+        |> put(meta_path(conn, :do_update_refresh_info, meta.slug), %{"slug" => meta.slug, "meta" => %{"refresh_rate" => "weeks", "refresh_interval" => "2", "refresh_starts_on" => "", "refresh_ends_on" => ""}})
+        |> response(:unauthorized)
+
+      assert response =~ "unauthenticated"
     end
   end
 end
