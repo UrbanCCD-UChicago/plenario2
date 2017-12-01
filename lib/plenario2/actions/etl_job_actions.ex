@@ -9,6 +9,11 @@ defmodule Plenario2.Actions.EtlJobActions do
     |> Repo.insert()
   end
 
+  def create!(meta_id) do
+    {:ok, job} = create(meta_id)
+    job
+  end
+
   def get_from_pk(pk), do: Repo.get_by(EtlJob, id: pk)
 
   def list(), do: Repo.all(EtlJob)

@@ -9,7 +9,11 @@ defmodule Plenario2.Etl.Worker do
   alias Plenario2.Actions.{
     DataSetDiffActions,
     DataSetFieldActions,
+    EtlJobActions,
+    MetaActions
   }
+
+  alias Plenario2.Schemas.Meta
 
   import Ecto.Adapters.SQL, only: [query!: 3]
   use GenServer
@@ -59,7 +63,7 @@ defmodule Plenario2.Etl.Worker do
     ...> })
 
   """
-  @spec download(state :: map) :: map
+  @spec download(state :: map) :: charlist
   def download(state) do
     %{
       meta: meta,
@@ -69,35 +73,92 @@ defmodule Plenario2.Etl.Worker do
     %HTTPoison.Response{body: body} = HTTPoison.get!(meta.source_url)
     path = "/tmp/#{table_name}.csv"
     File.write!(path, body)
-    Map.merge(state, %{worker_downloaded_file_path: path})
+
+    path
   end
 
   @doc """
   Upsert dataset rows from the file specified in `state`. Operations are
   performed in parallel on chunks of the file stream. The first line of 
   the file is skipped, assumed to be a header.
+
+  ## Example
+
+    iex> load(%{
+    ...>   meta_id: 4
+    ...> })
+
   """
   @spec load(state :: map) :: map
   def load(state) do
-    stream = File.stream!(state[:worker_downloaded_file_path]) |> CSV.decode!()
+    meta =
+      MetaActions.get_by_pk_preload(state[:meta_id], [
+        :data_set_constraints,
+        :data_set_fields
+      ])
 
-    header =
-      Enum.take(stream, 1)
-      |> List.first()
-      |> Enum.map(&String.trim/1)
+    job = EtlJobActions.create!(meta.id)
+    columns = MetaActions.get_columns(meta)
+    temp_file_path = download(state)
 
-    stream
+    # TODO(heyzoos) I'm expecting the first constraint to be the primary
+    # key - it's jank but it'll have to do for now
+    [constraint | _] = meta.data_set_constraints()
+    constraint = constraint.field_names()
+
+    state =
+      Map.merge(state, %{
+        job_id: job.id,
+        columns: columns,
+        table_name: Meta.get_dataset_table_name(meta),
+        constraint: constraint
+      })
+
+    File.stream!(temp_file_path)
+    |> CSV.decode!()
     |> Stream.drop(1)
     |> Stream.chunk_every(100)
     |> Enum.map(fn chunk ->
-         state = Map.merge(state, %{rows: chunk, columns: header})
-         spawn(__MODULE__, :upsert!, [self(), state])
+         state = Map.merge(state, %{rows: chunk})
+         spawn_link(__MODULE__, :load_chunk!, [self(), state])
        end)
     |> Enum.map(fn pid ->
          receive do
-           {^pid, result} -> result
+           {^pid, result} -> IO.inspect("Received #{result}!")
          end
        end)
+  end
+
+  def load_chunk!(sender, state) do
+    %{
+      meta_id: meta_id,
+      job_id: job_id,
+      columns: columns,
+      table_name: table,
+      rows: rows,
+      constraint: constraint
+    } = state
+
+    # existing_rows = contains!(columns, table, )
+    inserted_rows = upsert!(table, columns, rows, constraint)
+
+    # IO.inspect(existing_rows)
+    IO.inspect(inserted_rows)
+
+    # result = Enum.zip(existing_rows, inserted_rows)
+    # |> Enum.map(fn {existing_row, inserted_row} ->
+    #   constraint_id = %{}
+    #   create_diffs(
+    #     meta_id,
+    #     constraint_id,
+    #     job_id,
+    #     columns,
+    #     existing_row, 
+    #     inserted_row
+    #   )
+    # end)
+
+    send(sender, %{})
   end
 
   @doc """
@@ -107,103 +168,57 @@ defmodule Plenario2.Etl.Worker do
 
   ## Example
 
-    iex> upsert!(%{
-    ...>   meta: %Meta{},
-    ...>   table_name: "chicago_tree_trimmings",
-    ...>   columns: ["pk", "datetime", "location", "data"]
-    ...>   rows: [
-    ...>     [1, "2017-01-01T00:00:00", "(0, 0)", "eh?"]
-    ...>   ]
-    ...> })
+    iex> upsert!()
 
   """
-  @spec upsert!(sender :: pid, state :: map) :: :ok
-  def upsert!(sender, state) do
-    %{
-      meta: meta,
-      table_name: table_name,
-      rows: rows,
-      columns: columns
-    } = state
-
-    # TODO(heyzoos) this will be moved to the process that spawns the upsert
-    # subprocesses so that the query for dataset metadata is performed only
-    # once
-    fields = DataSetFieldActions.list_for_meta(meta)
-
-    [pkfield | _] =
-      Enum.filter(fields, fn field ->
-        String.contains?(field.opts, "primary key")
-      end)
-
+  @spec upsert!(
+    table :: charlist,
+    columns :: list[charlist],
+    rows :: list,
+    constraint :: list[charlist]
+  ) :: list
+  def upsert!(table, columns, rows, constraint) do
     sql =
       EEx.eval_file(
         @upsert_template,
-        table: table_name,
+        table: table,
         columns: columns,
         rows: rows,
-        pk: pkfield.name
+        pk: constraint
       )
 
-    result = query!(Plenario2.Repo, sql, [])
-    send(sender, {self(), result})
+    %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, sql, [])
+    rows
   end
 
-  # TODO(heyzoos) this and upsert are really similar, refactor this
   @doc """
   Query all values whose primary key might clash with a candidate row.
 
   ## Example
 
-    iex> contains!(%{
-    ...>   meta: %Meta{},
-    ...>   table_name: "chicago_tree_trimmings",
-    ...>   rows: [
-    ...>     [1, "2017-01-01T00:00:00", "(0, 0)"]
-    ...>   ]
-    ...> })
+    iex> contains!()
 
   """
-  @spec contains!(sender :: pid, state :: map) :: :ok
-  def contains!(sender, state) do
-    %{
-      meta: meta,
-      table_name: table_name,
-      rows: rows,
-      columns: columns
-    } = state
+  @spec contains!(
+    table :: charlist, 
+    columns :: list[charlist], 
+    rows :: list,
+    constraint :: list[charlist]
+  ) :: list
+  def contains!(table, columns, rows, constraint) do
+    IO.puts(
+      sql =
+        EEx.eval_file(
+          @contains_template,
+          table: table,
+          columns: columns,
+          pks: rows,
+          constraint: constraint
+        )
+    )
 
-    # TODO(heyzoos) this will be moved to the process that spawns the upsert
-    # subprocesses so that the query for dataset metadata is performed only
-    # once
-    fields = DataSetFieldActions.list_for_meta(meta)
-
-    [pkfield | _] =
-      Enum.filter(fields, fn field ->
-        String.contains?(field.opts, "primary key")
-      end)
-
-    pkname = pkfield.name()
-
-    {^pkname, pkindex} =
-      Enum.with_index(columns)
-      |> Enum.filter(fn {column, _} -> column == pkname end)
-      |> List.first()
-
-    incoming_pks = Enum.map(rows, &Enum.fetch!(&1, pkindex))
-
-    sql =
-      EEx.eval_file(
-        @contains_template,
-        table: table_name,
-        columns: columns,
-        rows: rows,
-        pk: pkname,
-        incoming_pks: incoming_pks
-      )
-
-    result = query!(Plenario2.Repo, sql, [])
-    send(sender, {self(), result})
+    %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, sql, [])
+    rows
   end
 
   @spec create_diffs(
@@ -221,16 +236,17 @@ defmodule Plenario2.Etl.Worker do
          if original_value !== updated_value do
            column = Enum.fetch!(columns, index)
 
-           {:ok, diff} = DataSetDiffActions.create(
-             meta_id,
-             constraint_id,
-             job_id,
-             column,
-             original_value,
-             updated_value,
-             DateTime.utc_now(),
-             %{event_id: "my-unique-id"}
-           )
+           {:ok, diff} =
+             DataSetDiffActions.create(
+               meta_id,
+               constraint_id,
+               job_id,
+               column,
+               original_value,
+               updated_value,
+               DateTime.utc_now(),
+               %{event_id: "my-unique-id"}
+             )
 
            diff
          end

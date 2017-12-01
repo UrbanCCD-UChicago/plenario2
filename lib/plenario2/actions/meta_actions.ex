@@ -32,7 +32,7 @@ defmodule Plenario2.Actions.MetaActions do
   def get_from_pk(pk), do: Repo.one(from(m in Meta, where: m.id == ^pk))
 
   @doc """
-  Get a single instance of `Meta` with any field specified by `preloads`
+  Load a single row of `Meta` with any field specified by `preloads`
   preloaded.
 
   ## Examples
@@ -51,6 +51,22 @@ defmodule Plenario2.Actions.MetaActions do
         preload: ^preloads
       )
     )
+  end
+
+  @doc """
+  Get a list of column names for a `Meta` struct. 
+
+  ## Examples
+
+    iex> get_columns(meta)
+
+  """
+  @spec get_columns(meta :: Meta) :: list[charlist]
+  def get_columns(meta) do
+    meta = Repo.preload(meta, :data_set_fields)
+    for field <- meta.data_set_fields() do
+      field.name()
+    end
   end
 
   def get_from_slug(slug), do: Repo.one(from(m in Meta, where: m.slug == ^slug))
