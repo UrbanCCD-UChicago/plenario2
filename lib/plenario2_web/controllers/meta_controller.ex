@@ -59,4 +59,172 @@ defmodule Plenario2Web.MetaController do
     |> put_flash(:error, "Please review and fix errors below.")
     |> render("create.html", changeset: changeset, action: action)
   end
+
+  def get_update_name(conn, %{"slug" => slug}) do
+    meta = MetaActions.get_from_slug(slug, [with_user: true])
+    user = Guardian.Plug.current_resource(conn)
+
+    if user.id != meta.user.id do
+      conn
+      |> send_resp(401, "unauthorized")
+      |> halt()
+    else
+      changeset = MetaChangesets.update_name(meta, %{})
+      action = meta_path(conn, :do_update_name, slug)
+      render(conn, "update_name.html", changeset: changeset, action: action)
+    end
+  end
+
+  def do_update_name(conn, %{"slug" => slug, "meta" => %{"name" => name}}) do
+    meta = MetaActions.get_from_slug(slug, [with_user: true])
+    user = Guardian.Plug.current_resource(conn)
+
+    if user.id != meta.user.id do
+      conn
+      |> send_resp(401, "unauthorized")
+      |> halt()
+    else
+      MetaActions.update_name(meta, name)
+      |> update_name_reply(conn, meta)
+    end
+  end
+
+  defp update_name_reply({:error, changeset}, conn, meta) do
+    action = meta_path(conn, :do_update_name, meta.slug)
+    conn
+    |> put_flash(:error, "Please view and fix errors below.")
+    |> render("update_name.html", changeset: changeset, action: action)
+  end
+
+  defp update_name_reply({:ok, meta}, conn, _) do
+    conn
+    |> put_flash(:success, "Updated name")
+    |> redirect(to: meta_path(conn, :detail, meta.slug))
+  end
+
+  def get_update_description(conn, %{"slug" => slug}) do
+    meta = MetaActions.get_from_slug(slug, [with_user: true])
+    user = Guardian.Plug.current_resource(conn)
+
+    if user.id != meta.user.id do
+      conn
+      |> send_resp(401, "unauthorized")
+      |> halt()
+    else
+      changeset = MetaChangesets.update_description_info(meta, %{})
+      action = meta_path(conn, :do_update_description, slug)
+      render(conn, "update_description.html", changeset: changeset, action: action, meta: meta)
+    end
+  end
+
+  def do_update_description(conn, %{"slug" => slug, "meta" => %{"description" => description, "attribution" => attribution}}) do
+    meta = MetaActions.get_from_slug(slug, [with_user: true])
+    user = Guardian.Plug.current_resource(conn)
+
+    if user.id != meta.user.id do
+      conn
+      |> send_resp(401, "unauthorized")
+      |> halt()
+    else
+      MetaActions.update_description_info(meta, [description: description, attribution: attribution])
+      |> update_description_reply(conn, meta)
+    end
+  end
+
+  defp update_description_reply({:error, changeset}, conn, meta) do
+    action = meta_path(conn, :do_update_description, meta.slug)
+    conn
+    |> put_flash(:error, "Please view and fix errors below.")
+    |> render("update_description.html", changeset: changeset, action: action)
+  end
+
+  defp update_description_reply({:ok, meta}, conn, _) do
+    conn
+    |> put_flash(:success, "Updated description information")
+    |> redirect(to: meta_path(conn, :detail, meta.slug))
+  end
+
+  def get_update_source_info(conn, %{"slug" => slug}) do
+    meta = MetaActions.get_from_slug(slug, [with_user: true])
+    user = Guardian.Plug.current_resource(conn)
+
+    if user.id != meta.user.id do
+      conn
+      |> send_resp(401, "unauthorized")
+      |> halt()
+    else
+      changeset = MetaChangesets.update_source_info(meta, %{})
+      action = meta_path(conn, :do_update_source_info, slug)
+      render(conn, "update_source_info.html", changeset: changeset, action: action)
+    end
+  end
+
+  def do_update_source_info(conn, %{"slug" => slug, "meta" => %{"source_url" => source_url, "source_type" => source_type}}) do
+    meta = MetaActions.get_from_slug(slug, [with_user: true])
+    user = Guardian.Plug.current_resource(conn)
+
+    if user.id != meta.user.id do
+      conn
+      |> send_resp(401, "unauthorized")
+      |> halt()
+    else
+      MetaActions.update_source_info(meta, [source_url: source_url, source_type: source_type])
+      |> update_source_info_reply(conn, meta)
+    end
+  end
+
+  defp update_source_info_reply({:error, changeset}, conn, meta) do
+    action = meta_path(conn, :do_update_source_info, meta.slug)
+    conn
+    |> put_flash(:error, "Please view and fix errors below.")
+    |> render("update_source_info.html", changeset: changeset, action: action)
+  end
+
+  defp update_source_info_reply({:ok, meta}, conn, _) do
+    conn
+    |> put_flash(:success, "Updated source information")
+    |> redirect(to: meta_path(conn, :detail, meta.slug))
+  end
+
+  def get_update_refresh_info(conn, %{"slug" => slug}) do
+    meta = MetaActions.get_from_slug(slug, [with_user: true])
+    user = Guardian.Plug.current_resource(conn)
+
+    if user.id != meta.user.id do
+      conn
+      |> send_resp(401, "unauthorized")
+      |> halt()
+    else
+      changeset = MetaChangesets.update_refresh_info(meta, %{})
+      action = meta_path(conn, :do_update_refresh_info, slug)
+      render(conn, "update_refresh_info.html", changeset: changeset, action: action)
+    end
+  end
+
+  def do_update_refresh_info(conn, %{"slug" => slug, "meta" => %{"refresh_rate" => refresh_rate, "refresh_interval" => refresh_interval, "refresh_starts_on" => refresh_starts_on, "refresh_ends_on" => refresh_ends_on}}) do
+    meta = MetaActions.get_from_slug(slug, [with_user: true])
+    user = Guardian.Plug.current_resource(conn)
+
+    if user.id != meta.user.id do
+      conn
+      |> send_resp(401, "unauthorized")
+      |> halt()
+    else
+      MetaActions.update_refresh_info(meta, [refresh_rate: refresh_rate, refresh_interval: refresh_interval, refresh_starts_on: refresh_starts_on, refresh_ends_on: refresh_ends_on])
+      |> update_refresh_info_reply(conn, meta)
+    end
+  end
+
+  defp update_refresh_info_reply({:error, changeset}, conn, meta) do
+    action = meta_path(conn, :do_update_refresh_info, meta.slug)
+    conn
+    |> put_flash(:error, "Please view and fix errors below.")
+    |> render("update_refresh_info.html", changeset: changeset, action: action)
+  end
+
+  defp update_refresh_info_reply({:ok, meta}, conn, _) do
+    conn
+    |> put_flash(:success, "Updated refresh information")
+    |> redirect(to: meta_path(conn, :detail, meta.slug))
+  end
 end
