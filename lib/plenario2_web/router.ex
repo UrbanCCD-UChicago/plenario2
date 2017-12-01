@@ -47,6 +47,14 @@ defmodule Plenario2Web.Router do
     # meta paths
     get "/datasets/create", MetaController, :get_create
     post "/datasets/create", MetaController, :do_create
+    get "/datasets/:slug/update/name", MetaController, :get_update_name
+    put "/datasets/:slug/update/name", MetaController, :do_update_name
+    get "/datasets/:slug/update/description", MetaController, :get_update_description
+    put "/datasets/:slug/update/description", MetaController, :do_update_description
+    get "/datasets/:slug/update/source", MetaController, :get_update_source_info
+    put "/datasets/:slug/update/source", MetaController, :do_update_source_info
+    get "/datasets/:slug/update/refresh", MetaController, :get_update_refresh_info
+    put "/datasets/:slug/update/refresh", MetaController, :do_update_refresh_info
   end
 
   # Other scopes may use custom stacks.
