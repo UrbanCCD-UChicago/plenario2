@@ -27,6 +27,16 @@ defmodule Plenario2.Etl.WorkerTest do
   @fixture_name "Chicago Tree Trimming"
   @fixture_source "https://example.com/chicago-tree-trimming"
   @fixture_columns ["pk", "datetime", "location", "data"]
+  @select_query "select #{Enum.join(@fixture_columns, ",")} from chicago_tree_trimming"
+  @insert_rows [
+    [1, "2017-01-01T00:00:00+00:00", "(0, 1)", "crackers"],
+    [2, "2017-01-02T00:00:00+00:00", "(0, 2)", "and"],
+    [3, "2017-01-03T00:00:00+00:00", "(0, 3)", "cheese"]
+  ]
+  @upsert_rows [
+    [1, "2017-01-01T00:00:00+00:00", "(0, 1)", "biscuits"],
+    [4, "2017-01-04T00:00:00+00:00", "(0, 4)", "gromit"]
+  ]
 
   setup do
     {:ok, user} = UserActions.create("user", "password", "email@example.com")
@@ -95,44 +105,24 @@ defmodule Plenario2.Etl.WorkerTest do
       body: """
       pk, datetime, location, data
       1, 2017-01-01T00:00:00,"(0, 1)",biscuits
-      3, 2017-04-04T00:00:00,"(0, 4)",gromit
+      4, 2017-04-04T00:00:00,"(0, 4)",gromit
       """
     }
   end
 
-  test "download/1 downloads file to correct location", context do
+  test :download! do
     with_mock HTTPoison, get!: &mock_csv_data_request/1 do
-      %{meta: meta, table_name: table_name} = context
+      name = "chicago_tree_trimming"
+      source = "https://example.com/dataset.csv"
+      path = Worker.download!(name, source)
 
-      temp_file_path =
-        Worker.download(%{
-          meta: meta,
-          table_name: table_name
-        })
-
-      assert temp_file_path === "/tmp/#{table_name}.csv"
-      assert File.exists?("/tmp/#{table_name}.csv")
+      assert path === "/tmp/#{name}.csv"
+      assert File.exists?("/tmp/#{name}.csv")
     end
   end
 
-  @insert_rows [
-    [1, "2017-01-01T00:00:00+00:00", "(0, 1)", "crackers"],
-    [2, "2017-01-02T00:00:00+00:00", "(0, 2)", "and"],
-    [3, "2017-01-03T00:00:00+00:00", "(0, 3)", "cheese"]
-  ]
-
-  @select_query "select pk, datetime, location, data from chicago_tree_trimming"
-
-  test "upsert!/2 inserts a set of new records", context do
-    %{meta: meta, table_name: table_name} = context
-
-    Worker.upsert!(self(), %{
-      meta: meta,
-      table_name: table_name,
-      rows: @insert_rows,
-      columns: @fixture_columns
-    })
-
+  test :upsert!, %{meta: meta} do
+    Worker.upsert!(meta, @insert_rows)
     %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
 
     assert [
@@ -142,112 +132,74 @@ defmodule Plenario2.Etl.WorkerTest do
     ] = Enum.sort(rows)
   end
 
-  @update_rows [
-    [1, "2017-01-01T00:00:00", "(0, 1)", "biscuits"],
-    [4, "2017-01-04T00:00:00", "(0, 4)", "gromit"]
-  ]
-
-  test "upsert!/2 inserts and updates new and existing records", context do
-    %{meta: meta, table_name: table_name} = context
-
-    Worker.upsert!(self(), %{
-      meta: meta,
-      table_name: table_name,
-      rows: @insert_rows,
-      columns: @fixture_columns
-    })
-
-    Worker.upsert!(self(), %{
-      meta: meta,
-      table_name: table_name,
-      rows: @update_rows,
-      columns: @fixture_columns
-    })
-
+  test :"upsert!/2 updates", %{meta: meta} do
+    Worker.upsert!(meta, @insert_rows)
+    Worker.upsert!(meta, @upsert_rows)
     %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
 
-    # TODO(heyzoos) this assertion is done with a match because the timezone 
-    # information seems to change depending on the host machine. Need to fix
-    # whatever causes that behaviour
     assert [
       [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "biscuits"],
       [2, {{2017, 1, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
-      [3, {{2017,185G 1, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"],
+      [3, {{2017, 1, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"],
       [4, {{2017, 1, 4}, {_, 0, 0, 0}}, "(0, 4)", "gromit"]
     ] = Enum.sort(rows)
   end
 
-  test "contains!/4 retreives rows contained by upsert rows", context do
-    %{meta: meta, table_name: table} = context
-
-    Worker.upsert!(table, ["pk", "datetime", "location", "data"], @insert_rows, ["pk"])
-
-    rows = Worker.contains!(table, columns, rows, constraint)
-
+  test :contains!, %{meta: meta} do
+    Worker.upsert!(meta, @insert_rows)
+    rows = Worker.contains!(meta, @upsert_rows)
     assert [[1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "crackers"]] = rows
   end
 
-  # test "load/1 ingests the sample data", context do
-  #   with_mock HTTPoison, get!: &mock_csv_data_request/1 do
-  #     state = context
+  test :create_diffs, %{meta: meta, job: job} do
+    row1 = ["original", "original", "original"]
+    row2 = ["original", "changed", "changed"]
+    Worker.create_diffs(meta, job, row1, row2)
+    diffs = Repo.all(DataSetDiff)
+    assert Enum.count(diffs) === 2
+  end
 
-  #     state
-  #     |> Worker.load()
+  test :load_chunk, %{meta: meta, job: job} do
+    Worker.load_chunk!(self(), meta, job, @insert_rows)
+    %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
 
-  #     %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
+    assert [
+      [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "crackers"],
+      [2, {{2017, 1, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
+      [3, {{2017, 1, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"]
+    ] = Enum.sort(rows)
+  end
 
-  #     assert [
-  #       [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "crackers"],
-  #       [2, {{2017, 2, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
-  #       [3, {{2017, 3, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"]
-  #     ] = Enum.sort(rows)
-  #   end
-  # end
+  test :load!, %{meta: meta} do
+    with_mock HTTPoison, get!: &mock_csv_data_request/1 do
+      Worker.load(%{meta_id: meta.id()})
+      %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
 
-  # test "load/1 generates diffs upon upsert", context do
-  #   state = context
+      assert [
+        [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "crackers"],
+        [2, {{2017, 2, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
+        [3, {{2017, 3, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"]
+      ] = Enum.sort(rows)
+    end
+  end
 
-  #   with_mock HTTPoison, get!: &mock_csv_data_request/1 do
-  #     Worker.load(state)
-  #   end
+  test "load/1 generates diffs upon upsert", %{meta: meta} do
+    with_mock HTTPoison, get!: &mock_csv_data_request/1 do
+      Worker.load(%{meta_id: meta.id()})
+    end
 
-  #   with_mock HTTPoison, get!: &mock_csv_update_request/1 do
-  #     Worker.load(state)
+    with_mock HTTPoison, get!: &mock_csv_update_request/1 do
+      Worker.load(%{meta_id: meta.id()})
+      %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
+      diffs = Repo.all(DataSetDiff)
 
-  #     %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
-
-  #     assert [
-  #       [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "biscuits"],
-  #       [2, {{2017, 2, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
-  #       [3, {{2017, 3, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"],
-  #       [4, {{2017, 4, 4}, {_, 0, 0, 0}}, "(0, 4)", "gromit"]
-  #     ] = Enum.sort(rows)
-
-  #     diffs = Repo.all(DataSetDiff)
-  #     assert Enum.count(diffs) === 1
-  #   end
-  # end
-
-  # describe "create_diffs/6" do
-  #   test "creates diff database entries with arbitrary data", context do
-  #     meta = MetaActions.get_by_pk_preload(context[:meta].id(), [:data_set_fields])
-  #     columns = for field <- meta.data_set_fields() do field.name() end
-
-  #     row1 = ["original", "original", "original"]
-  #     row2 = ["original", "changed", "changed"]
-  #     Worker.create_diffs(
-  #       context[:meta].id(),
-  #       context[:constraint].id(),
-  #       context[:job].id(),
-  #       columns,
-  #       row1,
-  #       row2
-  #     )
-
-  #     # ** (Postgrex.Error) ERROR 42703 (undefined_column): column d0.data_set_constraint_id does not exist
-  #     diffs = Repo.all(DataSetDiff)
-  #     # IO.inspect(diffs)
-  #     assert Enum.count(diffs) === 2
-  #   end
-  # end
+      assert [
+        [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "biscuits"],
+        [2, {{2017, 2, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
+        [3, {{2017, 3, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"],
+        [4, {{2017, 4, 4}, {_, 0, 0, 0}}, "(0, 4)", "gromit"]
+      ] = Enum.sort(rows)
+      assert Enum.count(diffs) === 1
+    end
+  end
 end

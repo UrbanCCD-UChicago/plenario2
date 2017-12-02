@@ -51,29 +51,20 @@ defmodule Plenario2.Etl.Worker do
   end
 
   @doc """
-  Downloads the file located at the `source_url` for our `state`. Updates
-  `state` to include a `worker_downloaded_file_path` key with the location
-  of the downloaded file.
+  Downloads the file located at the `source` with to /tmp/ with a file name
+  of `name`. Returns path of downloaded file.
 
   ## Example
 
-    iex> download(%{
-    ...>   meta: %Meta{},
-    ...>   table_name: "chicago_tree_trimmings"
-    ...> })
+    iex> download!("file_name", "https://source.url/")
+    "/tmp/file_name.csv"
 
   """
-  @spec download(state :: map) :: charlist
-  def download(state) do
-    %{
-      meta: meta,
-      table_name: table_name
-    } = state
-
-    %HTTPoison.Response{body: body} = HTTPoison.get!(meta.source_url)
-    path = "/tmp/#{table_name}.csv"
+  @spec download!(name :: charlist, source :: charlist) :: charlist
+  def download!(name, source) do
+    %HTTPoison.Response{body: body} = HTTPoison.get!(source)
+    path = "/tmp/#{name}.csv"
     File.write!(path, body)
-
     path
   end
 
@@ -98,154 +89,115 @@ defmodule Plenario2.Etl.Worker do
       ])
 
     job = EtlJobActions.create!(meta.id)
-    columns = MetaActions.get_columns(meta)
-    temp_file_path = download(state)
+    path = download!(Meta.get_dataset_table_name(meta), meta.source_url())
 
-    # TODO(heyzoos) I'm expecting the first constraint to be the primary
-    # key - it's jank but it'll have to do for now
-    [constraint | _] = meta.data_set_constraints()
-    constraint = constraint.field_names()
-
-    state =
-      Map.merge(state, %{
-        job_id: job.id,
-        columns: columns,
-        table_name: Meta.get_dataset_table_name(meta),
-        constraint: constraint
-      })
-
-    File.stream!(temp_file_path)
+    File.stream!(path)
     |> CSV.decode!()
     |> Stream.drop(1)
     |> Stream.chunk_every(100)
     |> Enum.map(fn chunk ->
-         state = Map.merge(state, %{rows: chunk})
-         spawn_link(__MODULE__, :load_chunk!, [self(), state])
+         spawn_link(__MODULE__, :load_chunk!, [self(), meta, job, chunk])
        end)
     |> Enum.map(fn pid ->
          receive do
-           {^pid, result} -> IO.inspect("Received #{result}!")
+           {^pid, result} -> result
          end
        end)
   end
 
-  def load_chunk!(sender, state) do
-    %{
-      meta_id: meta_id,
-      job_id: job_id,
-      columns: columns,
-      table_name: table,
-      rows: rows,
-      constraint: constraint
-    } = state
+  def load_chunk!(sender, meta, job, rows) do
+    existing_rows = contains!(meta, rows)
+    inserted_rows = upsert!(meta, rows)
+    pairs = Enum.zip(existing_rows, inserted_rows)
+    result = Enum.map(pairs, fn {existing_row, inserted_row} ->
+      create_diffs(meta, job, existing_row, inserted_row)
+    end)
 
-    # existing_rows = contains!(columns, table, )
-    inserted_rows = upsert!(table, columns, rows, constraint)
-
-    # IO.inspect(existing_rows)
-    IO.inspect(inserted_rows)
-
-    # result = Enum.zip(existing_rows, inserted_rows)
-    # |> Enum.map(fn {existing_row, inserted_row} ->
-    #   constraint_id = %{}
-    #   create_diffs(
-    #     meta_id,
-    #     constraint_id,
-    #     job_id,
-    #     columns,
-    #     existing_row, 
-    #     inserted_row
-    #   )
-    # end)
-
-    send(sender, %{})
+    send(sender, {self(), result})
   end
 
   @doc """
-  Upsert a chunk of rows. It's worth nothing that because Postgres wants
-  you to be explicit about what you update, this method updates all fields
-  with the exception of the table's primary key.
+  Upsert a dataset with a chunk of `rows`. 
 
   ## Example
 
-    iex> upsert!()
+    iex> upsert!(meta, rows)
+    # [[1, "inserted", "row"]]
 
   """
-  @spec upsert!(
-    table :: charlist,
-    columns :: list[charlist],
-    rows :: list,
-    constraint :: list[charlist]
-  ) :: list
-  def upsert!(table, columns, rows, constraint) do
+  @spec upsert!(meta :: Meta, rows :: list) :: list
+  def upsert!(meta, rows) do
+    template_query!(@upsert_template, meta, rows)
+  end
+
+  @doc """
+  Query existing rows that might conflict with an insert query using `rows`.
+
+  ## Example
+
+    iex> upsert!(meta, rows)
+    # [[1, "might", "conflict"]]
+
+  """
+  @spec contains!(meta :: Meta, rows :: list) :: list
+  def contains!(meta, rows) do
+    template_query!(@contains_template, meta, rows)
+  end
+
+  defp template_query!(template, meta, rows) do
+    table = Meta.get_dataset_table_name(meta)
+    columns = MetaActions.get_columns(meta)
+    constraints = MetaActions.get_constraints(meta)
+
     sql =
       EEx.eval_file(
-        @upsert_template,
+        template,
         table: table,
         columns: columns,
         rows: rows,
-        pk: constraint
+        constraints: constraints
       )
 
     %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, sql, [])
     rows
   end
 
-  @doc """
-  Query all values whose primary key might clash with a candidate row.
+  def create_diffs(meta, job, original, updated) do
+    table = Meta.get_dataset_table_name(meta)
+    columns = MetaActions.get_columns(meta)
+    constraint = MetaActions.get_constraint(meta)
+    constraints = MetaActions.get_constraints(meta)
 
-  ## Example
+    constraint_indices = Enum.map(constraints, fn constraint ->
+      Enum.find_index(columns, & &1 == constraint) 
+    end) 
 
-    iex> contains!()
+    constraint_values = Enum.map(constraint_indices, fn index ->
+      Enum.at(original, index)
+    end)
 
-  """
-  @spec contains!(
-    table :: charlist, 
-    columns :: list[charlist], 
-    rows :: list,
-    constraint :: list[charlist]
-  ) :: list
-  def contains!(table, columns, rows, constraint) do
-    IO.puts(
-      sql =
-        EEx.eval_file(
-          @contains_template,
-          table: table,
-          columns: columns,
-          pks: rows,
-          constraint: constraint
-        )
-    )
+    constraint_map = Enum.zip([constraints, constraint_values]) |> Map.new()
 
-    %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, sql, [])
-    rows
-  end
-
-  @spec create_diffs(
-          meta_id :: integer,
-          constraint_id :: integer,
-          job_id :: integer,
-          columns :: list,
-          origin :: list,
-          updated :: list
-        ) :: list
-  def create_diffs(meta_id, constraint_id, job_id, columns, original, updated) do
     List.zip([original, updated])
     |> Enum.with_index()
     |> Enum.map(fn {{original_value, updated_value}, index} ->
          if original_value !== updated_value do
            column = Enum.fetch!(columns, index)
 
+           # TODO(heyzoos) inspect will render values in a way that is 
+           # is probably unusable to end users. Need a way to guess the
+           # correct string format for a value.
+
            {:ok, diff} =
              DataSetDiffActions.create(
-               meta_id,
-               constraint_id,
-               job_id,
+               meta.id(),
+               constraint.id(),
+               job.id(),
                column,
-               original_value,
-               updated_value,
+               inspect(original_value),
+               inspect(updated_value),
                DateTime.utc_now(),
-               %{event_id: "my-unique-id"}
+               constraint_map
              )
 
            diff
@@ -253,3 +205,5 @@ defmodule Plenario2.Etl.Worker do
        end)
   end
 end
+
+# 2017:12:01T08:48:00 LC 255

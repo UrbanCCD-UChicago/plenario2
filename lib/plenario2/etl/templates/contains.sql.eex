@@ -2,14 +2,32 @@
 -- ==================
 -- columns          list[charlist]
 -- table            charlist
--- constraint       list[charlist]
--- incoming_pks     list
+-- constraints      list[charlist]
+-- pks              list
+
+
+<% 
+constraint_indices = Enum.map(constraints, fn constraint ->
+   Enum.find_index(columns, & &1 == constraint) 
+end) 
+
+pks = Enum.map(rows, fn row ->
+  Enum.map(constraint_indices, fn index ->
+    Enum.at(row, index)
+  end)
+end)
+%>
+
 
 SELECT 
   "<%= Enum.join(columns, ~s{", "}) %>"
 FROM
   "<%= table %>" AS t 
 WHERE
-  "(<%= Enum.join(constraint, ~s{","}) %>)"
+  ("<%= Enum.join(constraints, ~s{","}) %>")
 IN
-  (<%= Enum.join(incoming_pks, ~s{,}) %>)
+  (
+    <%= for {pk, index} <- Enum.with_index(pks) do %>
+      (<%= Enum.join(pk, ~s{),(}) %>)<%= if index != Enum.count(pks) - 1 do %>,<% end %>
+    <% end %>
+  )

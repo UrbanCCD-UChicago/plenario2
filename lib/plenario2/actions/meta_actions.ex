@@ -1,7 +1,10 @@
 defmodule Plenario2.Actions.MetaActions do
   import Ecto.Query
   alias Plenario2.Changesets.MetaChangesets
-  alias Plenario2.Schemas.Meta
+  alias Plenario2.Schemas.{
+    DataSetConstraint,
+    Meta
+  }
   alias Plenario2.Repo
 
   def create(name, user_id, source_url, details \\ []) do
@@ -59,6 +62,7 @@ defmodule Plenario2.Actions.MetaActions do
   ## Examples
 
     iex> get_columns(meta)
+    ["id", "location", "datetime", "observation"]
 
   """
   @spec get_columns(meta :: Meta) :: list[charlist]
@@ -67,6 +71,37 @@ defmodule Plenario2.Actions.MetaActions do
     for field <- meta.data_set_fields() do
       field.name()
     end
+  end
+
+  @doc """
+  Get the first constraint association for the given `meta`.
+
+  ## Examples
+
+    iex> get_constraint(meta)
+    %DataSetConstraint{}
+
+  """
+  @spec get_constraint(meta :: Meta) :: DataSetConstraint
+  def get_constraint(meta) do
+    meta = Repo.preload(meta, :data_set_constraints)
+    [constraint | _] = meta.data_set_constraints()
+    constraint
+  end
+
+  @doc """
+  Get the list of keys specified by the first `DataSetStraint` association
+  of a `Meta` struct.
+
+  ## Examples
+
+    iex> get_constraints(meta)
+    ["datetime", "location"]
+
+  """
+  @spec get_constraints(meta :: Meta) :: list[charlist]
+  def get_constraints(meta) do
+    get_constraint(meta).field_names()
   end
 
   def get_from_slug(slug), do: Repo.one(from(m in Meta, where: m.slug == ^slug))
