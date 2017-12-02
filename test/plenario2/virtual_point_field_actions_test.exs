@@ -1,7 +1,8 @@
 defmodule VirtualPointFieldActionsTests do
   use ExUnit.Case, async: true
-  alias Plenario2.Actions.{DataSetFieldActions, VirtualPointFieldActions, MetaActions, UserActions}
+  alias Plenario2.Actions.{DataSetFieldActions, VirtualPointFieldActions, MetaActions}
   alias Plenario2.Repo
+  alias Plenario2Auth.UserActions
 
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)

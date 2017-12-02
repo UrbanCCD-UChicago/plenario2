@@ -109,9 +109,11 @@ defmodule Plenario2.Etl.Worker do
     existing_rows = contains!(meta, rows)
     inserted_rows = upsert!(meta, rows)
     pairs = Enum.zip(existing_rows, inserted_rows)
-    result = Enum.map(pairs, fn {existing_row, inserted_row} ->
-      create_diffs(meta, job, existing_row, inserted_row)
-    end)
+
+    result =
+      Enum.map(pairs, fn {existing_row, inserted_row} ->
+        create_diffs(meta, job, existing_row, inserted_row)
+      end)
 
     send(sender, {self(), result})
   end
@@ -168,13 +170,15 @@ defmodule Plenario2.Etl.Worker do
     constraint = MetaActions.get_constraint(meta)
     constraints = MetaActions.get_constraints(meta)
 
-    constraint_indices = Enum.map(constraints, fn constraint ->
-      Enum.find_index(columns, & &1 == constraint) 
-    end) 
+    constraint_indices =
+      Enum.map(constraints, fn constraint ->
+        Enum.find_index(columns, &(&1 == constraint))
+      end)
 
-    constraint_values = Enum.map(constraint_indices, fn index ->
-      Enum.at(original, index)
-    end)
+    constraint_values =
+      Enum.map(constraint_indices, fn index ->
+        Enum.at(original, index)
+      end)
 
     constraint_map = Enum.zip([constraints, constraint_values]) |> Map.new()
 
@@ -205,5 +209,3 @@ defmodule Plenario2.Etl.Worker do
        end)
   end
 end
-
-# 2017:12:01T08:48:00 LC 255

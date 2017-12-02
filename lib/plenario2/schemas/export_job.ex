@@ -10,7 +10,7 @@ defmodule Plenario2.Schemas.ExportJob do
 
     timestamps()
 
-    belongs_to(:user, Plenario2.Schemas.User)
+    belongs_to(:user, Plenario2Auth.User)
     belongs_to(:meta, Plenario2.Schemas.Meta)
   end
 end

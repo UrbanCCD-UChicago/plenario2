@@ -1,11 +1,49 @@
 defmodule Plenario2.Actions.MetaActions do
-  import Ecto.Query
   alias Plenario2.Changesets.MetaChangesets
+  alias Plenario2.Queries.MetaQueries, as: Q
   alias Plenario2.Schemas.{
     DataSetConstraint,
     Meta
   }
   alias Plenario2.Repo
+
+  import Ecto.Query
+
+  ##
+  # get one
+
+  def get_from_id(id, opts \\ []) do
+    Q.from_id(id)
+    |> Q.handle_opts(opts)
+    |> Repo.one()
+  end
+
+  def get_from_slug(slug, opts \\ []) do
+    Q.from_slug(slug)
+    |> Q.handle_opts(opts)
+    |> Repo.one()
+  end
+
+  ##
+  # get list
+
+  def list(opts \\ []) do
+    Q.list()
+    |> Q.handle_opts(opts)
+    |> Repo.all()
+  end
+
+  def list_for_user(user, opts \\ []) do
+    local_defaults = [with_user: true, for_user: user]
+    opts = Keyword.merge(local_defaults, opts)
+
+    Q.list()
+    |> Q.handle_opts(opts)
+    |> Repo.all()
+  end
+
+  ##
+  # create
 
   def create(name, user_id, source_url, details \\ []) do
     defaults = [
@@ -19,20 +57,15 @@ defmodule Plenario2.Actions.MetaActions do
       srid: 4326,
       timezone: "UTC"
     ]
-
     named = [name: name, user_id: user_id, source_url: source_url]
 
-    params = Keyword.merge(defaults, details) |> Keyword.merge(named) |> Enum.into(%{})
+    params = Keyword.merge(defaults, details)
+    |> Keyword.merge(named)
+    |> Enum.into(%{})
 
     MetaChangesets.create(%Meta{}, params)
     |> Repo.insert()
   end
-
-  def list(), do: Repo.all(Meta)
-
-  def list_for_user(user), do: Repo.all(from(m in Meta, where: m.user_id == ^user.id))
-
-  def get_from_pk(pk), do: Repo.one(from(m in Meta, where: m.id == ^pk))
 
   @doc """
   Load a single row of `Meta` with any field specified by `preloads`
@@ -104,15 +137,13 @@ defmodule Plenario2.Actions.MetaActions do
     get_constraint(meta).field_names()
   end
 
-  def get_from_slug(slug), do: Repo.one(from(m in Meta, where: m.slug == ^slug))
-
   def update_name(meta, new_name) do
     MetaChangesets.update_name(meta, %{name: new_name})
     |> Repo.update()
   end
 
-  def update_user(meta, user_id) do
-    MetaChangesets.update_user(meta, %{user_id: user_id})
+  def update_user(meta, user) do
+    MetaChangesets.update_user(meta, %{user_id: user.id})
     |> Repo.update()
   end
 

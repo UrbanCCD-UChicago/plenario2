@@ -56,8 +56,9 @@ defmodule Plenario2.Mixfile do
       {:timex, "~> 3.1"},
       {:httpoison, "~> 0.13.0"},
       {:csv, "~> 2.0"},
+      {:mock, "~> 0.2.0", only: :test},
       {:quantum, ">= 2.2.0"},
-      {:mock, "~> 0.2.0", only: :test}
+      {:guardian, "~> 1.0"}
     ]
   end
 

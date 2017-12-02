@@ -13,8 +13,8 @@ defmodule Plenario2.Schemas.Meta do
     field(:latest_import, :utc_datetime)
     field(:refresh_rate, :string)
     field(:refresh_interval, :integer)
-    field(:refresh_starts_on, :utc_datetime)
-    field(:refresh_ends_on, :utc_datetime)
+    field(:refresh_starts_on, :date)
+    field(:refresh_ends_on, :date)
     field(:next_refresh, :utc_datetime)
     field(:srid, :integer)
     field(:bbox, Geo.Polygon)
@@ -23,7 +23,7 @@ defmodule Plenario2.Schemas.Meta do
 
     timestamps()
 
-    belongs_to(:user, Plenario2.Schemas.User)
+    belongs_to(:user, Plenario2Auth.User)
     has_many(:data_set_fields, Plenario2.Schemas.DataSetField)
     has_many(:data_set_constraints, Plenario2.Schemas.DataSetConstraint)
     has_many(:virtual_date_fields, Plenario2.Schemas.VirtualDateField)

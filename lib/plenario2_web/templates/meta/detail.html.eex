@@ -1,0 +1,141 @@
+<style>
+div>div:first-child { font-weight: bold; }
+div.row { margin-bottom: 2em; }
+</style>
+
+<div class="row" style="display:flex;align-items:baseline;">
+  <div class="col-md-9">
+    <h1><%= @meta.name %></h1>
+  </div>
+  <%= if @owner do %>
+    <div class="col-md-3">
+      <%= link "Change dataset name", to: meta_path(@conn, :get_update_name, @meta.slug), method: :get %>
+    </div>
+  <% end %>
+</div>
+
+<div class="row">
+  <div class="col-md-12">
+    <%= link "Back to list of datasets", to: meta_path(@conn, :list), method: :get %>
+  </div>
+</div>
+
+<h3>Metadata<hr></h3>
+
+<div class="row">
+  <div class="col-md-3">Maintainer:</div>
+  <div class="col-md-6"><%= @meta.user.name %></div>
+</div>
+
+<hr>
+
+<div class="row">
+  <div class="col-md-3">Description:</div>
+  <div class="col-md-6"><%= @meta.description || "No description provided" %></div>
+  <%= if @owner do %>
+    <div class="col-md-3">
+      <%= link "Change dataset description information", to: meta_path(@conn, :get_update_description, @meta.slug), method: :get %>
+    </div>
+  <% end %>
+</div>
+
+<div class="row">
+  <div class="col-md-3">Attribution:</div>
+  <div class="col-md-6"><%= @meta.attribution || "No attribution provided" %></div>
+</div>
+
+<hr>
+
+<div class="row">
+  <div class="col-md-3">Source URL:</div>
+  <div class="col-md-6"><%= @meta.source_url %></div>
+  <%= if @owner do %>
+    <div class="col-md-3">
+      <%= link "Change dataset source info", to: meta_path(@conn, :get_update_source_info, @meta.slug), method: :get %>
+    </div>
+  <% end %>
+</div>
+
+<hr>
+
+<div class="row">
+  <div class="col-md-3">First Import:</div>
+  <div class="col-md-6"><%= @meta.first_import || "Has not been imported yet" %></div>
+  <%= if @owner do %>
+    <div class="col-md-3">
+      <%= link "Change refresh info", to: meta_path(@conn, :get_update_refresh_info, @meta.slug), method: :get %>
+    </div>
+  <% end %>
+</div>
+
+<div class="row">
+  <div class="col-md-3">Latest Import:</div>
+  <div class="col-md-6"><%= @meta.latest_import || "Has not been imported yet" %></div>
+</div>
+
+<div class="row">
+  <div class="col-md-3">Next Refresh:</div>
+  <div class="col-md-6"><%= @meta.next_refresh || "No scheduled refresh" %></div>
+</div>
+
+<div class="row">
+  <div class="col-md-3">Refresh Cadence:</div>
+  <div class="col-md-6">
+    <%= @meta.refresh_interval %> <%= @meta.refresh_rate || "Imports have not been scheduled yet" %>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-3">Refresh Starts On:</div>
+  <div class="col-md-6"><%= @meta.refresh_starts_on || "Has not been provided yet" %></div>
+</div>
+
+<div class="row">
+  <div class="col-md-3">Refresh Ends On:</div>
+  <div class="col-md-6"><%= @meta.refresh_ends_on || "Never" %></div>
+</div>
+
+<hr>
+
+<div class="row">
+  <div class="col-md-3">Timezone:</div>
+  <div class="col-md-6"><%= @meta.timezone %></div>
+</div>
+
+<div class="row">
+  <div class="col-md-3">Timespan:</div>
+  <div class="col-md-6"><%= @meta.timerange || "Has not been imported yet" %></div>
+</div>
+
+<hr>
+
+<div class="row">
+  <div class="col-md-3">SRID:</div>
+  <div class="col-md-6"><%= @meta.srid %></div>
+</div>
+
+<div class="row">
+  a map will go here to demonstrate the bbox
+</div>
+
+<h3>Field Information<hr></h3>
+
+<%= for {f, i} <- Enum.with_index(@meta.data_set_fields) do %>
+<div class="row">
+  <div class="col-md-3"><%= f.name %></div>
+  <div class="col-md-3"><%= f.type %></div>
+  <%= if i == 0 do %>
+    <div class="col-md-3">&nbsp;</div>
+    <div class="col-md-3">
+      <a>Update fields</a>
+    </div>
+  <% end %>
+<% end %>
+
+<hr>
+
+<div class="row">
+  <div class="col-md-12">
+    <%= link "Back to list of datasets", to: meta_path(@conn, :list), method: :get %>
+  </div>
+</div>

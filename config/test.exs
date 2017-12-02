@@ -17,3 +17,8 @@ config :plenario2, Plenario2.Repo,
   database: "plenario2_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
+
+# Configure Guardian
+config :plenario2, Plenario2Auth.Guardian,
+  issuer: "Plenario",
+  secret_key: "qwertyuiopASDFGHJKLzxcvbnm1234567890QWERTYUIOPasdfghjklZXCVBNM!@"

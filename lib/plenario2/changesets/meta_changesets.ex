@@ -22,11 +22,11 @@ defmodule Plenario2.Changesets.MetaChangesets do
     |> cast_assoc(:user)
     |> unique_constraint(:name)
     |> unique_constraint(:source_url)
-    |> _set_slug()
-    |> _validate_refresh_rate()
-    |> _validate_refresh_interval()
-    |> _validate_refresh_ends_on()
-    |> _validate_source_type()
+    |> set_slug()
+    |> validate_refresh_rate()
+    |> validate_refresh_interval()
+    |> validate_refresh_ends_on()
+    |> validate_source_type()
     |> put_change(:state, "new")
   end
 
@@ -47,8 +47,9 @@ defmodule Plenario2.Changesets.MetaChangesets do
   def update_source_info(meta, params) do
     meta
     |> cast(params, [:source_url, :source_type])
+    |> validate_required([:source_url, :source_type])
     |> unique_constraint(:source_url)
-    |> _validate_source_type()
+    |> validate_source_type()
   end
 
   def update_description_info(meta, params) do
@@ -59,9 +60,9 @@ defmodule Plenario2.Changesets.MetaChangesets do
   def update_refresh_info(meta, params) do
     meta
     |> cast(params, [:refresh_rate, :refresh_interval, :refresh_starts_on, :refresh_ends_on])
-    |> _validate_refresh_rate()
-    |> _validate_refresh_interval()
-    |> _validate_refresh_ends_on()
+    |> validate_refresh_rate()
+    |> validate_refresh_interval()
+    |> validate_refresh_ends_on()
   end
 
 #  def update_bbox(meta, params) do
@@ -82,12 +83,12 @@ defmodule Plenario2.Changesets.MetaChangesets do
   ##
   # operations
 
-  defp _set_slug(changeset), do: changeset |> put_change(:slug, Tokens.generate_token())
+  defp set_slug(changeset), do: changeset |> put_change(:slug, Tokens.generate_token())
 
   ##
   # validations
 
-  defp _validate_refresh_rate(changeset) do
+  defp validate_refresh_rate(changeset) do
     rr = get_field(changeset, :refresh_rate)
 
     if Enum.member?([nil, "minutes", "hours", "days", "weeks", "months", "years"], rr) do
@@ -97,7 +98,7 @@ defmodule Plenario2.Changesets.MetaChangesets do
     end
   end
 
-  defp _validate_refresh_interval(changeset) do
+  defp validate_refresh_interval(changeset) do
     rr = get_field(changeset, :refresh_rate)
 
     if rr == nil do
@@ -107,7 +108,7 @@ defmodule Plenario2.Changesets.MetaChangesets do
     end
   end
 
-  defp _validate_refresh_ends_on(changeset) do
+  defp validate_refresh_ends_on(changeset) do
     rso = get_field(changeset, :refresh_starts_on)
 
     if rso == nil do
@@ -123,7 +124,7 @@ defmodule Plenario2.Changesets.MetaChangesets do
     end
   end
 
-  defp _validate_source_type(changeset) do
+  defp validate_source_type(changeset) do
     st = get_field(changeset, :source_type)
 
     if Enum.member?(["csv", "tsv", "shp", "json"], st) do
