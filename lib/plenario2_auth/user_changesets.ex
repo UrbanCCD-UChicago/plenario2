@@ -56,11 +56,11 @@ defmodule Plenario2Auth.UserChangesets do
   #   user
   #   |> cast(params, [:is_trusted])
   # end
-  #
-  # def update_admin(user, params) do
-  #   user
-  #   |> cast(params, [:is_admin])
-  # end
+  
+  def update_admin(user, params) do
+    user
+    |> cast(params, [:is_admin])
+  end
 
   ##
   # operations
