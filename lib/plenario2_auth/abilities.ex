@@ -12,7 +12,7 @@ defmodule Plenario2Auth.Abilities do
     end
 
     @doc """
-    Forbid unauthorized users from performing modification actions.
+    Forbid unauthenticated users from performing modification actions.
     """
     def can?(nil, _, meta = %Meta{}), do: false
   end

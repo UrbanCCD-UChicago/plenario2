@@ -5,7 +5,11 @@ defmodule Plenario2Web.MetaController do
   alias Plenario2.Schemas.Meta
   alias Plenario2Web.ErrorView
 
-  plug :load_and_authorize_resource, model: Meta, id_name: "slug", id_field: "slug", except: [:detail, :list, :get_create, :do_create]
+  plug :load_and_authorize_resource,
+    model: Meta,
+    id_name: "slug",
+    id_field: "slug",
+    except: [:detail, :list, :get_create, :do_create]
 
   def detail(conn, %{"slug" => slug}) do
     user = Guardian.Plug.current_resource(conn)
