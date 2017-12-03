@@ -173,4 +173,54 @@ defmodule MetaActionsTests do
     )
     assert changeset.errors == [refresh_ends_on: {"Invalid: end date cannot precede start date", []}]
   end
+
+  test "submit meta for for approval" do
+    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
+
+    assert meta.state == "new"
+
+    {:ok, meta} = MetaActions.submit_for_approval(meta)
+
+    assert meta.state == "needs_approval"
+  end
+
+  test "approve meta" do
+    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
+    {:ok, meta} = MetaActions.submit_for_approval(meta)
+
+    {:ok, meta} = MetaActions.approve(meta)
+    assert meta.state == "ready"
+  end
+
+  test "disapprove meta" do
+    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
+    {:ok, meta} = MetaActions.submit_for_approval(meta)
+
+    {:ok, meta} = MetaActions.disapprove(meta)
+    assert meta.state == "new"
+  end
+
+  test "mark meta as erred" do
+    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
+    {:ok, meta} = MetaActions.submit_for_approval(meta)
+    {:ok, meta} = MetaActions.approve(meta)
+
+    {:ok, meta} = MetaActions.mark_erred(meta)
+    assert meta.state == "erred"
+  end
+
+  test "mark meta as fixed" do
+    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
+    {:ok, meta} = MetaActions.submit_for_approval(meta)
+    {:ok, meta} = MetaActions.approve(meta)
+    {:ok, meta} = MetaActions.mark_erred(meta)
+
+    {:ok, meta} = MetaActions.mark_fixed(meta)
+    assert meta.state == "ready"
+  end
 end

@@ -145,5 +145,36 @@ defmodule Plenario2.Actions.MetaActions do
     |> Repo.update()
   end
 
+  ##
+  # states
+
+  def submit_for_approval(meta) do
+    Meta.submit_for_approval(meta)
+    |> Repo.update()
+  end
+
+  def approve(meta) do
+    Meta.approve(meta)
+    |> Repo.update()
+  end
+
+  def disapprove(meta) do
+    Meta.disapprove(meta)
+    |> Repo.update()
+  end
+
+  def mark_erred(meta) do
+    Meta.mark_erred(meta)
+    |> Repo.update()
+  end
+
+  def mark_fixed(meta) do
+    Meta.mark_fixed(meta)
+    |> Repo.update()
+  end
+
+  ##
+  # deletion
+
   def delete(meta), do: Repo.delete(meta)
 end
