@@ -39,6 +39,12 @@ config :plenario2, Plenario2.Scheduler,
       {"* * * * *", {Plenario2.Etl.ScheduledJobs, :find_refreshable_metas, []}}
   ]
 
+# configure canary
+config :canary,
+  repo: Plenario2.Repo,
+  unauthorized_handler: {Plenario2Auth.ErrorHandler, :handle_unauthorized},
+  not_found_handler: {Plenario2Auth.ErrorHandler, :handle_not_found}
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"

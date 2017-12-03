@@ -5,6 +5,12 @@ defmodule Plenario2Web.MetaController do
   alias Plenario2.Schemas.Meta
   alias Plenario2Web.ErrorView
 
+  plug :load_and_authorize_resource,
+    model: Meta,
+    id_name: "slug",
+    id_field: "slug",
+    except: [:detail, :list, :get_create, :do_create]
+
   def detail(conn, %{"slug" => slug}) do
     user = Guardian.Plug.current_resource(conn)
     meta = MetaActions.get_from_slug(slug, [with_user: true, with_fields: true])
@@ -67,31 +73,17 @@ defmodule Plenario2Web.MetaController do
 
   def get_update_name(conn, %{"slug" => slug}) do
     meta = MetaActions.get_from_slug(slug, [with_user: true])
-    user = Guardian.Plug.current_resource(conn)
+    changeset = MetaChangesets.update_name(meta, %{})
+    action = meta_path(conn, :do_update_name, slug)
 
-    if user == nil or user.id != meta.user.id do
-      conn
-      |> send_resp(:unauthorized, "unauthorized")
-      |> halt()
-    else
-      changeset = MetaChangesets.update_name(meta, %{})
-      action = meta_path(conn, :do_update_name, slug)
-      render(conn, "update_name.html", changeset: changeset, action: action)
-    end
+    render(conn, "update_name.html", changeset: changeset, action: action)
   end
 
   def do_update_name(conn, %{"slug" => slug, "meta" => %{"name" => name}}) do
     meta = MetaActions.get_from_slug(slug, [with_user: true])
-    user = Guardian.Plug.current_resource(conn)
 
-    if user == nil or user.id != meta.user.id do
-      conn
-      |> send_resp(:unauthorized, "unauthorized")
-      |> halt()
-    else
-      MetaActions.update_name(meta, name)
-      |> update_name_reply(conn, meta)
-    end
+    MetaActions.update_name(meta, name)
+    |> update_name_reply(conn, meta)
   end
 
   defp update_name_reply({:error, changeset}, conn, meta) do
@@ -110,31 +102,17 @@ defmodule Plenario2Web.MetaController do
 
   def get_update_description(conn, %{"slug" => slug}) do
     meta = MetaActions.get_from_slug(slug, [with_user: true])
-    user = Guardian.Plug.current_resource(conn)
+    changeset = MetaChangesets.update_description_info(meta, %{})
+    action = meta_path(conn, :do_update_description, slug)
 
-    if user == nil or user.id != meta.user.id do
-      conn
-      |> send_resp(:unauthorized, "unauthorized")
-      |> halt()
-    else
-      changeset = MetaChangesets.update_description_info(meta, %{})
-      action = meta_path(conn, :do_update_description, slug)
-      render(conn, "update_description.html", changeset: changeset, action: action, meta: meta)
-    end
+    render(conn, "update_description.html", changeset: changeset, action: action, meta: meta)
   end
 
   def do_update_description(conn, %{"slug" => slug, "meta" => %{"description" => description, "attribution" => attribution}}) do
     meta = MetaActions.get_from_slug(slug, [with_user: true])
-    user = Guardian.Plug.current_resource(conn)
 
-    if user == nil or user.id != meta.user.id do
-      conn
-      |> send_resp(401, "unauthorized")
-      |> halt()
-    else
-      MetaActions.update_description_info(meta, [description: description, attribution: attribution])
-      |> update_description_reply(conn, meta)
-    end
+    MetaActions.update_description_info(meta, [description: description, attribution: attribution])
+    |> update_description_reply(conn, meta)
   end
 
   defp update_description_reply({:error, changeset}, conn, meta) do
@@ -153,31 +131,17 @@ defmodule Plenario2Web.MetaController do
 
   def get_update_source_info(conn, %{"slug" => slug}) do
     meta = MetaActions.get_from_slug(slug, [with_user: true])
-    user = Guardian.Plug.current_resource(conn)
+    changeset = MetaChangesets.update_source_info(meta, %{})
+    action = meta_path(conn, :do_update_source_info, slug)
 
-    if user == nil or user.id != meta.user.id do
-      conn
-      |> send_resp(401, "unauthorized")
-      |> halt()
-    else
-      changeset = MetaChangesets.update_source_info(meta, %{})
-      action = meta_path(conn, :do_update_source_info, slug)
-      render(conn, "update_source_info.html", changeset: changeset, action: action)
-    end
+    render(conn, "update_source_info.html", changeset: changeset, action: action)
   end
 
   def do_update_source_info(conn, %{"slug" => slug, "meta" => %{"source_url" => source_url, "source_type" => source_type}}) do
     meta = MetaActions.get_from_slug(slug, [with_user: true])
-    user = Guardian.Plug.current_resource(conn)
 
-    if user == nil or user.id != meta.user.id do
-      conn
-      |> send_resp(401, "unauthorized")
-      |> halt()
-    else
-      MetaActions.update_source_info(meta, [source_url: source_url, source_type: source_type])
-      |> update_source_info_reply(conn, meta)
-    end
+    MetaActions.update_source_info(meta, [source_url: source_url, source_type: source_type])
+    |> update_source_info_reply(conn, meta)
   end
 
   defp update_source_info_reply({:error, changeset}, conn, meta) do
@@ -196,31 +160,17 @@ defmodule Plenario2Web.MetaController do
 
   def get_update_refresh_info(conn, %{"slug" => slug}) do
     meta = MetaActions.get_from_slug(slug, [with_user: true])
-    user = Guardian.Plug.current_resource(conn)
+    changeset = MetaChangesets.update_refresh_info(meta, %{})
+    action = meta_path(conn, :do_update_refresh_info, slug)
 
-    if user == nil or user.id != meta.user.id do
-      conn
-      |> send_resp(401, "unauthorized")
-      |> halt()
-    else
-      changeset = MetaChangesets.update_refresh_info(meta, %{})
-      action = meta_path(conn, :do_update_refresh_info, slug)
-      render(conn, "update_refresh_info.html", changeset: changeset, action: action)
-    end
+    render(conn, "update_refresh_info.html", changeset: changeset, action: action)
   end
 
   def do_update_refresh_info(conn, %{"slug" => slug, "meta" => %{"refresh_rate" => refresh_rate, "refresh_interval" => refresh_interval, "refresh_starts_on" => refresh_starts_on, "refresh_ends_on" => refresh_ends_on}}) do
     meta = MetaActions.get_from_slug(slug, [with_user: true])
-    user = Guardian.Plug.current_resource(conn)
 
-    if user == nil or user.id != meta.user.id do
-      conn
-      |> send_resp(401, "unauthorized")
-      |> halt()
-    else
-      MetaActions.update_refresh_info(meta, [refresh_rate: refresh_rate, refresh_interval: refresh_interval, refresh_starts_on: refresh_starts_on, refresh_ends_on: refresh_ends_on])
-      |> update_refresh_info_reply(conn, meta)
-    end
+    MetaActions.update_refresh_info(meta, [refresh_rate: refresh_rate, refresh_interval: refresh_interval, refresh_starts_on: refresh_starts_on, refresh_ends_on: refresh_ends_on])
+    |> update_refresh_info_reply(conn, meta)
   end
 
   defp update_refresh_info_reply({:error, changeset}, conn, meta) do
