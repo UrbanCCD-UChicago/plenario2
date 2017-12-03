@@ -13,18 +13,20 @@ defmodule Plenario2Web.Router do
     plug(:accepts, ["json"])
   end
 
-  pipeline :auth do
-    plug Plenario2Auth.Pipeline
+  # checks for a user in the session and if exists assigns to :current_user
+  pipeline :authenticate do
+    plug Plenario2Auth.AuthenticationPipeline
     plug Plenario2Auth.CurrentUserPlug
   end
 
-  pipeline :ensure_auth do
+  # ensures an authenticated user in the session
+  pipeline :ensure_authenticated do
     plug Guardian.Plug.EnsureAuthenticated
     plug Plenario2Auth.CurrentUserPlug
   end
 
   scope "/", Plenario2Web do
-    pipe_through [:browser, :auth]
+    pipe_through [:browser, :authenticate]
 
     # generic paths
     get   "/",        PageController, :index
@@ -42,7 +44,7 @@ defmodule Plenario2Web.Router do
   end
 
   scope "/", Plenario2Web do
-    pipe_through [:browser, :auth, :ensure_auth]
+    pipe_through [:browser, :authenticate, :ensure_authenticated]
 
     # meta paths
     get "/datasets/create", MetaController, :get_create
