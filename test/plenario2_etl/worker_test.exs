@@ -1,4 +1,4 @@
-defmodule Plenario2.Etl.WorkerTest do
+defmodule Plenario2Etl.WorkerTest do
   alias Plenario2.Actions.{
     DataSetActions,
     DataSetConstraintActions,
@@ -15,7 +15,7 @@ defmodule Plenario2.Etl.WorkerTest do
     Meta
   }
 
-  alias Plenario2.Etl.Worker
+  alias Plenario2Etl.Worker
   alias Plenario2.Repo
 
   import Ecto.Adapters.SQL, only: [query!: 3]

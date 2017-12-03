@@ -1,4 +1,4 @@
-defmodule Plenario2.Etl.Worker do
+defmodule Plenario2Etl.Worker do
   @moduledoc """
   A `GenServer` responsible for ingesting a single dataset. It dies when it
   has succesfully ingested a dataset or when it errors. It conveys infromation
@@ -17,8 +17,8 @@ defmodule Plenario2.Etl.Worker do
   import Ecto.Adapters.SQL, only: [query!: 3]
   use GenServer
 
-  @contains_template "lib/plenario2/etl/templates/contains.sql.eex"
-  @upsert_template "lib/plenario2/etl/templates/upsert.sql.eex"
+  @contains_template "lib/plenario2_etl/templates/contains.sql.eex"
+  @upsert_template "lib/plenario2_etl/templates/upsert.sql.eex"
 
   @doc """
   Entrypoint for the `Worker` `GenServer`. Saves you the hassle of writing out
