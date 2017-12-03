@@ -8,7 +8,6 @@ defmodule Plenario2.Etl.Worker do
 
   alias Plenario2.Actions.{
     DataSetDiffActions,
-    DataSetFieldActions,
     EtlJobActions,
     MetaActions
   }
@@ -27,14 +26,8 @@ defmodule Plenario2.Etl.Worker do
 
   ## Example
 
-    iex> alias Plenario2.Etl.Worker
-    nil
-    iex> worker = 
-    ...>   Worker.start_link(%{
-    ...>     name: "reports",
-    ...>     source_url: "https://reports.org/download"
-    ...>     data_set_fields: %{}
-    ...>   })
+    iex> worker = Worker.start_link(%{meta_id: 5})
+
   """
   def start_link(state) do
     GenServer.start_link(__MODULE__, state)
@@ -47,7 +40,7 @@ defmodule Plenario2.Etl.Worker do
   """
   @spec init(state :: map) :: {:ok, map}
   def init(state) do
-    {:ok, state}
+    {:ok, load(state)}
   end
 
   @doc """
@@ -105,6 +98,15 @@ defmodule Plenario2.Etl.Worker do
        end)
   end
 
+  @doc """
+  This is the main subprocess kicked off by the `load` method that handles
+  and ingests a smaller chunk of rows.
+
+  ## Example
+
+    iex> load_chunk!(self(), meta, job, [["some", "rows"]])
+
+  """
   def load_chunk!(sender, meta, job, rows) do
     existing_rows = contains!(meta, rows)
     inserted_rows = upsert!(meta, rows)
@@ -124,7 +126,7 @@ defmodule Plenario2.Etl.Worker do
   ## Example
 
     iex> upsert!(meta, rows)
-    # [[1, "inserted", "row"]]
+    [[1, "inserted", "row"]]
 
   """
   @spec upsert!(meta :: Meta, rows :: list) :: list
@@ -138,7 +140,7 @@ defmodule Plenario2.Etl.Worker do
   ## Example
 
     iex> upsert!(meta, rows)
-    # [[1, "might", "conflict"]]
+    [[1, "might", "conflict"]]
 
   """
   @spec contains!(meta :: Meta, rows :: list) :: list
@@ -164,8 +166,18 @@ defmodule Plenario2.Etl.Worker do
     rows
   end
 
+  @doc """
+  Currently the ugly duckling of the worker API, it generates diff entries
+  for a pair of rows. Needs to be refactored into something smaller and
+  more readable.
+
+  ## Example
+
+    iex> create_diffs!(meta, job, ["a", "b", "c"], ["1", "2", "3"])
+    [%DataSetDiff{}, ...]
+
+  """
   def create_diffs(meta, job, original, updated) do
-    table = Meta.get_dataset_table_name(meta)
     columns = MetaActions.get_columns(meta)
     constraint = MetaActions.get_constraint(meta)
     constraints = MetaActions.get_constraints(meta)
