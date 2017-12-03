@@ -25,6 +25,10 @@ defmodule Plenario2Web.Router do
     plug Plenario2Auth.CurrentUserPlug
   end
 
+  pipeline :ensure_admin do
+    plug Plenario2Auth.AdminPlug
+  end
+
   scope "/", Plenario2Web do
     pipe_through [:browser, :authenticate]
 
@@ -57,6 +61,12 @@ defmodule Plenario2Web.Router do
     put "/datasets/:slug/update/source", MetaController, :do_update_source_info
     get "/datasets/:slug/update/refresh", MetaController, :get_update_refresh_info
     put "/datasets/:slug/update/refresh", MetaController, :do_update_refresh_info
+  end
+
+  scope "/admin", Plenario2Web do
+    pipe_through [:browser, :authenticate, :ensure_authenticated, :ensure_admin]
+
+    get "/", AdminController, :index
   end
 
   # Other scopes may use custom stacks.
