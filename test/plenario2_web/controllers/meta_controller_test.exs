@@ -21,7 +21,7 @@ defmodule Plenario2Web.MetaControllerTest do
         |> get(meta_path(conn, :get_create))
         |> response(:unauthorized)
 
-      assert response =~ "unauthenticated"
+      assert response =~ "unauthorized"
     end
   end
 
@@ -59,7 +59,7 @@ defmodule Plenario2Web.MetaControllerTest do
         |> post(meta_path(conn, :do_create), %{"user" => %{"name" => "", "source_url" => ""}})
         |> response(:unauthorized)
 
-      assert response =~ "unauthenticated"
+      assert response =~ "unauthorized"
     end
   end
 
@@ -120,9 +120,9 @@ defmodule Plenario2Web.MetaControllerTest do
 
       response = conn
         |> get(meta_path(conn, :get_update_name, meta.slug))
-        |> response(:unauthorized)
+        |> response(:forbidden)
 
-      assert response =~ "unauthorized"
+      assert response =~ "forbidden"
     end
 
     test "when anonymous user", %{conn: conn} do
@@ -133,7 +133,7 @@ defmodule Plenario2Web.MetaControllerTest do
         |> get(meta_path(conn, :get_update_name, meta.slug))
         |> response(:unauthorized)
 
-      assert response =~ "unauthenticated"
+      assert response =~ "unauthorized"
     end
   end
 
@@ -173,9 +173,9 @@ defmodule Plenario2Web.MetaControllerTest do
 
       response = conn
         |> put(meta_path(conn, :do_update_name, meta.slug), %{"slug" => meta.slug, "meta" => %{"name" => "Some new name"}})
-        |> response(:unauthorized)
+        |> response(:forbidden)
 
-      assert response =~ "unauthorized"
+      assert response =~ "forbidden"
     end
 
     test "when anonymous user", %{conn: conn} do
@@ -186,7 +186,7 @@ defmodule Plenario2Web.MetaControllerTest do
         |> put(meta_path(conn, :do_update_name, meta.slug), %{"slug" => meta.slug, "meta" => %{"name" => "Some new name"}})
         |> response(:unauthorized)
 
-      assert response =~ "unauthenticated"
+      assert response =~ "unauthorized"
     end
   end
 
@@ -212,9 +212,9 @@ defmodule Plenario2Web.MetaControllerTest do
 
       response = conn
         |> get(meta_path(conn, :get_update_description, meta.slug))
-        |> response(:unauthorized)
+        |> response(:forbidden)
 
-      assert response =~ "unauthorized"
+      assert response =~ "forbidden"
     end
 
     test "when anonymous user", %{conn: conn} do
@@ -225,7 +225,7 @@ defmodule Plenario2Web.MetaControllerTest do
         |> get(meta_path(conn, :get_update_description, meta.slug))
         |> response(:unauthorized)
 
-      assert response =~ "unauthenticated"
+      assert response =~ "unauthorized"
     end
   end
 
@@ -254,9 +254,9 @@ defmodule Plenario2Web.MetaControllerTest do
 
       response = conn
         |> put(meta_path(conn, :do_update_description, meta.slug), %{"slug" => meta.slug, "meta" => %{"description" => "I'm a description", "attribution" => "I'm attributing this"}})
-        |> response(:unauthorized)
+        |> response(:forbidden)
 
-      assert response =~ "unauthorized"
+      assert response =~ "forbidden"
     end
 
     test "when anonymous user", %{conn: conn} do
@@ -267,7 +267,7 @@ defmodule Plenario2Web.MetaControllerTest do
         |> put(meta_path(conn, :do_update_description, meta.slug), %{"slug" => meta.slug, "meta" => %{"description" => "I'm a description", "attribution" => "I'm attributing this"}})
         |> response(:unauthorized)
 
-      assert response =~ "unauthenticated"
+      assert response =~ "unauthorized"
     end
   end
 
@@ -293,9 +293,9 @@ defmodule Plenario2Web.MetaControllerTest do
 
       response = conn
         |> get(meta_path(conn, :get_update_source_info, meta.slug))
-        |> response(:unauthorized)
+        |> response(:forbidden)
 
-      assert response =~ "unauthorized"
+      assert response =~ "forbidden"
     end
 
     test "when anonymous user", %{conn: conn} do
@@ -306,7 +306,7 @@ defmodule Plenario2Web.MetaControllerTest do
         |> get(meta_path(conn, :get_update_source_info, meta.slug))
         |> response(:unauthorized)
 
-      assert response =~ "unauthenticated"
+      assert response =~ "unauthorized"
     end
   end
 
@@ -346,9 +346,9 @@ defmodule Plenario2Web.MetaControllerTest do
 
       response = conn
         |> put(meta_path(conn, :do_update_source_info, meta.slug), %{"slug" => meta.slug, "meta" => %{"source_url" => "", "source_type" => "csv"}})
-        |> response(:unauthorized)
+        |> response(:forbidden)
 
-      assert response =~ "unauthorized"
+      assert response =~ "forbidden"
     end
 
     test "when anonymous user", %{conn: conn} do
@@ -359,7 +359,7 @@ defmodule Plenario2Web.MetaControllerTest do
         |> put(meta_path(conn, :do_update_source_info, meta.slug), %{"slug" => meta.slug, "meta" => %{"source_url" => "", "source_type" => "csv"}})
         |> response(:unauthorized)
 
-      assert response =~ "unauthenticated"
+      assert response =~ "unauthorized"
     end
   end
 
@@ -385,9 +385,9 @@ defmodule Plenario2Web.MetaControllerTest do
 
       response = conn
         |> get(meta_path(conn, :get_update_refresh_info, meta.slug))
-        |> response(:unauthorized)
+        |> response(:forbidden)
 
-      assert response =~ "unauthorized"
+      assert response =~ "forbidden"
     end
 
     test "when anonymous user", %{conn: conn} do
@@ -398,7 +398,7 @@ defmodule Plenario2Web.MetaControllerTest do
         |> get(meta_path(conn, :get_update_refresh_info, meta.slug))
         |> response(:unauthorized)
 
-      assert response =~ "unauthenticated"
+      assert response =~ "unauthorized"
     end
   end
 
@@ -426,9 +426,9 @@ defmodule Plenario2Web.MetaControllerTest do
 
       response = conn
         |> put(meta_path(conn, :do_update_refresh_info, meta.slug), %{"slug" => meta.slug, "meta" => %{"refresh_rate" => "weeks", "refresh_interval" => "2", "refresh_starts_on" => "", "refresh_ends_on" => ""}})
-        |> response(:unauthorized)
+        |> response(:forbidden)
 
-      assert response =~ "unauthorized"
+      assert response =~ "forbidden"
     end
 
     test "when anonymous user", %{conn: conn} do
@@ -439,7 +439,7 @@ defmodule Plenario2Web.MetaControllerTest do
         |> put(meta_path(conn, :do_update_refresh_info, meta.slug), %{"slug" => meta.slug, "meta" => %{"refresh_rate" => "weeks", "refresh_interval" => "2", "refresh_starts_on" => "", "refresh_ends_on" => ""}})
         |> response(:unauthorized)
 
-      assert response =~ "unauthenticated"
+      assert response =~ "unauthorized"
     end
   end
 end

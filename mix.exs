@@ -58,7 +58,10 @@ defmodule Plenario2.Mixfile do
       {:csv, "~> 2.0"},
       {:mock, "~> 0.2.0", only: :test},
       {:quantum, ">= 2.2.0"},
-      {:guardian, "~> 1.0"}
+      {:guardian, "~> 1.0"},
+      {:ecto_state_machine, "~> 0.3.0"},
+      {:canary, "~> 1.1"},
+      {:canada, "~> 1.0"}
     ]
   end
 

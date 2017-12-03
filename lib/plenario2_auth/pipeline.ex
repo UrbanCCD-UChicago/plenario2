@@ -1,4 +1,4 @@
-defmodule Plenario2Auth.Pipeline do
+defmodule Plenario2Auth.AuthenticationPipeline do
   use Guardian.Plug.Pipeline,
     otp_app: :plenario2,
     error_handler: Plenario2Auth.ErrorHandler,

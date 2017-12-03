@@ -25,6 +25,11 @@ defmodule Plenario2Auth.UserActions do
 
   def get_from_email(email), do: Repo.one(from u in User, where: u.email_address == ^email)
 
+  def promote_to_admin(user) do
+    UserChangesets.update_admin(user, %{is_admin: true})
+    |> Repo.update()
+  end
+
   def authenticate(email, password) do
     get_from_email(email)
     |> check_password(password)

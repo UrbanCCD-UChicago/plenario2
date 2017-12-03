@@ -23,6 +23,7 @@ defmodule Plenario2Web do
       import Plug.Conn
       import Plenario2Web.Router.Helpers
       import Plenario2Web.Gettext
+      import Canary.Plugs
     end
   end
 
