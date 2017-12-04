@@ -5,6 +5,16 @@ defmodule Plenario2Auth.UserActions do
   alias Plenario2Auth.User
   alias Plenario2Auth.UserChangesets
 
+  ##
+  # get one
+
+  def get_from_pk(pk), do: Repo.one(from u in User, where: u.id == ^pk)
+
+  def get_from_email(email), do: Repo.one(from u in User, where: u.email_address == ^email)
+
+  ##
+  # create
+
   def create(name, password, email, organization \\ nil, role \\ nil) do
     params = %{
       name: name,
@@ -21,14 +31,41 @@ defmodule Plenario2Auth.UserActions do
     |> Repo.insert()
   end
 
-  def get_from_pk(pk), do: Repo.one(from u in User, where: u.id == ^pk)
-
-  def get_from_email(email), do: Repo.one(from u in User, where: u.email_address == ^email)
+  ##
+  # edit
 
   def promote_to_admin(user) do
-    UserChangesets.update_admin(user, %{is_admin: true})
+    UserChangesets.update_admin(user, %{is_admin: true, is_trusted: true})
     |> Repo.update()
   end
+
+  def strip_admin(user) do
+    UserChangesets.update_admin(user, %{is_admin: false})
+    |> Repo.update()
+  end
+
+  def trust(user) do
+    UserChangesets.update_trusted(user, %{is_trusted: true})
+    |> Repo.update()
+  end
+
+  def untrust(user) do
+    UserChangesets.update_trusted(user, %{is_trusted: false})
+    |> Repo.update()
+  end
+
+  def activate(user) do
+    UserChangesets.update_active(user, %{is_active: true})
+    |> Repo.update()
+  end
+
+  def archive(user) do
+    UserChangesets.update_active(user, %{is_active: false})
+    |> Repo.update()
+  end
+
+  ##
+  # auth
 
   def authenticate(email, password) do
     get_from_email(email)

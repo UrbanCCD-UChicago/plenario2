@@ -67,6 +67,13 @@ defmodule Plenario2Web.Router do
     pipe_through [:browser, :authenticate, :ensure_authenticated, :ensure_admin]
 
     get "/", AdminController, :index
+    get "/users", AdminController, :user_index
+    put "/users/:user_id/activate", AdminController, :activate_user
+    put "/users/:user_id/archive", AdminController, :archive_user
+    put "/users/:user_id/trust", AdminController, :trust_user
+    put "/users/:user_id/untrust", AdminController, :untrust_user
+    put "/users/:user_id/promote-admin", AdminController, :promote_to_admin
+    put "/users/:user_id/strip-admin", AdminController, :strip_admin_privs
   end
 
   # Other scopes may use custom stacks.
