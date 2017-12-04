@@ -1,5 +1,5 @@
 defmodule Plenario2Web.AdminControllerTest do
-  use Plenario2Web.ConnCase
+  use Plenario2Web.ConnCase, async: true
   alias Plenario2Auth.UserActions
 
   describe "GET /admin" do

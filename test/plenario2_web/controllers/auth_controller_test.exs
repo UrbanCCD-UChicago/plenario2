@@ -1,5 +1,5 @@
 defmodule Plenario2Web.AuthControllerTest do
-  use Plenario2Web.ConnCase
+  use Plenario2Web.ConnCase, async: true
   alias Plenario2Auth.UserActions
 
   describe "GET /login" do
@@ -58,6 +58,16 @@ defmodule Plenario2Web.AuthControllerTest do
     response = html_response(conn, 200)
 
     assert response =~ "Home Page"
+  end
+
+  test "GET /register", %{conn: conn} do
+    response = conn
+      |> get(auth_path(conn, :get_register))
+      |> html_response(:ok)
+
+    assert response =~ "Name"
+    assert response =~ "Email"
+    assert response =~ "Password"
   end
 
   describe "POST /register" do
