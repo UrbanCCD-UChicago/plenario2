@@ -18,4 +18,20 @@ defmodule Plenario2Auth.User do
     has_many :metas, Plenario2.Schemas.Meta
     has_many :export_jobs, Plenario2.Schemas.ExportJob
   end
+
+  def get_status_name(user) do
+    if user.is_admin do
+      "Admin"
+    else
+      if user.is_trusted do
+        "Trusted"
+      else
+        if user.is_active do
+          "Active"
+        else
+          "Archived"
+        end
+      end
+    end
+  end
 end

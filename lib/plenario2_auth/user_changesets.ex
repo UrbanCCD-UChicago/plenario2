@@ -46,20 +46,20 @@ defmodule Plenario2Auth.UserChangesets do
   #   user
   #   |> cast(params, [:organization, :org_role])
   # end
-  #
-  # def update_active(user, params) do
-  #   user
-  #   |> cast(params, [:is_active])
-  # end
-  #
-  # def update_trusted(user, params) do
-  #   user
-  #   |> cast(params, [:is_trusted])
-  # end
-  
+
+  def update_active(user, params) do
+    user
+    |> cast(params, [:is_active])
+  end
+
+  def update_trusted(user, params) do
+    user
+    |> cast(params, [:is_trusted])
+  end
+
   def update_admin(user, params) do
     user
-    |> cast(params, [:is_admin])
+    |> cast(params, [:is_admin, :is_trusted])
   end
 
   ##

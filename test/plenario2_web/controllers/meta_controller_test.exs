@@ -1,5 +1,5 @@
 defmodule Plenario2Web.MetaControllerTest do
-  use Plenario2Web.ConnCase
+  use Plenario2Web.ConnCase, async: true
   alias Plenario2.Actions.MetaActions
   alias Plenario2Auth.UserActions
 
