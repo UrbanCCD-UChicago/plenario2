@@ -21,7 +21,7 @@ defmodule EtlJobActionsTests do
   test "get a job by id", context do
     {:ok, job} = EtlJobActions.create(context.meta.id)
 
-    found = EtlJobActions.get_from_pk(job.id)
+    found = EtlJobActions.get_from_id(job.id)
     assert found.id == job.id
   end
 
@@ -42,7 +42,7 @@ defmodule EtlJobActionsTests do
     {:ok, job} = EtlJobActions.create(context.meta.id)
     EtlJobActions.mark_started(job)
 
-    job = EtlJobActions.get_from_pk(job.id)
+    job = EtlJobActions.get_from_id(job.id)
     assert job.state == "running"
     assert job.started_on != nil
   end
@@ -52,7 +52,7 @@ defmodule EtlJobActionsTests do
     EtlJobActions.mark_started(job)
     EtlJobActions.mark_erred(job, "test")
 
-    job = EtlJobActions.get_from_pk(job.id)
+    job = EtlJobActions.get_from_id(job.id)
     assert job.state == "erred"
     assert job.completed_on != nil
     assert job.error_message == "test"
@@ -63,7 +63,7 @@ defmodule EtlJobActionsTests do
     EtlJobActions.mark_started(job)
     EtlJobActions.mark_completed(job)
 
-    job = EtlJobActions.get_from_pk(job.id)
+    job = EtlJobActions.get_from_id(job.id)
     assert job.state == "completed"
     assert job.completed_on != nil
   end

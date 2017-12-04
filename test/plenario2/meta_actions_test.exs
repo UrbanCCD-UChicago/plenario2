@@ -38,7 +38,7 @@ defmodule MetaActionsTests do
     assert length(metas) == 1
   end
 
-  test "get a meta from a pk" do
+  test "get a meta from a id" do
     {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
     {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 
