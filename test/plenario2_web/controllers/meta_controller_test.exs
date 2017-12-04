@@ -3,7 +3,7 @@ defmodule Plenario2Web.MetaControllerTest do
   alias Plenario2.Actions.MetaActions
   alias Plenario2Auth.UserActions
 
-  describe "GET /datasets/create" do
+  describe "GET /data-sets/create" do
     test "when authenticated", %{conn: conn} do
       UserActions.create("Test User", "password", "test@example.com")
       conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
@@ -25,7 +25,7 @@ defmodule Plenario2Web.MetaControllerTest do
     end
   end
 
-  describe "POST /datasets/create" do
+  describe "POST /data-sets/create" do
     test "with valid data", %{conn: conn} do
       UserActions.create("Test User", "password", "test@example.com")
       conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
@@ -33,7 +33,7 @@ defmodule Plenario2Web.MetaControllerTest do
       assert length(MetaActions.list()) == 0
 
       conn = post(conn, meta_path(conn, :do_create), %{"meta" => %{"name" => "Test Data", "source_url" => "https://example.com/test-data"}})
-      assert "/datasets/list" = redir_path = redirected_to(conn, :created)
+      assert "/data-sets/list" = redir_path = redirected_to(conn, :created)
       conn = get(recycle(conn), redir_path)
       response = html_response(conn, :ok)
 
@@ -63,7 +63,7 @@ defmodule Plenario2Web.MetaControllerTest do
     end
   end
 
-  test "GET /datasets/list", %{conn: conn} do
+  test "GET /data-sets/list", %{conn: conn} do
     {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
     MetaActions.create("Test Data", user.id, "https://example.com/test-data")
 
@@ -76,7 +76,7 @@ defmodule Plenario2Web.MetaControllerTest do
     assert response =~ "Test User"
   end
 
-  describe "GET /datasets/:slug" do
+  describe "GET /data-sets/:slug" do
     test "with a valid slug", %{conn: conn} do
       {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
@@ -98,7 +98,7 @@ defmodule Plenario2Web.MetaControllerTest do
     end
   end
 
-  describe "GET /datasets/:slug/update/name" do
+  describe "GET /data-sets/:slug/update/name" do
     test "when authenticated and owner", %{conn: conn} do
       {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
@@ -137,14 +137,14 @@ defmodule Plenario2Web.MetaControllerTest do
     end
   end
 
-  describe "PUT /datasets/:slug/update/name" do
+  describe "PUT /data-sets/:slug/update/name" do
     test "when authenticated and owner with good data", %{conn: conn} do
       {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
       conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
 
       conn = put(conn, meta_path(conn, :do_update_name, meta.slug), %{"slug" => meta.slug, "meta" => %{"name" => "Some new name"}})
-      redir_path = "/datasets/#{meta.slug}/detail"
+      redir_path = "/data-sets/#{meta.slug}/detail"
       assert redir_path == redirected_to(conn, :found)
       conn = get(recycle(conn), redir_path)
       response = html_response(conn, :ok)
@@ -190,7 +190,7 @@ defmodule Plenario2Web.MetaControllerTest do
     end
   end
 
-  describe "GET /datasets/:slug/update/description" do
+  describe "GET /data-sets/:slug/update/description" do
     test "when authenticated and owner", %{conn: conn} do
       {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
@@ -229,14 +229,14 @@ defmodule Plenario2Web.MetaControllerTest do
     end
   end
 
-  describe "PUT /datasets/:slug/update/description" do
+  describe "PUT /data-sets/:slug/update/description" do
     test "when authenticated and owner with good data", %{conn: conn} do
       {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
       conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
 
       conn = put(conn, meta_path(conn, :do_update_description, meta.slug), %{"slug" => meta.slug, "meta" => %{"description" => "I am a description", "attribution" => "I am attributing this"}})
-      redir_path = "/datasets/#{meta.slug}/detail"
+      redir_path = "/data-sets/#{meta.slug}/detail"
       assert redir_path == redirected_to(conn, :found)
       conn = get(recycle(conn), redir_path)
       response = html_response(conn, :ok)
@@ -271,7 +271,7 @@ defmodule Plenario2Web.MetaControllerTest do
     end
   end
 
-  describe "GET /datasets/:slug/update/source" do
+  describe "GET /data-sets/:slug/update/source" do
     test "when authenticated and owner", %{conn: conn} do
       {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
@@ -310,14 +310,14 @@ defmodule Plenario2Web.MetaControllerTest do
     end
   end
 
-  describe "PUT /datasets/:slug/update/source" do
+  describe "PUT /data-sets/:slug/update/source" do
     test "when authenticated and owner with good data", %{conn: conn} do
       {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
       conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
 
       conn = put(conn, meta_path(conn, :do_update_source_info, meta.slug), %{"slug" => meta.slug, "meta" => %{"source_url" => "https://example.com/different-data", "source_type" => "csv"}})
-      redir_path = "/datasets/#{meta.slug}/detail"
+      redir_path = "/data-sets/#{meta.slug}/detail"
       assert redir_path == redirected_to(conn, :found)
       conn = get(recycle(conn), redir_path)
       response = html_response(conn, :ok)
@@ -363,7 +363,7 @@ defmodule Plenario2Web.MetaControllerTest do
     end
   end
 
-  describe "GET /datasets/:slug/update/refresh" do
+  describe "GET /data-sets/:slug/update/refresh" do
     test "when authenticated and owner", %{conn: conn} do
       {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
@@ -402,14 +402,14 @@ defmodule Plenario2Web.MetaControllerTest do
     end
   end
 
-  describe "PUT /datasets/:slug/update/refresh" do
+  describe "PUT /data-sets/:slug/update/refresh" do
     test "when authenticated and owner with good data", %{conn: conn} do
       {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
       conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
 
       conn = put(conn, meta_path(conn, :do_update_refresh_info, meta.slug), %{"slug" => meta.slug, "meta" => %{"refresh_rate" => "weeks", "refresh_interval" => "2", "refresh_starts_on" => "", "refresh_ends_on" => ""}})
-      redir_path = "/datasets/#{meta.slug}/detail"
+      redir_path = "/data-sets/#{meta.slug}/detail"
       assert redir_path == redirected_to(conn, :found)
       conn = get(recycle(conn), redir_path)
       response = html_response(conn, :ok)

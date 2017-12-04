@@ -9,14 +9,14 @@ div.row { margin-bottom: 2em; }
   </div>
   <%= if @owner do %>
     <div class="col-md-3">
-      <%= link "Change dataset name", to: meta_path(@conn, :get_update_name, @meta.slug), method: :get %>
+      <%= link "Change data set name", to: meta_path(@conn, :get_update_name, @meta.slug), method: :get %>
     </div>
   <% end %>
 </div>
 
 <div class="row">
   <div class="col-md-12">
-    <%= link "Back to list of datasets", to: meta_path(@conn, :list), method: :get %>
+    <%= link "Back to list of data sets", to: meta_path(@conn, :list), method: :get %>
   </div>
 </div>
 
@@ -34,7 +34,7 @@ div.row { margin-bottom: 2em; }
   <div class="col-md-6"><%= @meta.description || "No description provided" %></div>
   <%= if @owner do %>
     <div class="col-md-3">
-      <%= link "Change dataset description information", to: meta_path(@conn, :get_update_description, @meta.slug), method: :get %>
+      <%= link "Change data set description information", to: meta_path(@conn, :get_update_description, @meta.slug), method: :get %>
     </div>
   <% end %>
 </div>
@@ -51,7 +51,7 @@ div.row { margin-bottom: 2em; }
   <div class="col-md-6"><%= @meta.source_url %></div>
   <%= if @owner do %>
     <div class="col-md-3">
-      <%= link "Change dataset source info", to: meta_path(@conn, :get_update_source_info, @meta.slug), method: :get %>
+      <%= link "Change data set source info", to: meta_path(@conn, :get_update_source_info, @meta.slug), method: :get %>
     </div>
   <% end %>
 </div>
@@ -136,6 +136,6 @@ div.row { margin-bottom: 2em; }
 
 <div class="row">
   <div class="col-md-12">
-    <%= link "Back to list of datasets", to: meta_path(@conn, :list), method: :get %>
+    <%= link "Back to list of data sets", to: meta_path(@conn, :list), method: :get %>
   </div>
 </div>

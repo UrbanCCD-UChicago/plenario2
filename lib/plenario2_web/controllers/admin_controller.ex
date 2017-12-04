@@ -21,7 +21,7 @@ defmodule Plenario2Web.AdminController do
   end
 
   def archive_user(conn, %{"user_id" => user_id}) do
-    UserActions.get_from_pk(user_id)
+    UserActions.get_from_id(user_id)
     |> UserActions.archive()
 
     conn
@@ -30,7 +30,7 @@ defmodule Plenario2Web.AdminController do
   end
 
   def activate_user(conn, %{"user_id" => user_id}) do
-    UserActions.get_from_pk(user_id)
+    UserActions.get_from_id(user_id)
     |> UserActions.activate()
 
     conn
@@ -39,7 +39,7 @@ defmodule Plenario2Web.AdminController do
   end
 
   def trust_user(conn, %{"user_id" => user_id}) do
-    UserActions.get_from_pk(user_id)
+    UserActions.get_from_id(user_id)
     |> UserActions.trust()
 
     conn
@@ -48,7 +48,7 @@ defmodule Plenario2Web.AdminController do
   end
 
   def untrust_user(conn, %{"user_id" => user_id}) do
-    UserActions.get_from_pk(user_id)
+    UserActions.get_from_id(user_id)
     |> UserActions.untrust()
 
     conn
@@ -57,7 +57,7 @@ defmodule Plenario2Web.AdminController do
   end
 
   def promote_to_admin(conn, %{"user_id" => user_id}) do
-    UserActions.get_from_pk(user_id)
+    UserActions.get_from_id(user_id)
     |> UserActions.promote_to_admin()
 
     conn
@@ -66,7 +66,7 @@ defmodule Plenario2Web.AdminController do
   end
 
   def strip_admin_privs(conn, %{"user_id" => user_id}) do
-    UserActions.get_from_pk(user_id)
+    UserActions.get_from_id(user_id)
     |> UserActions.strip_admin()
 
     conn

@@ -61,7 +61,7 @@ defmodule Plenario2.Schemas.Meta do
   ##
   # schema functions
 
-  def get_dataset_table_name(meta) do
+  def get_data_set_table_name(meta) do
     meta.name
     |> String.split(~r/\s/, trim: true)
     |> Enum.map(&(String.downcase(&1)))

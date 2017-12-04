@@ -144,7 +144,7 @@ defmodule Plenario2Web.AdminControllerTest do
     |> put(admin_path(conn, :archive_user, user.id))
     |> html_response(:found)
 
-    user = UserActions.get_from_pk(user.id)
+    user = UserActions.get_from_id(user.id)
     assert user.is_active == false
   end
 
@@ -158,14 +158,14 @@ defmodule Plenario2Web.AdminControllerTest do
     |> put(admin_path(conn, :archive_user, user.id))
     |> html_response(:found)
 
-    user = UserActions.get_from_pk(user.id)
+    user = UserActions.get_from_id(user.id)
     assert user.is_active == false
 
     conn
     |> put(admin_path(conn, :activate_user, user.id))
     |> html_response(:found)
 
-    user = UserActions.get_from_pk(user.id)
+    user = UserActions.get_from_id(user.id)
     assert user.is_active
   end
 
@@ -179,7 +179,7 @@ defmodule Plenario2Web.AdminControllerTest do
     |> put(admin_path(conn, :trust_user, user.id))
     |> html_response(:found)
 
-    user = UserActions.get_from_pk(user.id)
+    user = UserActions.get_from_id(user.id)
     assert user.is_trusted
   end
 
@@ -193,14 +193,14 @@ defmodule Plenario2Web.AdminControllerTest do
     |> put(admin_path(conn, :trust_user, user.id))
     |> html_response(:found)
 
-    user = UserActions.get_from_pk(user.id)
+    user = UserActions.get_from_id(user.id)
     assert user.is_trusted
 
     conn
     |> put(admin_path(conn, :untrust_user, user.id))
     |> html_response(:found)
 
-    user = UserActions.get_from_pk(user.id)
+    user = UserActions.get_from_id(user.id)
     assert user.is_trusted == false
   end
 
@@ -214,7 +214,7 @@ defmodule Plenario2Web.AdminControllerTest do
     |> put(admin_path(conn, :promote_to_admin, user.id))
     |> html_response(:found)
 
-    user = UserActions.get_from_pk(user.id)
+    user = UserActions.get_from_id(user.id)
     assert user.is_admin
   end
 
@@ -228,14 +228,14 @@ defmodule Plenario2Web.AdminControllerTest do
     |> put(admin_path(conn, :promote_to_admin, user.id))
     |> html_response(:found)
 
-    user = UserActions.get_from_pk(user.id)
+    user = UserActions.get_from_id(user.id)
     assert user.is_admin
 
     conn
     |> put(admin_path(conn, :strip_admin_privs, user.id))
     |> html_response(:found)
 
-    user = UserActions.get_from_pk(user.id)
+    user = UserActions.get_from_id(user.id)
     assert user.is_admin == false
   end
 end

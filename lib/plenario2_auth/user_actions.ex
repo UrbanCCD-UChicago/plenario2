@@ -4,13 +4,14 @@ defmodule Plenario2Auth.UserActions do
   alias Plenario2.Repo
   alias Plenario2Auth.User
   alias Plenario2Auth.UserChangesets
+  alias Plenario2Auth.UserQueries, as: Q
 
   ##
   # get one
 
-  def get_from_pk(pk), do: Repo.one(from u in User, where: u.id == ^pk)
+  def get_from_id(id), do: Q.get_by_id(id) |> Repo.one()
 
-  def get_from_email(email), do: Repo.one(from u in User, where: u.email_address == ^email)
+  def get_from_email(email), do: Q.get_by_email(email) |> Repo.one()
 
   ##
   # create
