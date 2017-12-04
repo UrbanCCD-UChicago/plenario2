@@ -26,7 +26,7 @@ defmodule DataSetConstraintActionsTest do
     assert cons.constraint_name == "unique_constraint_chicago_tree_trimming_date_location"
   end
 
-  test "creating a constraint with a field that doesn't exist in the dataset fails", context do
+  test "creating a constraint with a field that doesn't exist in the data set fails", context do
     {:error, _} = DataSetConstraintActions.create(context.meta.id, ["some_other_id"])
   end
 

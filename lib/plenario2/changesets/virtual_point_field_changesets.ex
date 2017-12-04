@@ -49,7 +49,7 @@ defmodule Plenario2.Changesets.VirtualPointFieldChangesets do
     if Enum.member?(known_field_names, loc) do
       changeset
     else
-      changeset |> add_error(:fields, "Field names must exist as registered fields of the dataset")
+      changeset |> add_error(:fields, "Field names must exist as registered fields of the data set")
     end
   end
 
@@ -68,7 +68,7 @@ defmodule Plenario2.Changesets.VirtualPointFieldChangesets do
     if is_subset do
       changeset
     else
-      changeset |> add_error(:fields, "Field names must exist as registered fields of the dataset")
+      changeset |> add_error(:fields, "Field names must exist as registered fields of the data set")
     end
   end
 end
