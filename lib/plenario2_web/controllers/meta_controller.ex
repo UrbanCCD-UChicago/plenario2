@@ -12,15 +12,16 @@ defmodule Plenario2Web.MetaController do
     except: [:detail, :list, :get_create, :do_create]
 
   def detail(conn, %{"slug" => slug}) do
+    curr_path = current_path(conn)
     user = Guardian.Plug.current_resource(conn)
-    meta = MetaActions.get_from_slug(slug, [with_user: true, with_fields: true])
+    meta = MetaActions.get_from_slug(slug, [with_user: true, with_fields: true, with_notes: true, curr_path: curr_path])
     owner = case user do
       nil -> false
       _   -> user.id == meta.user.id
     end
     case meta do
       nil  -> conn |> put_status(:not_found) |> put_view(ErrorView) |> render("404.html")
-      _    -> render(conn, "detail.html", meta: meta, owner: owner)
+      _    -> render(conn, "detail.html", meta: meta, owner: owner, curr_path: curr_path)
     end
   end
 
@@ -69,6 +70,16 @@ defmodule Plenario2Web.MetaController do
     |> put_status(:bad_request)
     |> put_flash(:error, "Please review and fix errors below.")
     |> render("create.html", changeset: changeset, action: action)
+  end
+
+  def submit_for_approval(conn, %{"slug" => slug}) do
+    meta = MetaActions.get_from_slug(slug, [with_user: true])
+    MetaActions.submit_for_approval(meta)
+
+    conn
+    |> put_status(:created)
+    |> put_flash(:success, "#{meta.name} Submitted for Approval!")
+    |> redirect(to: meta_path(conn, :list))
   end
 
   def get_update_name(conn, %{"slug" => slug}) do

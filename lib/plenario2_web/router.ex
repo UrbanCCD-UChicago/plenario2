@@ -61,12 +61,16 @@ defmodule Plenario2Web.Router do
     put "/data-sets/:slug/update/source", MetaController, :do_update_source_info
     get "/data-sets/:slug/update/refresh", MetaController, :get_update_refresh_info
     put "/data-sets/:slug/update/refresh", MetaController, :do_update_refresh_info
+    post "/data-sets/:slug/submit-for-approval", MetaController, :submit_for_approval
+
+    post "/notes/:id/acknowledge", AdminUserNoteController, :acknowledge
   end
 
   scope "/admin", Plenario2Web do
     pipe_through [:browser, :authenticate, :ensure_authenticated, :ensure_admin]
 
     get "/", AdminController, :index
+
     get "/users", AdminController, :user_index
     put "/users/:user_id/activate", AdminController, :activate_user
     put "/users/:user_id/archive", AdminController, :archive_user
@@ -74,6 +78,11 @@ defmodule Plenario2Web.Router do
     put "/users/:user_id/untrust", AdminController, :untrust_user
     put "/users/:user_id/promote-admin", AdminController, :promote_to_admin
     put "/users/:user_id/strip-admin", AdminController, :strip_admin_privs
+
+    get "/metas", AdminController, :meta_index
+    get "/metas/:id/approval-review", AdminController, :get_meta_approval_review
+    post "/metas/:id/approve", AdminController, :approve_meta
+    post "/metas/:id/disapprove", AdminController, :disapprove_meta
   end
 
   # Other scopes may use custom stacks.

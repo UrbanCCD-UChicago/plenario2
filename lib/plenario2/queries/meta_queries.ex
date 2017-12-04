@@ -31,6 +31,8 @@ defmodule Plenario2.Queries.MetaQueries do
 
   def with_data_set_diffs(query), do: from m in query, preload: [data_set_diffs: :metas]
 
+  def with_admin_user_notes(query), do: from m in query, preload: [admin_user_notes: :meta]
+
   ##
   # filters
 
@@ -46,6 +48,7 @@ defmodule Plenario2.Queries.MetaQueries do
       with_virtual_points: false,
       with_constraints: false,
       with_diffs: false,
+      with_notes: false,
       for_user: nil
     ]
     opts = Keyword.merge(defaults, opts)
@@ -57,6 +60,7 @@ defmodule Plenario2.Queries.MetaQueries do
     |> cond_compose(opts[:with_virtual_points], MetaQueries, :with_virtual_point_fields)
     |> cond_compose(opts[:with_constraints], MetaQueries, :with_data_set_constraints)
     |> cond_compose(opts[:with_diffs], MetaQueries, :with_data_set_diffs)
+    |> cond_compose(opts[:with_notes], MetaQueries, :with_admin_user_notes)
     |> filter_compose(opts[:for_user], MetaQueries, :for_user)
   end
 end

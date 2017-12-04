@@ -1,6 +1,7 @@
 defmodule Plenario2.Actions.MetaActions do
   alias Plenario2.Changesets.MetaChangesets
   alias Plenario2.Queries.MetaQueries, as: Q
+  alias Plenario2.Actions.AdminUserNoteActions
   alias Plenario2.Schemas.Meta
   alias Plenario2.Repo
 
@@ -153,22 +154,42 @@ defmodule Plenario2.Actions.MetaActions do
     |> Repo.update()
   end
 
-  def approve(meta) do
+  def approve(meta, admin) do
+    AdminUserNoteActions.create_for_meta(
+      "Your data set has been approved",
+      admin, meta.user, meta, false
+    )
+
     Meta.approve(meta)
     |> Repo.update()
   end
 
-  def disapprove(meta) do
+  def disapprove(meta, admin, message) do
+    msg = "Approval has been denied:\n\n" <> message
+    AdminUserNoteActions.create_for_meta(
+      msg, admin, meta.user, meta, true
+    )
+
     Meta.disapprove(meta)
     |> Repo.update()
   end
 
-  def mark_erred(meta) do
+  def mark_erred(meta, admin, message) do
+    msg = "An error occurred regarding your data set:\n\n" <> message
+    AdminUserNoteActions.create_for_meta(
+      msg, admin, meta.user, meta, true
+    )
+
     Meta.mark_erred(meta)
     |> Repo.update()
   end
 
-  def mark_fixed(meta) do
+  def mark_fixed(meta, admin, message) do
+    msg = "Data set error fixed:\n\n" <> message
+    AdminUserNoteActions.create_for_meta(
+      msg, admin, meta.user, meta, true
+    )
+
     Meta.mark_fixed(meta)
     |> Repo.update()
   end

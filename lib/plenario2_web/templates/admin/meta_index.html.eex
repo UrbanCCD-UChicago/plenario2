@@ -1,0 +1,67 @@
+<%= render Plenario2Web.AdminView, "_admin_nav.html", assigns %>
+
+<div class="row">
+  <div class="col-md-12">
+    <h1>Metas</h1>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-3">
+    <h4>Ready</h4>
+  </div>
+  <div class="col-md-3">
+    <h4>Erred</h4>
+  </div>
+  <div class="col-md-3">
+    <h4>Need Approval</h4>
+  </div>
+  <div class="col-md-3">
+    <h4>New</h4>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-3">
+    <h2><%= length(@ready_metas) %></h2>
+  </div>
+  <div class="col-md-3">
+    <h2><%= length(@erred_metas) %></h2>
+  </div>
+  <div class="col-md-3">
+    <h2><%= length(@approval_metas) %></h2>
+  </div>
+  <div class="col-md-3">
+    <h2><%= length(@new_metas) %></h2>
+  </div>
+</div>
+
+<%= if length(@erred_metas) > 0 do %>
+  <hr>
+  <div class="row">
+    <div class="col-md-12">
+      <h2>Review Erred Metas</h2>
+    </div>
+  </div>
+<% end %>
+
+<%= if length(@approval_metas) > 0 do %>
+  <hr>
+  <div class="row">
+    <div class="col-md-12">
+      <h2>Review Metas that Need Approval</h2>
+    </div>
+  </div>
+
+  <%= for m <- @approval_metas do %>
+  <div class="row">
+    <div class="col-md-11">
+      <strong><%= m.name %></strong><br>
+      Submitted By: <%= m.user.name %>
+    </div>
+    <div class="col-md-1">
+      <%= link "Review", to: admin_path(@conn, :get_meta_approval_review, m.id) %>
+    </div>
+  </div>
+  <% end %>
+<% end %>

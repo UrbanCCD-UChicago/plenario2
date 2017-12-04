@@ -21,11 +21,16 @@
               <li><%= link "Sign Up", to: auth_path(@conn, :get_register), method: :get %><li>
             <% else %>
               <li><a>Hi, <%= @current_user.name %>!</a></li>
+              <%= if @current_user.is_admin do %>
+                <li><%= link "Admin", to: admin_path(@conn, :index) %></li>
+              <% end %>
               <li><%= link "Sign Out", to: auth_path(@conn, :logout), method: :post %></li>
             <% end %>
           </ul>
         </nav>
-        <span class="logo"></span>
+        <a href="/">
+          <span class="logo"></span>
+        </a>
       </header>
 
       <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
