@@ -442,4 +442,16 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "unauthorized"
     end
   end
+
+  test ":submit_for_approval", %{conn: conn} do
+    {:ok, user} = UserActions.create("test user", "password", "test@example.com")
+    {:ok, meta} = MetaActions.create("test data", user.id, "https://example.com/")
+
+    conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
+
+    meta = MetaActions.get_from_id(meta.id)
+    conn
+    |> post(meta_path(conn, :submit_for_approval, meta.slug))
+    |> html_response(:found)
+  end
 end

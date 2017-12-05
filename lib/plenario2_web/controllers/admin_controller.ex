@@ -129,25 +129,25 @@ defmodule Plenario2Web.AdminController do
     |> redirect(to: admin_path(conn, :meta_index))
   end
 
-  def mark_meta_erred(conn, %{"id" => meta_id, "message" => message}) do
-    meta = MetaActions.get_from_id(meta_id, [with_user: true])
-    admin = Guardian.Plug.current_resource(conn)
+  # def mark_meta_erred(conn, %{"id" => meta_id, "message" => message}) do
+  #   meta = MetaActions.get_from_id(meta_id, [with_user: true])
+  #   admin = Guardian.Plug.current_resource(conn)
+  #
+  #   {:ok, _} = MetaActions.mark_erred(meta, admin, message)
+  #
+  #   conn
+  #   |> put_flash(:success, "'#{meta.name}' marked as erred")
+  #   |> redirect(to: admin_path(conn, :meta_index))
+  # end
 
-    {:ok, _} = MetaActions.mark_erred(meta, admin, message)
-
-    conn
-    |> put_flash(:success, "'#{meta.name}' marked as erred")
-    |> redirect(to: admin_path(conn, :meta_index))
-  end
-
-  def mark_meta_fixed(conn, %{"id" => meta_id, "message" => message}) do
-    meta = MetaActions.get_from_id(meta_id, [with_user: true])
-    admin = Guardian.Plug.current_resource(conn)
-
-    {:ok, _} = MetaActions.mark_fixed(meta, admin, message)
-
-    conn
-    |> put_flash(:success, "'#{meta.name}' marked as fixed")
-    |> redirect(to: admin_path(conn, :meta_index))
-  end
+  # def mark_meta_fixed(conn, %{"id" => meta_id, "message" => message}) do
+  #   meta = MetaActions.get_from_id(meta_id, [with_user: true])
+  #   admin = Guardian.Plug.current_resource(conn)
+  #
+  #   {:ok, _} = MetaActions.mark_fixed(meta, admin, message)
+  #
+  #   conn
+  #   |> put_flash(:success, "'#{meta.name}' marked as fixed")
+  #   |> redirect(to: admin_path(conn, :meta_index))
+  # end
 end

@@ -77,9 +77,8 @@ defmodule Plenario2Web.MetaController do
     MetaActions.submit_for_approval(meta)
 
     conn
-    |> put_status(:created)
     |> put_flash(:success, "#{meta.name} Submitted for Approval!")
-    |> redirect(to: meta_path(conn, :list))
+    |> redirect(to: meta_path(conn, :detail, meta.slug))
   end
 
   def get_update_name(conn, %{"slug" => slug}) do
