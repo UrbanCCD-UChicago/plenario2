@@ -19,7 +19,7 @@ defmodule Plenario2.Changesets.DataSetConstraintChangesets do
     table_name =
       get_field(changeset, :meta_id)
       |> MetaActions.get_from_id()
-      |> Meta.get_dataset_table_name()
+      |> Meta.get_data_set_table_name()
 
     field_names = get_field(changeset, :field_names) |> Enum.join("_")
     pieces = ["unique_constraint"] ++ [table_name] ++ [field_names]
@@ -43,7 +43,7 @@ defmodule Plenario2.Changesets.DataSetConstraintChangesets do
     if is_subset do
       changeset
     else
-      changeset |> add_error(:field_names, "Field names must exist as registered fields of the dataset")
+      changeset |> add_error(:field_names, "Field names must exist as registered fields of the data set")
     end
   end
 end

@@ -14,7 +14,7 @@ defmodule Plenario2.Actions.EtlJobActions do
     job
   end
 
-  def get_from_pk(pk), do: Repo.get_by(EtlJob, id: pk)
+  def get_from_id(id), do: Repo.get_by(EtlJob, id: id)
 
   def list(), do: Repo.all(EtlJob)
 

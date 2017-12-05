@@ -31,7 +31,7 @@ defmodule DataSetDiffActionsTest do
     )
   end
 
-  test "list diffs for a dataset", context do
+  test "list diffs for a data set", context do
     {:ok, _} = DataSetDiffActions.create(
       context.meta.id,
       context.cons.id,

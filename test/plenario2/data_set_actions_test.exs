@@ -24,11 +24,11 @@ defmodule DataSetActionsTest do
     VirtualPointFieldActions.create_from_long_lat(meta.id, "long", "lat")
     VirtualDateFieldActions.create(meta.id, "year", "month", "day")
 
-    [meta: meta, table_name: Meta.get_dataset_table_name(meta)]
+    [meta: meta, table_name: Meta.get_data_set_table_name(meta)]
   end
 
-  test "create a dataset table", context do
-    DataSetActions.create_dataset_table(context.meta)
+  test "create a data set table", context do
+    DataSetActions.create_data_set_table(context.meta)
 
     insert = """
     INSERT INTO #{context.table_name}
@@ -44,8 +44,8 @@ defmodule DataSetActionsTest do
     assert result.rows == [["abc123", 1.0, 1.0, 2017, 1, 1, {{2017, 1, 1}, {0, 0, 0, 0}}, %Geo.Point{coordinates: {1.0, 1.0}, srid: 4326}]]
   end
 
-  test "drop a dataset table", context do
-    DataSetActions.create_dataset_table(context.meta)
-    DataSetActions.drop_dataset_table(context.meta)
+  test "drop a data set table", context do
+    DataSetActions.create_data_set_table(context.meta)
+    DataSetActions.drop_data_set_table(context.meta)
   end
 end

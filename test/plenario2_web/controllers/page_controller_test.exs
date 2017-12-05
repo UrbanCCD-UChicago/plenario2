@@ -1,5 +1,5 @@
 defmodule Plenario2Web.PageControllerTest do
-  use Plenario2Web.ConnCase
+  use Plenario2Web.ConnCase, async: true
 
   test "GET /", %{conn: conn} do
     response =

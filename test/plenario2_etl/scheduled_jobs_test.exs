@@ -24,7 +24,7 @@ defmodule ScheduledJobsTest do
     MetaActions.update_next_refresh(meta)
     good_meta = meta
 
-    {:ok, meta} = MetaActions.create("Some Old Dataset", user.id, "https://www.example.com/some-old-dataset")
+    {:ok, meta} = MetaActions.create("Some Old Dataset", user.id, "https://www.example.com/some-old-data-set")
     MetaActions.update_refresh_info(meta, [
       refresh_starts_on: Timex.shift(DateTime.utc_now(), [years: -2]),
       refresh_ends_on: Timex.shift(DateTime.utc_now(), [years: -1]),

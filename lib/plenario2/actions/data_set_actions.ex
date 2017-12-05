@@ -3,8 +3,8 @@ defmodule Plenario2.Actions.DataSetActions do
   alias Plenario2.Schemas.Meta
   alias Plenario2.Repo
 
-  def create_dataset_table(meta) do
-    table_name = Meta.get_dataset_table_name(meta)
+  def create_data_set_table(meta) do
+    table_name = Meta.get_data_set_table_name(meta)
 
     # create table sql
     ds_fields = for f <- DataSetFieldActions.list_for_meta(meta), do: %{name: f.name, type: f.type, opts: f.opts}
@@ -49,8 +49,8 @@ defmodule Plenario2.Actions.DataSetActions do
     Ecto.Adapters.SQL.query!(Repo, parse_point_trigger_sql)
   end
 
-  def drop_dataset_table(meta) do
-    table_name = Meta.get_dataset_table_name(meta)
+  def drop_data_set_table(meta) do
+    table_name = Meta.get_data_set_table_name(meta)
     sql = gen_sql_drop_table(table_name)
 
     Ecto.Adapters.SQL.query!(Repo, sql)

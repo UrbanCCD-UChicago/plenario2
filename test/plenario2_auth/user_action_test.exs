@@ -25,7 +25,7 @@ defmodule UserActionsTests do
   test "get a user by primary key" do
     {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
 
-    found = UserActions.get_from_pk(user.id)
+    found = UserActions.get_from_id(user.id)
     assert user.email_address == found.email_address
   end
 
@@ -41,11 +41,11 @@ defmodule UserActionsTests do
   #   assert user.is_active == true
   #
   #   UserActions.archive(user)
-  #   user = UserActions.get_from_pk(user.id)
+  #   user = UserActions.get_from_id(user.id)
   #   assert user.is_active == false
   #
   #   UserActions.activate_archived(user)
-  #   user = UserActions.get_from_pk(user.id)
+  #   user = UserActions.get_from_id(user.id)
   #   assert user.is_active == true
   # end
 
@@ -54,11 +54,11 @@ defmodule UserActionsTests do
   #   assert user.is_trusted == false
   #
   #   UserActions.trust(user)
-  #   user = UserActions.get_from_pk(user.id)
+  #   user = UserActions.get_from_id(user.id)
   #   assert user.is_trusted == true
   #
   #   UserActions.untrust(user)
-  #   user = UserActions.get_from_pk(user.id)
+  #   user = UserActions.get_from_id(user.id)
   #   assert user.is_trusted == false
   # end
 
@@ -67,11 +67,11 @@ defmodule UserActionsTests do
   #   assert user.is_admin == false
   #
   #   UserActions.promote_to_admin(user)
-  #   user = UserActions.get_from_pk(user.id)
+  #   user = UserActions.get_from_id(user.id)
   #   assert user.is_admin == true
   #
   #   UserActions.revoke_admin(user)
-  #   user = UserActions.get_from_pk(user.id)
+  #   user = UserActions.get_from_id(user.id)
   #   assert user.is_admin == false
   # end
 
@@ -79,7 +79,7 @@ defmodule UserActionsTests do
   #   {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
   #
   #   UserActions.update_name(user, "Spiffy New Name")
-  #   user = UserActions.get_from_pk(user.id)
+  #   user = UserActions.get_from_id(user.id)
   #   assert user.name == "Spiffy New Name"
   # end
 
@@ -88,7 +88,7 @@ defmodule UserActionsTests do
   #   original = user.hashed_password
   #
   #   UserActions.update_password(user, "new password")
-  #   user = UserActions.get_from_pk(user.id)
+  #   user = UserActions.get_from_id(user.id)
   #   new = user.hashed_password
   #   assert new != original
   # end
@@ -97,7 +97,7 @@ defmodule UserActionsTests do
   #   {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
   #
   #   UserActions.update_email_address(user, "test2@example.com")
-  #   user = UserActions.get_from_pk(user.id)
+  #   user = UserActions.get_from_id(user.id)
   #   assert user.email_address == "test2@example.com"
   # end
 
@@ -105,15 +105,15 @@ defmodule UserActionsTests do
   #   {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
   #
   #   UserActions.update_org_info(user, org: "Plenario")
-  #   user = UserActions.get_from_pk(user.id)
+  #   user = UserActions.get_from_id(user.id)
   #   assert user.organization == "Plenario"
   #
   #   UserActions.update_org_info(user, role: "Lead Engineer")
-  #   user = UserActions.get_from_pk(user.id)
+  #   user = UserActions.get_from_id(user.id)
   #   assert user.org_role == "Lead Engineer"
   #
   #   UserActions.update_org_info(user, org: nil, role: "Bum")
-  #   user = UserActions.get_from_pk(user.id)
+  #   user = UserActions.get_from_id(user.id)
   #   assert user.organization == nil
   #   assert user.org_role == "Bum"
   # end

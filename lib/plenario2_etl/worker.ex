@@ -77,7 +77,7 @@ defmodule Plenario2Etl.Worker do
   def load(state) do
     meta = MetaActions.get_from_id(state[:meta_id])
     job = EtlJobActions.create!(meta.id)
-    path = download!(Meta.get_dataset_table_name(meta), meta.source_url())
+    path = download!(Meta.get_data_set_table_name(meta), meta.source_url())
 
     File.stream!(path)
     |> CSV.decode!()
@@ -144,7 +144,7 @@ defmodule Plenario2Etl.Worker do
   end
 
   defp template_query!(template, meta, rows) do
-    table = Meta.get_dataset_table_name(meta)
+    table = Meta.get_data_set_table_name(meta)
     columns = MetaActions.get_column_names(meta)
     constraints = MetaActions.get_first_constraint_field_names(meta)
 
