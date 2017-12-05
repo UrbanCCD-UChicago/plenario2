@@ -1,6 +1,7 @@
 defmodule Plenario2Web.AdminControllerTest do
   use Plenario2Web.ConnCase, async: true
   alias Plenario2Auth.UserActions
+  alias Plenario2.Actions.MetaActions
 
   describe "GET /admin" do
     test "as an authenticated user with admin permissions", %{conn: conn} do
@@ -237,5 +238,75 @@ defmodule Plenario2Web.AdminControllerTest do
 
     user = UserActions.get_from_id(user.id)
     assert user.is_admin == false
+  end
+
+  test :meta_index, %{conn: conn} do
+    {:ok, admin} = UserActions.create("admin", "password", "admin@example.com")
+    UserActions.promote_to_admin(admin)
+    conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "admin@example.com", "plaintext_password" => "password"}}))
+
+    {:ok, meta} = MetaActions.create("test", admin.id, "https://example.com/")
+
+    meta = MetaActions.get_from_id(meta.id, [with_user: true])
+    MetaActions.submit_for_approval(meta)
+
+    response = conn
+      |> get(admin_path(conn, :meta_index))
+      |> html_response(:ok)
+
+    assert response =~ "Metas"
+    assert response =~ "Ready"
+    assert response =~ "Erred"
+    assert response =~ "Need Approval"
+    assert response =~ "New"
+  end
+
+  test :get_meta_approval_review, %{conn: conn} do
+    {:ok, admin} = UserActions.create("admin", "password", "admin@example.com")
+    UserActions.promote_to_admin(admin)
+    conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "admin@example.com", "plaintext_password" => "password"}}))
+
+    {:ok, meta} = MetaActions.create("test", admin.id, "https://example.com/")
+
+    meta = MetaActions.get_from_id(meta.id, [with_user: true])
+    MetaActions.submit_for_approval(meta)
+
+    response = conn
+      |> get(admin_path(conn, :get_meta_approval_review, meta.id))
+      |> html_response(:ok)
+
+    assert response =~ meta.name
+  end
+
+  test :approve_meta, %{conn: conn} do
+    {:ok, admin} = UserActions.create("admin", "password", "admin@example.com")
+    UserActions.promote_to_admin(admin)
+    conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "admin@example.com", "plaintext_password" => "password"}}))
+
+    {:ok, meta} = MetaActions.create("test", admin.id, "https://example.com/")
+
+    meta = MetaActions.get_from_id(meta.id, [with_user: true])
+    MetaActions.submit_for_approval(meta)
+
+    post(conn, admin_path(conn, :approve_meta, meta.id))
+
+    meta = MetaActions.get_from_id(meta.id, [with_user: true])
+    assert meta.state == "ready"
+  end
+
+  test :disapprove_meta, %{conn: conn} do
+    {:ok, admin} = UserActions.create("admin", "password", "admin@example.com")
+    UserActions.promote_to_admin(admin)
+    conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "admin@example.com", "plaintext_password" => "password"}}))
+
+    {:ok, meta} = MetaActions.create("test", admin.id, "https://example.com/")
+
+    meta = MetaActions.get_from_id(meta.id, [with_user: true])
+    MetaActions.submit_for_approval(meta)
+
+    post(conn, admin_path(conn, :disapprove_meta, meta.id, message: "test"))
+
+    meta = MetaActions.get_from_id(meta.id, [with_user: true])
+    assert meta.state == "new"
   end
 end

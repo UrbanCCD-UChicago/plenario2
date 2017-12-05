@@ -56,5 +56,6 @@ defmodule Plenario2.Schemas.Meta do
     has_many(:etl_jobs, Plenario2.Schemas.EtlJob)
     has_many(:data_set_diffs, Plenario2.Schemas.DataSetDiff)
     has_many(:export_jobs, Plenario2.Schemas.ExportJob)
+    has_many(:admin_user_notes, Plenario2.Schemas.AdminUserNote)
   end
 end
