@@ -1,7 +1,6 @@
 defmodule DataSetActionsTest do
   use ExUnit.Case, async: true
   alias Plenario2.Actions.{DataSetActions, DataSetFieldActions, DataSetConstraintActions, MetaActions, VirtualPointFieldActions, VirtualDateFieldActions}
-  alias Plenario2.Schemas.Meta
   alias Plenario2.Repo
   alias Plenario2Auth.UserActions
 
@@ -24,7 +23,7 @@ defmodule DataSetActionsTest do
     VirtualPointFieldActions.create_from_long_lat(meta.id, "long", "lat")
     VirtualDateFieldActions.create(meta.id, "year", "month", "day")
 
-    [meta: meta, table_name: Meta.get_data_set_table_name(meta)]
+    [meta: meta, table_name: MetaActions.get_data_set_table_name(meta)]
   end
 
   test "create a data set table", context do

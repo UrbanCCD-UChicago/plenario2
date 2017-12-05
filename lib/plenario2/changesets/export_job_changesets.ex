@@ -21,7 +21,7 @@ defmodule Plenario2.Changesets.ExportJobChangesets do
     table_name =
       get_field(changeset, :meta_id)
       |> MetaActions.get_from_id()
-      |> Meta.get_data_set_table_name()
+      |> MetaActions.get_data_set_table_name()
 
     bucket = Application.get_env(:plenario2, :s3_export_bucket)
     now = DateTime.utc_now() |> DateTime.to_iso8601()
@@ -35,7 +35,7 @@ defmodule Plenario2.Changesets.ExportJobChangesets do
       table_name =
         get_field(changeset, :meta_id)
         |> MetaActions.get_from_id()
-        |> Meta.get_data_set_table_name()
+        |> MetaActions.get_data_set_table_name()
 
       bucket = Application.get_env(:plenario2, :s3_export_bucket)
       now = DateTime.utc_now() |> DateTime.to_iso8601()
