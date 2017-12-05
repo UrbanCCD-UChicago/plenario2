@@ -57,14 +57,4 @@ defmodule Plenario2.Schemas.Meta do
     has_many(:data_set_diffs, Plenario2.Schemas.DataSetDiff)
     has_many(:export_jobs, Plenario2.Schemas.ExportJob)
   end
-
-  ##
-  # schema functions
-
-  def get_data_set_table_name(meta) do
-    meta.name
-    |> String.split(~r/\s/, trim: true)
-    |> Enum.map(&String.downcase/1)
-    |> Enum.join("_")
-  end
 end

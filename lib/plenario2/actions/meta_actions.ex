@@ -83,6 +83,23 @@ defmodule Plenario2.Actions.MetaActions do
   end
 
   @doc """
+  Get a slugified version of `meta.name`.
+
+  ## Examples
+
+    iex> get_data_set_table_name(meta)
+    "chicago_tree_trimmings"
+
+  """
+  @spec get_data_set_table_name(meta :: Meta) :: charlist
+  def get_data_set_table_name(meta) do
+    meta.name
+    |> String.split(~r/\s/, trim: true)
+    |> Enum.map(&String.downcase/1)
+    |> Enum.join("_")
+  end
+
+  @doc """
   Get the first constraint association for the given `meta`.
 
   ## Examples

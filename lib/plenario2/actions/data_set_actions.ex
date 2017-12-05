@@ -1,10 +1,9 @@
 defmodule Plenario2.Actions.DataSetActions do
-  alias Plenario2.Actions.{DataSetConstraintActions, DataSetFieldActions, VirtualDateFieldActions, VirtualPointFieldActions}
-  alias Plenario2.Schemas.Meta
+  alias Plenario2.Actions.{DataSetConstraintActions, DataSetFieldActions, MetaActions, VirtualDateFieldActions, VirtualPointFieldActions}
   alias Plenario2.Repo
 
   def create_data_set_table(meta) do
-    table_name = Meta.get_data_set_table_name(meta)
+    table_name = MetaActions.get_data_set_table_name(meta)
 
     # create table sql
     ds_fields = for f <- DataSetFieldActions.list_for_meta(meta), do: %{name: f.name, type: f.type, opts: f.opts}
@@ -50,7 +49,7 @@ defmodule Plenario2.Actions.DataSetActions do
   end
 
   def drop_data_set_table(meta) do
-    table_name = Meta.get_data_set_table_name(meta)
+    table_name = MetaActions.get_data_set_table_name(meta)
     sql = gen_sql_drop_table(table_name)
 
     Ecto.Adapters.SQL.query!(Repo, sql)

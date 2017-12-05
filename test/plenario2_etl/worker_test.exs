@@ -9,12 +9,7 @@ defmodule Plenario2Etl.WorkerTest do
   }
 
   alias Plenario2Auth.UserActions
-
-  alias Plenario2.Schemas.{
-    DataSetDiff,
-    Meta
-  }
-
+  alias Plenario2.Schemas.DataSetDiff
   alias Plenario2Etl.Worker
   alias Plenario2.Repo
 
@@ -62,7 +57,7 @@ defmodule Plenario2Etl.WorkerTest do
     %{
       meta: meta,
       meta_id: meta.id,
-      table_name: Meta.get_data_set_table_name(meta),
+      table_name: MetaActions.get_data_set_table_name(meta),
       constraint: constraint,
       job: job
     }
