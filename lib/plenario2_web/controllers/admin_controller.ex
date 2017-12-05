@@ -18,10 +18,10 @@ defmodule Plenario2Web.AdminController do
 
   def user_index(conn, params) do
     users = UserQ.list()
-    |> cond_compose(Map.get(params, "active", false), Q, :active)
-    |> cond_compose(Map.get(params, "archived", false), Q, :archived)
-    |> cond_compose(Map.get(params, "trusted", false), Q, :trusted)
-    |> cond_compose(Map.get(params, "admin", false), Q, :admin)
+    |> cond_compose(Map.get(params, "active", false), UserQ, :active)
+    |> cond_compose(Map.get(params, "archived", false), UserQ, :archived)
+    |> cond_compose(Map.get(params, "trusted", false), UserQ, :trusted)
+    |> cond_compose(Map.get(params, "admin", false), UserQ, :admin)
     |> Repo.all()
 
     render(conn, "user_list.html", users: users)
