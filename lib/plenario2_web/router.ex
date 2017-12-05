@@ -61,6 +61,8 @@ defmodule Plenario2Web.Router do
     put "/data-sets/:slug/update/source", MetaController, :do_update_source_info
     get "/data-sets/:slug/update/refresh", MetaController, :get_update_refresh_info
     put "/data-sets/:slug/update/refresh", MetaController, :do_update_refresh_info
+
+    resources "/data-sets/:data_set_slug/fields", DataSetFieldController
   end
 
   scope "/admin", Plenario2Web do
