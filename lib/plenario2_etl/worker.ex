@@ -75,12 +75,7 @@ defmodule Plenario2Etl.Worker do
   """
   @spec load(state :: map) :: map
   def load(state) do
-    meta =
-      MetaActions.get_by_pk_preload(state[:meta_id], [
-        :data_set_constraints,
-        :data_set_fields
-      ])
-
+    meta = MetaActions.get_from_id(state[:meta_id])
     job = EtlJobActions.create!(meta.id)
     path = download!(Meta.get_dataset_table_name(meta), meta.source_url())
 
@@ -150,8 +145,8 @@ defmodule Plenario2Etl.Worker do
 
   defp template_query!(template, meta, rows) do
     table = Meta.get_dataset_table_name(meta)
-    columns = MetaActions.get_columns(meta)
-    constraints = MetaActions.get_constraints(meta)
+    columns = MetaActions.get_column_names(meta)
+    constraints = MetaActions.get_first_constraint_field_names(meta)
 
     sql =
       EEx.eval_file(
@@ -178,9 +173,9 @@ defmodule Plenario2Etl.Worker do
 
   """
   def create_diffs(meta, job, original, updated) do
-    columns = MetaActions.get_columns(meta)
-    constraint = MetaActions.get_constraint(meta)
-    constraints = MetaActions.get_constraints(meta)
+    columns = MetaActions.get_column_names(meta)
+    constraint = MetaActions.get_first_constraint(meta)
+    constraints = MetaActions.get_first_constraint_field_names(meta)
 
     constraint_indices =
       Enum.map(constraints, fn constraint ->

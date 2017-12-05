@@ -61,7 +61,6 @@ defmodule Plenario2.Schemas.Meta do
   ##
   # schema functions
 
-  # TODO(heyzoos) inconsistent naming
   def get_dataset_table_name(meta) do
     meta.name
     |> String.split(~r/\s/, trim: true)

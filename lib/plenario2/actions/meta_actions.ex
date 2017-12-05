@@ -7,8 +7,6 @@ defmodule Plenario2.Actions.MetaActions do
   }
   alias Plenario2.Repo
 
-  import Ecto.Query
-
   ##
   # get one
 
@@ -68,41 +66,19 @@ defmodule Plenario2.Actions.MetaActions do
   end
 
   @doc """
-  Load a single row of `Meta` with any field specified by `preloads`
-  preloaded.
-
-  ## Examples
-
-    iex> get_by_pk_preload(1)
-    iex> get_by_pk_preload(1, [:data_set_constraints])
-    iex> get_by_pk_preload(1, [:data_set_constraints, :data_set_diffs])
-
-  """
-  @spec get_by_pk_preload(pk :: integer, preloads :: list) :: Meta
-  def get_by_pk_preload(pk, preloads \\ []) do
-    Repo.one(
-      from(
-        m in Meta,
-        where: m.id == ^pk,
-        preload: ^preloads
-      )
-    )
-  end
-
-  @doc """
   Get a list of column names for a `Meta` struct. 
 
   ## Examples
 
-    iex> get_columns(meta)
+    iex> get_column_names(meta)
     ["id", "location", "datetime", "observation"]
 
   """
-  @spec get_columns(meta :: Meta) :: list[charlist]
-  def get_columns(meta) do
+  @spec get_column_names(meta :: Meta) :: list[charlist]
+  def get_column_names(meta) do
     meta = Repo.preload(meta, :data_set_fields)
     for field <- meta.data_set_fields() do
-      field.name()
+      field.name
     end
   end
 
@@ -111,14 +87,14 @@ defmodule Plenario2.Actions.MetaActions do
 
   ## Examples
 
-    iex> get_constraint(meta)
+    iex> get_first_constraint(meta)
     %DataSetConstraint{}
 
   """
-  @spec get_constraint(meta :: Meta) :: DataSetConstraint
-  def get_constraint(meta) do
+  @spec get_first_constraint(meta :: Meta) :: DataSetConstraint
+  def get_first_constraint(meta) do
     meta = Repo.preload(meta, :data_set_constraints)
-    [constraint | _] = meta.data_set_constraints()
+    [constraint | _] = meta.data_set_constraints
     constraint
   end
 
@@ -128,13 +104,13 @@ defmodule Plenario2.Actions.MetaActions do
 
   ## Examples
 
-    iex> get_constraints(meta)
+    iex> get_first_constraint_field_names(meta)
     ["datetime", "location"]
 
   """
-  @spec get_constraints(meta :: Meta) :: list[charlist]
-  def get_constraints(meta) do
-    get_constraint(meta).field_names()
+  @spec get_first_constraint_field_names(meta :: Meta) :: list[charlist]
+  def get_first_constraint_field_names(meta) do
+    get_first_constraint(meta).field_names
   end
 
   def update_name(meta, new_name) do
