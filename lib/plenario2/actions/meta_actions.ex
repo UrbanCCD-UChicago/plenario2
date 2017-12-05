@@ -4,7 +4,7 @@ defmodule Plenario2.Actions.MetaActions do
   alias Plenario2.Changesets.MetaChangesets
   alias Plenario2.Queries.MetaQueries, as: Q
   alias Plenario2.Actions.AdminUserNoteActions
-  alias Plenario2.Schemas.Meta
+  alias Plenario2.Schemas.{Meta, DataSetConstraint}
   alias Plenario2.Repo
 
   ##
@@ -65,8 +65,70 @@ defmodule Plenario2.Actions.MetaActions do
     |> Repo.insert()
   end
 
-  ##
-  # update
+  @doc """
+  Get a list of column names for a `Meta` struct.
+
+  ## Examples
+
+    iex> get_column_names(meta)
+    ["id", "location", "datetime", "observation"]
+
+  """
+  @spec get_column_names(meta :: Meta) :: list[charlist]
+  def get_column_names(meta) do
+    meta = Repo.preload(meta, :data_set_fields)
+    for field <- meta.data_set_fields() do
+      field.name
+    end
+  end
+
+  @doc """
+  Get a slugified version of `meta.name`.
+
+  ## Examples
+
+    iex> get_data_set_table_name(meta)
+    "chicago_tree_trimmings"
+
+  """
+  @spec get_data_set_table_name(meta :: Meta) :: charlist
+  def get_data_set_table_name(meta) do
+    meta.name
+    |> String.split(~r/\s/, trim: true)
+    |> Enum.map(&String.downcase/1)
+    |> Enum.join("_")
+  end
+
+  @doc """
+  Get the first constraint association for the given `meta`.
+
+  ## Examples
+
+    iex> get_first_constraint(meta)
+    %DataSetConstraint{}
+
+  """
+  @spec get_first_constraint(meta :: Meta) :: DataSetConstraint
+  def get_first_constraint(meta) do
+    meta = Repo.preload(meta, :data_set_constraints)
+    [constraint | _] = meta.data_set_constraints
+    constraint
+  end
+
+  @doc """
+  Get the list of keys specified by the first `DataSetStraint` association
+  of a `Meta` struct.
+
+  ## Examples
+
+    iex> get_first_constraint_field_names(meta)
+    ["datetime", "location"]
+
+  """
+  @spec get_first_constraint_field_names(meta :: Meta) :: list[charlist]
+  def get_first_constraint_field_names(meta) do
+    get_first_constraint(meta).field_names
+  end
 
   def update_name(meta, new_name) do
     MetaChangesets.update_name(meta, %{name: new_name})
@@ -83,10 +145,11 @@ defmodule Plenario2.Actions.MetaActions do
       source_url: :unchanged,
       source_type: :unchanged
     ]
+
     options = Keyword.merge(defaults, options) |> Enum.into(%{})
 
     params =
-      Enum.filter(options, fn({_, value}) -> value != :unchanged end)
+      Enum.filter(options, fn {_, value} -> value != :unchanged end)
       |> Enum.into(%{})
 
     MetaChangesets.update_source_info(meta, params)
@@ -98,10 +161,11 @@ defmodule Plenario2.Actions.MetaActions do
       description: :unchanged,
       attribution: :unchanged
     ]
+
     options = Keyword.merge(defaults, options) |> Enum.into(%{})
 
     params =
-      Enum.filter(options, fn({_, value}) -> value != :unchanged end)
+      Enum.filter(options, fn {_, value} -> value != :unchanged end)
       |> Enum.into(%{})
 
     MetaChangesets.update_description_info(meta, params)
@@ -115,10 +179,11 @@ defmodule Plenario2.Actions.MetaActions do
       refresh_starts_on: :unchanged,
       refresh_ends_on: :unchanged
     ]
+
     options = Keyword.merge(defaults, options) |> Enum.into(%{})
 
     params =
-      Enum.filter(options, fn({_, value}) -> value != :unchanged end)
+      Enum.filter(options, fn {_, value} -> value != :unchanged end)
       |> Enum.into(%{})
 
     MetaChangesets.update_refresh_info(meta, params)
@@ -135,7 +200,7 @@ defmodule Plenario2.Actions.MetaActions do
     current =
       case meta.next_refresh do
         nil -> DateTime.utc_now()
-        _   -> meta.next_refresh
+        _ -> meta.next_refresh
       end
 
     rate = meta.refresh_rate

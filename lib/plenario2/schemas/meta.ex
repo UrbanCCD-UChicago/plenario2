@@ -58,14 +58,4 @@ defmodule Plenario2.Schemas.Meta do
     has_many(:export_jobs, Plenario2.Schemas.ExportJob)
     has_many(:admin_user_notes, Plenario2.Schemas.AdminUserNote)
   end
-
-  ##
-  # schema functions
-
-  def get_data_set_table_name(meta) do
-    meta.name
-    |> String.split(~r/\s/, trim: true)
-    |> Enum.map(&(String.downcase(&1)))
-    |> Enum.join("_")
-  end
 end
