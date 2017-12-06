@@ -64,6 +64,8 @@ defmodule Plenario2Web.Router do
     post "/data-sets/:slug/submit-for-approval", MetaController, :submit_for_approval
 
     post "/notes/:id/acknowledge", AdminUserNoteController, :acknowledge
+
+    get "/my/info", UserController, :index
   end
 
   scope "/admin", Plenario2Web do

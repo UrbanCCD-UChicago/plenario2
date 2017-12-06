@@ -1,0 +1,201 @@
+<div class="row">
+  <div class="col-md-8">
+    <div class="jumbotron">
+
+      <div class="row">
+        <div class="col-md-6">
+          <%= link raw("<button class='btn btn-primary'>Create a New Data Set</button>"), to: meta_path(@conn, :get_create) %>
+        </div>
+        <div class="col-md-6">
+          <%= link raw("<button class='btn btn-primary'>View all My Data Sets</button>"), to: meta_path(@conn, :get_create) %>
+        </div>
+      </div>
+
+      <hr>
+
+      <% len_err = length(@erred_metas) %>
+      <%= if len_err > 0 do %>
+      <div class="row">
+        <div class="col-md-12" style="text-align:left;">
+          <h2><%= len_err %> Erred Data <%= s_plural("Set", len_err) %></h2>
+        </div>
+      </div>
+      <%= for m <- @erred_metas do %>
+      <div class="row">
+        <div class="col-md-12" style="text-align:left;">
+          <h3><%= m.name %></h3>
+        </div>
+      </div>
+      <% end %>
+      <hr>
+      <% end %>
+
+      <% len_wait =  length(@awaiting_metas) %>
+      <%= if len_wait > 0 do %>
+      <div class="row">
+        <div class="col-md-12" style="text-align:left;">
+          <h2><%= len_wait %> Data <%= s_plural("Set", len_wait) %> Awaiting Approval</h2>
+        </div>
+      </div>
+      <%= for m <- @awaiting_metas do %>
+      <div class="row">
+        <div class="col-md-12" style="text-align:left;">
+          <h3><%= m.name %></h3>
+        </div>
+      </div>
+      <% end %>
+      <hr>
+      <% end %>
+
+      <% len_new = length(@new_metas) %>
+      <%= if len_new > 0 do %>
+      <div class="row">
+        <div class="col-md-12" style="text-align:left;">
+          <h2><%= len_new %> Incomplete Data <%= s_plural("Set", len_new) %></h2>
+        </div>
+      </div>
+      <%= for m <- @new_metas do %>
+      <div class="row">
+        <div class="col-md-12" style="text-align:left;">
+          <h3><%= m.name %></h3>
+          <%= link "View Details and Edit", to: meta_path(@conn, :detail, m.slug) %>
+          <p><%= m.description %></p>
+        </div>
+      </div>
+      <% end %>
+      <hr>
+      <% end %>
+
+      <% len_ready = length(@ready_metas) %>
+      <%= if len_ready > 0 do %>
+      <div class="row">
+        <div class="col-md-12" style="text-align:left;">
+          <h2><%= len_ready %> Live Data <%= s_plural("Set", len_ready) %></h2>
+        </div>
+      </div>
+      <%= for m <- @ready_metas do %>
+      <div class="row">
+        <div class="col-md-12" style="text-align:left;">
+          <h3><%= m.name %></h3>
+          <%= link "View Details and Edit", to: meta_path(@conn, :detail, m.slug) %>
+          <p><%= m.description %></p>
+        </div>
+      </div>
+      <% end %>
+      <% end %>
+
+    </div>
+  </div>
+
+  <div class="col-md-4">
+
+    <div class="row">
+      <div class="col-md-12">
+        <h3>Personal Info<hr></h3>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-8">
+        <strong>Name:</strong><br>
+        <%= @current_user.name %>
+      </div>
+      <div class="col-md-4">
+        <a>Update Name</a>
+      </div>
+    </div>
+
+    <br>
+
+    <div class="row">
+      <div class="col-md-8">
+        <strong>Email:</strong><br>
+        <%= @current_user.email_address %>
+      </div>
+      <div class="col-md-4">
+        <a>Update Email</a>
+      </div>
+    </div>
+
+    <br>
+
+    <div class="row">
+      <div class="col-md-8">
+        <strong>Organization:</strong><br>
+        <%= @current_user.organization || "-" %>
+      </div>
+      <div class="col-md-4">
+        <a>Update Org Info</a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-8">
+        <strong>Role:</strong><br>
+        <%= @current_user.org_role || "-" %>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+      <div class="col-md-12">
+        <a>Update Password</a>
+      </div>
+    </div>
+
+    <br>
+
+    <div class="row">
+      <div class="col-md-12">
+        <h3>Messages<hr></h3>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-12">
+        <h4>Unread</h4>
+      </div>
+    </div>
+
+    <%= if length(@unread_notes) > 0 do %>
+
+      <%= for note <- @unread_notes do %>
+        <div class="row">
+          <div class="col-md-12">
+            <p>
+              <strong><%= note.inserted_at %></strong><br>
+              <%= note.note %><br>
+              <%= note.acknowledged %>
+            </p>
+          </div>
+        </div>
+      <% end %>
+
+    <% else %>
+      <div class="row">
+        <div class="col-md-12">
+          <p>All caught up!</p>
+        </div>
+      </div>
+
+    <% end %>
+
+    <div class="row">
+      <div class="col-md-12">
+        <h4>Archived</h4>
+      </div>
+    </div>
+
+    <%= for note <- @archived_notes do %>
+      <div class="row">
+        <div class="col-md-12">
+          <p>
+            <strong><%= note.inserted_at %></strong><br>
+            <%= note.note %>
+          </p>
+        </div>
+      </div>
+    <% end %>
+
+  </div>
+</div>
