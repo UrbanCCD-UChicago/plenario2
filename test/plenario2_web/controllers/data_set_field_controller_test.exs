@@ -62,7 +62,7 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
         }
       }))
 
-      response = conn
+      conn
         |> post(data_set_field_path(conn, :create, meta.slug), %{
           "data_set_field" => %{
             "name" => "foo",
