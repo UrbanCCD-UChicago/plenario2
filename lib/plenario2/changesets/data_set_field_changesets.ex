@@ -1,6 +1,13 @@
 defmodule Plenario2.Changesets.DataSetFieldChangesets do
   import Ecto.Changeset
 
+  def create(struct) do
+    struct
+    |> cast(%{}, [:name, :type, :opts, :meta_id])
+    |> validate_required([:name, :type, :opts, :meta_id])
+    |> cast_assoc(:meta)
+  end
+
   def create(struct, params) do
     struct
     |> cast(params, [:name, :type, :opts, :meta_id])
