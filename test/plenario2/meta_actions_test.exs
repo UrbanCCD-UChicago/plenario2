@@ -185,42 +185,143 @@ defmodule MetaActionsTests do
     assert meta.state == "needs_approval"
   end
 
-  test "approve meta" do
-    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
-    {:ok, meta} = MetaActions.submit_for_approval(meta)
+  describe "approve meta" do
+    test "with admin" do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      user = UserActions.get_from_id(user.id)
+      UserActions.promote_to_admin(user)
+      {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
+      {:ok, meta} = MetaActions.submit_for_approval(meta)
 
-    {:ok, meta} = MetaActions.approve(meta)
-    assert meta.state == "ready"
+      user = UserActions.get_from_id(user.id)
+      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      {:ok, meta} = MetaActions.approve(meta, user)
+      assert meta.state == "ready"
+    end
+
+    test "with regular user" do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
+      {:ok, meta} = MetaActions.submit_for_approval(meta)
+
+      user = UserActions.get_from_id(user.id)
+      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+
+      {:error, error} = MetaActions.approve(meta, user)
+      assert error =~ "not an admin"
+    end
   end
 
-  test "disapprove meta" do
-    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
-    {:ok, meta} = MetaActions.submit_for_approval(meta)
+  describe "disapprove meta" do
+    test "with admin" do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      user = UserActions.get_from_id(user.id)
+      UserActions.promote_to_admin(user)
+      {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
+      {:ok, meta} = MetaActions.submit_for_approval(meta)
 
-    {:ok, meta} = MetaActions.disapprove(meta)
-    assert meta.state == "new"
+      user = UserActions.get_from_id(user.id)
+      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      {:ok, meta} = MetaActions.disapprove(meta, user, "bad stuff")
+      assert meta.state == "new"
+    end
+
+    test "with regular user" do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      user = UserActions.get_from_id(user.id)
+      UserActions.promote_to_admin(user)
+      {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
+      {:ok, meta} = MetaActions.submit_for_approval(meta)
+
+      user = UserActions.get_from_id(user.id)
+      UserActions.strip_admin(user)
+      user = UserActions.get_from_id(user.id)
+
+      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      {:error, error} = MetaActions.disapprove(meta, user, "bad stuff")
+      assert error =~ "not an admin"
+    end
   end
 
-  test "mark meta as erred" do
-    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
-    {:ok, meta} = MetaActions.submit_for_approval(meta)
-    {:ok, meta} = MetaActions.approve(meta)
+  describe "mark meta as erred" do
+    test "with admin" do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      user = UserActions.get_from_id(user.id)
+      UserActions.promote_to_admin(user)
+      {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 
-    {:ok, meta} = MetaActions.mark_erred(meta)
-    assert meta.state == "erred"
+      user = UserActions.get_from_id(user.id)
+      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      {:ok, meta} = MetaActions.submit_for_approval(meta)
+      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      {:ok, meta} = MetaActions.approve(meta, user)
+
+      {:ok, meta} = MetaActions.mark_erred(meta, user, "something bad happened on our end")
+      assert meta.state == "erred"
+    end
+
+    test "with regular user" do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      user = UserActions.get_from_id(user.id)
+      UserActions.promote_to_admin(user)
+      {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
+
+      user = UserActions.get_from_id(user.id)
+      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      {:ok, meta} = MetaActions.submit_for_approval(meta)
+      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      {:ok, meta} = MetaActions.approve(meta, user)
+
+      user = UserActions.get_from_id(user.id)
+      UserActions.strip_admin(user)
+      user = UserActions.get_from_id(user.id)
+
+      {:error, error} = MetaActions.mark_erred(meta, user, "something bad happened on our end")
+      assert error =~ "not an admin"
+    end
   end
 
-  test "mark meta as fixed" do
-    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
-    {:ok, meta} = MetaActions.submit_for_approval(meta)
-    {:ok, meta} = MetaActions.approve(meta)
-    {:ok, meta} = MetaActions.mark_erred(meta)
+  describe "mark meta as fixed" do
+    test "with admin" do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      user = UserActions.get_from_id(user.id)
+      UserActions.promote_to_admin(user)
+      {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
 
-    {:ok, meta} = MetaActions.mark_fixed(meta)
-    assert meta.state == "ready"
+      user = UserActions.get_from_id(user.id)
+      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      {:ok, meta} = MetaActions.submit_for_approval(meta)
+      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      {:ok, meta} = MetaActions.approve(meta, user)
+      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      {:ok, meta} = MetaActions.mark_erred(meta, user, "something bad happened")
+      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+
+      {:ok, meta} = MetaActions.mark_fixed(meta, user, "something good happened")
+      assert meta.state == "ready"
+    end
+
+    test "with regular user" do
+      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+      user = UserActions.get_from_id(user.id)
+      UserActions.promote_to_admin(user)
+      {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
+
+      user = UserActions.get_from_id(user.id)
+      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      {:ok, meta} = MetaActions.submit_for_approval(meta)
+      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      {:ok, meta} = MetaActions.approve(meta, user)
+      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      {:ok, meta} = MetaActions.mark_erred(meta, user, "something bad happened")
+      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+
+      user = UserActions.get_from_id(user.id)
+      UserActions.strip_admin(user)
+      user = UserActions.get_from_id(user.id)
+
+      {:error, error} = MetaActions.mark_fixed(meta, user, "something good happened")
+      assert error =~ "not an admin"
+    end
   end
 end

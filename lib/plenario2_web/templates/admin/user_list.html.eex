@@ -67,7 +67,7 @@ span.strike {text-decoration:line-through}
     <% else %>
       <%= if not u.is_admin do %>
         <%= link "Trust", to: admin_path(@conn, :trust_user, u.id), method: :put %>
-      <%= else %>
+      <% else %>
         <span class="strike">Untrust</span>
       <% end %>
     <% end %>

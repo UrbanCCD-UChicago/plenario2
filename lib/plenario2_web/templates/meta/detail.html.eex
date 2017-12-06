@@ -3,6 +3,17 @@ div>div:first-child { font-weight: bold; }
 div.row { margin-bottom: 2em; }
 </style>
 
+<%= if @owner do %>
+  <%= for note <- Enum.reverse(@meta.admin_user_notes) do %>
+    <%= if not note.acknowledged do %>
+      <div class="alert alert-info" role="alert">
+        <%= link raw("&times;"), to: admin_user_note_path(@conn, :acknowledge, note.id, path: @curr_path), class: "close", method: :post %>
+        <%= note.note %>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>
+
 <div class="row" style="display:flex;align-items:baseline;">
   <div class="col-md-9">
     <h1><%= @meta.name %></h1>
@@ -133,6 +144,17 @@ div.row { margin-bottom: 2em; }
 <% end %>
 
 <hr>
+
+<%= if @owner and @meta.state == "new" do %>
+<div class="row">
+  <div class="col-md-12">
+    <%= form_for @conn, meta_path(@conn, :submit_for_approval, @meta.slug), fn f -> %>
+      <%= submit "Submit for Approval", class: "btn btn-primary" %>
+    <% end %>
+  </div>
+</div>
+<hr>
+<% end %>
 
 <div class="row">
   <div class="col-md-12">
