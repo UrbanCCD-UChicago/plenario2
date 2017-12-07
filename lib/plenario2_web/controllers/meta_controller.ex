@@ -59,7 +59,6 @@ defmodule Plenario2Web.MetaController do
 
   defp create_reply({:ok, meta}, conn) do
     conn
-    |> put_status(:created)
     |> put_flash(:success, "#{meta.name} Created!")
     |> redirect(to: meta_path(conn, :list))
   end

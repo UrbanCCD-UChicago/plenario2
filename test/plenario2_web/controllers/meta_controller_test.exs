@@ -33,7 +33,7 @@ defmodule Plenario2Web.MetaControllerTest do
       assert length(MetaActions.list()) == 0
 
       conn = post(conn, meta_path(conn, :do_create), %{"meta" => %{"name" => "Test Data", "source_url" => "https://example.com/test-data"}})
-      assert "/data-sets/list" = redir_path = redirected_to(conn, :created)
+      assert "/data-sets/list" = redir_path = redirected_to(conn, :found)
       conn = get(recycle(conn), redir_path)
       response = html_response(conn, :ok)
 
