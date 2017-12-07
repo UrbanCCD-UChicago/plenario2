@@ -101,4 +101,37 @@ defmodule Plenario2Web.UserControllerTest do
     assert user.organization == "University of Chicago"
     assert user.org_role == "Internet Janitor"
   end
+
+  test ":get_update_password", %{conn: conn} do
+    UserActions.create("test", "password", "test@example.com")
+    conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
+
+    res = conn
+      |> get(user_path(conn, :get_update_password))
+      |> html_response(:ok)
+
+    assert res =~ "Update Your Password"
+  end
+
+  describe ":do_update_password" do
+    test "with a good password", %{conn: conn} do
+      UserActions.create("test", "password", "test@example.com")
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
+
+      conn
+      |> put(user_path(conn, :do_update_password, %{"user" => %{"plaintext_password" => "shh secret"}}))
+      |> html_response(:found)
+
+      post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test2@example.com", "plaintext_password" => "shh secret"}}))
+    end
+
+    test "with a bad password", %{conn: conn} do
+      UserActions.create("test", "password", "test@example.com")
+      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
+
+      conn
+      |> put(user_path(conn, :do_update_password, %{"user" => %{"plaintext_password" => ""}}))
+      |> html_response(:bad_request)
+    end
+  end
 end

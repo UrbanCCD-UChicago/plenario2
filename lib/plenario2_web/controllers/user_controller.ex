@@ -116,4 +116,34 @@ defmodule Plenario2Web.UserController do
     |> put_status(:bad_request)
     |> render("update_org_info.html", changeset: changeset, action: action)
   end
+
+  def get_update_password(conn, _) do
+    user = Guardian.Plug.current_resource(conn)
+    changeset = UserChangesets.update_password(user, %{})
+    action = user_path(conn, :do_update_password)
+
+    render(conn, "update_password.html", changeset: changeset, action: action)
+  end
+
+  def do_update_password(conn, %{"user" => %{"plaintext_password" => password}}) do
+    user = Guardian.Plug.current_resource(conn)
+
+    UserActions.update_password(user, password)
+    |> update_password_reply(conn)
+  end
+
+  defp update_password_reply({:ok, _}, conn) do
+    conn
+    |> put_flash(:success, "Your password has been updated")
+    |> redirect(to: user_path(conn, :index))
+  end
+
+  defp update_password_reply({:error, changeset}, conn) do
+    action = user_path(conn, :do_update_password)
+
+    conn
+    |> put_flash(:error, "Please review and fix errors below")
+    |> put_status(:bad_request)
+    |> render("update_password.html", changeset: changeset, action: action)
+  end
 end

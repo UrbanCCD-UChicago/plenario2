@@ -139,7 +139,7 @@
 
     <div class="row">
       <div class="col-md-12">
-        <a>Update Password</a>
+        <%= link "Update Password", to: user_path(@conn, :get_update_password) %>
       </div>
     </div>
 
