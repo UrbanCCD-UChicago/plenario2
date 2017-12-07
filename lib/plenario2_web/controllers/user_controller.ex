@@ -75,7 +75,7 @@ defmodule Plenario2Web.UserController do
   defp update_email_reply({:ok, _}, conn) do
     conn
     |> put_flash(:success, "Your email address has been updated")
-    |> redirect(to: auth_path(conn, :get_login))
+    |> redirect(to: user_path(conn, :index))
   end
 
   defp update_email_reply({:error, changeset}, conn) do

@@ -3,11 +3,11 @@ defmodule Plenario2Auth.Guardian do
   alias Plenario2Auth.UserActions
 
   def subject_for_token(user, _claims) do
-    {:ok, user.email_address}
+    {:ok, user.id}
   end
 
   def resource_from_claims(claims) do
-    user = UserActions.get_from_email(claims["sub"])
+    user = UserActions.get_from_id(claims["sub"])
     case user do
       nil -> {:error, "Unknown user"}
       _   -> {:ok, user}
