@@ -101,7 +101,7 @@
         <%= @current_user.name %>
       </div>
       <div class="col-md-4">
-        <a>Update Name</a>
+        <%= link "Update Name", to: user_path(@conn, :get_update_name) %>
       </div>
     </div>
 

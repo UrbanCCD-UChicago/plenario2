@@ -66,6 +66,8 @@ defmodule Plenario2Web.Router do
     post "/notes/:id/acknowledge", AdminUserNoteController, :acknowledge
 
     get "/my/info", UserController, :index
+    get "/my/name", UserController, :get_update_name
+    put "/my/name", UserController, :do_update_name
   end
 
   scope "/admin", Plenario2Web do

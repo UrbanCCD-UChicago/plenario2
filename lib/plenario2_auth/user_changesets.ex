@@ -22,30 +22,30 @@ defmodule Plenario2Auth.UserChangesets do
     |> hash_password()
   end
 
-  # def update_name(user, params) do
-  #   user
-  #   |> cast(params, [:name])
-  # end
-  #
-  # def update_email_address(user, params) do
-  #   user
-  #   |> cast(params, [:email_address])
-  #   |> validate_required([:email_address])
-  #   |> unique_constraint(:email_address)
-  #   |> validate_format(:email_address, @email_regex)
-  # end
-  #
-  # def update_password(user, params) do
-  #   user
-  #   |> cast(params, [:plaintext_password])
-  #   |> validate_required([:plaintext_password])
-  #   |> hash_password(params.plaintext_password)
-  # end
-  #
-  # def update_org_info(user, params) do
-  #   user
-  #   |> cast(params, [:organization, :org_role])
-  # end
+  def update_name(user, params) do
+    user
+    |> cast(params, [:name])
+  end
+
+  def update_email_address(user, params) do
+    user
+    |> cast(params, [:email_address])
+    |> validate_required([:email_address])
+    |> unique_constraint(:email_address)
+    |> validate_format(:email_address, @email_regex)
+  end
+
+  def update_password(user, params) do
+    user
+    |> cast(params, [:plaintext_password])
+    |> validate_required([:plaintext_password])
+    |> hash_password()
+  end
+
+  def update_org_info(user, params) do
+    user
+    |> cast(params, [:organization, :org_role])
+  end
 
   def update_active(user, params) do
     user
