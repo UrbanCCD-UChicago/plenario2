@@ -21,7 +21,7 @@ defmodule Plenario2.Queries.MetaQueries do
 
   def with_user(query), do: from m in query, preload: [user: :metas]
 
-  def with_data_set_fields(query), do: from m in query, preload: [data_set_fields: :metas]
+  def with_data_set_fields(query), do: from m in query, preload: [data_set_fields: :meta]
 
   def with_data_set_constraints(query), do: from m in query, preload: [data_set_constraints: :metas]
 

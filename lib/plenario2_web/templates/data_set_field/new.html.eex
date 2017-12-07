@@ -1,0 +1,31 @@
+<!-- Template Variables -->
+<!-- ================== -->
+<!-- meta        Meta -->
+<!-- fields      list[DataSetField] -->
+<!-- slug        charlist -->
+
+<h2>Register New Data Set Field</h2>
+
+<%= form_for @changeset, data_set_field_path(@conn, :create, @slug), fn f -> %>
+  <div class="form-group">
+    <%= label f, "Field Name", class: "control-label" %>
+    <%= text_input f, :name, class: "form-control" %>
+    <%= error_tag f, :name %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, "Type", class: "control-label" %>
+    <%= text_input f, :type, class: "form-control" %>
+    <%= error_tag f, :type %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, "Modifiers", class: "control-label" %>
+    <%= text_input f, :opts, class: "form-control" %>
+    <%= error_tag f, :opts %>
+  </div>
+
+  <div class="from-group">
+    <%= submit "Create", class: "btn btn-primary" %>
+  </div>
+<% end %>
