@@ -9,6 +9,23 @@
 
     <title>Plenario</title>
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+    <style>
+    @media (min-width: 900px) {
+      .container {
+        max-width: 870px;
+      }
+    }
+    @media (min-width: 1150px) {
+      .container {
+        max-width: 1120px;
+      }
+    }
+    @media (min-width: 1400px) {
+      .container {
+        max-width: 1370px;
+      }
+    }
+    </style>
   </head>
 
   <body>
@@ -20,7 +37,7 @@
               <li><%= link "Sign In", to: auth_path(@conn, :get_login), method: :get %></li>
               <li><%= link "Sign Up", to: auth_path(@conn, :get_register), method: :get %><li>
             <% else %>
-              <li><a>Hi, <%= @current_user.name %>!</a></li>
+              <li><%= link "Hi, #{@current_user.name}!", to: user_path(@conn, :index) %></li>
               <%= if @current_user.is_admin do %>
                 <li><%= link "Admin", to: admin_path(@conn, :index) %></li>
               <% end %>

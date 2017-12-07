@@ -35,6 +35,35 @@ defmodule Plenario2Auth.UserActions do
   ##
   # edit
 
+  def update_name(user, new_name) do
+    UserChangesets.update_name(user, %{name: new_name})
+    |> Repo.update()
+  end
+
+  def update_email_address(user, new_email) do
+    UserChangesets.update_email_address(user, %{email_address: new_email})
+    |> Repo.update()
+  end
+
+  def update_org_info(user, opts \\ []) do
+    defaults = [
+      organization: :unchanged,
+      org_role: :unchanged
+    ]
+    options = Keyword.merge(defaults, opts) |> Enum.into(%{})
+    params =
+      Enum.filter(options, fn {_, value} -> value != :unchanged end)
+      |> Enum.into(%{})
+
+    UserChangesets.update_org_info(user, params)
+    |> Repo.update()
+  end
+
+  def update_password(user, new_password) do
+    UserChangesets.update_password(user, %{plaintext_password: new_password})
+    |> Repo.update()
+  end
+
   def promote_to_admin(user) do
     UserChangesets.update_admin(user, %{is_admin: true, is_trusted: true})
     |> Repo.update()
