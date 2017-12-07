@@ -1,3 +1,8 @@
+<!-- Template Variables -->
+<!-- ================== -->
+<!-- meta        Meta -->
+
+
 <style>
 div>div:first-child { font-weight: bold; }
 div.row { margin-bottom: 2em; }
@@ -131,17 +136,28 @@ div.row { margin-bottom: 2em; }
 
 <h3>Field Information<hr></h3>
 
-<%= for {f, i} <- Enum.with_index(@meta.data_set_fields) do %>
-<div class="row">
-  <div class="col-md-3"><%= f.name %></div>
-  <div class="col-md-3"><%= f.type %></div>
-  <%= if i == 0 do %>
-    <div class="col-md-3">&nbsp;</div>
-    <div class="col-md-3">
-      <a>Update fields</a>
-    </div>
-  <% end %>
-<% end %>
+<div class="border">
+  <table class="table">
+    <thead class="thead-light">
+      <tr>
+        <th scope="col">ID</th>
+        <th scope="col">Name</th>
+        <th scope="col">Type</th>
+        <th scope="col">Column</th>
+      </tr>
+    </thead>
+    <tbody>
+      <%= for field <- @meta.data_set_fields do %>
+        <tr>
+          <th><%= field.id %></th>
+          <td><%= field.name %></td>
+          <td><%= field.type %></td>
+          <td><%= field.opts %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table> 
+</div>
 
 <hr>
 

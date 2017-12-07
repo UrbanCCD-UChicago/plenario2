@@ -1,6 +1,6 @@
 defmodule Plenario2Web.MetaControllerTest do
   use Plenario2Web.ConnCase, async: true
-  alias Plenario2.Actions.MetaActions
+  alias Plenario2.Actions.{DataSetFieldActions, MetaActions}
   alias Plenario2Auth.UserActions
 
   describe "GET /data-sets/create" do
@@ -95,6 +95,48 @@ defmodule Plenario2Web.MetaControllerTest do
         |> html_response(404)
 
       assert response =~ "not found"
+    end
+  end
+
+  describe  "GET /data-sets/:slug/detail" do
+    @user_name "louis_friend"
+    @user_pass "iron_sulfide"
+    @user_mail "louis@gmail.com"
+    @meta_name "lost_socks"
+    @meta_src "http://www.how_do_i_keep_losing_them.com/"
+    @text_columns ["datetime", "location", "sock_color", "sock_brand"]
+
+    setup do
+      {:ok, user} = UserActions.create(@user_name, @user_pass, @user_mail)
+      {:ok, meta} = MetaActions.create(@meta_name, user.id, @meta_src)
+      {:ok, pk} = DataSetFieldActions.create(meta.id, "pk", "integer")
+
+      DataSetFieldActions.make_primary_key(pk)
+
+      for text_column <- @text_columns do
+        DataSetFieldActions.create(meta.id, text_column, "text")
+      end
+
+      %{user: user, meta: meta}
+    end
+
+    test "data set fields are present", %{conn: conn, meta: meta, user: user} do
+      conn = get(conn, :do_login, %{
+        "user" => %{
+          "email_address" => user.email_address, 
+          "plaintext_password" => user.plaintext_password
+        }
+      })
+
+      response = conn
+        |> get(meta_path(conn, :detail, meta.slug))
+        |> html_response(:ok)
+      
+      assert response =~ "pk"
+      assert response =~ "datetime"
+      assert response =~ "location"
+      assert response =~ "sock_color"
+      assert response =~ "sock_brand"
     end
   end
 
