@@ -70,6 +70,8 @@ defmodule Plenario2Web.Router do
     put "/my/name", UserController, :do_update_name
     get "/my/email", UserController, :get_update_email
     put "/my/email", UserController, :do_update_email
+    get "/my/org-info", UserController, :get_update_org_info
+    put "/my/org-info", UserController, :do_update_org_info
   end
 
   scope "/admin", Plenario2Web do

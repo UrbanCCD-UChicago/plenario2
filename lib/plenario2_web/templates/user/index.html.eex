@@ -125,7 +125,7 @@
         <%= @current_user.organization || "-" %>
       </div>
       <div class="col-md-4">
-        <a>Update Org Info</a>
+        <%= link "Update Org Info", to: user_path(@conn, :get_update_org_info) %>
       </div>
     </div>
     <div class="row">

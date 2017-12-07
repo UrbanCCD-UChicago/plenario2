@@ -77,4 +77,28 @@ defmodule Plenario2Web.UserControllerTest do
       |> html_response(:bad_request)
     end
   end
+
+  test ":get_update_org_info", %{conn: conn} do
+    UserActions.create("test", "password", "test@example.com")
+    conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
+
+    res = conn
+      |> get(user_path(conn, :get_update_org_info))
+      |> html_response(:ok)
+
+    assert res =~ "Update Your Organization Info"
+  end
+
+  test ":do_update_org_info", %{conn: conn} do
+    UserActions.create("test", "password", "test@example.com")
+    conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
+
+    conn
+    |> put(user_path(conn, :do_update_org_info, %{"user" => %{"organization" => "University of Chicago", "org_role" => "Internet Janitor"}}))
+    |> html_response(:found)
+
+    user = UserActions.get_from_email("test@example.com")
+    assert user.organization == "University of Chicago"
+    assert user.org_role == "Internet Janitor"
+  end
 end

@@ -3,7 +3,6 @@ defmodule Plenario2Web.UserController do
 
   alias Plenario2.Actions.{MetaActions, AdminUserNoteActions}
   alias Plenario2Auth.{UserActions, UserChangesets}
-  alias Plenario2.Repo
 
   def index(conn, _) do
     user = Guardian.Plug.current_resource(conn)
@@ -43,7 +42,7 @@ defmodule Plenario2Web.UserController do
     |> update_name_reply(conn)
   end
 
-  defp update_name_reply({:ok, user}, conn) do
+  defp update_name_reply({:ok, _}, conn) do
     conn
     |> put_flash(:success, "Your name has been updated")
     |> redirect(to: user_path(conn, :index))
@@ -73,7 +72,7 @@ defmodule Plenario2Web.UserController do
     |> update_email_reply(conn)
   end
 
-  defp update_email_reply({:ok, user}, conn) do
+  defp update_email_reply({:ok, _}, conn) do
     conn
     |> put_flash(:success, "Your email address has been updated")
     |> redirect(to: auth_path(conn, :get_login))
@@ -86,5 +85,35 @@ defmodule Plenario2Web.UserController do
     |> put_flash(:error, "Please review and fix errors below")
     |> put_status(:bad_request)
     |> render("update_email.html", changeset: changeset, action: action)
+  end
+
+  def get_update_org_info(conn, _) do
+    user = Guardian.Plug.current_resource(conn)
+    changeset = UserChangesets.update_org_info(user, %{})
+    action = user_path(conn, :do_update_org_info)
+
+    render(conn, "update_org_info.html", changeset: changeset, action: action)
+  end
+
+  def do_update_org_info(conn, %{"user" => %{"organization" => org, "org_role" => role}}) do
+    user = Guardian.Plug.current_resource(conn)
+
+    UserActions.update_org_info(user, [organization: org, org_role: role])
+    |> update_org_info_reply(conn)
+  end
+
+  defp update_org_info_reply({:ok, _}, conn) do
+    conn
+    |> put_flash(:success, "Your organization information has been updated")
+    |> redirect(to: user_path(conn, :index))
+  end
+
+  defp update_org_info_reply({:error, changeset}, conn) do
+    action = user_path(conn, :do_update_org_info)
+
+    conn
+    |> put_flash(:error, "Please review and fix errors below")
+    |> put_status(:bad_request)
+    |> render("update_org_info.html", changeset: changeset, action: action)
   end
 end
