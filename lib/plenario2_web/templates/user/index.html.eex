@@ -113,7 +113,7 @@
         <%= @current_user.email_address %>
       </div>
       <div class="col-md-4">
-        <a>Update Email</a>
+        <%= link "Update Email", to: user_path(@conn, :get_update_email) %>
       </div>
     </div>
 

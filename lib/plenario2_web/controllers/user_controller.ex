@@ -57,4 +57,34 @@ defmodule Plenario2Web.UserController do
     |> put_status(:bad_request)
     |> render("update_name.html", changeset: changeset, action: action)
   end
+
+  def get_update_email(conn, _) do
+    user = Guardian.Plug.current_resource(conn)
+    changeset = UserChangesets.update_email_address(user, %{})
+    action = user_path(conn, :do_update_email)
+
+    render(conn, "update_email.html", changeset: changeset, action: action)
+  end
+
+  def do_update_email(conn, %{"user" => %{"email_address" => email}}) do
+    user = Guardian.Plug.current_resource(conn)
+
+    UserActions.update_email_address(user, email)
+    |> update_email_reply(conn)
+  end
+
+  defp update_email_reply({:ok, user}, conn) do
+    conn
+    |> put_flash(:success, "Your email address has been updated")
+    |> redirect(to: auth_path(conn, :get_login))
+  end
+
+  defp update_email_reply({:error, changeset}, conn) do
+    action = user_path(conn, :do_update_email)
+
+    conn
+    |> put_flash(:error, "Please review and fix errors below")
+    |> put_status(:bad_request)
+    |> render("update_email.html", changeset: changeset, action: action)
+  end
 end
