@@ -32,16 +32,16 @@
     <div class="container">
       <header class="header">
         <nav role="navigation">
-          <ul class="nav nav-pills pull-right">
+          <ul class="nav nav-pills float-right">
             <%= if assigns[:current_user] == nil do %>
-              <li><%= link "Sign In", to: auth_path(@conn, :get_login), method: :get %></li>
-              <li><%= link "Sign Up", to: auth_path(@conn, :get_register), method: :get %><li>
+              <li class="nav-item"><%= link "Sign In", to: auth_path(@conn, :get_login), method: :get, class: "nav-link" %></li>
+              <li class="nav-item"><%= link "Sign Up", to: auth_path(@conn, :get_register), method: :get, class: "nav-link" %></li>
             <% else %>
-              <li><%= link "Hi, #{@current_user.name}!", to: user_path(@conn, :index) %></li>
+              <li class="nav-item"><%= link "Hi, #{@current_user.name}!", to: user_path(@conn, :index), class: "nav-link" %></li>
               <%= if @current_user.is_admin do %>
                 <li><%= link "Admin", to: admin_path(@conn, :index) %></li>
               <% end %>
-              <li><%= link "Sign Out", to: auth_path(@conn, :logout), method: :post %></li>
+              <li class="nav-item"><%= link "Sign Out", to: auth_path(@conn, :logout), method: :post, class: "nav-link" %></li>
             <% end %>
           </ul>
         </nav>
