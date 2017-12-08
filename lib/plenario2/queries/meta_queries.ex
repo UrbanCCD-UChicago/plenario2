@@ -36,6 +36,16 @@ defmodule Plenario2.Queries.MetaQueries do
   ##
   # filters
 
+  def new(query), do: from m in query, where: m.state == "new"
+
+  def needs_approval(query), do: from m in query, where: m.state == "needs_approval"
+
+  def ready(query), do: from m in query, where: m.state == "ready"
+
+  def erred(query), do: from m in query, where: m.state == "erred"
+
+  def limit_to(query, limit), do: from m in query, limit: ^limit
+
   def for_user(query, user), do: from m in query, where: m.user_id == ^user.id
 
   ##
@@ -49,6 +59,11 @@ defmodule Plenario2.Queries.MetaQueries do
       with_constraints: false,
       with_diffs: false,
       with_notes: false,
+      new: false,
+      needs_approval: false,
+      ready: false,
+      erred: false,
+      limit_to: nil,
       for_user: nil
     ]
     opts = Keyword.merge(defaults, opts)
@@ -61,6 +76,11 @@ defmodule Plenario2.Queries.MetaQueries do
     |> cond_compose(opts[:with_constraints], MetaQueries, :with_data_set_constraints)
     |> cond_compose(opts[:with_diffs], MetaQueries, :with_data_set_diffs)
     |> cond_compose(opts[:with_notes], MetaQueries, :with_admin_user_notes)
+    |> cond_compose(opts[:new], MetaQueries, :new)
+    |> cond_compose(opts[:needs_approval], MetaQueries, :needs_approval)
+    |> cond_compose(opts[:ready], MetaQueries, :ready)
+    |> cond_compose(opts[:erred], MetaQueries, :erred)
+    |> filter_compose(opts[:limit_to], MetaQueries, :limit_to)
     |> filter_compose(opts[:for_user], MetaQueries, :for_user)
   end
 end

@@ -66,6 +66,16 @@ defmodule Plenario2Web.Router do
     resources "/data-sets/:slug/fields", DataSetFieldController
 
     post "/notes/:id/acknowledge", AdminUserNoteController, :acknowledge
+
+    get "/my/info", UserController, :index
+    get "/my/name", UserController, :get_update_name
+    put "/my/name", UserController, :do_update_name
+    get "/my/email", UserController, :get_update_email
+    put "/my/email", UserController, :do_update_email
+    get "/my/org-info", UserController, :get_update_org_info
+    put "/my/org-info", UserController, :do_update_org_info
+    get "/my/password", UserController, :get_update_password
+    put "/my/password", UserController, :do_update_password
   end
 
   scope "/admin", Plenario2Web do
