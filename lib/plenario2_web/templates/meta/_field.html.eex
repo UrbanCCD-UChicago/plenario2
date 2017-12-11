@@ -1,0 +1,10 @@
+<!-- Template Variables -->
+<!-- ================== -->
+<!-- meta          Meta -->
+<!-- field     charlist -->
+
+<tr>
+  <th><%= String.capitalize @field %></th>
+  <td><%= Map.get(@meta, String.to_atom @field) || "No #{@field} provided" %></td>
+  <td><%= link "Edit", to: @action, method: :get %></td>
+</tr>
