@@ -39,7 +39,8 @@ pre_erlang_clean_compile() {
     mkdir -p priv/static # required by the phoenix.digest task
     npm install
 
-    brunch build --production
+    cd ./assets && brunch build --production
+    cd ..
 
     # run your custom task
     APP='$APP' MIX_ENV='$TARGET_MIX_ENV' $MIX_CMD phoenix.digest $SILENCE
