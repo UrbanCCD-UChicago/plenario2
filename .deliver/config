@@ -1,0 +1,48 @@
+APP="plenario2"
+
+BUILD_HOST="dev"
+BUILD_USER="ubuntu"
+BUILD_AT="/tmp/edeliver/$APP/builds"
+
+RELEASE_DIR="/tmp/edeliver/$APP/builds/_build/prod/rel/$APP"
+
+# prevent re-installing node modules; this defaults to "."
+GIT_CLEAN_PATHS="_build rel priv/static"
+
+# STAGING_HOSTS="dev"
+# STAGING_USER="ubuntu"
+# TEST_AT="/home/ubuntu/staging"
+
+PRODUCTION_HOSTS="dev"
+PRODUCTION_USER="ubuntu"
+DELIVER_TO="/home/ubuntu"
+
+# For *Phoenix* projects, symlink prod.secret.exs to our tmp source
+pre_erlang_get_and_update_deps() {
+  local _prod_secret_path="/home/ubuntu/prod.secret.exs"
+  if [ "$TARGET_MIX_ENV" = "prod" ]; then
+    __sync_remote "
+      ln -sfn '$_prod_secret_path' '$BUILD_AT/config/prod.secret.exs'
+    "
+  fi
+}
+
+pre_erlang_clean_compile() {
+  status "Running phoenix.digest" # log output prepended with "----->"
+  __sync_remote " # runs the commands on the build host
+    # [ -f ~/.profile ] && source ~/.profile # load profile (optional)
+    source ~/.profile
+    # echo \$PATH # check if rbenv is in the path
+    set -e # fail if any command fails (recommended)
+    cd '$BUILD_AT' # enter the build directory on the build host (required)
+    # prepare something
+    mkdir -p priv/static # required by the phoenix.digest task
+    npm install
+
+    cd ./assets && brunch build --production
+    cd ..
+
+    # run your custom task
+    APP='$APP' MIX_ENV='$TARGET_MIX_ENV' $MIX_CMD phoenix.digest $SILENCE
+  "
+}
