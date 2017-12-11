@@ -2,8 +2,6 @@
 <!-- ================== -->
 <!-- meta        Meta -->
 
-<% IO.inspect @meta %>
-
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css"
   integrity="sha512-M2wvCLH6DSRazYeZRIm1JnYyh22purTM+FDB5CsyxtQJYeKq83arPe5wgbNmcFXGqiSH2XR8dT/fJISVA1r/zQ=="
   crossorigin=""/>
@@ -97,22 +95,23 @@
       </div>
 
       <div class="m-3">
-        <table class="table border table-responsive">
+        <table class="table border table-responsive" style="word-break: break-word; font-size: 70%;">
           <thead class="thead-light">
             <tr>
-              <th scope="col" style="word-break:break-word;font-size:70%;">ID</th>
-              <th scope="col" style="word-break:break-word;font-size:70%;">Name</th>
-              <th scope="col" style="word-break:break-word;font-size:70%;">Type</th>
-              <th scope="col" style="word-break:break-word;font-size:70%;">Opts</th>
+              <th scope="col">ID</th>
+              <th scope="col">Name</th>
+              <th scope="col">Type</th>
+              <th scope="col">Opts</th>
             </tr>
           </thead>
           <tbody>
             <%= for field <- @meta.data_set_fields do %>
               <tr>
-                <th style="word-break:break-word;font-size:70%;"><%= field.id %></th>
-                <td style="word-break:break-word;font-size:70%;"><%= field.name %></td>
-                <td style="word-break:break-word;font-size:70%;"><%= field.type %></td>
-                <td style="word-break:break-word;font-size:70%;"><%= field.opts %></td>
+                <th><%= field.id %></th>
+                <td><%= field.name %></td>
+                <td><%= field.type %></td>
+                <td><%= field.opts %></td>
+                <td><%= link "Edit", to: data_set_field_path(@conn, :edit, @meta.slug, field.id), method: :get %></td>
               </tr>
             <% end %>
           </tbody>
