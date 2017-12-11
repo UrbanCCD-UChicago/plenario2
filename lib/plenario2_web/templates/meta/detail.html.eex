@@ -94,6 +94,12 @@
         <h5>Field Information</h5>
       </div>
 
+      <div class="row justify-content-center align-items-center">
+        <%= if @owner do %>
+          <%= link "Add field", to: data_set_field_path(@conn, :new, @meta.slug), method: :get %>
+        <% end %>
+      </div>
+
       <div class="m-3">
         <table class="table border table-responsive" style="word-break: break-word; font-size: 70%;">
           <thead class="thead-light">

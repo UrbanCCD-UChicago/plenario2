@@ -29,7 +29,7 @@ defmodule Plenario2Web.DataSetFieldController do
       {:ok, field} ->
         conn
         |> put_flash(:info, "#{field.name} created!")
-        |> redirect(to: data_set_field_path(conn, :index, slug))
+        |> redirect(to: meta_path(conn, :detail, slug))
 
       {:error, changeset} ->
         render(conn, "new.html", changeset: changeset, slug: slug)
