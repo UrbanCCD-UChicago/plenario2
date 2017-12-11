@@ -7,7 +7,7 @@ defmodule Plenario2Auth.Guardian do
   end
 
   def resource_from_claims(claims) do
-    user = UserActions.get_from_id(claims["sub"])
+    user = UserActions.get_from_email(claims["sub"])
     case user do
       nil -> {:error, "Unknown user"}
       _   -> {:ok, user}
