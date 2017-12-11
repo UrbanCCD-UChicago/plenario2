@@ -1,6 +1,6 @@
 APP="plenario2"
 
-BUILD_HOST="34.230.74.71"
+BUILD_HOST="dev"
 BUILD_USER="ubuntu"
 BUILD_AT="/tmp/edeliver/$APP/builds"
 
@@ -9,11 +9,11 @@ RELEASE_DIR="/tmp/edeliver/$APP/builds/_build/prod/rel/$APP"
 # prevent re-installing node modules; this defaults to "."
 GIT_CLEAN_PATHS="_build rel priv/static"
 
-# STAGING_HOSTS="34.230.74.71"
+# STAGING_HOSTS="dev"
 # STAGING_USER="ubuntu"
 # TEST_AT="/home/ubuntu/staging"
 
-PRODUCTION_HOSTS="34.230.74.71"
+PRODUCTION_HOSTS="dev"
 PRODUCTION_USER="ubuntu"
 DELIVER_TO="/home/ubuntu"
 
