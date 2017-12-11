@@ -31,3 +31,6 @@ node_modules/
 .idea
 *.iml
 .elixir_ls
+
+# build and release
+.deliver/releases/
