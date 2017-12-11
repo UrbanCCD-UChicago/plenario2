@@ -2,6 +2,10 @@
 [![Build Status](https://travis-ci.org/UrbanCCD-UChicago/plenario2.svg?branch=master)](https://travis-ci.org/UrbanCCD-UChicago/plenario2)
 [![Coverage Status](https://coveralls.io/repos/github/UrbanCCD-UChicago/plenario2/badge.svg?branch=master)](https://coveralls.io/github/UrbanCCD-UChicago/plenario2?branch=master)
 
+## Open RFCs
+
+We encourage everyone to participate in this project -- filing bugs, opening feature requests, etc. One of the most impactful areas is participating in open RFCs specifically. The following link will bring you to the list of currently active RFCs: https://github.com/UrbanCCD-UChicago/plenario2/issues?q=is%3Aopen+is%3Aissue+label%3Arfc
+
 ## Running the Tests
 
 You're going to need a local version of Postgres with the PostGIS extension
