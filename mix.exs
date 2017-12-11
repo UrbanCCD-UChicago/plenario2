@@ -61,7 +61,9 @@ defmodule Plenario2.Mixfile do
       {:guardian, "~> 1.0"},
       {:ecto_state_machine, "~> 0.3.0"},
       {:canary, "~> 1.1"},
-      {:canada, "~> 1.0"}
+      {:canada, "~> 1.0"},
+      {:edeliver, "~> 1.4"},
+      {:distillery, "~> 1.5"}
     ]
   end
 
