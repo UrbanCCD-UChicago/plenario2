@@ -1,6 +1,8 @@
 defmodule Plenario2Web.DataSetFieldControllerTest do
   use Plenario2Web.ConnCase, async: true
   alias Plenario2.Actions.{DataSetFieldActions, MetaActions}
+  alias Plenario2.Schemas.DataSetField
+  alias Plenario2.Repo
   alias Plenario2Auth.UserActions
 
   @user_name "user"
@@ -75,6 +77,54 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
       fields = DataSetFieldActions.list_for_meta(meta)
 
       assert Enum.count(fields) == 1
+    end
+  end
+
+  describe "POST :update" do
+    test "when anonymous", %{conn: conn} do
+      response = conn
+        |> get(data_set_field_path(conn, :update, "some slug", -1))
+        |> response(:unauthorized)
+
+      assert response =~ "unauthorized"
+    end
+
+    test "when logged in", %{conn: conn, meta: meta} do
+      conn = post(conn, auth_path(conn, :do_login, %{
+        "user" => %{
+          "email_address" => @user_email, 
+          "plaintext_password" => @user_password
+        }
+      }))
+
+      conn
+        |> post(data_set_field_path(conn, :create, meta.slug), %{
+          "data_set_field" => %{
+            "name" => "foo",
+            "type" => "bar",
+            "opts" => "baz"
+          }
+        })
+        |> response(302)
+
+      fields = DataSetFieldActions.list_for_meta(meta)
+      [field | _] = fields
+
+      conn
+        |> put(data_set_field_path(conn, :update, meta.slug, field.id), %{
+          "data_set_field" => %{
+            "name" => "FOOS",
+            "type" => "BAR",
+            "opts" => "BAZ"
+          }
+        })
+        |> response(302)
+
+      field = Repo.get!(DataSetField, field.id)
+
+      assert field.name == "foos"
+      assert field.type == "BAR"
+      assert field.opts == "BAZ"
     end
   end
 end

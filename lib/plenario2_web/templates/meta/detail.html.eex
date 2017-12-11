@@ -55,10 +55,13 @@
 
         <table class="table border table-responsive">
           <tbody>
+            <th>Refresh Interval</th>
+            <td><%= @meta.refresh_interval %> <%= @meta.refresh_rate %></td>
+            <td><%= link "Edit", to: meta_path(@conn, :get_update_refresh_info, @meta.slug), method: :get %></td>
+
             <%= render "_field.html", field: "first_import", meta: @meta, action: meta_path(@conn, :get_update_refresh_info, @meta.slug) %>
             <%= render "_field.html", field: "latest_import", meta: @meta, action: meta_path(@conn, :get_update_refresh_info, @meta.slug) %>
             <%= render "_field.html", field: "next_refresh", meta: @meta, action: meta_path(@conn, :get_update_refresh_info, @meta.slug) %>
-            <%= render "_field.html", field: "refresh_interval", meta: @meta, action: meta_path(@conn, :get_update_refresh_info, @meta.slug) %>
             <%= render "_field.html", field: "refresh_starts_on", meta: @meta, action: meta_path(@conn, :get_update_refresh_info, @meta.slug) %>
             <%= render "_field.html", field: "refresh_ends_on", meta: @meta, action: meta_path(@conn, :get_update_refresh_info, @meta.slug) %>
           </tbody>
@@ -159,7 +162,7 @@
 <%= if @owner and @meta.state == "new" do %>
 <div class="row">
   <div class="col-md-12">
-    <%= form_for @conn, meta_path(@conn, :submit_for_approval, @meta.slug), fn f -> %>
+    <%= form_for @conn, meta_path(@conn, :submit_for_approval, @meta.slug), fn _f -> %>
       <%= submit "Submit for Approval", class: "btn btn-primary" %>
     <% end %>
   </div>

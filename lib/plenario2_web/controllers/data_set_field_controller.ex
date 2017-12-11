@@ -13,10 +13,7 @@ defmodule Plenario2Web.DataSetFieldController do
   end
 
   def new(conn, %{"slug" => slug}) do
-    meta = MetaActions.get_from_slug(slug)
-    source = meta.source_url
     changeset = DataSetFieldChangesets.create(%DataSetField{})
-
     render(conn, "new.html", changeset: changeset, slug: slug)
   end
 
@@ -47,7 +44,7 @@ defmodule Plenario2Web.DataSetFieldController do
     changeset = DataSetFieldChangesets.create(field, field_params)
 
     case Repo.update(changeset) do
-      {:ok, field} ->
+      {:ok, _field} ->
         conn
         |> put_flash(:info, "Data Set Field updated successfully.")
         |> redirect(to: meta_path(conn, :detail, slug))

@@ -7,10 +7,13 @@ defmodule Plenario2Auth.Guardian do
   end
 
   def resource_from_claims(claims) do
-    user = UserActions.get_from_email(claims["sub"])
+    user = _get_user(claims["sub"])
     case user do
       nil -> {:error, "Unknown user"}
       _   -> {:ok, user}
     end
   end
+
+  defp _get_user(id) when is_integer(id), do: UserActions.get_from_id(id)
+  defp _get_user(email), do: UserActions.get_from_email(email)
 end
