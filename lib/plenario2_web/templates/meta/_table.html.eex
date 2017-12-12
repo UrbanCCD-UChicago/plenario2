@@ -1,0 +1,13 @@
+<!-- Template Variables -->
+<!-- ================== -->
+<!-- meta          Meta -->
+<!-- fields        list -->
+<!-- action           ? -->
+
+<table class="table border table-responsive">
+  <tbody >
+    <%= for field <- @fields do %>
+      <%= render "_field.html", field: field, meta: @meta, action: @action %>
+    <% end %>
+  </tbody>
+</table> 
