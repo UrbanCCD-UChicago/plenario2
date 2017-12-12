@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   stages {
-    stage('pre-build') {
+    stage('pre build') {
       steps {
         checkout scm
 
@@ -39,6 +39,16 @@ pipeline {
           sh 'mix ecto.migrate'
           sh 'mix coveralls'
         }
+      }
+    }
+
+    stage('deploy [dev]') {
+      when {
+        branch 'master'
+      }
+      steps {
+        sh 'mix edeliver build release production --verbose'
+        sh 'mix edeliver deploy release to production'
       }
     }
   }
