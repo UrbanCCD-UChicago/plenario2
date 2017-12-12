@@ -9,7 +9,7 @@ We encourage everyone to participate in this project -- filing bugs, opening fea
 ## Running the Tests
 
 You're going to need a local version of Postgres with the PostGIS extension
-enabled running. If you need to install it, use Docker and pull the 
+enabled running. If you need to install it, use Docker and pull the
 `mdillon/postgis` image:
 
 ```bash
@@ -34,7 +34,7 @@ Travis, update the `config/travis.exs` file.
 
 ## Formatting
 
-Code will be required to be formatted with the built in 1.6 formatter that's 
+Code will be required to be formatted with the built in 1.6 formatter that's
 coming in the near future. Until then, our builds do not check for formatting,
 but it is highly encouraged. In order to use the formatter you must build
 Elixir from their `master` branch and run:
@@ -50,7 +50,7 @@ This means that you probably do not want it to be your main installation of
 Elixir. A quick and dirty remedy for this is to overwrite the `PREFIX`
 variable in the Elixir source's `Makefile` so that it does not overwrite
 your current installation. You can then symlink the executables you want
-to keep them distinctly separate. For example:
+to keep them distinctly separate. For example: 
 
 ##### Makefile Head
 ```bash
