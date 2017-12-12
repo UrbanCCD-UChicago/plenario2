@@ -26,7 +26,7 @@
           <tbody>
             <tr>
               <th style="word-break:break-word;">Maintainer</th>
-              <td style="word-break:break-word;"><%= @meta.user.name %></td>
+              <td style="word-break:break-word;" class="text-right"><%= @meta.user.name %></td>
             </tr>
           </tbody>
         </table> 
@@ -34,7 +34,7 @@
         <table class="table border table-responsive">
           <tbody>
             <th>Refresh Interval</th>
-            <td><%= @meta.refresh_interval %> <%= @meta.refresh_rate %></td>
+            <td class="text-right"><%= @meta.refresh_interval %> <%= @meta.refresh_rate %></td>
             <%= if @owner do %>
               <td><%= link "Edit", to: meta_path(@conn, :get_update_refresh_info, @meta.slug), method: :get %></td>
             <% end %>

@@ -6,7 +6,7 @@
 
 <tr>
   <th><%= String.capitalize @field %></th>
-  <td><%= Map.get(@meta, String.to_atom @field) || "No #{@field} provided" %></td>
+  <td class="text-right"><%= Map.get(@meta, String.to_atom @field) || "No #{@field} provided" %></td>
   <%= if @owner do %>
     <td><%= link "Edit", to: @action, method: :get %></td>
   <% end %>
