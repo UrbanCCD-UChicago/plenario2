@@ -6,9 +6,6 @@ pipeline {
       steps {
         step([$class, 'WsCleanup'])
 
-        env.BUILD_VERSION = sh(script: 'date +%Y.%m.%d%H%M', returnStdout: true).trim()
-        def ARTIFACT_PATH = "${env.BRANCH_NAME}/${env.BUILD_VERSION}"
-
         checkout scm
 
         sh 'mix local.hex --force'
@@ -16,7 +13,7 @@ pipeline {
         sh 'mix clean'
         sh 'mix deps.get'
 
-        stash name: 'source', useDefaultExcludes: false
+        stash name: 'source'
       }
     }
 
