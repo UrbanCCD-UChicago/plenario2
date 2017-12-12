@@ -8,7 +8,11 @@
     <meta name="author" content="">
 
     <title>Plenario</title>
+
+    <!-- Import css and js files built by brunch -->
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
+    <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
+
     <style>
     @media (min-width: 900px) {
       .container {
@@ -26,6 +30,7 @@
       }
     }
     </style>
+
   </head>
 
   <body>
@@ -59,6 +64,5 @@
       </main>
 
     </div> <!-- /container -->
-    <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
   </body>
 </html>
