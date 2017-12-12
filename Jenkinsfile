@@ -34,6 +34,7 @@ pipeline {
 
         withEnv(['MIX_ENV=test']) {
           sh 'mix deps.get'
+          sh 'mix coveralls'
         }
       }
     }
