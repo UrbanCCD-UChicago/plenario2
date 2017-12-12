@@ -34,7 +34,9 @@ pipeline {
 
         withEnv(['MIX_ENV=test']) {
           sh 'mix deps.get'
-          sh 'mix ecto.reset'
+          sh 'mix ecto.drop'
+          sh 'mix ecto.create'
+          sh 'mix ecto.migrate'
           sh 'mix coveralls'
         }
       }
