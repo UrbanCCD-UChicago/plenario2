@@ -4,10 +4,10 @@
 <!-- fields        list -->
 <!-- action           ? -->
 
-<table class="table border table-responsive">
+<table class="table border table-responsive mt-0">
   <tbody >
     <%= for field <- @fields do %>
-      <%= render "_field.html", field: field, meta: @meta, action: @action %>
+      <%= render "_field.html", field: field, meta: @meta, action: @action, owner: @owner %>
     <% end %>
   </tbody>
 </table> 

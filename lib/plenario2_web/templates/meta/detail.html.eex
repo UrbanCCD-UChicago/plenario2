@@ -35,17 +35,19 @@
           <tbody>
             <th>Refresh Interval</th>
             <td><%= @meta.refresh_interval %> <%= @meta.refresh_rate %></td>
-            <td><%= link "Edit", to: meta_path(@conn, :get_update_refresh_info, @meta.slug), method: :get %></td>
+            <%= if @owner do %>
+              <td><%= link "Edit", to: meta_path(@conn, :get_update_refresh_info, @meta.slug), method: :get %></td>
+            <% end %>
           </tbody>
         </table>
 
         <% refresh_fields = ["first_import", "latest_import", "next_refresh", "refresh_starts_on", "refresh_ends_on"]%>
 
-        <%= render "_table.html", fields: ["description", "attribution"], meta: @meta, action: meta_path(@conn, :get_update_description, @meta.slug) %>
-        <%= render "_table.html", fields: ["source_type", "source_url"], meta: @meta, action: meta_path(@conn, :get_update_source_info, @meta.slug) %>
-        <%= render "_table.html", fields: refresh_fields, meta: @meta, action: meta_path(@conn, :get_update_refresh_info, @meta.slug) %>
-        <%= render "_table.html", fields: ["timezone", "timerange"], meta: @meta, action: "#"%>
-        <%= render "_table.html", fields: ["srid", "bbox"], meta: @meta, action: "#"%>
+        <%= render "_table.html", owner: @owner, fields: ["description", "attribution"], meta: @meta, action: meta_path(@conn, :get_update_description, @meta.slug) %>
+        <%= render "_table.html", owner: @owner, fields: ["source_type", "source_url"], meta: @meta, action: meta_path(@conn, :get_update_source_info, @meta.slug) %>
+        <%= render "_table.html", owner: @owner, fields: refresh_fields, meta: @meta, action: meta_path(@conn, :get_update_refresh_info, @meta.slug) %>
+        <%= render "_table.html", owner: @owner, fields: ["timezone", "timerange"], meta: @meta, action: "#"%>
+        <%= render "_table.html", owner: @owner, fields: ["srid", "bbox"], meta: @meta, action: "#"%>
       </div>
     </div>
   </div>
@@ -86,7 +88,9 @@
                 <td><%= field.name %></td>
                 <td><%= field.type %></td>
                 <td><%= field.opts %></td>
-                <td><%= link "Edit", to: data_set_field_path(@conn, :edit, @meta.slug, field.id), method: :get %></td>
+                <%= if @owner do %>
+                  <td><%= link "Edit", to: data_set_field_path(@conn, :edit, @meta.slug, field.id), method: :get %></td>
+                <% end %>
               </tr>
             <% end %>
           </tbody>

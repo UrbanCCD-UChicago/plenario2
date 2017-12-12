@@ -2,9 +2,12 @@
 <!-- ================== -->
 <!-- meta          Meta -->
 <!-- field     charlist -->
+<!-- owner            ? -->
 
 <tr>
   <th><%= String.capitalize @field %></th>
   <td><%= Map.get(@meta, String.to_atom @field) || "No #{@field} provided" %></td>
-  <td><%= link "Edit", to: @action, method: :get %></td>
+  <%= if @owner do %>
+    <td><%= link "Edit", to: @action, method: :get %></td>
+  <% end %>
 </tr>
