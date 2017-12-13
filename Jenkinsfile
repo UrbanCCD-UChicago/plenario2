@@ -42,30 +42,18 @@ pipeline {
       }
     }
 
-    stage('build [deploy]') {
+    stage('deploy [dev]') {
       when {
         branch 'master'
       }
       steps {
         unstash 'source'
 
-        sh 'mix compile'
-
-        dir('./assets') {
-          sh 'npm install'
-          sh 'brunch build --production'
-        }
-      }
-    }
-
-    stage('deploy [dev]') {
-      when {
-        branch 'master'
-      }
-      steps {
-        sh 'mix edeliver build release production --verbose'
+        sh 'mix edeliver build release'
         sh 'mix edeliver deploy release to production'
         sh 'mix edeliver start production'
+
+        deleteDir()
       }
     }
   }

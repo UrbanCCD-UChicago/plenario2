@@ -4,7 +4,7 @@ defmodule Plenario2.Mixfile do
   def project do
     [
       app: :plenario2,
-      version: "0.0.1",
+      version: "0.0.2",
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env),
       compilers: [:phoenix, :gettext] ++ Mix.compilers,
@@ -27,7 +27,7 @@ defmodule Plenario2.Mixfile do
   def application do
     [
       mod: {Plenario2.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :edeliver]
     ]
   end
 
