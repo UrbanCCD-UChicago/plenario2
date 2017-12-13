@@ -1,5 +1,7 @@
 APP="plenario2"
 
+AUTO_VERSION=git-revision
+
 BUILD_HOST="dev"
 BUILD_USER="ubuntu"
 BUILD_AT="/tmp/edeliver/$APP/builds"
@@ -9,6 +11,7 @@ RELEASE_DIR="/tmp/edeliver/$APP/builds/_build/prod/rel/$APP"
 # prevent re-installing node modules; this defaults to "."
 GIT_CLEAN_PATHS="_build rel priv/static"
 
+STAGING_NODES="dev"
 # STAGING_HOSTS="dev"
 # STAGING_USER="ubuntu"
 # TEST_AT="/home/ubuntu/staging"
@@ -29,9 +32,10 @@ pre_erlang_get_and_update_deps() {
 
 pre_erlang_clean_compile() {
   status "Running phoenix.digest" # log output prepended with "----->"
-  __sync_remote " # runs the commands on the build host
+  __sync_remote "
     source ~/.profile
-    set -e # fail if any command fails (recommended)
+
+    set -e
     cd '$BUILD_AT'
     mkdir -p priv/static
 
@@ -40,7 +44,6 @@ pre_erlang_clean_compile() {
     brunch build --production
     cd ..
 
-    # run your custom task
     APP='$APP' MIX_ENV='$TARGET_MIX_ENV' $MIX_CMD phoenix.digest $SILENCE
   "
 }
