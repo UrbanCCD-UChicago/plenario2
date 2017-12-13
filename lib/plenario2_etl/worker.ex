@@ -51,10 +51,10 @@ defmodule Plenario2Etl.Worker do
     "/tmp/file_name.csv"
 
   """
-  @spec download!(name :: charlist, source :: charlist) :: charlist
-  def download!(name, source) do
+  @spec download!(name :: charlist, source :: charlist, type :: charlist) :: charlist
+  def download!(name, source, type) do
     %HTTPoison.Response{body: body} = HTTPoison.get!(source)
-    path = "/tmp/#{name}.csv"
+    path = "/tmp/#{name}.#{type}"
     File.write!(path, body)
     path
   end
@@ -75,11 +75,50 @@ defmodule Plenario2Etl.Worker do
   def load(state) do
     meta = MetaActions.get_from_id(state[:meta_id])
     job = EtlJobActions.create!(meta.id)
-    path = download!(MetaActions.get_data_set_table_name(meta), meta.source_url())
 
-    File.stream!(path)
-    |> CSV.decode!()
-    |> Stream.drop(1)
+    path =
+      download!(
+        MetaActions.get_data_set_table_name(meta),
+        meta.source_url,
+        meta.source_type
+      )
+
+    case meta.source_type do
+      "json" -> load_json(meta, path, job)
+      _ -> load_csv(meta, path, job)
+    end
+  end
+
+  @doc """
+  This is the main subprocess kicked off by the `load` method that handles
+  and ingests a smaller chunk of rows.
+
+  ## Example
+
+    iex> load_chunk!(self(), meta, job, [["some", "rows"]])
+
+  """
+  def load_chunk!(sender, meta, job, chunk) do
+    rows = Enum.map(chunk, &Keyword.values/1)
+    existing_rows = contains!(meta, rows)
+    inserted_rows = upsert!(meta, rows)
+    pairs = Enum.zip(existing_rows, inserted_rows)
+
+    result =
+      Enum.map(pairs, fn {existing_row, inserted_row} ->
+        create_diffs(meta, job, existing_row, inserted_row)
+      end)
+
+    send(sender, {self(), result})
+  end
+
+  @doc """
+  """
+  def load_json(meta, path, job) do
+    File.read!(path)
+    |> Poison.decode!()
+    |> Stream.map(&Enum.to_list/1)
+    |> Stream.map(&Enum.sort/1)
     |> Stream.chunk_every(100)
     |> Enum.map(fn chunk ->
          spawn_link(__MODULE__, :load_chunk!, [self(), meta, job, chunk])
@@ -92,25 +131,21 @@ defmodule Plenario2Etl.Worker do
   end
 
   @doc """
-  This is the main subprocess kicked off by the `load` method that handles
-  and ingests a smaller chunk of rows.
-
-  ## Example
-
-    iex> load_chunk!(self(), meta, job, [["some", "rows"]])
-
   """
-  def load_chunk!(sender, meta, job, rows) do
-    existing_rows = contains!(meta, rows)
-    inserted_rows = upsert!(meta, rows)
-    pairs = Enum.zip(existing_rows, inserted_rows)
-
-    result =
-      Enum.map(pairs, fn {existing_row, inserted_row} ->
-        create_diffs(meta, job, existing_row, inserted_row)
-      end)
-
-    send(sender, {self(), result})
+  def load_csv(meta, path, job) do
+    File.stream!(path)
+    |> CSV.decode!(headers: true)
+    |> Stream.map(&Enum.to_list/1)
+    |> Stream.map(&Enum.sort/1)
+    |> Stream.chunk_every(100)
+    |> Enum.map(fn chunk ->
+         spawn_link(__MODULE__, :load_chunk!, [self(), meta, job, chunk])
+       end)
+    |> Enum.map(fn pid ->
+         receive do
+           {^pid, result} -> result
+         end
+       end)
   end
 
   @doc """
@@ -143,7 +178,7 @@ defmodule Plenario2Etl.Worker do
 
   defp template_query!(template, meta, rows) do
     table = MetaActions.get_data_set_table_name(meta)
-    columns = MetaActions.get_column_names(meta)
+    columns = MetaActions.get_column_names(meta) |> Enum.sort()
     constraints = MetaActions.get_first_constraint_field_names(meta)
 
     sql =
