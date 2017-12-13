@@ -106,11 +106,44 @@ defmodule Plenario2Etl.WorkerTest do
     }
   end
 
+  @doc """
+  This helper function replaces the call to HTTPoison.get! made by a worker
+  process. It returns a generic set of json data to ingest.
+
+  ## Example
+
+    iex> mock_csv_data_request("http://doesnt_matter.com")
+    %HTTPoison.Response{body: "json data..."}
+
+  """
+  def mock_json_data_request(_) do
+    %HTTPoison.Response{
+      body: """
+      [{
+        "pk": 1,
+        "datetime": "2017-01-01T00:00:00",
+        "location": "(0, 1)",
+        "data": "crackers"
+      },{
+        "pk": 2,
+        "datetime": "2017-01-02T00:00:00",
+        "location": "(0, 2)",
+        "data": "and"
+      },{
+        "pk": 3,
+        "datetime": "2017-01-03T00:00:00",
+        "location": "(0, 3)",
+        "data": "cheese"
+      }]
+      """
+    }
+  end
+
   test :download! do
     with_mock HTTPoison, get!: &mock_csv_data_request/1 do
       name = "chicago_tree_trimming"
       source = "https://example.com/dataset.csv"
-      path = Worker.download!(name, source)
+      path = Worker.download!(name, source, "csv")
 
       assert path === "/tmp/#{name}.csv"
       assert File.exists?("/tmp/#{name}.csv")
@@ -198,5 +231,22 @@ defmodule Plenario2Etl.WorkerTest do
 
       assert Enum.count(diffs) === 1
     end
+  end
+
+  test "load/1 ingests json dataset" do
+    {:ok, user} = UserActions.create("otheruser", "password", "otheremail@example.com")
+    {:ok, meta} = MetaActions.create("Chicago Beard Trimmings", user.id, "mocked", source_type: "json")
+
+    with_mock HTTPoison, get!: &mock_json_data_request/1 do
+      Worker.load(%{meta_id: meta.id})
+    end
+
+    # %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
+
+    # assert [
+    #   [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "biscuits"],
+    #   [2, {{2017, 2, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
+    #   [3, {{2017, 3, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"],
+    # ] = Enum.sort(rows)
   end
 end

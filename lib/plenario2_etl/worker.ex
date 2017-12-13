@@ -51,10 +51,10 @@ defmodule Plenario2Etl.Worker do
     "/tmp/file_name.csv"
 
   """
-  @spec download!(name :: charlist, source :: charlist) :: charlist
-  def download!(name, source) do
+  @spec download!(name :: charlist, source :: charlist, type :: charlist) :: charlist
+  def download!(name, source, type) do
     %HTTPoison.Response{body: body} = HTTPoison.get!(source)
-    path = "/tmp/#{name}.csv"
+    path = "/tmp/#{name}.#{type}"
     File.write!(path, body)
     path
   end
@@ -75,20 +75,18 @@ defmodule Plenario2Etl.Worker do
   def load(state) do
     meta = MetaActions.get_from_id(state[:meta_id])
     job = EtlJobActions.create!(meta.id)
-    path = download!(MetaActions.get_data_set_table_name(meta), meta.source_url())
 
-    File.stream!(path)
-    |> CSV.decode!()
-    |> Stream.drop(1)
-    |> Stream.chunk_every(100)
-    |> Enum.map(fn chunk ->
-         spawn_link(__MODULE__, :load_chunk!, [self(), meta, job, chunk])
-       end)
-    |> Enum.map(fn pid ->
-         receive do
-           {^pid, result} -> result
-         end
-       end)
+    path =
+      download!(
+        MetaActions.get_data_set_table_name(meta),
+        meta.source_url,
+        meta.source_type
+      )
+
+    case meta.source_type do
+      "json" -> load_json(meta, path, job)
+      _ -> load_csv(meta, path, job)
+    end
   end
 
   @doc """
@@ -111,6 +109,30 @@ defmodule Plenario2Etl.Worker do
       end)
 
     send(sender, {self(), result})
+  end
+
+  @doc """
+  """
+  def load_json(meta, path, job) do
+    File.read!(path)
+    |> Poison.decode!()
+  end
+
+  @doc """
+  """
+  def load_csv(meta, path, job) do
+    File.stream!(path)
+    |> CSV.decode!()
+    |> Stream.drop(1)
+    |> Stream.chunk_every(100)
+    |> Enum.map(fn chunk ->
+         spawn_link(__MODULE__, :load_chunk!, [self(), meta, job, chunk])
+       end)
+    |> Enum.map(fn pid ->
+         receive do
+           {^pid, result} -> result
+         end
+       end)
   end
 
   @doc """
