@@ -49,9 +49,11 @@ pipeline {
       steps {
         unstash 'source'
 
-        sh 'mix edeliver build upgrade --from=master'
-        sh 'mix edeliver deploy upgrade to production'
+        sh 'mix edeliver build release'
+        sh 'mix edeliver deploy release to production'
         sh 'mix edeliver start production'
+
+        deleteDir()
       }
     }
   }
