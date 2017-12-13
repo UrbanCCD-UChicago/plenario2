@@ -41,34 +41,5 @@ pipeline {
         }
       }
     }
-
-    stage('deploy [dev]') {
-      when {
-        branch 'master'
-      }
-      steps {
-        deleteDir() // clean workspace
-
-        checkout scm  // checkout source
-
-        // build and compile
-        sh 'mix local.hex --force'
-        sh 'mix local.rebar --force'
-        sh 'mix clean'
-        sh 'mix deps.get'
-        sh 'mix compile'
-
-        // build assets
-        dir('./assets') {
-          sh 'npm install'
-          sh 'brunch build --production'
-        }
-
-        // build release, deploy and start app
-        sh 'mix edeliver build release production --verbose'
-        sh 'mix edeliver deploy release to production'
-        sh 'mix edeliver start production'
-      }
-    }
   }
 }
