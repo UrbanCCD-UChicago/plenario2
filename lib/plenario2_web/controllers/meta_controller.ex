@@ -1,5 +1,8 @@
 defmodule Plenario2Web.MetaController do
   use Plenario2Web, :controller
+
+  require Logger
+
   alias Plenario2.Actions.MetaActions
   alias Plenario2.Changesets.MetaChangesets
   alias Plenario2.Schemas.Meta
@@ -58,6 +61,7 @@ defmodule Plenario2Web.MetaController do
   end
 
   defp create_reply({:ok, meta}, conn) do
+    Logger.info("Meta \##{meta.id} created")
     conn
     |> put_flash(:success, "#{meta.name} Created!")
     |> redirect(to: meta_path(conn, :list))
