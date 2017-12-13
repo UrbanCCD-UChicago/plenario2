@@ -41,20 +41,5 @@ pipeline {
         }
       }
     }
-
-    stage('deploy [dev]') {
-      when {
-        branch 'master'
-      }
-      steps {
-        unstash 'source'
-
-        sh 'mix edeliver build release'
-        sh 'mix edeliver deploy release to production'
-        sh 'mix edeliver start production'
-
-        deleteDir()
-      }
-    }
   }
 }
