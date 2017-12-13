@@ -3,7 +3,7 @@
 -- columns          list[charlist]
 -- table            charlist
 -- constraints      list[charlist]
--- pks              list
+
 
 <% last_index = Enum.count(rows) - 1 %>
 
@@ -33,4 +33,4 @@ ON CONFLICT ("<%= Enum.join(constraints, ~s{","}) %>")
     <%= if index != Enum.count(constraints) - 1 do %>,<% end %>
   <% end %>
   RETURNING 
-    t.*
+    t."<%= Enum.join(columns, ~s{", t."}) %>"

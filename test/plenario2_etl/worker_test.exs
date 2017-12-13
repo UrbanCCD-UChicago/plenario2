@@ -25,13 +25,13 @@ defmodule Plenario2Etl.WorkerTest do
   @fixture_columns ["pk", "datetime", "location", "data"]
   @select_query "select #{Enum.join(@fixture_columns, ",")} from chicago_tree_trimming"
   @insert_rows [
-    [1, "2017-01-01T00:00:00+00:00", "(0, 1)", "crackers"],
-    [2, "2017-01-02T00:00:00+00:00", "(0, 2)", "and"],
-    [3, "2017-01-03T00:00:00+00:00", "(0, 3)", "cheese"]
+    ["crackers", "2017-01-01T00:00:00+00:00", "(0, 1)", 1],
+    ["and", "2017-01-02T00:00:00+00:00", "(0, 2)", 2],
+    ["cheese", "2017-01-03T00:00:00+00:00", "(0, 3)", 3]
   ]
   @upsert_rows [
-    [1, "2017-01-01T00:00:00+00:00", "(0, 1)", "biscuits"],
-    [4, "2017-01-04T00:00:00+00:00", "(0, 4)", "gromit"]
+    ["biscuits", "2017-01-01T00:00:00+00:00", "(0, 1)", 1],
+    ["gromit", "2017-01-04T00:00:00+00:00", "(0, 4)", 4]
   ]
 
   setup do
@@ -139,6 +139,34 @@ defmodule Plenario2Etl.WorkerTest do
     }
   end
 
+  @doc """
+  This helper function replaces the call to HTTPoison.get! made by a worker
+  process. It returns a generic set of json data for updates.
+
+  ## Example
+
+    iex> mock_csv_data_request("http://doesnt_matter.com")
+    %HTTPoison.Response{body: "json data..."}
+
+  """
+  def mock_json_update_request(_) do
+    %HTTPoison.Response{
+      body: """
+      [{
+        "pk": 1,
+        "datetime": "2017-01-01T00:00:00",
+        "location": "(0, 1)",
+        "data": "biscuits"
+      },{
+        "pk": 4,
+        "datetime": "2017-01-04T00:00:00",
+        "location": "(0, 4)",
+        "data": "gromit"
+      }]
+      """
+    }
+  end
+
   test :download! do
     with_mock HTTPoison, get!: &mock_csv_data_request/1 do
       name = "chicago_tree_trimming"
@@ -155,10 +183,10 @@ defmodule Plenario2Etl.WorkerTest do
     %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
 
     assert [
-      [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "crackers"],
-      [2, {{2017, 1, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
-      [3, {{2017, 1, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"]
-    ] = Enum.sort(rows)
+             [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "crackers"],
+             [2, {{2017, 1, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
+             [3, {{2017, 1, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"]
+           ] = Enum.sort(rows)
   end
 
   test :"upsert!/2 updates", %{meta: meta} do
@@ -167,17 +195,17 @@ defmodule Plenario2Etl.WorkerTest do
     %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
 
     assert [
-      [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "biscuits"],
-      [2, {{2017, 1, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
-      [3, {{2017, 1, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"],
-      [4, {{2017, 1, 4}, {_, 0, 0, 0}}, "(0, 4)", "gromit"]
-    ] = Enum.sort(rows)
+             [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "biscuits"],
+             [2, {{2017, 1, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
+             [3, {{2017, 1, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"],
+             [4, {{2017, 1, 4}, {_, 0, 0, 0}}, "(0, 4)", "gromit"]
+           ] = Enum.sort(rows)
   end
 
   test :contains!, %{meta: meta} do
     Worker.upsert!(meta, @insert_rows)
     rows = Worker.contains!(meta, @upsert_rows)
-    assert [[1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "crackers"]] = rows
+    assert [["crackers", {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", 1]] = rows
   end
 
   test :create_diffs, %{meta: meta, job: job} do
@@ -189,14 +217,34 @@ defmodule Plenario2Etl.WorkerTest do
   end
 
   test :load_chunk, %{meta: meta, job: job} do
-    Worker.load_chunk!(self(), meta, job, @insert_rows)
+    Worker.load_chunk!(self(), meta, job, Enum.map([
+      %{
+        "data" => "crackers",
+        "datetime" => "2017-01-01T00:00:00",
+        "location" => "(0, 1)",
+        "pk" => 1
+      },
+      %{
+        "data" => "and",
+        "datetime" => "2017-01-02T00:00:00",
+        "location" => "(0, 2)",
+        "pk" => 2
+      },
+      %{
+        "data" => "cheese",
+        "datetime" => "2017-01-03T00:00:00",
+        "location" => "(0, 3)",
+        "pk" => 3
+      }
+    ], &Enum.to_list/1))
+
     %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
 
     assert [
-      [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "crackers"],
-      [2, {{2017, 1, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
-      [3, {{2017, 1, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"]
-    ] = Enum.sort(rows)
+             [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "crackers"],
+             [2, {{2017, 1, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
+             [3, {{2017, 1, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"]
+           ] = Enum.sort(rows)
   end
 
   test :load!, %{meta: meta} do
@@ -205,10 +253,10 @@ defmodule Plenario2Etl.WorkerTest do
       %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
 
       assert [
-        [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "crackers"],
-        [2, {{2017, 2, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
-        [3, {{2017, 3, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"]
-      ] = Enum.sort(rows)
+               [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "crackers"],
+               [2, {{2017, 2, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
+               [3, {{2017, 3, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"]
+             ] = Enum.sort(rows)
     end
   end
 
@@ -223,30 +271,52 @@ defmodule Plenario2Etl.WorkerTest do
       diffs = Repo.all(DataSetDiff)
 
       assert [
-        [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "biscuits"],
-        [2, {{2017, 2, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
-        [3, {{2017, 3, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"],
-        [4, {{2017, 4, 4}, {_, 0, 0, 0}}, "(0, 4)", "gromit"]
-      ] = Enum.sort(rows)
+               [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "biscuits"],
+               [2, {{2017, 2, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
+               [3, {{2017, 3, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"],
+               [4, {{2017, 4, 4}, {_, 0, 0, 0}}, "(0, 4)", "gromit"]
+             ] = Enum.sort(rows)
 
       assert Enum.count(diffs) === 1
     end
   end
 
-  test "load/1 ingests json dataset" do
-    {:ok, user} = UserActions.create("otheruser", "password", "otheremail@example.com")
-    {:ok, meta} = MetaActions.create("Chicago Beard Trimmings", user.id, "mocked", source_type: "json")
+  test "load/1 ingests json dataset", %{meta: meta} do
+    MetaActions.update_source_info(meta, source_type: "json")
 
     with_mock HTTPoison, get!: &mock_json_data_request/1 do
       Worker.load(%{meta_id: meta.id})
     end
 
-    # %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
+    %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
 
-    # assert [
-    #   [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "biscuits"],
-    #   [2, {{2017, 2, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
-    #   [3, {{2017, 3, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"],
-    # ] = Enum.sort(rows)
+    assert [
+             [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "crackers"],
+             [2, {{2017, 1, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
+             [3, {{2017, 1, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"]
+           ] = Enum.sort(rows)
+  end
+
+  test "load/1 ingests json dataset and creates diffs", %{meta: meta} do
+    MetaActions.update_source_info(meta, source_type: "json")
+
+    with_mock HTTPoison, get!: &mock_json_data_request/1 do
+      Worker.load(%{meta_id: meta.id})
+    end
+
+    with_mock HTTPoison, get!: &mock_json_update_request/1 do
+      Worker.load(%{meta_id: meta.id})
+      %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
+      diffs = Repo.all(DataSetDiff)
+
+      assert [
+               [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "biscuits"],
+               [2, {{2017, 1, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
+               [3, {{2017, 1, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"],
+               [4, {{2017, 1, 4}, {_, 0, 0, 0}}, "(0, 4)", "gromit"]
+             ] = Enum.sort(rows)
+
+      assert Enum.count(diffs) === 1
+    end
   end
 end

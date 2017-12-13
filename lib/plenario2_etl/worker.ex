@@ -98,7 +98,8 @@ defmodule Plenario2Etl.Worker do
     iex> load_chunk!(self(), meta, job, [["some", "rows"]])
 
   """
-  def load_chunk!(sender, meta, job, rows) do
+  def load_chunk!(sender, meta, job, chunk) do
+    rows = Enum.map(chunk, &Keyword.values/1)
     existing_rows = contains!(meta, rows)
     inserted_rows = upsert!(meta, rows)
     pairs = Enum.zip(existing_rows, inserted_rows)
@@ -116,14 +117,26 @@ defmodule Plenario2Etl.Worker do
   def load_json(meta, path, job) do
     File.read!(path)
     |> Poison.decode!()
+    |> Stream.map(&Enum.to_list/1)
+    |> Stream.map(&Enum.sort/1)
+    |> Stream.chunk_every(100)
+    |> Enum.map(fn chunk ->
+         spawn_link(__MODULE__, :load_chunk!, [self(), meta, job, chunk])
+       end)
+    |> Enum.map(fn pid ->
+         receive do
+           {^pid, result} -> result
+         end
+       end)
   end
 
   @doc """
   """
   def load_csv(meta, path, job) do
     File.stream!(path)
-    |> CSV.decode!()
-    |> Stream.drop(1)
+    |> CSV.decode!(headers: true)
+    |> Stream.map(&Enum.to_list/1)
+    |> Stream.map(&Enum.sort/1)
     |> Stream.chunk_every(100)
     |> Enum.map(fn chunk ->
          spawn_link(__MODULE__, :load_chunk!, [self(), meta, job, chunk])
@@ -165,7 +178,7 @@ defmodule Plenario2Etl.Worker do
 
   defp template_query!(template, meta, rows) do
     table = MetaActions.get_data_set_table_name(meta)
-    columns = MetaActions.get_column_names(meta)
+    columns = MetaActions.get_column_names(meta) |> Enum.sort()
     constraints = MetaActions.get_first_constraint_field_names(meta)
 
     sql =
