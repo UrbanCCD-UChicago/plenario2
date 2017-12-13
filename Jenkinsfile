@@ -41,5 +41,18 @@ pipeline {
         }
       }
     }
+
+    stage('deploy [dev]') {
+      when {
+        branch 'master'
+      }
+      steps {
+        unstash 'source'
+
+        sh 'mix edeliver build upgrade'
+        sh 'mix edeliver deploy upgrade to production'
+        sh 'mix edeliver start production'
+      }
+    }
   }
 }

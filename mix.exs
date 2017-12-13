@@ -27,7 +27,8 @@ defmodule Plenario2.Mixfile do
   def application do
     [
       mod: {Plenario2.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools],
+      applications: [:edeliver]
     ]
   end
 
