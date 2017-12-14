@@ -86,6 +86,27 @@ defmodule Plenario2Etl.WorkerTest do
 
   @doc """
   This helper function replaces the call to HTTPoison.get! made by a worker
+  process. It returns a generic set of tsv data to ingest.
+
+  ## Example
+
+    iex> mock_tsv_data_request("http://doesnt_matter.com")
+    %HTTPoison.Response{body: "tsv data..."}
+
+  """
+  def mock_tsv_data_request(_) do
+    %HTTPoison.Response{
+      body: """
+      pk\tdatetime\tlocation\tdata
+      1\t2017-01-01T00:00:00\t"(0, 1)"\tcrackers
+      2\t2017-02-02T00:00:00\t"(0, 2)"\tand
+      3\t2017-03-03T00:00:00\t"(0, 3)"\tcheese
+      """
+    }
+  end
+
+  @doc """
+  This helper function replaces the call to HTTPoison.get! made by a worker
   process. It returns a generic set of csv data to upsert with. This method
   is meant to be used in conjunction with `mock_csv_data_request/1` to 
   simulate making requests to changing datasets.
@@ -249,6 +270,20 @@ defmodule Plenario2Etl.WorkerTest do
 
   test :load!, %{meta: meta} do
     with_mock HTTPoison, get!: &mock_csv_data_request/1 do
+      Worker.load(%{meta_id: meta.id})
+      %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
+
+      assert [
+               [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "crackers"],
+               [2, {{2017, 2, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
+               [3, {{2017, 3, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"]
+             ] = Enum.sort(rows)
+    end
+  end
+
+  test "load/1 loads tsv", %{meta: meta} do
+    MetaActions.update_source_info(meta, source_type: "tsv")
+    with_mock HTTPoison, get!: &mock_tsv_data_request/1 do
       Worker.load(%{meta_id: meta.id})
       %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
 

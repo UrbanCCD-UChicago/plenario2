@@ -85,7 +85,8 @@ defmodule Plenario2Etl.Worker do
 
     case meta.source_type do
       "json" -> load_json(meta, path, job)
-      _ -> load_csv(meta, path, job)
+      "csv" -> load_csv(meta, path, job)
+      "tsv" -> load_tsv(meta, path, job)
     end
   end
 
@@ -130,7 +131,16 @@ defmodule Plenario2Etl.Worker do
     end)
   end
 
-  def load_data(meta, path, job, decode) do
+  @doc """
+  """
+  def load_tsv(meta, path, job) do
+    load_data(meta, path, job, fn path -> 
+      File.stream!(path)
+      |> CSV.decode!(headers: true, separator: ?\t)
+    end)
+  end
+
+  defp load_data(meta, path, job, decode) do
     decode.(path)
     |> Stream.map(&Enum.to_list/1)
     |> Stream.map(&Enum.sort/1)
@@ -187,6 +197,7 @@ defmodule Plenario2Etl.Worker do
         constraints: constraints
       )
 
+    # TODO(heyzoos) log informative messages for failing queries
     %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, sql, [])
     rows
   end
