@@ -115,26 +115,23 @@ defmodule Plenario2Etl.Worker do
   @doc """
   """
   def load_json(meta, path, job) do
-    File.read!(path)
-    |> Poison.decode!()
-    |> Stream.map(&Enum.to_list/1)
-    |> Stream.map(&Enum.sort/1)
-    |> Stream.chunk_every(100)
-    |> Enum.map(fn chunk ->
-         spawn_link(__MODULE__, :load_chunk!, [self(), meta, job, chunk])
-       end)
-    |> Enum.map(fn pid ->
-         receive do
-           {^pid, result} -> result
-         end
-       end)
+    load_data(meta, path, job, fn path ->
+      File.read!(path)
+      |> Poison.decode!()
+    end)
   end
 
   @doc """
   """
   def load_csv(meta, path, job) do
-    File.stream!(path)
-    |> CSV.decode!(headers: true)
+    load_data(meta, path, job, fn path -> 
+      File.stream!(path)
+      |> CSV.decode!(headers: true)
+    end)
+  end
+
+  def load_data(meta, path, job, decode) do
+    decode.(path)
     |> Stream.map(&Enum.to_list/1)
     |> Stream.map(&Enum.sort/1)
     |> Stream.chunk_every(100)
