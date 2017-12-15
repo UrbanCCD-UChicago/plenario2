@@ -188,6 +188,22 @@ defmodule Plenario2Etl.WorkerTest do
     }
   end
 
+  @doc """
+  This helper function replaces the call to HTTPoison.get! made by a worker
+  process. It returns a generic set of shape data for updates.
+
+  ## Example
+
+    iex> mock_shapefile_data_request("http://doesnt_matter.com")
+    %HTTPoison.Response{body: "shapefile data..."}
+
+  """
+  def mock_shapefile_data_request(_) do
+    %HTTPoison.Response{
+      body: File.read!("test/plenario2_etl/fixtures/watersheds.zip")
+    }
+  end
+
   test :download! do
     with_mock HTTPoison, get!: &mock_csv_data_request/1 do
       name = "chicago_tree_trimming"
@@ -354,4 +370,12 @@ defmodule Plenario2Etl.WorkerTest do
       assert Enum.count(diffs) === 1
     end
   end
+
+  # test "load/1 ingests shapefile data", %{meta: meta} do
+  #   MetaActions.update_source_info(meta, source_type: "shp")
+
+  #   with_mock HTTPoison, get!: &mock_shapefile_data_request/1 do
+  #     Worker.load(%{meta_id: meta.id})
+  #   end
+  # end
 end

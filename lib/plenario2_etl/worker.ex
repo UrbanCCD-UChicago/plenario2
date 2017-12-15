@@ -13,6 +13,7 @@ defmodule Plenario2Etl.Worker do
   }
 
   import Ecto.Adapters.SQL, only: [query!: 3]
+  require Logger
   use GenServer
 
   @contains_template "lib/plenario2_etl/templates/contains.sql.eex"
@@ -76,17 +77,24 @@ defmodule Plenario2Etl.Worker do
     meta = MetaActions.get_from_id(state[:meta_id])
     job = EtlJobActions.create!(meta.id)
 
+    Logger.info("Downloading file for #{meta.name}")
+    Logger.info("#{meta.name} source url is #{meta.source_url}")
+    Logger.info("#{meta.name} source type is #{meta.source_type}")
+
     path =
       download!(
         MetaActions.get_data_set_table_name(meta),
         meta.source_url,
         meta.source_type
       )
+      
+    Logger.info("File stored at #{path}")
 
     case meta.source_type do
       "json" -> load_json(meta, path, job)
       "csv" -> load_csv(meta, path, job)
       "tsv" -> load_tsv(meta, path, job)
+      "shp" -> load_shape(meta, path, job)
     end
   end
 
@@ -137,6 +145,15 @@ defmodule Plenario2Etl.Worker do
     load_data(meta, path, job, fn path -> 
       File.stream!(path)
       |> CSV.decode!(headers: true, separator: ?\t)
+    end)
+  end
+
+  @doc """
+  """
+  def load_shape(meta, path, job) do
+    Logger.info("Loading shape file at #{path} for #{meta.name}")
+    load_data(meta, path, job, fn path ->
+      Exshape.from_zip(path)
     end)
   end
 

@@ -6,7 +6,6 @@ config :plenario2, Plenario2Web.Endpoint,
   http: [port: 4001],
   server: false
 
-# Print only warnings and errors during test
 config :logger, level: :warn
 
 # Configure your database
