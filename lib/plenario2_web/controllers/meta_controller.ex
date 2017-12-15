@@ -17,7 +17,7 @@ defmodule Plenario2Web.MetaController do
   def detail(conn, %{"slug" => slug}) do
     curr_path = current_path(conn)
     user = Guardian.Plug.current_resource(conn)
-    meta = MetaActions.get_from_slug(slug, [with_user: true, with_fields: true, with_notes: true, curr_path: curr_path])
+    meta = MetaActions.get_from_slug(slug, [with_user: true, with_fields: true, with_notes: true, curr_path: curr_path, with_virtual_points: true])
     owner = case user do
       nil -> false
       _   -> user.id == meta.user.id

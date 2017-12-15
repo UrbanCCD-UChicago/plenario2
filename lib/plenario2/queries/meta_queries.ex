@@ -27,7 +27,7 @@ defmodule Plenario2.Queries.MetaQueries do
 
   def with_virtual_date_fields(query), do: from m in query, preload: [virtual_date_fields: :metas]
 
-  def with_virtual_point_fields(query), do: from m in query, preload: [virtual_point_fields: :metas]
+  def with_virtual_point_fields(query), do: from m in query, preload: [virtual_point_fields: :meta]
 
   def with_data_set_diffs(query), do: from m in query, preload: [data_set_diffs: :metas]
 

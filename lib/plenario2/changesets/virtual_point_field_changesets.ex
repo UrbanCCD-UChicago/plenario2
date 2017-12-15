@@ -11,6 +11,11 @@ defmodule Plenario2.Changesets.VirtualPointFieldChangesets do
     |> set_name_loc()
   end
 
+  def blank_loc(struct) do
+    struct
+    |> cast(%{}, [:location_field, :meta_id])
+  end
+
   def create_from_long_lat(struct, params) do
     struct
     |> cast(params, [:longitude_field, :latitude_field, :meta_id])
@@ -18,6 +23,11 @@ defmodule Plenario2.Changesets.VirtualPointFieldChangesets do
     |> validate_long_lat()
     |> cast_assoc(:meta)
     |> set_name_long_lat()
+  end
+
+  def blank_long_lat(struct) do
+    struct
+    |> cast(%{}, [:longitude_field, :latitude_field, :meta_id])
   end
 
   ##

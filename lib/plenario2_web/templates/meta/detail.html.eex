@@ -139,7 +139,6 @@ div.row { margin-bottom: 2em; }
 
 <table class="table table-striped">
   <tr>
-    <th>ID</th>
     <th>Name</td>
     <th>Type</td>
     <th>Opts</td>
@@ -149,7 +148,6 @@ div.row { margin-bottom: 2em; }
   </tr>
   <%= for {f, i} <- Enum.with_index(@meta.data_set_fields) do %>
   <tr>
-    <th><%= f.id %></th>
     <td><%= f.name %></td>
     <td><%= f.type %></td>
     <td><%= f.opts %></td>
@@ -162,8 +160,37 @@ div.row { margin-bottom: 2em; }
 
 <div class="row">
   <div class="col-md-12">
-    <%= link raw("<button class='btn btn-primary'>Add a New Field</button>"), to: data_set_field_path(@conn, :new, @meta.slug) %> 
+    <%= link raw("<button class='btn btn-primary'>Add a New Field</button>"), to: data_set_field_path(@conn, :new, @meta.slug) %>
   </div>
+</div>
+
+<hr>
+
+<h3>Parsed Location Fields</h3>
+
+<table class="table table-striped">
+  <tr>
+    <th>Fields</th>
+  </tr>
+  <%= for f <- @meta.virtual_point_fields do %>
+  <tr>
+    <td><%= if f.location_field do %>
+          <%= f.location_field %>
+        <% else %>
+          <%= f.longitude_field %>, <%= f.latitude_field %>
+        <% end %>
+    </td>
+  </tr>
+  <% end %>
+</table>
+
+<div class="row">
+  <div class="col-md-6">
+    <%= link raw("<button class='btn btn-primary'>Add a New Location Field From a Single Field</button>"), to: virtual_point_field_path(@conn, :get_create_loc, @meta.slug) %>
+  </div>
+    <div class="col-md-6">
+      <%= link raw("<button class='btn btn-primary'>Add a New Location Field From Two Fields</button>"), to: virtual_point_field_path(@conn, :get_create_longlat, @meta.slug) %>
+    </div>
 </div>
 
 <hr>

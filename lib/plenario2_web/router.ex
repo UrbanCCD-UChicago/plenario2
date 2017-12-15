@@ -65,6 +65,11 @@ defmodule Plenario2Web.Router do
 
     resources "/data-sets/:slug/fields", DataSetFieldController
 
+    get "/data-sets/:slug/virtual-points/create-loc", VirtualPointFieldController, :get_create_loc
+    post "/data-sets/:slug/virtual-points/create-loc", VirtualPointFieldController, :do_create_loc
+    get "/data-sets/:slug/virtual-points/create-longlat", VirtualPointFieldController, :get_create_longlat
+    post "/data-sets/:slug/virtual-points/create-longlat", VirtualPointFieldController, :do_create_longlat
+
     post "/notes/:id/acknowledge", AdminUserNoteController, :acknowledge
 
     get "/my/info", UserController, :index
