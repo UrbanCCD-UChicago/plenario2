@@ -12,6 +12,7 @@
     <!-- Import css and js files built by brunch -->
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
+    <link rel="shortcut icon" type="image/png" href="<%= static_path(@conn, "/images/favicon.png") %>">
 
     <style>
     @media (min-width: 900px) {
