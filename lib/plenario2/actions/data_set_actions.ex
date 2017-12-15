@@ -167,7 +167,7 @@ defmodule Plenario2.Actions.DataSetActions do
 
   defp gen_sql_create_parse_location_function(srid) do
     template = """
-    CREATE FUNCTION
+    CREATE OR REPLACE FUNCTION
       parse_pt_location_<%= srid %>(location TEXT)
     RETURNS GEOMETRY(POINT, <%= srid %>) AS $$
 
