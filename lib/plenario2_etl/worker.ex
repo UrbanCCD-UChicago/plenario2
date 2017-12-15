@@ -162,6 +162,13 @@ defmodule Plenario2Etl.Worker do
       |> Stream.map(fn shape ->
         {polygon, values} = shape
 
+        wkt = 
+          Geojson.from_exshape(polygon)
+          |> Poison.decode!()
+          |> Geo.JSON.decode()
+          |> set_srid(meta.srid)
+          |> Geo.WKT.encode()
+
         values = Enum.map(values, fn value ->
           if is_binary(value) do
             String.trim(value)
@@ -170,9 +177,14 @@ defmodule Plenario2Etl.Worker do
           end
         end)
 
-        Enum.zip(columns, values) |> Enum.map(fn {col, val} -> {String.to_atom(col), val} end)
+        kwlist = Enum.zip(columns, values) |> Enum.map(fn {col, val} -> {String.to_atom(col), val} end)
+        Enum.sort(kwlist ++ [shape: wkt])
       end)
     end)
+  end
+
+  defp set_srid(%Geo.Polygon{ coordinates: coordinates }, srid) do
+    %Geo.Polygon{coordinates: coordinates, srid: srid}
   end
 
   defp load_data(meta, path, job, decode) do
