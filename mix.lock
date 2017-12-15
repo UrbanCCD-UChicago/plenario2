@@ -1,4 +1,5 @@
-%{"base64url": {:hex, :base64url, "0.0.1", "36a90125f5948e3afd7be97662a1504b934dd5dac78451ca6e9abf85a10286be", [:rebar], [], "hexpm"},
+%{
+  "base64url": {:hex, :base64url, "0.0.1", "36a90125f5948e3afd7be97662a1504b934dd5dac78451ca6e9abf85a10286be", [:rebar], [], "hexpm"},
   "bcrypt_elixir": {:hex, :bcrypt_elixir, "1.0.5", "cca70b5c8d9a98a0151c2d2796c728719c9c4b3f8bd2de015758ef577ee5141e", [:make, :mix], [{:elixir_make, "~> 0.4", [hex: :elixir_make, repo: "hexpm", optional: false]}], "hexpm"},
   "canada": {:hex, :canada, "1.0.2", "040e4c47609b0a67d5773ac1fbe5e99f840cef173d69b739beda7c98453e0770", [], [], "hexpm"},
   "canary": {:hex, :canary, "1.1.1", "4138d5e05db8497c477e4af73902eb9ae06e49dceaa13c2dd9f0b55525ded48b", [], [{:canada, "~> 1.0.1", [hex: :canada, repo: "hexpm", optional: false]}, {:ecto, ">= 1.1.0", [hex: :ecto, repo: "hexpm", optional: false]}, {:plug, "~> 1.0", [hex: :plug, repo: "hexpm", optional: false]}], "hexpm"},
@@ -19,6 +20,7 @@
   "elixir_make": {:hex, :elixir_make, "0.4.0", "992f38fabe705bb45821a728f20914c554b276838433349d4f2341f7a687cddf", [:mix], [], "hexpm"},
   "excoveralls": {:hex, :excoveralls, "0.7.5", "339e433e5d3bce09400dc8de7b9040741a409c93917849916c136a0f51fdc183", [:mix], [{:exjsx, ">= 3.0.0", [hex: :exjsx, repo: "hexpm", optional: false]}, {:hackney, ">= 0.12.0", [hex: :hackney, repo: "hexpm", optional: false]}], "hexpm"},
   "exjsx": {:hex, :exjsx, "4.0.0", "60548841e0212df401e38e63c0078ec57b33e7ea49b032c796ccad8cde794b5c", [:mix], [{:jsx, "~> 2.8.0", [hex: :jsx, repo: "hexpm", optional: false]}], "hexpm"},
+  "exshape": {:git, "https://github.com/HeyZoos/exshape", "2795a8177843ebc46275b219d7deba4ee57b6ed2", []},
   "file_system": {:hex, :file_system, "0.2.2", "7f1e9de4746f4eb8a4ca8f2fbab582d84a4e40fa394cce7bfcb068b988625b06", [:mix], [], "hexpm"},
   "gen_stage": {:hex, :gen_stage, "0.12.2", "e0e347cbb1ceb5f4e68a526aec4d64b54ad721f0a8b30aa9d28e0ad749419cbb", [:mix], [], "hexpm"},
   "geo": {:hex, :geo, "2.0.0", "4a847aa42fcfac5b9ea23f938e1f4bde1c39c240a5d54b52eb0456530a2d040a", [:mix], [{:ecto, "~> 2.1", [hex: :ecto, repo: "hexpm", optional: true]}, {:poison, "~> 3.0", [hex: :poison, repo: "hexpm", optional: true]}], "hexpm"},
@@ -51,4 +53,5 @@
   "timex": {:hex, :timex, "3.1.24", "d198ae9783ac807721cca0c5535384ebdf99da4976be8cefb9665a9262a1e9e3", [:mix], [{:combine, "~> 0.7", [hex: :combine, repo: "hexpm", optional: false]}, {:gettext, "~> 0.10", [hex: :gettext, repo: "hexpm", optional: false]}, {:tzdata, "~> 0.1.8 or ~> 0.5", [hex: :tzdata, repo: "hexpm", optional: false]}], "hexpm"},
   "tzdata": {:hex, :tzdata, "0.5.14", "56f05ea3dd87db946966ab3c7168c0b35025c7ee0e9b4fc130a04631f5611eb1", [:mix], [{:hackney, "~> 1.0", [hex: :hackney, repo: "hexpm", optional: false]}], "hexpm"},
   "unicode_util_compat": {:hex, :unicode_util_compat, "0.3.1", "a1f612a7b512638634a603c8f401892afbf99b8ce93a45041f8aaca99cadb85e", [:rebar3], [], "hexpm"},
-  "uuid": {:hex, :uuid, "1.1.8", "e22fc04499de0de3ed1116b770c7737779f226ceefa0badb3592e64d5cfb4eb9", [:mix], [], "hexpm"}}
+  "uuid": {:hex, :uuid, "1.1.8", "e22fc04499de0de3ed1116b770c7737779f226ceefa0badb3592e64d5cfb4eb9", [:mix], [], "hexpm"},
+}
