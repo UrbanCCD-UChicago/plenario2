@@ -160,6 +160,12 @@ div.row { margin-bottom: 2em; }
   <% end %>
 </table>
 
+<div class="row">
+  <div class="col-md-12">
+    <%= link raw("<button class='btn btn-primary'>Add a New Field</button>"), to: data_set_field_path(@conn, :new, @meta.slug) %> 
+  </div>
+</div>
+
 <hr>
 
 <%= if @owner and @meta.state == "new" do %>
