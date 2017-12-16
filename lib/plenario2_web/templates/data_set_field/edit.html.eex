@@ -15,7 +15,7 @@
 
   <div class="form-group">
     <%= label f, "Modifiers", class: "control-label" %>
-    <%= text_input f, :opts, class: "form-control" %>
+    <%= text_input f, :opts, class: "form-control", value: "default null" %>
     <%= error_tag f, :opts %>
   </div>
 
