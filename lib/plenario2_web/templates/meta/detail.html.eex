@@ -147,7 +147,7 @@ div.row { margin-bottom: 2em; }
       <th></th>
     <% end %>
   </tr>
-  <%= for {f, i} <- Enum.with_index(@meta.data_set_fields) do %>
+  <%= for f <- @meta.data_set_fields do %>
   <tr>
     <th><%= f.id %></th>
     <td><%= f.name %></td>
@@ -165,9 +165,7 @@ div.row { margin-bottom: 2em; }
 <%= if @owner and @meta.state == "new" do %>
 <div class="row">
   <div class="col-md-12">
-    <%= form_for @conn, meta_path(@conn, :submit_for_approval, @meta.slug), fn f -> %>
-      <%= submit "Submit for Approval", class: "btn btn-primary" %>
-    <% end %>
+    <%= button "Submit for Approval", to:  meta_path(@conn, :submit_for_approval, @meta.slug), class: "btn btn-primary" %>
   </div>
 </div>
 <hr>

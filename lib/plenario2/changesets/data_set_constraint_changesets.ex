@@ -1,7 +1,6 @@
 defmodule Plenario2.Changesets.DataSetConstraintChangesets do
   import Ecto.Changeset
   alias Plenario2.Actions.{MetaActions, DataSetFieldActions}
-  alias Plenario2.Schemas.Meta
 
   def create(struct, params) do
     struct
