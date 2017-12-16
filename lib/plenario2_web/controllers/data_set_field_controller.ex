@@ -9,7 +9,7 @@ defmodule Plenario2Web.DataSetFieldController do
     {"Text", "text"},
     {"Integer", "integer"},
     {"Decimal", "float"},
-    {String.to_atom("True/False"), "boolean"},
+    {"True/False", "boolean"},
     {"Date", "timestamptz"}
   ]
 

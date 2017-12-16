@@ -20,4 +20,14 @@ defmodule Plenario2Web.TemplateHelpers do
       _ -> plural
     end
   end
+
+  def psql_to_human(value) do
+    Map.get(%{
+      "text" => "Text",
+      "integer" => "Integer",
+      "float" => "Decimal",
+      "boolean" => "True/False",
+      "timestamptz" => "Date"
+    }, value)
+  end
 end
