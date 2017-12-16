@@ -5,6 +5,14 @@ defmodule Plenario2Web.DataSetFieldController do
   alias Plenario2.Schemas.DataSetField
   use Plenario2Web, :controller
 
+  @field_type_options [
+    {"Text", "text"},
+    {"Integer", "integer"},
+    {"Decimal", "float"},
+    {String.to_atom("True/False"), "boolean"},
+    {"Date", "timestamptz"}
+  ]
+
   def index(conn, %{"slug" => slug}) do
     meta = MetaActions.get_from_slug(slug)
     fields = DataSetFieldActions.list_for_meta(meta)
@@ -14,7 +22,7 @@ defmodule Plenario2Web.DataSetFieldController do
 
   def new(conn, %{"slug" => slug}) do
     changeset = DataSetFieldChangesets.create(%DataSetField{})
-    render(conn, "new.html", changeset: changeset, slug: slug)
+    render(conn, "new.html", changeset: changeset, slug: slug, field_type_options: @field_type_options)
   end
 
   def create(conn, %{"data_set_field" => params, "slug" => slug}) do
@@ -36,7 +44,7 @@ defmodule Plenario2Web.DataSetFieldController do
   def edit(conn, %{"slug"=> slug, "id" => id}) do
     field = Repo.get!(DataSetField, id)
     changeset = DataSetFieldChangesets.create(field)
-    render(conn, "edit.html", field: field, changeset: changeset, slug: slug)
+    render(conn, "edit.html", field: field, changeset: changeset, slug: slug, field_type_options: @field_type_options)
   end
 
   def update(conn, %{"slug" => slug, "id" => id, "data_set_field" => field_params}) do

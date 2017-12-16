@@ -15,7 +15,7 @@
 
   <div class="form-group">
     <%= label f, "Type", class: "control-label" %>
-    <%= text_input f, :type, class: "form-control" %>
+    <%= select f, :type, @field_type_options, class: "form-control" %>
     <%= error_tag f, :type %>
   </div>
 

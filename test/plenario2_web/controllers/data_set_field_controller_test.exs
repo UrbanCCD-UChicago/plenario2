@@ -11,7 +11,7 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
 
   @meta_name "test"
   @meta_source_url "somewhere"
-  
+
   setup do
     {:ok, user} = UserActions.create(@user_name, @user_password, @user_email)
     {:ok, meta} = MetaActions.create(@meta_name, user.id, @meta_source_url)
@@ -34,7 +34,7 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
     test "when logged in", %{conn: conn, meta: meta} do
       conn = post(conn, auth_path(conn, :do_login, %{
         "user" => %{
-          "email_address" => @user_email, 
+          "email_address" => @user_email,
           "plaintext_password" => @user_password
         }
       }))
@@ -59,7 +59,7 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
     test "when logged in", %{conn: conn, meta: meta} do
       conn = post(conn, auth_path(conn, :do_login, %{
         "user" => %{
-          "email_address" => @user_email, 
+          "email_address" => @user_email,
           "plaintext_password" => @user_password
         }
       }))
@@ -68,8 +68,8 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
         |> post(data_set_field_path(conn, :create, meta.slug), %{
           "data_set_field" => %{
             "name" => "foo",
-            "type" => "bar",
-            "opts" => "baz"
+            "type" => "text",
+            "opts" => "default null"
           }
         })
         |> response(302)
@@ -92,7 +92,7 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
     test "when logged in", %{conn: conn, meta: meta} do
       conn = post(conn, auth_path(conn, :do_login, %{
         "user" => %{
-          "email_address" => @user_email, 
+          "email_address" => @user_email,
           "plaintext_password" => @user_password
         }
       }))
@@ -101,8 +101,8 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
         |> post(data_set_field_path(conn, :create, meta.slug), %{
           "data_set_field" => %{
             "name" => "foo",
-            "type" => "bar",
-            "opts" => "baz"
+            "type" => "text",
+            "opts" => "default null"
           }
         })
         |> response(302)
@@ -114,8 +114,8 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
         |> put(data_set_field_path(conn, :update, meta.slug, field.id), %{
           "data_set_field" => %{
             "name" => "FOOS",
-            "type" => "BAR",
-            "opts" => "BAZ"
+            "type" => "integer",
+            "opts" => "default null"
           }
         })
         |> response(302)
@@ -123,8 +123,8 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
       field = Repo.get!(DataSetField, field.id)
 
       assert field.name == "foos"
-      assert field.type == "BAR"
-      assert field.opts == "BAZ"
+      assert field.type == "integer"
+      assert field.opts == "default null"
     end
   end
 end
