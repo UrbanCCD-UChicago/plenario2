@@ -224,7 +224,28 @@ div.row { margin-bottom: 2em; }
 <div class="row">
   <div class="col-md-12">
     <%= button "Add a New Date Field", to: virtual_date_field_path(@conn, :get_create, @meta.slug), class: "btn btn-primary" %>
+  </div>
 </div>
+
+<hr>
+
+<h3>Data Set Constraints</h3>
+
+<table class="table table-striped">
+  <tr>
+    <th>Unique Field Group</th>
+  </tr>
+  <%= for c <- @meta.data_set_constraints do %>
+  <tr>
+    <td><%= c.field_names %></td>
+  </tr>
+  <% end %>
+</table>
+
+<div class="row">
+  <div class="col-md-12">
+    <%= button "Add a New Constraint", to: data_set_constraint_path(@conn, :get_create, @meta.slug), class: "btn btn-primary" %>
+  </div>
 </div>
 
 <hr>
