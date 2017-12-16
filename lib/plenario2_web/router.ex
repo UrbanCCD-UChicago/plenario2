@@ -70,6 +70,9 @@ defmodule Plenario2Web.Router do
     get "/data-sets/:slug/virtual-points/create-longlat", VirtualPointFieldController, :get_create_longlat
     post "/data-sets/:slug/virtual-points/create-longlat", VirtualPointFieldController, :do_create_longlat
 
+    get "/data-sets/:slug/virtual-dates/create", VirtualDateFieldController, :get_create
+    post "/data-sets/:slug/virtual-dates/create", VirtualDateFieldController, :do_create
+
     post "/notes/:id/acknowledge", AdminUserNoteController, :acknowledge
 
     get "/my/info", UserController, :index

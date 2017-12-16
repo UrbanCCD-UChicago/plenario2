@@ -1,8 +1,6 @@
 defmodule Plenario2Web.VirtualPointFieldController do
   use Plenario2Web, :controller
 
-  require Logger
-
   alias Plenario2.Repo
   alias Plenario2.Actions.{MetaActions, VirtualPointFieldActions}
   alias Plenario2.Changesets.VirtualPointFieldChangesets

@@ -19,6 +19,19 @@ defmodule Plenario2.Changesets.VirtualDateFieldChangesets do
     |> set_name()
   end
 
+  def blank(struct) do
+    struct
+    |> cast(%{}, [
+         :year_field,
+         :month_field,
+         :day_field,
+         :hour_field,
+         :minute_field,
+         :second_field,
+         :meta_id
+       ])
+   end
+
   ##
   # operations
 
