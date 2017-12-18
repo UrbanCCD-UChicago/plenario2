@@ -13,6 +13,7 @@ defmodule Plenario2Etl.Worker do
   }
 
   import Ecto.Adapters.SQL, only: [query!: 3]
+  import Slug, only: [slugify: 1]
   require Logger
   use GenServer
 
@@ -87,7 +88,7 @@ defmodule Plenario2Etl.Worker do
         meta.source_url,
         meta.source_type
       )
-      
+
     Logger.info("File stored at #{path}")
 
     case meta.source_type do
@@ -133,7 +134,7 @@ defmodule Plenario2Etl.Worker do
   @doc """
   """
   def load_csv(meta, path, job) do
-    load_data(meta, path, job, fn path -> 
+    load_data(meta, path, job, fn path ->
       File.stream!(path)
       |> CSV.decode!(headers: true)
     end)
@@ -142,7 +143,7 @@ defmodule Plenario2Etl.Worker do
   @doc """
   """
   def load_tsv(meta, path, job) do
-    load_data(meta, path, job, fn path -> 
+    load_data(meta, path, job, fn path ->
       File.stream!(path)
       |> CSV.decode!(headers: true, separator: ?\t)
     end)
@@ -152,38 +153,43 @@ defmodule Plenario2Etl.Worker do
   """
   def load_shape(meta, path, job) do
     Logger.info("Loading shape file at #{path} for #{meta.name}")
+
     load_data(meta, path, job, fn path ->
-      [{_, _, stream }] = Exshape.from_zip(path)
+      [{_, _, stream}] = Exshape.from_zip(path)
       [{_, header}] = Enum.take(stream, 1)
       columns = Enum.map(header.columns, fn column -> column.name end)
 
       stream
       |> Stream.drop(1)
       |> Stream.map(fn shape ->
-        {polygon, values} = shape
+           {polygon, values} = shape
 
-        wkt = 
-          Geojson.from_exshape(polygon)
-          |> Poison.decode!()
-          |> Geo.JSON.decode()
-          |> set_srid(meta.srid)
-          |> Geo.WKT.encode()
+           wkt =
+             Geojson.from_exshape(polygon)
+             |> Poison.decode!()
+             |> Geo.JSON.decode()
+             |> set_srid(meta.srid)
+             |> Geo.WKT.encode()
 
-        values = Enum.map(values, fn value ->
-          if is_binary(value) do
-            String.trim(value)
-          else
-            value
-          end
-        end)
+           values =
+             Enum.map(values, fn value ->
+               if is_binary(value) do
+                 String.trim(value)
+               else
+                 value
+               end
+             end)
 
-        kwlist = Enum.zip(columns, values) |> Enum.map(fn {col, val} -> {String.to_atom(col), val} end)
-        Enum.sort(kwlist ++ [shape: wkt])
-      end)
+           kwlist =
+             Enum.zip(columns, values)
+             |> Enum.map(fn {col, val} -> {String.to_atom(slugify(col)), val} end)
+
+           kwlist ++ [shape: wkt]
+         end)
     end)
   end
 
-  defp set_srid(%Geo.Polygon{ coordinates: coordinates }, srid) do
+  defp set_srid(%Geo.Polygon{coordinates: coordinates}, srid) do
     %Geo.Polygon{coordinates: coordinates, srid: srid}
   end
 
