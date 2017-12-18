@@ -166,7 +166,6 @@ defmodule Plenario2Etl.Worker do
 
            wkt =
              Geojson.from_exshape(polygon)
-             |> Poison.decode!()
              |> Geo.JSON.decode()
              |> set_srid(meta.srid)
              |> Geo.WKT.encode()

@@ -1,42 +1,15 @@
 defmodule Geojson do
   def from_exshape(%Exshape.Shp.Polygon{points: points}) do
-    coordinates = 
-      for level1 <- points do
-        for level2 <- level1 do
-          for %Exshape.Shp.Point{x: x, y: y} <- level2 do
-            {x, y}
-          end
-        end
-      end
+    [ [ points | _ ] | _ ] = points
 
-      """
-      {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -87.52498626708983,
-              41.651879827111344
-            ],
-            [
-              -87.39555358886719,
-              41.651879827111344
-            ],
-            [
-              -87.39555358886719,
-              41.70624114327587
-            ],
-            [
-              -87.52498626708983,
-              41.70624114327587
-            ],
-            [
-              -87.52498626708983,
-              41.651879827111344
-            ]
-          ]
-        ]
-      }
-      """
+    coordinates = 
+      Enum.map(points, fn %Exshape.Shp.Point{x: x, y: y} ->
+        [x, y]
+      end)
+
+    %{
+      "type" => "Polygon",
+      "coordinates" => [coordinates]
+    }
   end
 end
