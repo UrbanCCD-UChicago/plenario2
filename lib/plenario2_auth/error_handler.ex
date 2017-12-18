@@ -1,4 +1,10 @@
 defmodule Plenario2Auth.ErrorHandler do
+  @moduledoc """
+  This module provides error handlers for Guardian and Canary. In all cases,
+  the request is responded to with an appropriate response code and the
+  process is halted (i.e. no other plugs will be called).
+  """
+
   import Plug.Conn
 
   @doc """
