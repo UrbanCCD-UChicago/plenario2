@@ -23,13 +23,13 @@ defmodule Plenario2.Queries.MetaQueries do
 
   def with_data_set_fields(query), do: from m in query, preload: [data_set_fields: :meta]
 
-  def with_data_set_constraints(query), do: from m in query, preload: [data_set_constraints: :metas]
+  def with_data_set_constraints(query), do: from m in query, preload: [data_set_constraints: :meta]
 
-  def with_virtual_date_fields(query), do: from m in query, preload: [virtual_date_fields: :metas]
+  def with_virtual_date_fields(query), do: from m in query, preload: [virtual_date_fields: :meta]
 
-  def with_virtual_point_fields(query), do: from m in query, preload: [virtual_point_fields: :metas]
+  def with_virtual_point_fields(query), do: from m in query, preload: [virtual_point_fields: :meta]
 
-  def with_data_set_diffs(query), do: from m in query, preload: [data_set_diffs: :metas]
+  def with_data_set_diffs(query), do: from m in query, preload: [data_set_diffs: :meta]
 
   def with_admin_user_notes(query), do: from m in query, preload: [admin_user_notes: :meta]
 
