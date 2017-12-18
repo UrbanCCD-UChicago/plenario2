@@ -12,6 +12,11 @@ defmodule Plenario2.Changesets.DataSetConstraintChangesets do
     |> set_name()
   end
 
+  def blank(struct) do
+    struct
+    |> cast(%{}, [:field_names, :meta_id])
+  end
+
   ##
   # operations
 
