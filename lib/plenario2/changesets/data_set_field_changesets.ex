@@ -1,7 +1,7 @@
 defmodule Plenario2.Changesets.DataSetFieldChangesets do
   import Ecto.Changeset
 
-  @valid_types ~w(text integer float boolean timestamptz)
+  @valid_types ~w{text integer float boolean timestamptz geometry(polygon,4326)}
 
   def create(struct, params \\ %{}) do
     struct

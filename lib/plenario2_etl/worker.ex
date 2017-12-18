@@ -184,7 +184,7 @@ defmodule Plenario2Etl.Worker do
              Enum.zip(columns, values)
              |> Enum.map(fn {col, val} -> {String.to_atom(slugify(col)), val} end)
 
-           kwlist ++ [shape: wkt]
+           kwlist ++ [geom: wkt]
          end)
     end)
   end

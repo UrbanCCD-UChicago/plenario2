@@ -381,7 +381,7 @@ defmodule Plenario2Etl.WorkerTest do
     DataSetFieldActions.create(meta.id, "watershed", "text")
     DataSetFieldActions.create(meta.id, "washd_code", "text")
     DataSetFieldActions.create(meta.id, "portland_m", "text")
-    DataSetFieldActions.create(meta.id, "shape", "geometry(polygon, 4326)")
+    DataSetFieldActions.create(meta.id, "geom", "geometry(polygon,4326)")
     DataSetFieldActions.make_primary_key(pk)
     {:ok, constraint} = DataSetConstraintActions.create(meta.id, ["objectid"])
     {:ok, job} = EtlJobActions.create(meta.id)
