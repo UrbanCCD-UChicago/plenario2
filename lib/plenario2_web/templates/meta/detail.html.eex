@@ -149,7 +149,7 @@ div.row { margin-bottom: 2em; }
   <%= for {f, i} <- Enum.with_index(@meta.data_set_fields) do %>
   <tr>
     <td><%= f.name %></td>
-    <td><%= f.type %></td>
+    <td><%= psql_to_human(f.type) %></td>
     <td><%= f.opts %></td>
     <%= if @owner do %>
       <td><%= link "Edit", to: data_set_field_path(@conn, :edit, @meta.slug, f.id), method: :get %></td>

@@ -9,7 +9,7 @@ defmodule DataSetConstraintActionsTest do
 
     {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
     {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
-    DataSetFieldActions.create(meta.id, "date", "date")
+    DataSetFieldActions.create(meta.id, "date", "timestamptz")
     DataSetFieldActions.create(meta.id, "location", "text")
     DataSetFieldActions.create(meta.id, "event_id", "text")
 
