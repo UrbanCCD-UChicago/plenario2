@@ -37,12 +37,7 @@ defmodule Plenario2Etl.WorkerTest do
   setup do
     {:ok, user} = UserActions.create("user", "password", "email@example.com")
 
-    {:ok, meta} =
-      MetaActions.create(
-        @fixture_name,
-        user.id,
-        @fixture_source
-      )
+    {:ok, meta} = MetaActions.create( @fixture_name, user.id, @fixture_source)
 
     {:ok, pk} = DataSetFieldActions.create(meta.id, "pk", "integer")
     DataSetFieldActions.create(meta.id, "datetime", "timestamptz")
@@ -109,7 +104,7 @@ defmodule Plenario2Etl.WorkerTest do
   @doc """
   This helper function replaces the call to HTTPoison.get! made by a worker
   process. It returns a generic set of csv data to upsert with. This method
-  is meant to be used in conjunction with `mock_csv_data_request/1` to 
+  is meant to be used in conjunction with `mock_csv_data_request/1` to
   simulate making requests to changing datasets.
 
   ## Example

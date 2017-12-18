@@ -139,7 +139,6 @@ div.row { margin-bottom: 2em; }
 
 <table class="table table-striped">
   <tr>
-    <th>ID</th>
     <th>Name</td>
     <th>Type</td>
     <th>Opts</td>
@@ -149,9 +148,8 @@ div.row { margin-bottom: 2em; }
   </tr>
   <%= for {f, i} <- Enum.with_index(@meta.data_set_fields) do %>
   <tr>
-    <th><%= f.id %></th>
     <td><%= f.name %></td>
-    <td><%= f.type %></td>
+    <td><%= psql_to_human(f.type) %></td>
     <td><%= f.opts %></td>
     <%= if @owner do %>
       <td><%= link "Edit", to: data_set_field_path(@conn, :edit, @meta.slug, f.id), method: :get %></td>
@@ -160,14 +158,102 @@ div.row { margin-bottom: 2em; }
   <% end %>
 </table>
 
+<div class="row">
+  <div class="col-md-12">
+    <%= link raw("<button class='btn btn-primary'>Add a New Field</button>"), to: data_set_field_path(@conn, :new, @meta.slug) %>
+  </div>
+</div>
+
+<hr>
+
+<h3>Virtual Location Fields</h3>
+
+<table class="table table-striped">
+  <tr>
+    <th>Virtual Field Name</th>
+    <th>Location Field Ref</th>
+    <th>Longitude Field Ref</th>
+    <th>Latitude Field Ref</th>
+  </tr>
+  <%= for f <- @meta.virtual_point_fields do %>
+  <tr>
+    <td><%= f.name %></td>
+    <td><%= f.location_field || "-" %></td>
+    <td><%= f.longitude_field || "-" %></td>
+    <td><%= f.latitude_field || "-" %></td>
+  </tr>
+  <% end %>
+</table>
+
+<div class="row">
+  <div class="col-md-6">
+    <%= button "Add a New Location Field From a Single Text Field", to: virtual_point_field_path(@conn, :get_create_loc, @meta.slug), class: "btn btn-primary" %>
+  </div>
+  <div class="col-md-6">
+    <%= button "Add a New Location Field from a Long/Lat Field Combo", to: virtual_point_field_path(@conn, :get_create_longlat, @meta.slug), class: "btn btn-primary pull-right" %>
+  </div>
+</div>
+
+<hr>
+
+<h3>Virtual Date Fields</h3>
+
+<table class="table table-striped">
+  <tr>
+    <th>Virtual Field Name</th>
+    <th>Year Field Ref</th>
+    <th>Month Field Ref</th>
+    <th>Day Field Ref</th>
+    <th>Hour Field Ref</th>
+    <th>MInute Field Ref</th>
+    <th>Second Field Ref</th>
+  </tr>
+  <%= for f <- @meta.virtual_date_fields do %>
+  <tr>
+    <td><%= f.name %></td>
+    <td><%= f.year_field || "-" %></td>
+    <td><%= f.month_field || "-" %></td>
+    <td><%= f.day_field || "-" %></td>
+    <td><%= f.hour_field || "-" %></td>
+    <td><%= f.minute_field || "-" %></td>
+    <td><%= f.second_field || "-" %></td>
+  </tr>
+  <% end %>
+</table>
+
+<div class="row">
+  <div class="col-md-12">
+    <%= button "Add a New Date Field", to: virtual_date_field_path(@conn, :get_create, @meta.slug), class: "btn btn-primary" %>
+  </div>
+</div>
+
+<hr>
+
+<h3>Data Set Constraints</h3>
+
+<table class="table table-striped">
+  <tr>
+    <th>Unique Field Group</th>
+  </tr>
+  <%= for c <- @meta.data_set_constraints do %>
+  <tr>
+    <td><%= c.field_names %></td>
+  </tr>
+  <% end %>
+</table>
+
+<div class="row">
+  <div class="col-md-12">
+    <%= button "Add a New Constraint", to: data_set_constraint_path(@conn, :get_create, @meta.slug), class: "btn btn-primary" %>
+  </div>
+</div>
+
 <hr>
 
 <%= if @owner and @meta.state == "new" do %>
 <div class="row">
   <div class="col-md-12">
-    <%= form_for @conn, meta_path(@conn, :submit_for_approval, @meta.slug), fn f -> %>
-      <%= submit "Submit for Approval", class: "btn btn-primary" %>
-    <% end %>
+    <%= button "Submit Data Set for Approval", to: meta_path(@conn, :submit_for_approval, @meta.slug), class: "btn btn-primary" %>
   </div>
 </div>
 <hr>
