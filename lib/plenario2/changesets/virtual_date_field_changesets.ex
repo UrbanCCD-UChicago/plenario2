@@ -1,7 +1,28 @@
 defmodule Plenario2.Changesets.VirtualDateFieldChangesets do
-  import Ecto.Changeset
-  alias Plenario2.Actions.{MetaActions, DataSetFieldActions}
+  @moduledoc """
+  This module provides functions for creating changesets for
+  VirtualDateField structs.
+  """
 
+  import Ecto.Changeset
+
+  alias Plenario2.Actions.{MetaActions, DataSetFieldActions}
+  alias Plenario2.Schemas.VirtualDateField
+
+  @doc """
+  Creates a changeset for inserting a new VirtualDateField into the database.
+
+  Params include:
+
+    - year_field
+    - month_field
+    - day_field
+    - hour_field
+    - minute_field
+    - second_field
+    - meta_id
+  """
+  @spec create(struct :: %VirtualDateField{}, params :: %{}) :: Ecto.Changeset.t
   def create(struct, params) do
     struct
     |> cast(params, [
@@ -19,6 +40,11 @@ defmodule Plenario2.Changesets.VirtualDateFieldChangesets do
     |> set_name()
   end
 
+  # TODO: i hate this. this should be cleaned up or folded in somehow
+  @doc """
+  Creates an empty changeset for creating form in the web templates
+  """
+  @spec blank(struct :: %VirtualDateField{}) :: Ecto.Changeset.t
   def blank(struct) do
     struct
     |> cast(%{}, [
@@ -32,9 +58,7 @@ defmodule Plenario2.Changesets.VirtualDateFieldChangesets do
        ])
    end
 
-  ##
-  # operations
-
+  # Sets the name of the field as a function of the field names passed in
   defp set_name(changeset) do
     yr = get_field(changeset, :year_field)
     mo = get_field(changeset, :month_field)
@@ -66,9 +90,6 @@ defmodule Plenario2.Changesets.VirtualDateFieldChangesets do
 
     changeset |> put_change(:name, name)
   end
-
-  ##
-  # validations
 
   defp validate_fields(changeset) do
     meta_id = get_field(changeset, :meta_id)

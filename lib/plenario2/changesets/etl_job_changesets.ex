@@ -1,6 +1,17 @@
 defmodule Plenario2.Changesets.EtlJobChangesets do
+  @moduledoc """
+  This module provides functions for creating changesets for
+  EtlJob structs.
+  """
+
   import Ecto.Changeset
 
+  alias Plenario2.Schemas.EtlJob
+
+  @doc """
+  Creates a changeset for inserting new EtlJobs into the database
+  """
+  @spec create(struct :: %EtlJob{}, params :: %{}) :: Ecto.Changeset.t
   def create(struct, params) do
     struct
     |> cast(params, [:meta_id])
@@ -9,6 +20,7 @@ defmodule Plenario2.Changesets.EtlJobChangesets do
     |> put_change(:state, "new")
   end
 
+  # TODO: delete this -- this should be an FSM on the schema
   def mark_started(job) do
     job
     |> cast(%{}, [])
@@ -16,6 +28,7 @@ defmodule Plenario2.Changesets.EtlJobChangesets do
     |> put_change(:started_on, DateTime.utc_now())
   end
 
+  # TODO: delete this -- this should be an FSM on the schema
   def mark_erred(job, params) do
     job
     |> cast(params, [:error_message])
@@ -23,6 +36,7 @@ defmodule Plenario2.Changesets.EtlJobChangesets do
     |> put_change(:completed_on, DateTime.utc_now())
   end
 
+  # TODO: delete this -- this should be an FSM on the schema
   def mark_completed(job) do
     job
     |> cast(%{}, [])

@@ -1,8 +1,18 @@
 defmodule Plenario2.Changesets.ExportJobChangesets do
-  import Ecto.Changeset
-  alias Plenario2.Actions.MetaActions
-  alias Plenario2.Schemas.Meta
+  @moduledoc """
+  This module provides functions for creating changesets for
+  ExportJob structs.
+  """
 
+  import Ecto.Changeset
+
+  alias Plenario2.Actions.MetaActions
+  alias Plenario2.Schemas.ExportJob
+
+  @doc """
+  Creates a changeset for inserting a new ExportJob into the database
+  """
+  @spec create(struct :: %ExportJob{}, params :: %{}) :: Ecto.Changeset.t
   def create(struct, params) do
     struct
     |> cast(params, [:query, :include_diffs, :user_id, :meta_id])
@@ -14,9 +24,7 @@ defmodule Plenario2.Changesets.ExportJobChangesets do
     |> set_export_ttl()
   end
 
-  ##
-  # operations
-
+  # Creates a path name for dumping the table contents to S3
   defp set_export_path(changeset) do
     table_name =
       get_field(changeset, :meta_id)
@@ -30,6 +38,7 @@ defmodule Plenario2.Changesets.ExportJobChangesets do
     changeset |> put_change(:export_path, file_name)
   end
 
+  # Creates a path name for dumping diffs to S3
   defp set_diffs_path(changeset) do
     if get_field(changeset, :include_diffs) == true do
       table_name =
@@ -46,6 +55,7 @@ defmodule Plenario2.Changesets.ExportJobChangesets do
     end
   end
 
+  # Creates a TTL for the S3 exports so we're not paying to hold these things forever
   defp set_export_ttl(changeset) do
     now = DateTime.utc_now()
     delta = Application.get_env(:plenario2, :s3_export_ttl)
