@@ -1,4 +1,10 @@
 defmodule Plenario2Auth.CurrentUserPlug do
+  @moduledoc """
+  This creates a plug that assigns an authenticated user as
+  the `:current_user` for a request cycle. This uses Guardian
+  to store authentication cookies for a user.
+  """
+
   alias Plenario2Auth.Guardian
 
   def init(opts), do: opts

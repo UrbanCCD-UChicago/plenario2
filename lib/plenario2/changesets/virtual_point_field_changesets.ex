@@ -1,7 +1,19 @@
 defmodule Plenario2.Changesets.VirtualPointFieldChangesets do
-  import Ecto.Changeset
-  alias Plenario2.Actions.{MetaActions, DataSetFieldActions}
+  @moduledoc """
+  This module provides functions for creating changesets for
+  VirtualPointField structs.
+  """
 
+  import Ecto.Changeset
+
+  alias Plenario2.Actions.{MetaActions, DataSetFieldActions}
+  alias Plenario2.Schemas.VirtualPointField
+
+  @doc """
+  Creates a changeset for inserting a new VirtualPointField into the database
+  that is sourced from a single text field.
+  """
+  @spec create_from_loc(struct :: %VirtualPointField{}, params :: %{meta_id: integer, location_field: String.t}) :: Ecto.Changeset.t
   def create_from_loc(struct, params) do
     struct
     |> cast(params, [:location_field, :meta_id])
@@ -11,11 +23,17 @@ defmodule Plenario2.Changesets.VirtualPointFieldChangesets do
     |> set_name_loc()
   end
 
+  # TODO: kill this with fire
   def blank_loc(struct) do
     struct
     |> cast(%{}, [:location_field, :meta_id])
   end
 
+  @doc """
+  Creates a changeset for inserting a new VirtualPointField into the database
+  that is sourced from a longitude field and latitude field.
+  """
+  @spec create_from_long_lat(struct :: %VirtualPointField{}, params :: %{meta_id: integer, longitude_field: String.t, latitude_field: String.t}) :: Ecto.Changeset.t
   def create_from_long_lat(struct, params) do
     struct
     |> cast(params, [:longitude_field, :latitude_field, :meta_id])
@@ -25,13 +43,11 @@ defmodule Plenario2.Changesets.VirtualPointFieldChangesets do
     |> set_name_long_lat()
   end
 
+  # TODO: burn this too
   def blank_long_lat(struct) do
     struct
     |> cast(%{}, [:longitude_field, :latitude_field, :meta_id])
   end
-
-  ##
-  # operations
 
   defp set_name_long_lat(changeset) do
     long = get_field(changeset, :longitude_field)
@@ -45,9 +61,6 @@ defmodule Plenario2.Changesets.VirtualPointFieldChangesets do
 
     changeset |> put_change(:name, "_meta_point_#{loc}")
   end
-
-  ##
-  # validation
 
   defp validate_loc(changeset) do
     meta_id = get_field(changeset, :meta_id)

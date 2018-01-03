@@ -1,7 +1,17 @@
 defmodule Plenario2.Actions.DataSetActions do
+  @moduledoc """
+  This module handles the database operations for working with
+  tables that hold the data wrapped by the Metas.
+  """
   alias Plenario2.Actions.{DataSetConstraintActions, DataSetFieldActions, MetaActions, VirtualDateFieldActions, VirtualPointFieldActions}
+  alias Plenario2.Schemas.Meta
   alias Plenario2.Repo
 
+  # TODO: this needs to return somthing meaningful
+  @doc """
+  Creates a new database table with functions and triggers for a data set.
+  """
+  @spec create_data_set_table(meta :: %Meta{}) :: nil
   def create_data_set_table(meta) do
     table_name = MetaActions.get_data_set_table_name(meta)
 
@@ -48,6 +58,11 @@ defmodule Plenario2.Actions.DataSetActions do
     Ecto.Adapters.SQL.query!(Repo, parse_point_trigger_sql)
   end
 
+  # TODO: this needs to return something meaningful
+  @doc """
+  Drops a database table for a data set.
+  """
+  @spec drop_data_set_table(meta :: %Meta{}) :: nil
   def drop_data_set_table(meta) do
     table_name = MetaActions.get_data_set_table_name(meta)
     sql = gen_sql_drop_table(table_name)

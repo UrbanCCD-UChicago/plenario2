@@ -1,4 +1,10 @@
 defmodule Plenario2Auth.AdminPlug do
+  @moduledoc """
+  This creates a plug to be used in authenticating and authorizing users
+  for the /admin paths of the website. If the requesting user is not
+  an admin or is anonymous then this will bounce the request.
+  """
+
   alias Plenario2Auth.Guardian
   alias Plenario2Auth.ErrorHandler
 

@@ -146,7 +146,7 @@ div.row { margin-bottom: 2em; }
       <th></th>
     <% end %>
   </tr>
-  <%= for {f, i} <- Enum.with_index(@meta.data_set_fields) do %>
+  <%= for f <- @meta.data_set_fields do %>
   <tr>
     <td><%= f.name %></td>
     <td><%= psql_to_human(f.type) %></td>
@@ -187,10 +187,10 @@ div.row { margin-bottom: 2em; }
 
 <div class="row">
   <div class="col-md-6">
-    <%= button "Add a New Location Field From a Single Text Field", to: virtual_point_field_path(@conn, :get_create_loc, @meta.slug), class: "btn btn-primary" %>
+    <%= button "Add a New Location Field From a Single Text Field", to: virtual_point_field_path(@conn, :get_create_loc, @meta.slug), method: :get, class: "btn btn-primary" %>
   </div>
   <div class="col-md-6">
-    <%= button "Add a New Location Field from a Long/Lat Field Combo", to: virtual_point_field_path(@conn, :get_create_longlat, @meta.slug), class: "btn btn-primary pull-right" %>
+    <%= button "Add a New Location Field from a Long/Lat Field Combo", to: virtual_point_field_path(@conn, :get_create_longlat, @meta.slug), method: :get, class: "btn btn-primary pull-right" %>
   </div>
 </div>
 
@@ -223,7 +223,7 @@ div.row { margin-bottom: 2em; }
 
 <div class="row">
   <div class="col-md-12">
-    <%= button "Add a New Date Field", to: virtual_date_field_path(@conn, :get_create, @meta.slug), class: "btn btn-primary" %>
+    <%= button "Add a New Date Field", to: virtual_date_field_path(@conn, :get_create, @meta.slug), method: :get, class: "btn btn-primary" %>
   </div>
 </div>
 
@@ -244,7 +244,7 @@ div.row { margin-bottom: 2em; }
 
 <div class="row">
   <div class="col-md-12">
-    <%= button "Add a New Constraint", to: data_set_constraint_path(@conn, :get_create, @meta.slug), class: "btn btn-primary" %>
+    <%= button "Add a New Constraint", to: data_set_constraint_path(@conn, :get_create, @meta.slug), method: :get, class: "btn btn-primary" %>
   </div>
 </div>
 

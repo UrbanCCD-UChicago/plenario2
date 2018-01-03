@@ -1,7 +1,6 @@
 defmodule Plenario2Web.VirtualPointFieldController do
   use Plenario2Web, :controller
 
-  alias Plenario2.Repo
   alias Plenario2.Actions.{MetaActions, VirtualPointFieldActions}
   alias Plenario2.Changesets.VirtualPointFieldChangesets
   alias Plenario2.Schemas.VirtualPointField
