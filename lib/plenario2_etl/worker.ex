@@ -152,40 +152,6 @@ defmodule Plenario2Etl.Worker do
   @doc """
   """
   def load_shape(meta, path, job) do
-    Logger.info("Loading shape file at #{path} for #{meta.name}")
-
-    load_data(meta, path, job, fn path ->
-      [{_, _, stream}] = Exshape.from_zip(path)
-      [{_, header}] = Enum.take(stream, 1)
-      columns = Enum.map(header.columns, fn column -> column.name end)
-
-      stream
-      |> Stream.drop(1)
-      |> Stream.map(fn shape ->
-           {polygon, values} = shape
-
-           wkt =
-             Geojson.from_exshape(polygon)
-             |> Geo.JSON.decode()
-             |> set_srid(meta.srid)
-             |> Geo.WKT.encode()
-
-           values =
-             Enum.map(values, fn value ->
-               if is_binary(value) do
-                 String.trim(value)
-               else
-                 value
-               end
-             end)
-
-           kwlist =
-             Enum.zip(columns, values)
-             |> Enum.map(fn {col, val} -> {String.to_atom(slugify(col)), val} end)
-
-           kwlist ++ [geom: wkt]
-         end)
-    end)
   end
 
   defp set_srid(%Geo.Polygon{coordinates: coordinates}, srid) do

@@ -366,33 +366,4 @@ defmodule Plenario2Etl.WorkerTest do
       assert Enum.count(diffs) === 1
     end
   end
-
-  test "load/1 ingests shapefile data", %{user: user} do
-    {:ok, meta} = 
-      MetaActions.create(
-        "portland_watersheds", 
-        user.id, 
-        "https://portland_watersheds.com",
-        source_type: "shp"
-      )
-
-    {:ok, pk} = DataSetFieldActions.create(meta.id, "objectid", "integer")
-
-    DataSetFieldActions.create(meta.id, "watershed", "text")
-    DataSetFieldActions.create(meta.id, "washd_code", "text")
-    DataSetFieldActions.create(meta.id, "portland_m", "text")
-    DataSetFieldActions.create(meta.id, "geom", "geometry(polygon,4326)")
-    DataSetFieldActions.make_primary_key(pk)
-    {:ok, constraint} = DataSetConstraintActions.create(meta.id, ["objectid"])
-    {:ok, job} = EtlJobActions.create(meta.id)
-    DataSetActions.create_data_set_table(meta)
-
-    with_mock HTTPoison, get!: &mock_shapefile_data_request/1 do
-      Worker.load(%{meta_id: meta.id})
-    end
-
-    %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, "select * from portland_watersheds", [])
-
-    assert Enum.count(rows) == 7
-  end
 end
