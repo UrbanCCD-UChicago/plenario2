@@ -1,7 +1,4 @@
 defmodule Plenario2Etl.WorkerTest do
-  use ExUnit.Case, async: true
-  doctest Plenario2Etl.Worker
-
   alias Plenario2.Actions.{
     DataSetActions,
     DataSetConstraintActions,

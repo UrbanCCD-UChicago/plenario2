@@ -50,7 +50,7 @@ defmodule Plenario2Etl.Worker do
 
   ## Example
 
-    iex> download!("file_name", "https://source.url/")
+    iex> download!("file_name", "https://source.url/", "csv")
     "/tmp/file_name.csv"
 
   """
