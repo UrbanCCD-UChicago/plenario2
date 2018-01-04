@@ -27,6 +27,7 @@ defmodule Plenario2Etl.Worker do
   ## Example
 
     iex> worker = Worker.start_link(%{meta_id: 5})
+    :ok
 
   """
   def start_link(state) do
@@ -71,6 +72,7 @@ defmodule Plenario2Etl.Worker do
     iex> load(%{
     ...>   meta_id: 4
     ...> })
+    :ok
 
   """
   @spec load(state :: map) :: map
@@ -106,6 +108,7 @@ defmodule Plenario2Etl.Worker do
   ## Example
 
     iex> load_chunk!(self(), meta, job, [["some", "rows"]])
+    :ok
 
   """
   def load_chunk!(sender, meta, job, chunk) do
