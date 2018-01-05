@@ -6,15 +6,33 @@ defmodule Plenario2.Actions.DataSetConstraintActions do
 
   import Ecto.Query
 
+  import Plenario2.Guards, only: [is_id: 1]
+
   alias Plenario2.Changesets.DataSetConstraintChangesets
   alias Plenario2.Schemas.{DataSetConstraint, Meta}
   alias Plenario2.Repo
 
+  @typedoc """
+  Parameter is an ID attribute
+  """
+  @type id :: String.t | integer
+
+  @typedoc """
+  Returns a tuple of :ok, DataSetConstraint or :error, Ecto.Changeset
+  """
+  @type ok_constr :: {:ok, DataSetConstraint} | {:error, Ecto.Changeset.T}
+
   @doc """
   Creates a new instance of a DataSetConstraint.
   """
-  @spec create(meta_id :: integer, field_names :: [String.t]) :: {:ok, %DataSetConstraint{} | :error, Ecto.Changeset.t}
-  def create(meta_id, field_names) do
+  @spec create(meta :: Meta | id, field_names :: [String.t]) :: ok_constr
+  def create(meta, field_names) do
+    meta_id =
+      case is_id(meta) do
+        true -> meta
+        false -> meta.id
+      end
+
     params = %{
       meta_id: meta_id,
       field_names: field_names
@@ -27,8 +45,19 @@ defmodule Plenario2.Actions.DataSetConstraintActions do
   @doc """
   Lists all the constraints related to a given Meta.
   """
-  @spec list_for_meta(meta :: %Meta{}) :: [%DataSetConstraint{}]
-  def list_for_meta(meta), do: Repo.all(from c in DataSetConstraint, where: c.meta_id == ^meta.id)
+  @spec list_for_meta(meta :: Meta | id) :: list(DataSetConstraint)
+  def list_for_meta(meta) do
+    meta_id =
+      case is_id(meta) do
+        true -> meta
+        false -> meta.id
+      end
+
+    Repo.all(
+      from c in DataSetConstraint,
+      where: c.meta_id == ^meta_id
+    )
+  end
 
   @doc """
   Deletes a given constraint.

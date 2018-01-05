@@ -171,7 +171,7 @@ defmodule Plenario2.Changesets.MetaChangesets do
     else
       reo = get_field(changeset, :refresh_ends_on)
 
-      if reo > rso or reo == nil do
+      if reo == nil or Date.compare(reo, rso) == :gt do
         changeset
       else
         changeset |> add_error(:refresh_ends_on, "Invalid: end date cannot precede start date")

@@ -6,15 +6,33 @@ defmodule Plenario2.Actions.VirtualDateFieldActions do
 
   import Ecto.Query
 
+  import Plenario2.Guards, only: [is_id: 1]
+
   alias Plenario2.Changesets.VirtualDateFieldChangesets
   alias Plenario2.Schemas.{VirtualDateField, Meta}
   alias Plenario2.Repo
 
+  @typedoc """
+  Parameter is an ID attribute
+  """
+  @type id :: String.t | integer
+
+  @typedoc """
+  Returns a tuple of :ok, VirtualDateField or :error, Ecto.Changeset
+  """
+  @type ok_field :: {:ok, VirtualDateField} | {:error, Ecto.Changeset.T}
+
   @doc """
   Creates a new instance of a VirtualDateField
   """
-  @spec create(meta_id :: integer, year :: String.t, month :: String.t | nil, day :: String.t | nil, hour :: String.t | nil, minute :: String.t | nil, second :: String.t | nil) :: {:ok, %VirtualDateField{} | :error, Ecto.Changeset.t}
-  def create(meta_id, year, month \\ nil, day \\ nil, hour \\ nil, minute \\ nil, second \\ nil) do
+  @spec create(meta :: Meta | id, year :: String.t, month :: String.t | nil, day :: String.t | nil, hour :: String.t | nil, minute :: String.t | nil, second :: String.t | nil) :: ok_field
+  def create(meta, year, month \\ nil, day \\ nil, hour \\ nil, minute \\ nil, second \\ nil) do
+    meta_id =
+      case is_id(meta) do
+        true -> meta
+        false -> meta.id
+      end
+
     params = %{
       meta_id: meta_id,
       year_field: year,
@@ -32,8 +50,19 @@ defmodule Plenario2.Actions.VirtualDateFieldActions do
   @doc """
   Gets a list of all VirtualDateFields for given Meta
   """
-  @spec list_for_meta(meta :: %Meta{}) :: [%VirtualDateField{}]
-  def list_for_meta(meta), do: Repo.all(from f in VirtualDateField, where: f.meta_id == ^meta.id)
+  @spec list_for_meta(meta :: Meta | id) :: list(VirtualDateField)
+  def list_for_meta(meta) do
+    meta_id =
+      case is_id(meta) do
+        true -> meta
+        false -> meta.id
+      end
+
+    Repo.all(
+      from f in VirtualDateField,
+      where: f.meta_id == ^meta_id
+    )
+  end
 
   @doc """
   Deletes a given VirtualDateField
