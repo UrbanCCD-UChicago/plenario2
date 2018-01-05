@@ -1,15 +1,17 @@
 defmodule DataSetActionsTest do
-  use ExUnit.Case, async: true
-  alias Plenario2.Actions.{DataSetActions, DataSetFieldActions, DataSetConstraintActions, MetaActions, VirtualPointFieldActions, VirtualDateFieldActions}
+  use Plenario2.DataCase, async: true
+
+  alias Plenario2.Actions.{
+    DataSetActions,
+    DataSetFieldActions,
+    DataSetConstraintActions,
+    MetaActions,
+    VirtualPointFieldActions,
+    VirtualDateFieldActions}
   alias Plenario2.Repo
-  alias Plenario2Auth.UserActions
 
-  setup do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
-
-    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-
-    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
+  setup context do
+    meta = context[:meta]
 
     DataSetFieldActions.create(meta.id, "event id", "text")
     DataSetFieldActions.create(meta.id, "long", "float")
@@ -23,7 +25,7 @@ defmodule DataSetActionsTest do
     VirtualPointFieldActions.create_from_long_lat(meta.id, "long", "lat")
     VirtualDateFieldActions.create(meta.id, "year", "month", "day")
 
-    [meta: meta, table_name: MetaActions.get_data_set_table_name(meta)]
+    [table_name: MetaActions.get_data_set_table_name(meta)]
   end
 
   test "create a data set table", context do

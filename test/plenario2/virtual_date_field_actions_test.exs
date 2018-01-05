@@ -1,22 +1,17 @@
 defmodule VirtualDateFieldActionsTests do
-  use ExUnit.Case, async: true
-  alias Plenario2.Actions.{DataSetFieldActions, VirtualDateFieldActions, MetaActions}
-  alias Plenario2.Repo
-  alias Plenario2Auth.UserActions
+  use Plenario2.DataCase, async: true
 
-  setup do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
+  alias Plenario2.Actions.{DataSetFieldActions, VirtualDateFieldActions}
 
-    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
-    DataSetFieldActions.create(meta.id, "year", "integer")
-    DataSetFieldActions.create(meta.id, "month", "integer")
-    DataSetFieldActions.create(meta.id, "day", "integer")
-    DataSetFieldActions.create(meta.id, "hour", "integer")
-    DataSetFieldActions.create(meta.id, "minute", "integer")
-    DataSetFieldActions.create(meta.id, "second", "integer")
+  setup context do
+    DataSetFieldActions.create(context.meta.id, "year", "integer")
+    DataSetFieldActions.create(context.meta.id, "month", "integer")
+    DataSetFieldActions.create(context.meta.id, "day", "integer")
+    DataSetFieldActions.create(context.meta.id, "hour", "integer")
+    DataSetFieldActions.create(context.meta.id, "minute", "integer")
+    DataSetFieldActions.create(context.meta.id, "second", "integer")
 
-    [meta: meta]
+    context
   end
 
   test "create virtual date field", context do

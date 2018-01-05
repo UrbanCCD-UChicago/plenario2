@@ -1,17 +1,10 @@
 defmodule MetaQueriesTests do
-  use ExUnit.Case, async: true
+  use Plenario2.DataCase, async: true
 
   alias Plenario2.Repo
   alias Plenario2.Actions.MetaActions
   alias Plenario2.Queries.MetaQueries, as: Q
   alias Plenario2Auth.UserActions
-
-  setup do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
-    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-
-    %{user: user}
-  end
 
   test "from_id/1", %{user: user} do
     {:ok, meta} = MetaActions.create("test", user.id, "https://example.com/")
@@ -32,7 +25,7 @@ defmodule MetaQueriesTests do
     MetaActions.create("test 2", user.id, "https://example.com/2")
 
     metas = Q.list() |> Repo.all()
-    assert length(metas) == 2
+    assert length(metas) == 3
   end
 
   test "with_user/1", %{user: user} do
@@ -104,6 +97,6 @@ defmodule MetaQueriesTests do
       |> Q.for_user(user)
       |> Repo.all()
 
-    assert length(found) == 1
+    assert length(found) == 2
   end
 end
