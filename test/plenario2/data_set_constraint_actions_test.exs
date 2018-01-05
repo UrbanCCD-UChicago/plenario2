@@ -1,19 +1,16 @@
 defmodule DataSetConstraintActionsTest do
-  use ExUnit.Case, async: true
-  alias Plenario2.Actions.{DataSetFieldActions, DataSetConstraintActions, MetaActions}
-  alias Plenario2.Repo
-  alias Plenario2Auth.UserActions
+  use Plenario2.DataCase, async: true
 
-  setup do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
+  alias Plenario2.Actions.{DataSetFieldActions, DataSetConstraintActions}
 
-    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
+  setup context do
+    meta = context[:meta]
+
     DataSetFieldActions.create(meta.id, "date", "timestamptz")
     DataSetFieldActions.create(meta.id, "location", "text")
     DataSetFieldActions.create(meta.id, "event_id", "text")
 
-    [meta: meta]
+    context
   end
 
   test "create a new constraint with one field", context do

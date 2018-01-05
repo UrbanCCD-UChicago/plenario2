@@ -1,17 +1,7 @@
 defmodule DataSetFieldTests do
-  use ExUnit.Case, async: true
-  alias Plenario2.Actions.{DataSetFieldActions, MetaActions}
-  alias Plenario2.Repo
-  alias Plenario2Auth.UserActions
+  use Plenario2.DataCase, async: true
 
-  setup do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
-
-    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
-
-    [meta: meta]
-  end
+  alias Plenario2.Actions.DataSetFieldActions
 
   test "create a data set field", context do
     {:ok, field} = DataSetFieldActions.create(context.meta.id, "location", "text")

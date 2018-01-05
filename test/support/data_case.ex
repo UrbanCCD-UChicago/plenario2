@@ -14,6 +14,10 @@ defmodule Plenario2.DataCase do
 
   use ExUnit.CaseTemplate
 
+  alias Plenario2.Actions.MetaActions
+
+  alias Plenario2Auth.UserActions
+
   using do
     quote do
       alias Plenario2.Repo
@@ -28,11 +32,23 @@ defmodule Plenario2.DataCase do
   setup tags do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Plenario2.Repo)
 
+    # create a user
+    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+
+    # create a meta
+    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
+
     unless tags[:async] do
       Ecto.Adapters.SQL.Sandbox.mode(Plenario2.Repo, {:shared, self()})
     end
 
-    :ok
+    {
+      :ok,
+      [
+        user: user,
+        meta: meta
+      ]
+    }
   end
 
   @doc """
