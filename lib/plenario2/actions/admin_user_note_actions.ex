@@ -4,12 +4,20 @@ defmodule Plenario2.Actions.AdminUserNoteActions do
   underlying the various public interfaces for AdminUserNotes.
   """
 
+  import Plenario2.Guards, only: [is_id: 1]
+
   alias Plenario2.Repo
   alias Plenario2.Schemas.{AdminUserNote, Meta}
   alias Plenario2.Changesets.AdminUserNoteChangesets
   alias Plenario2.Queries.AdminUserNoteQueries, as: Q
 
   alias Plenario2Auth.User
+
+  @type id :: String.t | integer
+
+  @type t_admin :: %User{is_admin: true} | id
+
+  @type ok_note :: {:ok, AdminUserNote} | {:error, Ecto.Changeset.T}
 
   @doc """
   Gets a single AdminUserNote by ID, optionally preloading relations.
@@ -36,14 +44,32 @@ defmodule Plenario2.Actions.AdminUserNoteActions do
   @doc """
   Creates a new AdminUserNote related to a Meta.
   """
-  @spec create_for_meta(note :: String.t, admin :: %User{is_admin: true}, user :: %User{}, meta :: %Meta{}, should_email :: boolean) :: {:ok, %AdminUserNote{} | :error, Ecto.Changeset.t}
+  @spec create_for_meta(note :: String.t, admin :: t_admin, user :: User | id, meta :: Meta | id, should_email :: boolean) :: ok_note
   def create_for_meta(note, admin, user, meta, should_email \\ false) do
+    admin_id =
+      case is_id(admin) do
+        true -> admin
+        false -> admin.id
+      end
+
+    user_id =
+      case is_id(user) do
+        true -> user
+        false -> user.id
+      end
+
+    meta_id =
+      case is_id(meta) do
+        true -> meta
+        false -> meta.id
+      end
+
     params = %{
       note: note,
       should_email: should_email,
-      admin_id: admin.id,
-      user_id: user.id,
-      meta_id: meta.id
+      admin_id: admin_id,
+      user_id: user_id,
+      meta_id: meta_id
     }
     AdminUserNoteChangesets.create_for_meta(%AdminUserNote{}, params)
     |> Repo.insert()
