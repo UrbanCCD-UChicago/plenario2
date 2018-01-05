@@ -98,7 +98,7 @@ defmodule Plenario2Web.AdminController do
   end
 
   def get_meta_approval_review(conn, %{"id" => meta_id}) do
-    meta = MetaActions.get_from_id(meta_id, [with_user: true, with_fields: true, with_constraints: true])
+    meta = MetaActions.get(meta_id, [with_user: true, with_fields: true, with_constraints: true])
     approve_action = admin_path(conn, :approve_meta, meta_id)
     disapprove_action = admin_path(conn, :disapprove_meta, meta_id)
 
@@ -108,7 +108,7 @@ defmodule Plenario2Web.AdminController do
   end
 
   def approve_meta(conn, %{"id" => meta_id}) do
-    meta = MetaActions.get_from_id(meta_id, [with_user: true])
+    meta = MetaActions.get(meta_id, [with_user: true])
     admin = Guardian.Plug.current_resource(conn)
 
     {:ok, _} = MetaActions.approve(meta, admin)
@@ -119,7 +119,7 @@ defmodule Plenario2Web.AdminController do
   end
 
   def disapprove_meta(conn, %{"id" => meta_id, "message" => message}) do
-    meta = MetaActions.get_from_id(meta_id, [with_user: true])
+    meta = MetaActions.get(meta_id, [with_user: true])
     admin = Guardian.Plug.current_resource(conn)
 
     {:ok, _} = MetaActions.disapprove(meta, admin, message)
@@ -130,7 +130,7 @@ defmodule Plenario2Web.AdminController do
   end
 
   # def mark_meta_erred(conn, %{"id" => meta_id, "message" => message}) do
-  #   meta = MetaActions.get_from_id(meta_id, [with_user: true])
+  #   meta = MetaActions.get(meta_id, [with_user: true])
   #   admin = Guardian.Plug.current_resource(conn)
   #
   #   {:ok, _} = MetaActions.mark_erred(meta, admin, message)
@@ -141,7 +141,7 @@ defmodule Plenario2Web.AdminController do
   # end
 
   # def mark_meta_fixed(conn, %{"id" => meta_id, "message" => message}) do
-  #   meta = MetaActions.get_from_id(meta_id, [with_user: true])
+  #   meta = MetaActions.get(meta_id, [with_user: true])
   #   admin = Guardian.Plug.current_resource(conn)
   #
   #   {:ok, _} = MetaActions.mark_fixed(meta, admin, message)

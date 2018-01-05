@@ -28,7 +28,7 @@ defmodule Plenario2.Changesets.ExportJobChangesets do
   defp set_export_path(changeset) do
     table_name =
       get_field(changeset, :meta_id)
-      |> MetaActions.get_from_id()
+      |> MetaActions.get()
       |> MetaActions.get_data_set_table_name()
 
     bucket = Application.get_env(:plenario2, :s3_export_bucket)
@@ -43,7 +43,7 @@ defmodule Plenario2.Changesets.ExportJobChangesets do
     if get_field(changeset, :include_diffs) == true do
       table_name =
         get_field(changeset, :meta_id)
-        |> MetaActions.get_from_id()
+        |> MetaActions.get()
         |> MetaActions.get_data_set_table_name()
 
       bucket = Application.get_env(:plenario2, :s3_export_bucket)

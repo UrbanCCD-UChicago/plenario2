@@ -23,18 +23,18 @@ defmodule MetaActionsTests do
   end
 
   test "get a meta from a id", context do
-    found = MetaActions.get_from_id(context.meta.id)
+    found = MetaActions.get(context.meta.id)
     assert found.slug == context.meta.slug
   end
 
   test "get a meta from a slug", context do
-    found = MetaActions.get_from_slug(context.meta.slug)
+    found = MetaActions.get(context.meta.slug)
     assert found.id == context.meta.id
   end
 
   test "update name", context do
     MetaActions.update_name(context.meta, "Chicago Tree Trimming - 2017")
-    updated = MetaActions.get_from_id(context.meta.id)
+    updated = MetaActions.get(context.meta.id)
     assert updated.name == "Chicago Tree Trimming - 2017"
   end
 
@@ -42,20 +42,20 @@ defmodule MetaActionsTests do
     {:ok, user2} = UserActions.create("Test User2", "password", "test2@example.com")
 
     MetaActions.update_user(context.meta, user2)
-    updated = MetaActions.get_from_id(context.meta.id)
+    updated = MetaActions.get(context.meta.id)
     assert updated.user_id == user2.id
   end
 
   test "update source info", context do
     MetaActions.update_source_info(context.meta, [source_url: "https://example.com/tree-trim.json", source_type: "json"])
-    updated = MetaActions.get_from_id(context.meta.id)
+    updated = MetaActions.get(context.meta.id)
     assert updated.source_url == "https://example.com/tree-trim.json"
     assert updated.source_type == "json"
   end
 
   test "update description info", context do
     MetaActions.update_description_info(context.meta, [description: "blah blah blah", attribution: "City of Chicago"])
-    updated = MetaActions.get_from_id(context.meta.id)
+    updated = MetaActions.get(context.meta.id)
     assert updated.description == "blah blah blah"
     assert updated.attribution == "City of Chicago"
   end
@@ -68,7 +68,7 @@ defmodule MetaActionsTests do
       refresh_ends_on: %{year: 2017, month: 12, day: 1, hour: 23, minute: 59}
     ]
     MetaActions.update_refresh_info(context.meta, changes)
-    updated = MetaActions.get_from_id(context.meta.id)
+    updated = MetaActions.get(context.meta.id)
     assert updated.refresh_rate == "days"
     assert updated.refresh_interval == 1
     assert updated.refresh_starts_on != nil
@@ -104,7 +104,7 @@ defmodule MetaActionsTests do
 
   test "delete a meta", context do
     MetaActions.delete(context.meta)
-    found = MetaActions.get_from_id(context.meta.id)
+    found = MetaActions.get(context.meta.id)
     assert found == nil
   end
 
@@ -144,7 +144,7 @@ defmodule MetaActionsTests do
       {:ok, meta} = MetaActions.submit_for_approval(context.meta)
 
       user = UserActions.get_from_id(context.user.id)
-      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      meta = MetaActions.get(meta.id, [with_user: true])
       {:ok, meta} = MetaActions.approve(meta, user)
       assert meta.state == "ready"
     end
@@ -153,7 +153,7 @@ defmodule MetaActionsTests do
       {:ok, meta} = MetaActions.submit_for_approval(context.meta)
 
       user = UserActions.get_from_id(context.user.id)
-      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      meta = MetaActions.get(meta.id, [with_user: true])
 
       {:error, error} = MetaActions.approve(meta, user)
       assert error =~ "not an admin"
@@ -166,7 +166,7 @@ defmodule MetaActionsTests do
       {:ok, meta} = MetaActions.submit_for_approval(context.meta)
 
       user = UserActions.get_from_id(context.user.id)
-      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      meta = MetaActions.get(meta.id, [with_user: true])
       {:ok, meta} = MetaActions.disapprove(meta, user, "bad stuff")
       assert meta.state == "new"
     end
@@ -174,7 +174,7 @@ defmodule MetaActionsTests do
     test "with regular user", context do
       {:ok, meta} = MetaActions.submit_for_approval(context.meta)
 
-      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      meta = MetaActions.get(meta.id, [with_user: true])
       {:error, error} = MetaActions.disapprove(meta, context.user, "bad stuff")
       assert error =~ "not an admin"
     end
@@ -185,9 +185,9 @@ defmodule MetaActionsTests do
       UserActions.promote_to_admin(context.user)
 
       user = UserActions.get_from_id(context.user.id)
-      meta = MetaActions.get_from_id(context.meta.id, [with_user: true])
+      meta = MetaActions.get(context.meta.id, [with_user: true])
       {:ok, meta} = MetaActions.submit_for_approval(meta)
-      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      meta = MetaActions.get(meta.id, [with_user: true])
       {:ok, meta} = MetaActions.approve(meta, user)
 
       {:ok, meta} = MetaActions.mark_erred(meta, user, "something bad happened on our end")
@@ -198,9 +198,9 @@ defmodule MetaActionsTests do
       UserActions.promote_to_admin(context.user)
 
       user = UserActions.get_from_id(context.user.id)
-      meta = MetaActions.get_from_id(context.meta.id, [with_user: true])
+      meta = MetaActions.get(context.meta.id, [with_user: true])
       {:ok, meta} = MetaActions.submit_for_approval(meta)
-      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      meta = MetaActions.get(meta.id, [with_user: true])
       {:ok, meta} = MetaActions.approve(meta, user)
 
       user = UserActions.get_from_id(user.id)
@@ -217,13 +217,13 @@ defmodule MetaActionsTests do
       UserActions.promote_to_admin(context.user)
 
       user = UserActions.get_from_id(context.user.id)
-      meta = MetaActions.get_from_id(context.meta.id, [with_user: true])
+      meta = MetaActions.get(context.meta.id, [with_user: true])
       {:ok, meta} = MetaActions.submit_for_approval(meta)
-      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      meta = MetaActions.get(meta.id, [with_user: true])
       {:ok, meta} = MetaActions.approve(meta, user)
-      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      meta = MetaActions.get(meta.id, [with_user: true])
       {:ok, meta} = MetaActions.mark_erred(meta, user, "something bad happened")
-      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      meta = MetaActions.get(meta.id, [with_user: true])
 
       {:ok, meta} = MetaActions.mark_fixed(meta, user, "something good happened")
       assert meta.state == "ready"
@@ -233,13 +233,13 @@ defmodule MetaActionsTests do
       UserActions.promote_to_admin(context.user)
 
       user = UserActions.get_from_id(context.user.id)
-      meta = MetaActions.get_from_id(context.meta.id, [with_user: true])
+      meta = MetaActions.get(context.meta.id, [with_user: true])
       {:ok, meta} = MetaActions.submit_for_approval(meta)
-      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      meta = MetaActions.get(meta.id, [with_user: true])
       {:ok, meta} = MetaActions.approve(meta, user)
-      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      meta = MetaActions.get(meta.id, [with_user: true])
       {:ok, meta} = MetaActions.mark_erred(meta, user, "something bad happened")
-      meta = MetaActions.get_from_id(meta.id, [with_user: true])
+      meta = MetaActions.get(meta.id, [with_user: true])
 
       user = UserActions.get_from_id(user.id)
       UserActions.strip_admin(user)

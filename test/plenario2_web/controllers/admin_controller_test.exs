@@ -204,7 +204,7 @@ defmodule Plenario2Web.AdminControllerTest do
   test :meta_index, %{conn: conn, admin_user: admin} do
     {:ok, meta} = MetaActions.create("test", admin.id, "https://example.com/")
 
-    meta = MetaActions.get_from_id(meta.id, [with_user: true])
+    meta = MetaActions.get(meta.id, [with_user: true])
     MetaActions.submit_for_approval(meta)
 
     response = conn
@@ -222,7 +222,7 @@ defmodule Plenario2Web.AdminControllerTest do
   test :get_meta_approval_review, %{conn: conn, admin_user: admin} do
     {:ok, meta} = MetaActions.create("test", admin.id, "https://example.com/")
 
-    meta = MetaActions.get_from_id(meta.id, [with_user: true])
+    meta = MetaActions.get(meta.id, [with_user: true])
     MetaActions.submit_for_approval(meta)
 
     response = conn
@@ -236,12 +236,12 @@ defmodule Plenario2Web.AdminControllerTest do
   test :approve_meta, %{conn: conn, admin_user: admin} do
     {:ok, meta} = MetaActions.create("test", admin.id, "https://example.com/")
 
-    meta = MetaActions.get_from_id(meta.id, [with_user: true])
+    meta = MetaActions.get(meta.id, [with_user: true])
     MetaActions.submit_for_approval(meta)
 
     post(conn, admin_path(conn, :approve_meta, meta.id))
 
-    meta = MetaActions.get_from_id(meta.id, [with_user: true])
+    meta = MetaActions.get(meta.id, [with_user: true])
     assert meta.state == "ready"
   end
 
@@ -249,12 +249,12 @@ defmodule Plenario2Web.AdminControllerTest do
   test :disapprove_meta, %{conn: conn, admin_user: admin} do
     {:ok, meta} = MetaActions.create("test", admin.id, "https://example.com/")
 
-    meta = MetaActions.get_from_id(meta.id, [with_user: true])
+    meta = MetaActions.get(meta.id, [with_user: true])
     MetaActions.submit_for_approval(meta)
 
     post(conn, admin_path(conn, :disapprove_meta, meta.id, message: "test"))
 
-    meta = MetaActions.get_from_id(meta.id, [with_user: true])
+    meta = MetaActions.get(meta.id, [with_user: true])
     assert meta.state == "new"
   end
 end

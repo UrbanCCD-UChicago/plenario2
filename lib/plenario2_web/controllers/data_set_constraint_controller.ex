@@ -6,7 +6,7 @@ defmodule Plenario2Web.DataSetConstraintController do
   alias Plenario2.Schemas.DataSetConstraint
 
   def get_create(conn, %{"slug" => meta_slug}) do
-    meta = MetaActions.get_from_slug(meta_slug, [with_fields: true])
+    meta = MetaActions.get(meta_slug, [with_fields: true])
     changeset = DataSetConstraintChangesets.blank(%DataSetConstraint{})
     action = data_set_constraint_path(conn, :do_create, meta_slug)
 
@@ -27,7 +27,7 @@ defmodule Plenario2Web.DataSetConstraintController do
   end
 
   defp create_reply({:error, changeset}, conn, meta_slug) do
-    meta = MetaActions.get_from_slug(meta_slug, [with_fields: true])
+    meta = MetaActions.get(meta_slug, [with_fields: true])
     action = data_set_constraint_path(conn, :do_create, meta_slug)
 
     field_opts = for f <- meta.data_set_fields, do: [{String.to_atom("#{f.name} (#{f.type})"), f.name}]

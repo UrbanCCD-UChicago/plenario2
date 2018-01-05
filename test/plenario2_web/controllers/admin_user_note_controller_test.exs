@@ -6,7 +6,7 @@ defmodule Plenario2Web.AdminUserNoteControllerTest do
   @tag :auth
   test "POST /acknowledge", %{conn: conn, admin_user: admin, reg_user: regular} do
     {:ok, meta} = MetaActions.create("test", regular.id, "https://example.com/")
-    meta = MetaActions.get_from_id(meta.id)
+    meta = MetaActions.get(meta.id)
 
     {:ok, note} = AdminUserNoteActions.create_for_meta("blah blah blah", admin, regular, meta)
 

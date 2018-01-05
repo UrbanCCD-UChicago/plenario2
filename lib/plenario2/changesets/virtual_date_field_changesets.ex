@@ -101,7 +101,7 @@ defmodule Plenario2.Changesets.VirtualDateFieldChangesets do
     second = get_field(changeset, :second_field)
     field_namez = [year, month, day, hour, minute, second]
 
-    meta = MetaActions.get_from_id(meta_id)
+    meta = MetaActions.get(meta_id)
     fields = DataSetFieldActions.list_for_meta(meta)
     known_field_names = for f <- fields, do: f.name
 
