@@ -1,13 +1,12 @@
 defmodule Plenario2Web.MetaControllerTest do
   use Plenario2Web.ConnCase, async: true
-  alias Plenario2.Actions.{DataSetFieldActions, MetaActions}
-  alias Plenario2Auth.UserActions
+
+  alias Plenario2.Actions.MetaActions
 
   describe "GET /data-sets/create" do
-    test "when authenticated", %{conn: conn} do
-      UserActions.create("Test User", "password", "test@example.com")
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
 
+    @tag :auth
+    test "when authenticated", %{conn: conn} do
       response = conn
         |> get(meta_path(conn, :get_create))
         |> html_response(:ok)
@@ -16,6 +15,7 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "Source url"
     end
 
+    @tag :anon
     test "when not authenticated", %{conn: conn} do
       response = conn
         |> get(meta_path(conn, :get_create))
@@ -26,10 +26,9 @@ defmodule Plenario2Web.MetaControllerTest do
   end
 
   describe "POST /data-sets/create" do
-    test "with valid data", %{conn: conn} do
-      UserActions.create("Test User", "password", "test@example.com")
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
 
+    @tag :auth
+    test "with valid data", %{conn: conn} do
       assert length(MetaActions.list()) == 0
 
       conn = post(conn, meta_path(conn, :do_create), %{"meta" => %{"name" => "Test Data", "source_url" => "https://example.com/test-data"}})
@@ -43,10 +42,8 @@ defmodule Plenario2Web.MetaControllerTest do
       assert length(MetaActions.list()) == 1
     end
 
+    @tag :auth
     test "with bad data", %{conn: conn} do
-      UserActions.create("Test User", "password", "test@example.com")
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
-
       response = conn
         |> post(meta_path(conn, :do_create), %{"meta" => %{"name" => "", "source_url" => ""}})
         |> html_response(:bad_request)
@@ -54,6 +51,7 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "Please review and fix errors below"
     end
 
+    @tag :anon
     test "when not authenticated", %{conn: conn} do
       response = conn
         |> post(meta_path(conn, :do_create), %{"user" => %{"name" => "", "source_url" => ""}})
@@ -63,8 +61,8 @@ defmodule Plenario2Web.MetaControllerTest do
     end
   end
 
-  test "GET /data-sets/list", %{conn: conn} do
-    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+  @tag :anon
+  test "GET /data-sets/list", %{conn: conn, reg_user: user} do
     MetaActions.create("Test Data", user.id, "https://example.com/test-data")
 
     response = conn
@@ -73,12 +71,13 @@ defmodule Plenario2Web.MetaControllerTest do
 
     assert response =~ "Datasets"
     assert response =~ "Test Data"
-    assert response =~ "Test User"
+    assert response =~ "Regular User"
   end
 
   describe "GET /data-sets/:slug" do
-    test "with a valid slug", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+
+    @tag :anon
+    test "with a valid slug", %{conn: conn, reg_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
 
       response = conn
@@ -89,6 +88,7 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ user.name
     end
 
+    @tag :anon
     test "with a bad slug", %{conn: conn} do
       response = conn
         |> get(meta_path(conn, :detail, "nope"))
@@ -98,53 +98,11 @@ defmodule Plenario2Web.MetaControllerTest do
     end
   end
 
-  describe  "GET /data-sets/:slug/detail" do
-    @user_name "louis_friend"
-    @user_pass "iron_sulfide"
-    @user_mail "louis@gmail.com"
-    @meta_name "lost_socks"
-    @meta_src "http://www.how_do_i_keep_losing_them.com/"
-    @text_columns ["datetime", "location", "sock_color", "sock_brand"]
-
-    setup do
-      {:ok, user} = UserActions.create(@user_name, @user_pass, @user_mail)
-      {:ok, meta} = MetaActions.create(@meta_name, user.id, @meta_src)
-      {:ok, pk} = DataSetFieldActions.create(meta.id, "pk", "integer")
-
-      DataSetFieldActions.make_primary_key(pk)
-
-      for text_column <- @text_columns do
-        DataSetFieldActions.create(meta.id, text_column, "text")
-      end
-
-      %{user: user, meta: meta}
-    end
-
-    test "data set fields are present", %{conn: conn, meta: meta, user: user} do
-      conn = get(conn, :do_login, %{
-        "user" => %{
-          "email_address" => user.email_address, 
-          "plaintext_password" => user.plaintext_password
-        }
-      })
-
-      response = conn
-        |> get(meta_path(conn, :detail, meta.slug))
-        |> html_response(:ok)
-      
-      assert response =~ "pk"
-      assert response =~ "datetime"
-      assert response =~ "location"
-      assert response =~ "sock_color"
-      assert response =~ "sock_brand"
-    end
-  end
-
   describe "GET /data-sets/:slug/update/name" do
-    test "when authenticated and owner", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+
+    @tag :auth
+    test "when authenticated and owner", %{conn: conn, reg_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
 
       response = conn
         |> get(meta_path(conn, :get_update_name, meta.slug))
@@ -153,12 +111,9 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "Update Name"
     end
 
-    test "when authenticated but not owner", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-      UserActions.create("Test User 2", "password", "test2@example.com")
+    @tag :auth
+    test "when authenticated but not owner", %{conn: conn, admin_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
-
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test2@example.com", "plaintext_password" => "password"}}))
 
       response = conn
         |> get(meta_path(conn, :get_update_name, meta.slug))
@@ -167,8 +122,8 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "forbidden"
     end
 
-    test "when anonymous user", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+    @tag :anon
+    test "when anonymous user", %{conn: conn, reg_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
 
       response = conn
@@ -180,10 +135,10 @@ defmodule Plenario2Web.MetaControllerTest do
   end
 
   describe "PUT /data-sets/:slug/update/name" do
-    test "when authenticated and owner with good data", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+
+    @tag :auth
+    test "when authenticated and owner with good data", %{conn: conn, reg_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
 
       conn = put(conn, meta_path(conn, :do_update_name, meta.slug), %{"slug" => meta.slug, "meta" => %{"name" => "Some new name"}})
       redir_path = "/data-sets/#{meta.slug}/detail"
@@ -194,10 +149,9 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "Some new name"
     end
 
-    test "when authenticated and owner with bad data", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+    @tag :auth
+    test "when authenticated and owner with bad data", %{conn: conn, reg_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
 
       response = conn
         |> put(meta_path(conn, :do_update_name, meta.slug), %{"slug" => meta.slug, "meta" => %{"name" => ""}})
@@ -206,12 +160,9 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "Please view and fix errors below."
     end
 
-    test "when authenticated but not owner", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-      UserActions.create("Test User 2", "password", "test2@example.com")
+    @tag :auth
+    test "when authenticated but not owner", %{conn: conn, admin_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
-
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test2@example.com", "plaintext_password" => "password"}}))
 
       response = conn
         |> put(meta_path(conn, :do_update_name, meta.slug), %{"slug" => meta.slug, "meta" => %{"name" => "Some new name"}})
@@ -220,8 +171,8 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "forbidden"
     end
 
-    test "when anonymous user", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+    @tag :anon
+    test "when anonymous user", %{conn: conn, reg_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
 
       response = conn
@@ -233,10 +184,10 @@ defmodule Plenario2Web.MetaControllerTest do
   end
 
   describe "GET /data-sets/:slug/update/description" do
-    test "when authenticated and owner", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+
+    @tag :auth
+    test "when authenticated and owner", %{conn: conn, reg_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
 
       response = conn
         |> get(meta_path(conn, :get_update_description, meta.slug))
@@ -245,12 +196,9 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "Update Description"
     end
 
-    test "when authenticated but not owner", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-      UserActions.create("Test User 2", "password", "test2@example.com")
+    @tag :auth
+    test "when authenticated but not owner", %{conn: conn, admin_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
-
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test2@example.com", "plaintext_password" => "password"}}))
 
       response = conn
         |> get(meta_path(conn, :get_update_description, meta.slug))
@@ -259,8 +207,8 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "forbidden"
     end
 
-    test "when anonymous user", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+    @tag :anon
+    test "when anonymous user", %{conn: conn, reg_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
 
       response = conn
@@ -272,10 +220,10 @@ defmodule Plenario2Web.MetaControllerTest do
   end
 
   describe "PUT /data-sets/:slug/update/description" do
-    test "when authenticated and owner with good data", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+
+    @tag :auth
+    test "when authenticated and owner with good data", %{conn: conn, reg_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
 
       conn = put(conn, meta_path(conn, :do_update_description, meta.slug), %{"slug" => meta.slug, "meta" => %{"description" => "I am a description", "attribution" => "I am attributing this"}})
       redir_path = "/data-sets/#{meta.slug}/detail"
@@ -287,12 +235,9 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "I am attributing this"
     end
 
-    test "when authenticated but not owner", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-      UserActions.create("Test User 2", "password", "test2@example.com")
+    @tag :auth
+    test "when authenticated but not owner", %{conn: conn, admin_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
-
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test2@example.com", "plaintext_password" => "password"}}))
 
       response = conn
         |> put(meta_path(conn, :do_update_description, meta.slug), %{"slug" => meta.slug, "meta" => %{"description" => "I'm a description", "attribution" => "I'm attributing this"}})
@@ -301,8 +246,8 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "forbidden"
     end
 
-    test "when anonymous user", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+    @tag :anon
+    test "when anonymous user", %{conn: conn, reg_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
 
       response = conn
@@ -314,10 +259,10 @@ defmodule Plenario2Web.MetaControllerTest do
   end
 
   describe "GET /data-sets/:slug/update/source" do
-    test "when authenticated and owner", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+
+    @tag :auth
+    test "when authenticated and owner", %{conn: conn, reg_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
 
       response = conn
         |> get(meta_path(conn, :get_update_source_info, meta.slug))
@@ -326,12 +271,9 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "Update Source Information"
     end
 
-    test "when authenticated but not owner", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-      UserActions.create("Test User 2", "password", "test2@example.com")
+    @tag :auth
+    test "when authenticated but not owner", %{conn: conn, admin_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
-
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test2@example.com", "plaintext_password" => "password"}}))
 
       response = conn
         |> get(meta_path(conn, :get_update_source_info, meta.slug))
@@ -340,8 +282,8 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "forbidden"
     end
 
-    test "when anonymous user", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+    @tag :anon
+    test "when anonymous user", %{conn: conn, reg_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
 
       response = conn
@@ -353,10 +295,10 @@ defmodule Plenario2Web.MetaControllerTest do
   end
 
   describe "PUT /data-sets/:slug/update/source" do
-    test "when authenticated and owner with good data", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+
+    @tag :auth
+    test "when authenticated and owner with good data", %{conn: conn, reg_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
 
       conn = put(conn, meta_path(conn, :do_update_source_info, meta.slug), %{"slug" => meta.slug, "meta" => %{"source_url" => "https://example.com/different-data", "source_type" => "csv"}})
       redir_path = "/data-sets/#{meta.slug}/detail"
@@ -367,10 +309,9 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "different-data"
     end
 
-    test "when authenticated and owner with bad data", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+    @tag :auth
+    test "when authenticated and owner with bad data", %{conn: conn, reg_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
 
       response = conn
         |> put(meta_path(conn, :do_update_source_info, meta.slug), %{"slug" => meta.slug, "meta" => %{"source_url" => "", "source_type" => "csv"}})
@@ -379,12 +320,9 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "Please view and fix errors below."
     end
 
-    test "when authenticated but not owner", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-      UserActions.create("Test User 2", "password", "test2@example.com")
+    @tag :auth
+    test "when authenticated but not owner", %{conn: conn, admin_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
-
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test2@example.com", "plaintext_password" => "password"}}))
 
       response = conn
         |> put(meta_path(conn, :do_update_source_info, meta.slug), %{"slug" => meta.slug, "meta" => %{"source_url" => "", "source_type" => "csv"}})
@@ -393,8 +331,8 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "forbidden"
     end
 
-    test "when anonymous user", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+    @tag :anon
+    test "when anonymous user", %{conn: conn, reg_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
 
       response = conn
@@ -406,10 +344,10 @@ defmodule Plenario2Web.MetaControllerTest do
   end
 
   describe "GET /data-sets/:slug/update/refresh" do
-    test "when authenticated and owner", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+
+    @tag :auth
+    test "when authenticated and owner", %{conn: conn, reg_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
 
       response = conn
         |> get(meta_path(conn, :get_update_refresh_info, meta.slug))
@@ -418,12 +356,9 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "Update Refresh Information"
     end
 
-    test "when authenticated but not owner", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-      UserActions.create("Test User 2", "password", "test2@example.com")
+    @tag :auth
+    test "when authenticated but not owner", %{conn: conn, admin_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
-
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test2@example.com", "plaintext_password" => "password"}}))
 
       response = conn
         |> get(meta_path(conn, :get_update_refresh_info, meta.slug))
@@ -432,8 +367,8 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "forbidden"
     end
 
-    test "when anonymous user", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+    @tag :anon
+    test "when anonymous user", %{conn: conn, reg_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
 
       response = conn
@@ -445,10 +380,10 @@ defmodule Plenario2Web.MetaControllerTest do
   end
 
   describe "PUT /data-sets/:slug/update/refresh" do
-    test "when authenticated and owner with good data", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+
+    @tag :auth
+    test "when authenticated and owner with good data", %{conn: conn, reg_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
 
       conn = put(conn, meta_path(conn, :do_update_refresh_info, meta.slug), %{"slug" => meta.slug, "meta" => %{"refresh_rate" => "weeks", "refresh_interval" => "2", "refresh_starts_on" => "", "refresh_ends_on" => ""}})
       redir_path = "/data-sets/#{meta.slug}/detail"
@@ -459,12 +394,9 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "2 weeks"
     end
 
-    test "when authenticated but not owner", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-      UserActions.create("Test User 2", "password", "test2@example.com")
+    @tag :auth
+    test "when authenticated but not owner", %{conn: conn, admin_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
-
-      conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test2@example.com", "plaintext_password" => "password"}}))
 
       response = conn
         |> put(meta_path(conn, :do_update_refresh_info, meta.slug), %{"slug" => meta.slug, "meta" => %{"refresh_rate" => "weeks", "refresh_interval" => "2", "refresh_starts_on" => "", "refresh_ends_on" => ""}})
@@ -473,8 +405,8 @@ defmodule Plenario2Web.MetaControllerTest do
       assert response =~ "forbidden"
     end
 
-    test "when anonymous user", %{conn: conn} do
-      {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+    @tag :anon
+    test "when anonymous user", %{conn: conn, reg_user: user} do
       {:ok, meta} = MetaActions.create("Test Data", user.id, "https://example.com/test-data")
 
       response = conn
@@ -485,11 +417,9 @@ defmodule Plenario2Web.MetaControllerTest do
     end
   end
 
-  test ":submit_for_approval", %{conn: conn} do
-    {:ok, user} = UserActions.create("test user", "password", "test@example.com")
+  @tag :auth
+  test ":submit_for_approval", %{conn: conn, reg_user: user} do
     {:ok, meta} = MetaActions.create("test data", user.id, "https://example.com/")
-
-    conn = post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test@example.com", "plaintext_password" => "password"}}))
 
     meta = MetaActions.get_from_id(meta.id)
     conn
