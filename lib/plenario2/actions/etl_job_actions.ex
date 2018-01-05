@@ -49,13 +49,13 @@ defmodule Plenario2.Actions.EtlJobActions do
   @doc """
   Gets a single EtlJob from a given ID
   """
-  @spec get_from_id(id :: integer) :: %EtlJob{}
-  def get_from_id(id), do: Repo.get_by(EtlJob, id: id)
+  @spec get(id :: id) :: EtlJob
+  def get(id), do: Repo.get_by(EtlJob, id: id)
 
   @doc """
   Gets a list of all EtlJobs
   """
-  @spec list() :: [%EtlJob{}]
+  @spec list() :: list(EtlJob)
   def list(), do: Repo.all(EtlJob)
 
   @doc """
