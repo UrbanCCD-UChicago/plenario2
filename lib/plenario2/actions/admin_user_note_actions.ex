@@ -13,10 +13,19 @@ defmodule Plenario2.Actions.AdminUserNoteActions do
 
   alias Plenario2Auth.User
 
+  @typedoc """
+  Parameter is an ID attribute
+  """
   @type id :: String.t | integer
 
+  @typedoc """
+  Parameter is an _admin_ User
+  """
   @type t_admin :: %User{is_admin: true} | id
 
+  @typedoc """
+  Returns a tuple of :ok, AdminUserNote or :error, Ecto.Changeset
+  """
   @type ok_note :: {:ok, AdminUserNote} | {:error, Ecto.Changeset.T}
 
   @doc """
