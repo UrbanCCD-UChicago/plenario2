@@ -14,7 +14,7 @@ defmodule Plenario2Web.AdminUserNoteControllerTest do
     |> post(admin_user_note_path(conn, :acknowledge, note.id), %{"path" => meta_path(conn, :detail, meta.slug)})
     |> html_response(:found)
 
-    note = AdminUserNoteActions.get_from_id(note.id)
+    note = AdminUserNoteActions.get(note.id)
     assert note.acknowledged == true
   end
 end

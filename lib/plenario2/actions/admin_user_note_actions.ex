@@ -24,6 +24,11 @@ defmodule Plenario2.Actions.AdminUserNoteActions do
   @type t_admin :: %User{is_admin: true} | id
 
   @typedoc """
+  Parameter is a keyword list
+  """
+  @type kwlist :: list({atom, any})
+
+  @typedoc """
   Returns a tuple of :ok, AdminUserNote or :error, Ecto.Changeset
   """
   @type ok_note :: {:ok, AdminUserNote} | {:error, Ecto.Changeset.T}
@@ -32,8 +37,8 @@ defmodule Plenario2.Actions.AdminUserNoteActions do
   Gets a single AdminUserNote by ID, optionally preloading relations.
   See the notes for AdminUserNoteQueries.handle_opts
   """
-  @spec get_from_id(id :: integer, opts :: %{}) :: %AdminUserNote{} | nil
-  def get_from_id(id, opts \\ []) do
+  @spec get(id :: id, opts :: kwlist) :: AdminUserNote | nil
+  def get(id, opts \\ []) do
     Q.from_id(id)
     |> Q.handle_opts(opts)
     |> Repo.one()
@@ -43,7 +48,7 @@ defmodule Plenario2.Actions.AdminUserNoteActions do
   Gets a list of AdminUserNotes, optionally filtering and preloading relations.
   See the notes for AdminUserNoteQueries.handle_opts
   """
-  @spec list(opts :: %{}) :: [%AdminUserNote{}]
+  @spec list(opts :: kwlist) :: list(AdminUserNote)
   def list(opts \\ []) do
     Q.list()
     |> Q.handle_opts(opts)
@@ -111,7 +116,7 @@ defmodule Plenario2.Actions.AdminUserNoteActions do
   @doc """
   Updates a given note in the database as having been acknowledged by the user.
   """
-  @spec mark_acknowledged(note :: AdminUserNote) :: {:ok, %AdminUserNote{} | :error, Ecto.Changeset.t}
+  @spec mark_acknowledged(note :: AdminUserNote) :: ok_note
   def mark_acknowledged(note) do
     AdminUserNoteChangesets.update_acknowledged(note, %{acknowledged: true})
     |> Repo.update()
