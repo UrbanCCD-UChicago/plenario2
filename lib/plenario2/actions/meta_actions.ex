@@ -4,6 +4,8 @@ defmodule Plenario2.Actions.MetaActions do
   underlying the various public interfaces for VirtualDateField.
   """
 
+  import Plenario2.Guards, only: [is_id: 1]
+
   alias Plenario2Auth.User
 
   alias Plenario2.Changesets.MetaChangesets
@@ -12,23 +14,40 @@ defmodule Plenario2.Actions.MetaActions do
   alias Plenario2.Schemas.{Meta, DataSetConstraint}
   alias Plenario2.Repo
 
-  @doc """
-  Gets a single Meta instance by its ID, optionally preloading
-  relations. See MetaQueries.handle_opts for more info.
+  @typedoc """
+  Parameter is an ID attribute
   """
-  @spec get_from_id(id :: integer, opts :: %{}) :: %Meta{}
-  def get_from_id(id, opts \\ []) do
+  @type id :: String.t | integer
+
+  @typedoc """
+  Parameter is a keyword list
+  """
+  @type kwlist :: list({atom, any})
+
+  @typedoc """
+  Returns a tuple of :ok, Meta or :error, Ecto.Changeset
+  """
+  @type ok_meta :: {:ok, Meta} | {:error, Ecto.Changeset.t}
+
+  @doc """
+  Gets an instance of a Meta by its ID or slug, optionally preloading
+  relations and applying other filters
+  """
+  @spec get(id_or_slug :: id, opts :: kwlist) :: Meta
+  def get(id_or_slug, opts \\ []) do
+    case is_integer(id_or_slug) or Regex.match?(~r/^\d+$/, id_or_slug) do
+      true -> get_by_id(id_or_slug, opts)
+      false -> get_by_slug(id_or_slug, opts)
+    end
+  end
+
+  defp get_by_id(id, opts) do
     Q.from_id(id)
     |> Q.handle_opts(opts)
     |> Repo.one()
   end
 
-  @doc """
-  Gets a single Meta instance by its slug, optionally preloading
-  relations. See MetaQueries.handle_opts for more info.
-  """
-  @spec get_from_slug(slug :: String.t, opts :: %{}) :: %Meta{}
-  def get_from_slug(slug, opts \\ []) do
+  defp get_by_slug(slug, opts) do
     Q.from_slug(slug)
     |> Q.handle_opts(opts)
     |> Repo.one()
@@ -38,7 +57,7 @@ defmodule Plenario2.Actions.MetaActions do
   Gets a list of Metas, optionally preloading relations
   and applying filters. See MetaQueries.handle_opts for more info
   """
-  @spec list(opts :: %{}) :: [%Meta{}]
+  @spec list(opts :: kwlist) :: list(Meta)
   def list(opts \\ []) do
     Q.list()
     |> Q.handle_opts(opts)
@@ -49,7 +68,7 @@ defmodule Plenario2.Actions.MetaActions do
   Lists all Metas that are owned by a given user, optionally preloading
   relations and applying filters. See MetaQueries.handle_opts for more info
   """
-  @spec list_for_user(user :: %User{}, opts :: %{}) :: [%Meta{}]
+  @spec list_for_user(user :: User, opts :: kwlist) :: list(Meta)
   def list_for_user(user, opts \\ []) do
     local_defaults = [with_user: true, for_user: user]
     opts = Keyword.merge(local_defaults, opts)
@@ -62,8 +81,14 @@ defmodule Plenario2.Actions.MetaActions do
   @doc """
   Creates a new instance of a Meta
   """
-  @spec create(name :: String.t, user_id :: integer, source_url :: String.t, details :: %{}) :: {:ok, %Meta{} | :error, Ecto.Changeset.t}
-  def create(name, user_id, source_url, details \\ []) do
+  @spec create(name :: String.t, user :: User | id, source_url :: String.t, details :: kwlist) :: ok_meta
+  def create(name, user, source_url, details \\ []) do
+    user_id =
+      case is_id(user) do
+        true -> user
+        false -> user.id
+      end
+
     defaults = [
       source_type: "csv",
       description: nil,

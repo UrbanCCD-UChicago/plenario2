@@ -6,7 +6,7 @@ defmodule Plenario2Web.VirtualPointFieldController do
   alias Plenario2.Schemas.VirtualPointField
 
   def get_create_loc(conn, %{"slug" => meta_slug}) do
-    meta = MetaActions.get_from_slug(meta_slug, [with_fields: true])
+    meta = MetaActions.get(meta_slug, [with_fields: true])
     changeset = VirtualPointFieldChangesets.blank_loc(%VirtualPointField{})
     action = virtual_point_field_path(conn, :do_create_loc, meta_slug)
 
@@ -28,7 +28,7 @@ defmodule Plenario2Web.VirtualPointFieldController do
   end
 
   defp create_loc_reply({:error, changeset}, conn, meta_slug) do
-    meta = MetaActions.get_from_slug(meta_slug, [with_fields: true])
+    meta = MetaActions.get(meta_slug, [with_fields: true])
     action = virtual_point_field_path(conn, :do_create_loc, meta_slug)
 
     text_fields = Enum.filter(meta.data_set_fields, fn f -> f.type == "text" end)
@@ -40,7 +40,7 @@ defmodule Plenario2Web.VirtualPointFieldController do
   end
 
   def get_create_longlat(conn, %{"slug" => meta_slug}) do
-    meta = MetaActions.get_from_slug(meta_slug, [with_fields: true])
+    meta = MetaActions.get(meta_slug, [with_fields: true])
     changeset = VirtualPointFieldChangesets.blank_long_lat(%VirtualPointField{})
     action = virtual_point_field_path(conn, :do_create_longlat, meta_slug)
 
@@ -62,7 +62,7 @@ defmodule Plenario2Web.VirtualPointFieldController do
   end
 
   defp create_longlat_reply({:error, changeset}, conn, meta_slug) do
-    meta = MetaActions.get_from_slug(meta_slug, [with_fields: true])
+    meta = MetaActions.get(meta_slug, [with_fields: true])
     action = virtual_point_field_path(conn, :do_create_longlat, meta_slug)
 
     float_fields = Enum.filter(meta.data_set_fields, fn f -> f.type == "float" end)

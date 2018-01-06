@@ -17,7 +17,7 @@ defmodule Plenario2Web.MetaController do
   def detail(conn, %{"slug" => slug}) do
     curr_path = current_path(conn)
     user = Guardian.Plug.current_resource(conn)
-    meta = MetaActions.get_from_slug(
+    meta = MetaActions.get(
       slug, [
         with_user: true,
         with_fields: true,
@@ -85,7 +85,7 @@ defmodule Plenario2Web.MetaController do
   end
 
   def submit_for_approval(conn, %{"slug" => slug}) do
-    meta = MetaActions.get_from_slug(slug, [with_user: true])
+    meta = MetaActions.get(slug, [with_user: true])
     MetaActions.submit_for_approval(meta)
 
     conn
@@ -94,7 +94,7 @@ defmodule Plenario2Web.MetaController do
   end
 
   def get_update_name(conn, %{"slug" => slug}) do
-    meta = MetaActions.get_from_slug(slug, [with_user: true])
+    meta = MetaActions.get(slug, [with_user: true])
     changeset = MetaChangesets.update_name(meta, %{})
     action = meta_path(conn, :do_update_name, slug)
 
@@ -102,7 +102,7 @@ defmodule Plenario2Web.MetaController do
   end
 
   def do_update_name(conn, %{"slug" => slug, "meta" => %{"name" => name}}) do
-    meta = MetaActions.get_from_slug(slug, [with_user: true])
+    meta = MetaActions.get(slug, [with_user: true])
 
     MetaActions.update_name(meta, name)
     |> update_name_reply(conn, meta)
@@ -123,7 +123,7 @@ defmodule Plenario2Web.MetaController do
   end
 
   def get_update_description(conn, %{"slug" => slug}) do
-    meta = MetaActions.get_from_slug(slug, [with_user: true])
+    meta = MetaActions.get(slug, [with_user: true])
     changeset = MetaChangesets.update_description_info(meta, %{})
     action = meta_path(conn, :do_update_description, slug)
 
@@ -131,7 +131,7 @@ defmodule Plenario2Web.MetaController do
   end
 
   def do_update_description(conn, %{"slug" => slug, "meta" => %{"description" => description, "attribution" => attribution}}) do
-    meta = MetaActions.get_from_slug(slug, [with_user: true])
+    meta = MetaActions.get(slug, [with_user: true])
 
     MetaActions.update_description_info(meta, [description: description, attribution: attribution])
     |> update_description_reply(conn, meta)
@@ -152,7 +152,7 @@ defmodule Plenario2Web.MetaController do
   end
 
   def get_update_source_info(conn, %{"slug" => slug}) do
-    meta = MetaActions.get_from_slug(slug, [with_user: true])
+    meta = MetaActions.get(slug, [with_user: true])
     changeset = MetaChangesets.update_source_info(meta, %{})
     action = meta_path(conn, :do_update_source_info, slug)
 
@@ -160,7 +160,7 @@ defmodule Plenario2Web.MetaController do
   end
 
   def do_update_source_info(conn, %{"slug" => slug, "meta" => %{"source_url" => source_url, "source_type" => source_type}}) do
-    meta = MetaActions.get_from_slug(slug, [with_user: true])
+    meta = MetaActions.get(slug, [with_user: true])
 
     MetaActions.update_source_info(meta, [source_url: source_url, source_type: source_type])
     |> update_source_info_reply(conn, meta)
@@ -181,7 +181,7 @@ defmodule Plenario2Web.MetaController do
   end
 
   def get_update_refresh_info(conn, %{"slug" => slug}) do
-    meta = MetaActions.get_from_slug(slug, [with_user: true])
+    meta = MetaActions.get(slug, [with_user: true])
     changeset = MetaChangesets.update_refresh_info(meta, %{})
     action = meta_path(conn, :do_update_refresh_info, slug)
 
@@ -189,7 +189,7 @@ defmodule Plenario2Web.MetaController do
   end
 
   def do_update_refresh_info(conn, %{"slug" => slug, "meta" => %{"refresh_rate" => refresh_rate, "refresh_interval" => refresh_interval, "refresh_starts_on" => refresh_starts_on, "refresh_ends_on" => refresh_ends_on}}) do
-    meta = MetaActions.get_from_slug(slug, [with_user: true])
+    meta = MetaActions.get(slug, [with_user: true])
 
     MetaActions.update_refresh_info(meta, [refresh_rate: refresh_rate, refresh_interval: refresh_interval, refresh_starts_on: refresh_starts_on, refresh_ends_on: refresh_ends_on])
     |> update_refresh_info_reply(conn, meta)

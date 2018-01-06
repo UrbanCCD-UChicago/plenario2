@@ -15,11 +15,16 @@ defmodule Plenario2.Queries.AdminUserNoteQueries do
 
   alias Plenario2Auth.User
 
+  @typedoc """
+  Parameter is an ID attribute
+  """
+  @type id :: String.t | integer
+
 
   @doc """
   Creates a query for a single AdminUserNote entity in the database filtered by its ID
   """
-  @spec from_id(id :: integer) :: Ecto.Queryset.t
+  @spec from_id(id :: id) :: Ecto.Queryset.t
   def from_id(id), do: (from n in AdminUserNote, where: n.id == ^id)
 
   @doc """

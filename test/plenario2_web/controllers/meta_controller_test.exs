@@ -421,7 +421,7 @@ defmodule Plenario2Web.MetaControllerTest do
   test ":submit_for_approval", %{conn: conn, reg_user: user} do
     {:ok, meta} = MetaActions.create("test data", user.id, "https://example.com/")
 
-    meta = MetaActions.get_from_id(meta.id)
+    meta = MetaActions.get(meta.id)
     conn
     |> post(meta_path(conn, :submit_for_approval, meta.slug))
     |> html_response(:found)

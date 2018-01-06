@@ -43,7 +43,7 @@ defmodule Plenario2.Changesets.DataSetConstraintChangesets do
   defp set_name(changeset) do
     table_name =
       get_field(changeset, :meta_id)
-      |> MetaActions.get_from_id()
+      |> MetaActions.get()
       |> MetaActions.get_data_set_table_name()
 
     field_names = get_field(changeset, :field_names) |> Enum.join("_")
@@ -58,7 +58,7 @@ defmodule Plenario2.Changesets.DataSetConstraintChangesets do
     meta_id = get_field(changeset, :meta_id)
     field_names = get_field(changeset, :field_names)
 
-    meta = MetaActions.get_from_id(meta_id)
+    meta = MetaActions.get(meta_id)
     fields = DataSetFieldActions.list_for_meta(meta)
     known_field_names = for f <- fields, do: f.name
 

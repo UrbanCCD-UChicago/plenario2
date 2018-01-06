@@ -6,7 +6,7 @@ defmodule Plenario2Web.VirtualDateFieldController do
   alias Plenario2.Schemas.VirtualDateField
 
   def get_create(conn, %{"slug" => meta_slug}) do
-    meta = MetaActions.get_from_slug(meta_slug, [with_fields: true])
+    meta = MetaActions.get(meta_slug, [with_fields: true])
     changeset = VirtualDateFieldChangesets.blank(%VirtualDateField{})
     action = virtual_date_field_path(conn, :do_create, meta_slug)
 
@@ -36,7 +36,7 @@ defmodule Plenario2Web.VirtualDateFieldController do
   end
 
   defp create_reply({:error, changeset}, conn, meta_slug) do
-    meta = MetaActions.get_from_slug(meta_slug, [with_fields: true])
+    meta = MetaActions.get(meta_slug, [with_fields: true])
     action = virtual_date_field_path(conn, :do_create, meta_slug)
 
     integer_fields = Enum.filter(meta.data_set_fields, fn f -> f.type == "integer" end)
