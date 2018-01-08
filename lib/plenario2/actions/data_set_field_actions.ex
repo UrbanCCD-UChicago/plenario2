@@ -70,11 +70,6 @@ defmodule Plenario2.Actions.DataSetFieldActions do
     |> Repo.update()
   end
 
-  def make_primary_key(field) do
-    DataSetFieldChangesets.make_primary_key(field)
-    |> Repo.update()
-  end
-
   @doc """
   Deletes a given data set field
   """

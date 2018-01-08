@@ -57,13 +57,6 @@ defmodule Plenario2.Changesets.DataSetFieldChangesets do
     |> validate_type()
   end
 
-  # TODO: delete this? i don't know where we're using it or why we would...
-  def make_primary_key(field) do
-    field
-    |> cast(%{}, [])
-    |> put_change(:opts, "not null primary key")
-  end
-
   # Converts name values to snake case
   # For example, if a user passes a field named "Event ID", this would return "event_id"
   defp check_name(changeset) do
