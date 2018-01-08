@@ -8,9 +8,10 @@ defmodule Plenario2Etl.WorkerTest do
     VirtualPointFieldActions
   }
 
-  alias Plenario2.Schemas.DataSetDiff
-  alias Plenario2Etl.Worker
   alias Plenario2.Repo
+  alias Plenario2.Schemas.DataSetDiff
+  alias Plenario2Auth.UserActions
+  alias Plenario2Etl.Worker
 
   import Ecto.Adapters.SQL, only: [query!: 3]
   import Mock
@@ -34,6 +35,7 @@ defmodule Plenario2Etl.WorkerTest do
   setup context do
     meta = context.meta
 
+    {:ok, user} = UserActions.create("Trusted User", "password", "trusted@example.com") 
     {:ok, pk} = DataSetFieldActions.create(meta.id, "pk", "integer")
     DataSetFieldActions.create(meta.id, "datetime", "timestamptz")
     DataSetFieldActions.create(meta.id, "location", "text")
