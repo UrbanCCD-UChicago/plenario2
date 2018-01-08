@@ -20,7 +20,7 @@ defmodule Plenario2.Changesets.DataSetFieldChangesets do
 
   @new_create_param_keys [:name, :type, :opts, :meta_id]
 
-  @valid_types ~w(text integer float boolean timestamptz geometry(polygon,4326))
+  @valid_types ~w{text integer float boolean timestamptz geometry(polygon,4326)}
 
   @doc """
   Creates a blank changeset for creating a webform
