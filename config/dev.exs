@@ -67,3 +67,6 @@ config :plenario2, Plenario2.Repo,
 config :plenario2, Plenario2Auth.Guardian,
   issuer: "Plenario",
   secret_key: "qwertyuiopASDFGHJKLzxcvbnm1234567890QWERTYUIOPasdfghjklZXCVBNM!@"
+
+# Configure HTTP API
+config :plenario2, :http, HTTP.Live
