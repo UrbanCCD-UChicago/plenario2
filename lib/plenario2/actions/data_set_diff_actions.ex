@@ -56,7 +56,7 @@ defmodule Plenario2.Actions.DataSetDiffActions do
       constraint_values: constraint_values
     }
 
-    DataSetDiffChangesets.create(%DataSetDiff{}, params)
+    DataSetDiffChangesets.create(params)
     |> Repo.insert()
   end
 
