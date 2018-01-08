@@ -184,8 +184,9 @@ defmodule Plenario2Web.MetaController do
     meta = MetaActions.get(slug, [with_user: true])
     changeset = MetaChangesets.update_refresh_info(meta, %{})
     action = meta_path(conn, :do_update_refresh_info, slug)
+    rr_choices = Meta.get_refresh_rate_choices()
 
-    render(conn, "update_refresh_info.html", changeset: changeset, action: action)
+    render(conn, "update_refresh_info.html", changeset: changeset, action: action, rr_choices: rr_choices)
   end
 
   def do_update_refresh_info(conn, %{"slug" => slug, "meta" => %{"refresh_rate" => refresh_rate, "refresh_interval" => refresh_interval, "refresh_starts_on" => refresh_starts_on, "refresh_ends_on" => refresh_ends_on}}) do

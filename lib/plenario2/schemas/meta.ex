@@ -58,4 +58,28 @@ defmodule Plenario2.Schemas.Meta do
     has_many(:export_jobs, Plenario2.Schemas.ExportJob)
     has_many(:admin_user_notes, Plenario2.Schemas.AdminUserNote)
   end
+
+  @refresh_rate_values [
+    nil,
+    "minutes",
+    "hours",
+    "days",
+    "weeks",
+    "months",
+    "years"
+  ]
+
+  @refresh_rate_choices [
+    "Don't Refresh": nil,
+    "Minutes": "minutes",
+    "Hours": "hours",
+    "Days": "days",
+    "Weeks": "weeks",
+    "Months": "months",
+    "Years": "years"
+  ]
+
+  def get_refresh_rate_values(), do: @refresh_rate_values
+
+  def get_refresh_rate_choices(), do: @refresh_rate_choices
 end

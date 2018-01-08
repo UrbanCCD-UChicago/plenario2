@@ -160,7 +160,7 @@ defmodule Plenario2.Changesets.MetaChangesets do
   defp validate_refresh_rate(changeset) do
     rr = get_field(changeset, :refresh_rate)
 
-    if Enum.member?([nil, "minutes", "hours", "days", "weeks", "months", "years"], rr) do
+    if Enum.member?(Meta.get_refresh_rate_values(), rr) do
       changeset
     else
       changeset |> add_error(:refresh_rate, "Invalid value `#{rr}`")
