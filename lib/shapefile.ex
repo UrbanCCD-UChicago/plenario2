@@ -17,25 +17,26 @@ defmodule Shapefile do
   ## Examples
 
       iex> Shapefile.load(
-      ...>   "/tmp/shapefile", 
-      ...>   "shapefile",
-      ...>   "postgresql://postgres:password@localhost:5432/plenario2_test"
+      ...>   "test/fixtures/Watersheds.shp", 
+      ...>   "watersheds"
       ...> )
       :ok
       
   """
-  def load(path, table, connection) do
-    args = [
-      "-f", "PostgreSQL",
-      "-lco", "PRECISION=no",
-      "-nlt", "PROMOTE_TO_MULTI",
-      "-s_srs", path <> ".prj",
-      "-t_srs", "EPSG:4326",
-      connection, path <> ".shp",
-      "-nln", table,
-      "-lco", "GEOMETRY_NAME=geom"
-    ]
+  def load(path, table) do
+    host = Application.get_env(:plenario2, Plenario2.Repo)[:hostname]
+    user = Application.get_env(:plenario2, Plenario2.Repo)[:username]
+    password = Application.get_env(:plenario2, Plenario2.Repo)[:password]
+    db = Application.get_env(:plenario2, Plenario2.Repo)[:database]
+    dbconn = "PG:host=#{host} user=#{user} dbname=#{db} password=#{password}"
 
-    System.cmd("ogr2ogr", args)
+    args = ["-f", "PostgreSQL", dbconn, path, "-lco", "GEOMETRY_NAME=geom",
+      "-lco", "FID=gid", "-lco", "PRECISION=no", "-nlt", "PROMOTE_TO_MULTI",
+      "-nln", table, "-overwrite"]
+
+    case System.cmd("ogr2ogr", args) do
+      {"", 0} -> :ok
+      {error, 1} -> error
+    end
   end
 end
