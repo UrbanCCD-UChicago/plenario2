@@ -85,7 +85,7 @@ defmodule Plenario2.Actions.AdminUserNoteActions do
       user_id: user_id,
       meta_id: meta_id
     }
-    AdminUserNoteChangesets.create_for_meta(%AdminUserNote{}, params)
+    AdminUserNoteChangesets.create_for_meta(params)
     |> Repo.insert()
   end
 

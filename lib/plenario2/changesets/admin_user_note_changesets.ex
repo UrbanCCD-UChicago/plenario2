@@ -8,21 +8,31 @@ defmodule Plenario2.Changesets.AdminUserNoteChangesets do
 
   alias Plenario2.Schemas.AdminUserNote
 
-  @doc """
-  Creates a new AdminUserNote that is related to a Meta entity.
-
-  Params include:
-
-    - note
-    - should_email
-    - admin_id
-    - user_id
-    - meta_id
+  @typedoc """
+  Verbose map of params for create_for_meta
   """
-  @spec create_for_meta(note :: %AdminUserNote{}, params :: %{}) :: Ecto.Changeset.t
-  def create_for_meta(struct, params) do
-    struct
-    |> cast(params, [:note, :should_email, :admin_id, :user_id, :meta_id])
+  @type create_meta_params :: %{
+    note: String.t,
+    should_email: boolean,
+    admin_id: integer,
+    user_id: integer,
+    meta_id: integer
+  }
+
+  @new_create_meta_param_keys [:note, :should_email, :admin_id, :user_id, :meta_id]
+
+  def new_for_meta() do
+    %AdminUserNote{}
+    |> cast(%{}, @new_create_meta_param_keys)
+  end
+
+  @doc """
+  Creates a new AdminUserNote that is related to a Meta entity
+  """
+  @spec create_for_meta(params :: create_meta_params) :: Ecto.Changeset.t
+  def create_for_meta(params) do
+    %AdminUserNote{}
+    |> cast(params, @new_create_meta_param_keys)
     |> validate_required([:note, :admin_id, :user_id, :meta_id])
     |> cast_assoc(:admin)
     |> cast_assoc(:user)
@@ -50,7 +60,7 @@ defmodule Plenario2.Changesets.AdminUserNoteChangesets do
   @doc """
   Creates a changeset to update a given note's acknowledged bit in the database
   """
-  @spec update_acknowledged(note :: %AdminUserNote{}, params :: %{acknowledged: boolean}) :: Ecto.Changeset.t
+  @spec update_acknowledged(note :: AdminUserNote, params :: %{acknowledged: boolean}) :: Ecto.Changeset.t
   def update_acknowledged(note, params) do
     note
     |> cast(params, [:acknowledged])
