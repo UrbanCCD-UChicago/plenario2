@@ -21,12 +21,6 @@ defmodule DataSetFieldTests do
     assert length(fields) == 2
   end
 
-  test "make a data set field a primary key", context do
-    {:ok, field} = DataSetFieldActions.create(context.meta.id, "location", "text")
-    {:ok, field} = DataSetFieldActions.make_primary_key(field)
-    assert field.opts == "not null primary key"
-  end
-
   test "delete a data set field", context do
     {:ok, field} = DataSetFieldActions.create(context.meta.id, "location", "text")
     DataSetFieldActions.delete(field)

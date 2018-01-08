@@ -35,12 +35,11 @@ defmodule Plenario2Etl.WorkerTest do
   setup context do
     meta = context.meta
 
-    {:ok, user} = UserActions.create("Trusted User", "password", "trusted@example.com") 
-    {:ok, pk} = DataSetFieldActions.create(meta.id, "pk", "integer")
+    {:ok, user} = UserActions.create("Trusted User", "password", "trusted@example.com")
+    {:ok, _} = DataSetFieldActions.create(meta.id, "pk", "integer")
     DataSetFieldActions.create(meta.id, "datetime", "timestamptz")
     DataSetFieldActions.create(meta.id, "location", "text")
     DataSetFieldActions.create(meta.id, "data", "text")
-    DataSetFieldActions.make_primary_key(pk)
     {:ok, constraint} = DataSetConstraintActions.create(meta.id, ["pk"])
     {:ok, job} = EtlJobActions.create(meta.id)
     VirtualPointFieldActions.create_from_loc(meta.id, "location")
