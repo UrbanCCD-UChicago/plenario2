@@ -6,9 +6,9 @@ pipeline {
       steps {
         checkout scm
 
-        sh 'sudo add-apt-repository ppa:ubuntugis/ppa'
-        sh 'sudo apt-get update'
-        sh 'sudo apt-get install gdal-bin'
+        sh 'add-apt-repository ppa:ubuntugis/ppa'
+        sh 'apt-get update'
+        sh 'apt-get install gdal-bin'
 
         sh 'mix local.hex --force'
         sh 'mix local.rebar --force'
