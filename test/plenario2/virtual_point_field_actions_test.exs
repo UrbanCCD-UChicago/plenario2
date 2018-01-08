@@ -1,19 +1,14 @@
 defmodule VirtualPointFieldActionsTests do
-  use ExUnit.Case, async: true
-  alias Plenario2.Actions.{DataSetFieldActions, VirtualPointFieldActions, MetaActions}
-  alias Plenario2.Repo
-  alias Plenario2Auth.UserActions
+  use Plenario2.DataCase, async: true
 
-  setup do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
+  alias Plenario2.Actions.{DataSetFieldActions, VirtualPointFieldActions}
 
-    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
-    DataSetFieldActions.create(meta.id, "location", "text")
-    DataSetFieldActions.create(meta.id, "longitude", "float")
-    DataSetFieldActions.create(meta.id, "latitude", "float")
+  setup context do
+    DataSetFieldActions.create(context.meta.id, "location", "text")
+    DataSetFieldActions.create(context.meta.id, "longitude", "float")
+    DataSetFieldActions.create(context.meta.id, "latitude", "float")
 
-    [meta: meta]
+    context
   end
 
   test "create virtual point field from long/lat", context do

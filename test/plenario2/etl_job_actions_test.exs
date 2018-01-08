@@ -1,17 +1,7 @@
 defmodule EtlJobActionsTests do
-  use ExUnit.Case, async: true
-  alias Plenario2.Actions.{EtlJobActions, MetaActions}
-  alias Plenario2.Repo
-  alias Plenario2Auth.UserActions
+  use Plenario2.DataCase, async: true
 
-  setup do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
-
-    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
-
-    [meta: meta]
-  end
+  alias Plenario2.Actions.EtlJobActions
 
   test "create a new job", context do
     {:ok, job} = EtlJobActions.create(context.meta.id)
@@ -21,7 +11,7 @@ defmodule EtlJobActionsTests do
   test "get a job by id", context do
     {:ok, job} = EtlJobActions.create(context.meta.id)
 
-    found = EtlJobActions.get_from_id(job.id)
+    found = EtlJobActions.get(job.id)
     assert found.id == job.id
   end
 
@@ -42,7 +32,7 @@ defmodule EtlJobActionsTests do
     {:ok, job} = EtlJobActions.create(context.meta.id)
     EtlJobActions.mark_started(job)
 
-    job = EtlJobActions.get_from_id(job.id)
+    job = EtlJobActions.get(job.id)
     assert job.state == "running"
     assert job.started_on != nil
   end
@@ -52,7 +42,7 @@ defmodule EtlJobActionsTests do
     EtlJobActions.mark_started(job)
     EtlJobActions.mark_erred(job, "test")
 
-    job = EtlJobActions.get_from_id(job.id)
+    job = EtlJobActions.get(job.id)
     assert job.state == "erred"
     assert job.completed_on != nil
     assert job.error_message == "test"
@@ -63,7 +53,7 @@ defmodule EtlJobActionsTests do
     EtlJobActions.mark_started(job)
     EtlJobActions.mark_completed(job)
 
-    job = EtlJobActions.get_from_id(job.id)
+    job = EtlJobActions.get(job.id)
     assert job.state == "completed"
     assert job.completed_on != nil
   end

@@ -1,21 +1,22 @@
 defmodule DataSetDiffActionsTest do
-  use ExUnit.Case, async: true
-  alias Plenario2.Actions.{DataSetDiffActions, EtlJobActions, DataSetFieldActions, DataSetConstraintActions, MetaActions}
-  alias Plenario2.Repo
-  alias Plenario2Auth.UserActions
+  use Plenario2.DataCase, async: true
 
-  setup do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
+  alias Plenario2.Actions.{
+    DataSetDiffActions,
+    EtlJobActions,
+    DataSetFieldActions,
+    DataSetConstraintActions}
 
-    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
+  setup context do
+    meta = context[:meta]
+
     DataSetFieldActions.create(meta.id, "date", "date")
     DataSetFieldActions.create(meta.id, "location", "text")
     DataSetFieldActions.create(meta.id, "event_id", "text")
     {:ok, cons} = DataSetConstraintActions.create(meta.id, ["event_id"])
     {:ok, job} = EtlJobActions.create(meta.id)
 
-    [meta: meta, cons: cons, job: job]
+    [cons: cons, job: job]
   end
 
   test "create a diff", context do

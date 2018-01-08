@@ -8,7 +8,6 @@ defmodule Plenario2Etl.WorkerTest do
     VirtualPointFieldActions
   }
 
-  alias Plenario2Auth.UserActions
   alias Plenario2.Schemas.DataSetDiff
   alias Plenario2Etl.Worker
   alias Plenario2.Repo
@@ -20,8 +19,6 @@ defmodule Plenario2Etl.WorkerTest do
 
   use Plenario2.DataCase
 
-  @fixture_name "Chicago Tree Trimming"
-  @fixture_source "https://example.com/chicago-tree-trimming"
   @fixture_columns ["pk", "datetime", "location", "data"]
   @select_query "select #{Enum.join(@fixture_columns, ",")} from chicago_tree_trimming"
   @insert_rows [
@@ -34,10 +31,8 @@ defmodule Plenario2Etl.WorkerTest do
     ["gromit", "2017-01-04T00:00:00+00:00", "(0, 4)", 4]
   ]
 
-  setup do
-    {:ok, user} = UserActions.create("user", "password", "email@example.com")
-
-    {:ok, meta} = MetaActions.create( @fixture_name, user.id, @fixture_source)
+  setup context do
+    meta = context.meta
 
     {:ok, pk} = DataSetFieldActions.create(meta.id, "pk", "integer")
     DataSetFieldActions.create(meta.id, "datetime", "timestamptz")
@@ -50,7 +45,6 @@ defmodule Plenario2Etl.WorkerTest do
     DataSetActions.create_data_set_table(meta)
 
     %{
-      meta: meta,
       meta_id: meta.id,
       table_name: MetaActions.get_data_set_table_name(meta),
       constraint: constraint,

@@ -3,19 +3,11 @@ defmodule Plenario2Web.DataSetConstraintControllerTest do
 
   alias Plenario2.Actions.{MetaActions, DataSetFieldActions, DataSetConstraintActions}
 
-  alias Plenario2Auth.UserActions
-
-  @username "Test User"
-  @password "password"  # omg so secure
-  @email "test@example.com"
-
   @meta_name "Test Data Set"
   @meta_source_url "https://example.com/"
 
-  setup do
-    {:ok, user} = UserActions.create @username, @password, @email
-
-    {:ok, meta} = MetaActions.create @meta_name, user.id, @meta_source_url
+  setup context do
+    {:ok, meta} = MetaActions.create @meta_name, context.reg_user.id, @meta_source_url
 
     DataSetFieldActions.create meta.id, "event id", "text"
     DataSetFieldActions.create meta.id, "long", "float"
@@ -27,14 +19,8 @@ defmodule Plenario2Web.DataSetConstraintControllerTest do
     %{meta: meta}
   end
 
+  @tag :auth
   test ":get_create", %{conn: conn, meta: meta} do
-    conn = post(conn, auth_path(conn, :do_login, %{
-      "user" => %{
-        "email_address" => @email,
-        "plaintext_password" => @password
-      }
-    }))
-
     response = conn
       |> get(data_set_constraint_path(conn, :get_create, meta.slug))
       |> html_response(:ok)
@@ -47,14 +33,8 @@ defmodule Plenario2Web.DataSetConstraintControllerTest do
     assert response =~ "day"
   end
 
+  @tag :auth
   test ":do_create", %{conn: conn, meta: meta} do
-    conn = post(conn, auth_path(conn, :do_login, %{
-      "user" => %{
-        "email_address" => @email,
-        "plaintext_password" => @password
-      }
-    }))
-
     conn
     |> post(data_set_constraint_path(conn, :do_create, meta.slug), %{
         "data_set_constraint" => %{

@@ -14,7 +14,7 @@ defmodule Plenario2Web.DataSetFieldController do
   ]
 
   def index(conn, %{"slug" => slug}) do
-    meta = MetaActions.get_from_slug(slug)
+    meta = MetaActions.get(slug)
     fields = DataSetFieldActions.list_for_meta(meta)
 
     render(conn, "index.html", slug: slug, meta: meta, fields: fields)
@@ -26,7 +26,7 @@ defmodule Plenario2Web.DataSetFieldController do
   end
 
   def create(conn, %{"data_set_field" => params, "slug" => slug}) do
-    meta = MetaActions.get_from_slug(slug)
+    meta = MetaActions.get(slug)
     changeset_params = Map.merge(params, %{"meta_id" => meta.id})
     changeset = DataSetFieldChangesets.create(%DataSetField{}, changeset_params)
 

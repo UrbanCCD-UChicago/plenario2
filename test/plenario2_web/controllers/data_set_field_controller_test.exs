@@ -1,28 +1,22 @@
 defmodule Plenario2Web.DataSetFieldControllerTest do
   use Plenario2Web.ConnCase, async: true
+
   alias Plenario2.Actions.{DataSetFieldActions, MetaActions}
   alias Plenario2.Schemas.DataSetField
   alias Plenario2.Repo
-  alias Plenario2Auth.UserActions
-
-  @user_name "user"
-  @user_password "password"
-  @user_email "email@example.com"
 
   @meta_name "test"
   @meta_source_url "somewhere"
 
-  setup do
-    {:ok, user} = UserActions.create(@user_name, @user_password, @user_email)
-    {:ok, meta} = MetaActions.create(@meta_name, user.id, @meta_source_url)
+  setup context do
+    {:ok, meta} = MetaActions.create(@meta_name, context.reg_user.id, @meta_source_url)
 
-    %{
-      meta: meta,
-      user: user
-    }
+    %{meta: meta}
   end
 
   describe "GET :new" do
+
+    @tag :anon
     test "when anonymous", %{conn: conn} do
       response = conn
         |> get(data_set_field_path(conn, :new, "some slug"))
@@ -31,14 +25,8 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
       assert response =~ "unauthorized"
     end
 
+    @tag :auth
     test "when logged in", %{conn: conn, meta: meta} do
-      conn = post(conn, auth_path(conn, :do_login, %{
-        "user" => %{
-          "email_address" => @user_email,
-          "plaintext_password" => @user_password
-        }
-      }))
-
       response = conn
         |> get(data_set_field_path(conn, :new, meta.slug))
         |> response(200)
@@ -48,6 +36,8 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
   end
 
   describe "POST :create" do
+
+    @tag :anon
     test "when anonymous", %{conn: conn} do
       response = conn
         |> get(data_set_field_path(conn, :create, "some slug"))
@@ -56,14 +46,8 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
       assert response =~ "unauthorized"
     end
 
+    @tag :auth
     test "when logged in", %{conn: conn, meta: meta} do
-      conn = post(conn, auth_path(conn, :do_login, %{
-        "user" => %{
-          "email_address" => @user_email,
-          "plaintext_password" => @user_password
-        }
-      }))
-
       conn
         |> post(data_set_field_path(conn, :create, meta.slug), %{
           "data_set_field" => %{
@@ -81,6 +65,8 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
   end
 
   describe "POST :update" do
+
+    @tag :anon
     test "when anonymous", %{conn: conn} do
       response = conn
         |> get(data_set_field_path(conn, :update, "some slug", -1))
@@ -89,14 +75,8 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
       assert response =~ "unauthorized"
     end
 
+    @tag :auth
     test "when logged in", %{conn: conn, meta: meta} do
-      conn = post(conn, auth_path(conn, :do_login, %{
-        "user" => %{
-          "email_address" => @user_email,
-          "plaintext_password" => @user_password
-        }
-      }))
-
       conn
         |> post(data_set_field_path(conn, :create, meta.slug), %{
           "data_set_field" => %{

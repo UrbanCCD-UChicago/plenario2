@@ -4,6 +4,8 @@ defmodule Plenario2.Actions.AdminUserNoteActions do
   underlying the various public interfaces for AdminUserNotes.
   """
 
+  import Plenario2.Guards, only: [is_id: 1]
+
   alias Plenario2.Repo
   alias Plenario2.Schemas.{AdminUserNote, Meta}
   alias Plenario2.Changesets.AdminUserNoteChangesets
@@ -11,12 +13,32 @@ defmodule Plenario2.Actions.AdminUserNoteActions do
 
   alias Plenario2Auth.User
 
+  @typedoc """
+  Parameter is an ID attribute
+  """
+  @type id :: String.t | integer
+
+  @typedoc """
+  Parameter is an _admin_ User
+  """
+  @type t_admin :: %User{is_admin: true} | id
+
+  @typedoc """
+  Parameter is a keyword list
+  """
+  @type kwlist :: list({atom, any})
+
+  @typedoc """
+  Returns a tuple of :ok, AdminUserNote or :error, Ecto.Changeset
+  """
+  @type ok_note :: {:ok, AdminUserNote} | {:error, Ecto.Changeset.T}
+
   @doc """
   Gets a single AdminUserNote by ID, optionally preloading relations.
   See the notes for AdminUserNoteQueries.handle_opts
   """
-  @spec get_from_id(id :: integer, opts :: %{}) :: %AdminUserNote{} | nil
-  def get_from_id(id, opts \\ []) do
+  @spec get(id :: id, opts :: kwlist) :: AdminUserNote | nil
+  def get(id, opts \\ []) do
     Q.from_id(id)
     |> Q.handle_opts(opts)
     |> Repo.one()
@@ -26,7 +48,7 @@ defmodule Plenario2.Actions.AdminUserNoteActions do
   Gets a list of AdminUserNotes, optionally filtering and preloading relations.
   See the notes for AdminUserNoteQueries.handle_opts
   """
-  @spec list(opts :: %{}) :: [%AdminUserNote{}]
+  @spec list(opts :: kwlist) :: list(AdminUserNote)
   def list(opts \\ []) do
     Q.list()
     |> Q.handle_opts(opts)
@@ -36,14 +58,32 @@ defmodule Plenario2.Actions.AdminUserNoteActions do
   @doc """
   Creates a new AdminUserNote related to a Meta.
   """
-  @spec create_for_meta(note :: String.t, admin :: %User{is_admin: true}, user :: %User{}, meta :: %Meta{}, should_email :: boolean) :: {:ok, %AdminUserNote{} | :error, Ecto.Changeset.t}
+  @spec create_for_meta(note :: String.t, admin :: t_admin, user :: User | id, meta :: Meta | id, should_email :: boolean) :: ok_note
   def create_for_meta(note, admin, user, meta, should_email \\ false) do
+    admin_id =
+      case is_id(admin) do
+        true -> admin
+        false -> admin.id
+      end
+
+    user_id =
+      case is_id(user) do
+        true -> user
+        false -> user.id
+      end
+
+    meta_id =
+      case is_id(meta) do
+        true -> meta
+        false -> meta.id
+      end
+
     params = %{
       note: note,
       should_email: should_email,
-      admin_id: admin.id,
-      user_id: user.id,
-      meta_id: meta.id
+      admin_id: admin_id,
+      user_id: user_id,
+      meta_id: meta_id
     }
     AdminUserNoteChangesets.create_for_meta(%AdminUserNote{}, params)
     |> Repo.insert()
@@ -76,7 +116,7 @@ defmodule Plenario2.Actions.AdminUserNoteActions do
   @doc """
   Updates a given note in the database as having been acknowledged by the user.
   """
-  @spec mark_acknowledged(note :: AdminUserNote) :: {:ok, %AdminUserNote{} | :error, Ecto.Changeset.t}
+  @spec mark_acknowledged(note :: AdminUserNote) :: ok_note
   def mark_acknowledged(note) do
     AdminUserNoteChangesets.update_acknowledged(note, %{acknowledged: true})
     |> Repo.update()

@@ -6,15 +6,33 @@ defmodule Plenario2.Actions.DataSetFieldActions do
 
   import Ecto.Query
 
+  import Plenario2.Guards, only: [is_id: 1]
+
   alias Plenario2.Changesets.DataSetFieldChangesets
   alias Plenario2.Schemas.{DataSetField, Meta}
   alias Plenario2.Repo
 
+  @typedoc """
+  Parameter is an ID attribute
+  """
+  @type id :: String.t | integer
+
+  @typedoc """
+  Returns a tuple of :ok, DataSetField or :error, Ecto.Changeset
+  """
+  @type ok_field :: {:ok, DataSetField} | {:error, Ecto.Changeset.T}
+
   @doc """
   Crates a new instance of DataSetField
   """
-  @spec create(meta_id :: integer, name :: String.t, type :: String.t, opts :: String.t) :: {:ok, %DataSetField{} | :error, Ecto.Changeset.t}
-  def create(meta_id, name, type, opts \\ "default null") do
+  @spec create(meta :: Meta | id, name :: String.t, type :: String.t, opts :: String.t) :: ok_field
+  def create(meta, name, type, opts \\ "default null") do
+    meta_id =
+      case is_id(meta) do
+        true -> meta
+        false -> meta.id
+      end
+
     params = %{
       meta_id: meta_id,
       name: name,
@@ -29,8 +47,19 @@ defmodule Plenario2.Actions.DataSetFieldActions do
   @doc """
   Gets a list of fields related to a given Meta
   """
-  @spec list_for_meta(meta :: %Meta{}) :: [%DataSetField{}]
-  def list_for_meta(meta), do: Repo.all(from f in DataSetField, where: f.meta_id == ^meta.id)
+  @spec list_for_meta(meta :: Meta | id) :: list(DataSetField)
+  def list_for_meta(meta) do
+    meta_id =
+      case is_id(meta) do
+        true -> meta
+        false -> meta.id
+      end
+
+    Repo.all(
+      from f in DataSetField,
+      where: f.meta_id == ^meta_id
+    )
+  end
 
   def make_primary_key(field) do
     DataSetFieldChangesets.make_primary_key(field)

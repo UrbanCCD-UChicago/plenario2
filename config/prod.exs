@@ -19,7 +19,7 @@ config :plenario2, Plenario2Web.Endpoint,
   cache_static_manifest: "priv/static/manifest.json"
 
 # Do not print debug messages in production
-config :logger, level: :info
+config :logger, level: :info, metadata: [:request_id]
 
 # ## SSL Support
 #

@@ -1,17 +1,7 @@
 defmodule ExportJobActionsTest do
-  use ExUnit.Case, async: true
-  alias Plenario2.Actions.{ExportJobActions, MetaActions}
-  alias Plenario2.Repo
-  alias Plenario2Auth.UserActions
+  use Plenario2.DataCase, async: true
 
-  setup do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
-
-    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
-
-    [user: user, meta: meta]
-  end
+  alias Plenario2.Actions.ExportJobActions
 
   test "create an export job", context do
     {:ok, job} = ExportJobActions.create(context.meta.id, context.user.id, "select * from chicago_tree_trinning")

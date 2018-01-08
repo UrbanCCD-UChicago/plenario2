@@ -64,7 +64,7 @@ defmodule Plenario2Etl.Worker do
 
   @doc """
   Upsert dataset rows from the file specified in `state`. Operations are
-  performed in parallel on chunks of the file stream. The first line of 
+  performed in parallel on chunks of the file stream. The first line of
   the file is skipped, assumed to be a header.
 
   ## Example
@@ -77,7 +77,7 @@ defmodule Plenario2Etl.Worker do
   """
   @spec load(state :: map) :: map
   def load(state) do
-    meta = MetaActions.get_from_id(state[:meta_id])
+    meta = MetaActions.get(state[:meta_id])
     job = EtlJobActions.create!(meta.id)
 
     Logger.info("Downloading file for #{meta.name}")
@@ -177,7 +177,7 @@ defmodule Plenario2Etl.Worker do
   end
 
   @doc """
-  Upsert a dataset with a chunk of `rows`. 
+  Upsert a dataset with a chunk of `rows`.
 
   ## Example
 
@@ -257,7 +257,7 @@ defmodule Plenario2Etl.Worker do
          if original_value !== updated_value do
            column = Enum.fetch!(columns, index)
 
-           # TODO(heyzoos) inspect will render values in a way that is 
+           # TODO(heyzoos) inspect will render values in a way that is
            # is probably unusable to end users. Need a way to guess the
            # correct string format for a value.
 

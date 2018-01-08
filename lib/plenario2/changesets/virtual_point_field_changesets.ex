@@ -66,7 +66,7 @@ defmodule Plenario2.Changesets.VirtualPointFieldChangesets do
     meta_id = get_field(changeset, :meta_id)
     loc = get_field(changeset, :location_field)
 
-    meta = MetaActions.get_from_id(meta_id)
+    meta = MetaActions.get(meta_id)
     fields = DataSetFieldActions.list_for_meta(meta)
     known_field_names = for f <- fields, do: f.name
     if Enum.member?(known_field_names, loc) do
@@ -83,7 +83,7 @@ defmodule Plenario2.Changesets.VirtualPointFieldChangesets do
 
     field_names = [long, lat]
 
-    meta = MetaActions.get_from_id(meta_id)
+    meta = MetaActions.get(meta_id)
     fields = DataSetFieldActions.list_for_meta(meta)
     known_field_names = for f <- fields, do: f.name
 
