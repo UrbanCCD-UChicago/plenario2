@@ -33,7 +33,7 @@ defmodule Plenario2.Actions.EtlJobActions do
         false -> meta.id
       end
 
-    EtlJobChangesets.create(%EtlJob{}, %{meta_id: meta_id})
+    EtlJobChangesets.create(%{meta_id: meta_id})
     |> Repo.insert()
   end
 

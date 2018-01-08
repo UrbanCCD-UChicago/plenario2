@@ -11,9 +11,9 @@ defmodule Plenario2.Changesets.EtlJobChangesets do
   @doc """
   Creates a changeset for inserting new EtlJobs into the database
   """
-  @spec create(struct :: %EtlJob{}, params :: %{}) :: Ecto.Changeset.t
-  def create(struct, params) do
-    struct
+  @spec create(params :: %{meta_id: integer}) :: Ecto.Changeset.t
+  def create(params) do
+    %EtlJob{}
     |> cast(params, [:meta_id])
     |> validate_required([:meta_id])
     |> cast_assoc(:meta)
