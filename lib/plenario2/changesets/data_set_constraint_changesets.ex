@@ -9,32 +9,36 @@ defmodule Plenario2.Changesets.DataSetConstraintChangesets do
   alias Plenario2.Actions.{MetaActions, DataSetFieldActions}
   alias Plenario2.Schemas.DataSetConstraint
 
-  @doc """
-  Creates a changeset for creating new data set constraints in the database.
-
-  Params include:
-
-    - field_names
-    - meta_id
+  @typedoc """
+  Verbose map of params for create
   """
-  @spec create(struct :: %DataSetConstraint{}, params :: %{}) :: Ecto.Changeset.t
-  def create(struct, params) do
-    struct
-    |> cast(params, [:field_names, :meta_id])
-    |> validate_required([:field_names, :meta_id])
+  @type create_params :: %{
+    field_names: list(String.t),
+    meta_id: integer
+  }
+
+  @new_create_param_keys [:field_names, :meta_id]
+
+  @doc """
+  Creates a blank changeset for webforms
+  """
+  @spec new() :: Ecto.Changeset.t
+  def new() do
+    %DataSetConstraint{}
+    |> cast(%{}, @new_create_param_keys)
+  end
+
+  @doc """
+  Creates a changeset for creating new data set constraints in the database
+  """
+  @spec create(params :: create_params) :: Ecto.Changeset.t
+  def create(params) do
+    %DataSetConstraint{}
+    |> cast(params, @new_create_param_keys)
+    |> validate_required(@new_create_param_keys)
     |> validate_field_names()
     |> cast_assoc(:meta)
     |> set_name()
-  end
-
-  # TODO: i hate this -- maybe this should be something like def new(), do: %DataSetConstraint{} |> cast(%{}, [:field_names, :meta_id])
-  @doc """
-  Creates a blank changeset for building forms in web templates
-  """
-  @spec blank(struct :: %DataSetConstraint{}) :: Ecto.Changeset.t
-  def blank(struct) do
-    struct
-    |> cast(%{}, [:field_names, :meta_id])
   end
 
   # Sets the name of the constraint by prefixing `unique_constraint` and then underscore joining the field names.

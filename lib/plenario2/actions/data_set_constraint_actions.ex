@@ -38,7 +38,7 @@ defmodule Plenario2.Actions.DataSetConstraintActions do
       field_names: field_names
     }
 
-    DataSetConstraintChangesets.create(%DataSetConstraint{}, params)
+    DataSetConstraintChangesets.create(params)
     |> Repo.insert()
   end
 
