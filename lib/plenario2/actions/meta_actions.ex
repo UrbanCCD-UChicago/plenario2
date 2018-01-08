@@ -106,7 +106,7 @@ defmodule Plenario2.Actions.MetaActions do
     |> Keyword.merge(named)
     |> Enum.into(%{})
 
-    MetaChangesets.create(%Meta{}, params)
+    MetaChangesets.create(params)
     |> Repo.insert()
   end
 
