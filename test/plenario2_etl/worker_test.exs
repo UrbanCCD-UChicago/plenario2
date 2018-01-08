@@ -1,4 +1,7 @@
 defmodule Plenario2Etl.WorkerTest do
+  use Plenario2.DataCase
+  doctest Plenario2Etl.Worker
+
   alias Plenario2.Actions.{
     DataSetActions,
     DataSetConstraintActions,
@@ -17,8 +20,6 @@ defmodule Plenario2Etl.WorkerTest do
   import Mock
 
   require HTTPoison
-
-  use Plenario2.DataCase
 
   @fixture_columns ["pk", "datetime", "location", "data"]
   @select_query "select #{Enum.join(@fixture_columns, ",")} from chicago_tree_trimming"

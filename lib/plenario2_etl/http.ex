@@ -1,4 +1,4 @@
-defmodule HTTP do
+defmodule Plenario2Etl.Http do
   @moduledoc """
   Explicitly defines this application's http interface. With this module as a
   contract, we do not have to be tightly coupled to any one HTTP library and
@@ -17,7 +17,7 @@ defmodule HTTP do
 
       iex> {:ok, %{
       ...>   body: body
-      ...> }} = HTTP.get("https://www.google.com")
+      ...> }} = Plenario2Etl.Http.get("https://www.google.com")
       iex> body =~ "<!doctype html>"
       true
 
@@ -31,7 +31,7 @@ defmodule HTTP do
 
       iex> {:ok, %{
       ...>   status: status,
-      ...> }} = HTTP.post("https://www.google.com")
+      ...> }} = Plenario2Etl.Http.post("https://www.google.com")
       iex> status == 200
       true
 

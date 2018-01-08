@@ -13,7 +13,6 @@ defmodule Plenario2Etl.Worker do
   }
 
   import Ecto.Adapters.SQL, only: [query!: 3]
-  import Slug, only: [slugify: 1]
   require Logger
   use GenServer
 
@@ -23,12 +22,6 @@ defmodule Plenario2Etl.Worker do
   @doc """
   Entrypoint for the `Worker` `GenServer`. Saves you the hassle of writing out
   `GenServer.start_link`. Calls this module's `init/1` function.
-
-  ## Example
-
-    iex> worker = Worker.start_link(%{meta_id: 5})
-    :ok
-
   """
   def start_link(state) do
     GenServer.start_link(__MODULE__, state)
@@ -47,12 +40,6 @@ defmodule Plenario2Etl.Worker do
   @doc """
   Downloads the file located at the `source` with to /tmp/ with a file name
   of `name`. Returns path of downloaded file.
-
-  ## Example
-
-    iex> download!("file_name", "https://source.url/", "csv")
-    "/tmp/file_name.csv"
-
   """
   @spec download!(name :: charlist, source :: charlist, type :: charlist) :: charlist
   def download!(name, source, type) do
@@ -66,14 +53,6 @@ defmodule Plenario2Etl.Worker do
   Upsert dataset rows from the file specified in `state`. Operations are
   performed in parallel on chunks of the file stream. The first line of
   the file is skipped, assumed to be a header.
-
-  ## Example
-
-    iex> load(%{
-    ...>   meta_id: 4
-    ...> })
-    :ok
-
   """
   @spec load(state :: map) :: map
   def load(state) do
@@ -104,12 +83,6 @@ defmodule Plenario2Etl.Worker do
   @doc """
   This is the main subprocess kicked off by the `load` method that handles
   and ingests a smaller chunk of rows.
-
-  ## Example
-
-    iex> load_chunk!(self(), meta, job, [["some", "rows"]])
-    :ok
-
   """
   def load_chunk!(sender, meta, job, chunk) do
     rows = Enum.map(chunk, &Keyword.values/1)
@@ -153,12 +126,20 @@ defmodule Plenario2Etl.Worker do
   end
 
   @doc """
-  """
-  def load_shape(meta, path, job) do
-  end
+  Performs the work of loading a shapefile associated with a `Meta` instance.
 
-  defp set_srid(%Geo.Polygon{coordinates: coordinates}, srid) do
-    %Geo.Polygon{coordinates: coordinates, srid: srid}
+  ## Examples
+
+      iex> {:ok, user} = Plenario2Auth.UserActions.create("a", "b", "c@email.com")
+      iex> {:ok, meta} = Plenario2.Actions.MetaActions.create("watersheds", user.id, "foo")
+      iex> {:ok, job} = Plenario2.Actions.EtlJobActions.create(meta.id)
+      iex> path = "test/fixtures/Watersheds.shp"
+      iex> Plenario2Etl.Worker.load_shape(meta, path, job)
+      {:ok, "watersheds"}
+
+  """
+  def load_shape(meta, path, _job) do
+    Plenario2Etl.Shapefile.load(path, meta.name)
   end
 
   defp load_data(meta, path, job, decode) do
@@ -178,12 +159,6 @@ defmodule Plenario2Etl.Worker do
 
   @doc """
   Upsert a dataset with a chunk of `rows`.
-
-  ## Example
-
-    iex> upsert!(meta, rows)
-    [[1, "inserted", "row"]]
-
   """
   @spec upsert!(meta :: Meta, rows :: list) :: list
   def upsert!(meta, rows) do
@@ -192,12 +167,6 @@ defmodule Plenario2Etl.Worker do
 
   @doc """
   Query existing rows that might conflict with an insert query using `rows`.
-
-  ## Example
-
-    iex> upsert!(meta, rows)
-    [[1, "might", "conflict"]]
-
   """
   @spec contains!(meta :: Meta, rows :: list) :: list
   def contains!(meta, rows) do
@@ -227,12 +196,6 @@ defmodule Plenario2Etl.Worker do
   Currently the ugly duckling of the worker API, it generates diff entries
   for a pair of rows. Needs to be refactored into something smaller and
   more readable.
-
-  ## Example
-
-    iex> create_diffs!(meta, job, ["a", "b", "c"], ["1", "2", "3"])
-    [%DataSetDiff{}, ...]
-
   """
   def create_diffs(meta, job, original, updated) do
     columns = MetaActions.get_column_names(meta)
