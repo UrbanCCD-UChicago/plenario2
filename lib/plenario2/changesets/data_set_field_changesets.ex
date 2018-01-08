@@ -8,7 +8,7 @@ defmodule Plenario2.Changesets.DataSetFieldChangesets do
 
   alias Plenario2.Schemas.DataSetField
 
-  @valid_types ~w(text integer float boolean timestamptz)
+  @valid_types ~w{text integer float boolean timestamptz geometry(polygon,4326)}
 
   @doc """
   Creates a changeset for inserting a new DataSetField into the database

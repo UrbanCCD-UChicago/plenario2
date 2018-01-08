@@ -63,7 +63,8 @@ defmodule Plenario2.Mixfile do
       {:canary, "~> 1.1"},
       {:canada, "~> 1.0"},
       {:edeliver, "~> 1.4"},
-      {:distillery, "~> 1.5"}
+      {:distillery, "~> 1.5"},
+      {:slugify, "~> 1.1"}
     ]
   end
 

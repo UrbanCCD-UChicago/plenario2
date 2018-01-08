@@ -13,6 +13,8 @@ defmodule Plenario2Etl.Worker do
   }
 
   import Ecto.Adapters.SQL, only: [query!: 3]
+  import Slug, only: [slugify: 1]
+  require Logger
   use GenServer
 
   @contains_template "lib/plenario2_etl/templates/contains.sql.eex"
@@ -25,6 +27,7 @@ defmodule Plenario2Etl.Worker do
   ## Example
 
     iex> worker = Worker.start_link(%{meta_id: 5})
+    :ok
 
   """
   def start_link(state) do
@@ -47,7 +50,7 @@ defmodule Plenario2Etl.Worker do
 
   ## Example
 
-    iex> download!("file_name", "https://source.url/")
+    iex> download!("file_name", "https://source.url/", "csv")
     "/tmp/file_name.csv"
 
   """
@@ -69,12 +72,17 @@ defmodule Plenario2Etl.Worker do
     iex> load(%{
     ...>   meta_id: 4
     ...> })
+    :ok
 
   """
   @spec load(state :: map) :: map
   def load(state) do
     meta = MetaActions.get(state[:meta_id])
     job = EtlJobActions.create!(meta.id)
+
+    Logger.info("Downloading file for #{meta.name}")
+    Logger.info("#{meta.name} source url is #{meta.source_url}")
+    Logger.info("#{meta.name} source type is #{meta.source_type}")
 
     path =
       download!(
@@ -83,9 +91,13 @@ defmodule Plenario2Etl.Worker do
         meta.source_type
       )
 
+    Logger.info("File stored at #{path}")
+
     case meta.source_type do
       "json" -> load_json(meta, path, job)
-      _ -> load_csv(meta, path, job)
+      "csv" -> load_csv(meta, path, job)
+      "tsv" -> load_tsv(meta, path, job)
+      "shp" -> load_shape(meta, path, job)
     end
   end
 
@@ -96,6 +108,7 @@ defmodule Plenario2Etl.Worker do
   ## Example
 
     iex> load_chunk!(self(), meta, job, [["some", "rows"]])
+    :ok
 
   """
   def load_chunk!(sender, meta, job, chunk) do
@@ -130,7 +143,25 @@ defmodule Plenario2Etl.Worker do
     end)
   end
 
-  def load_data(meta, path, job, decode) do
+  @doc """
+  """
+  def load_tsv(meta, path, job) do
+    load_data(meta, path, job, fn path ->
+      File.stream!(path)
+      |> CSV.decode!(headers: true, separator: ?\t)
+    end)
+  end
+
+  @doc """
+  """
+  def load_shape(meta, path, job) do
+  end
+
+  defp set_srid(%Geo.Polygon{coordinates: coordinates}, srid) do
+    %Geo.Polygon{coordinates: coordinates, srid: srid}
+  end
+
+  defp load_data(meta, path, job, decode) do
     decode.(path)
     |> Stream.map(&Enum.to_list/1)
     |> Stream.map(&Enum.sort/1)
@@ -187,6 +218,7 @@ defmodule Plenario2Etl.Worker do
         constraints: constraints
       )
 
+    # TODO(heyzoos) log informative messages for failing queries
     %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, sql, [])
     rows
   end
