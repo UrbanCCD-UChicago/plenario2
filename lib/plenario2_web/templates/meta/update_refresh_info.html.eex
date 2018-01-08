@@ -4,7 +4,7 @@
 
   <div class="form-group">
     <%= label f, :refresh_rate, class: "control-label" %>
-    <%= select f, :refresh_rate, ["Don't Refresh": nil, "Minutes": "minutes", "Hours": "hours", "Days": "days", "Weeks": "weeks", "Months": "months", "Years": "years"], class: "form-control" %>
+    <%= select f, :refresh_rate, @rr_choices, class: "form-control" %>
     <%= error_tag f, :refresh_rate %>
   </div>
 
