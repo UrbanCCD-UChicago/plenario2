@@ -9,13 +9,18 @@ defmodule Plenario2.Changesets.VirtualPointFieldChangesets do
   alias Plenario2.Actions.{MetaActions, DataSetFieldActions}
   alias Plenario2.Schemas.VirtualPointField
 
+  def new_from_loc() do
+    %VirtualPointField{}
+    |> cast(%{}, [:location_field, :meta_id])
+  end
+
   @doc """
   Creates a changeset for inserting a new VirtualPointField into the database
   that is sourced from a single text field.
   """
-  @spec create_from_loc(struct :: %VirtualPointField{}, params :: %{meta_id: integer, location_field: String.t}) :: Ecto.Changeset.t
-  def create_from_loc(struct, params) do
-    struct
+  @spec create_from_loc(params :: %{meta_id: integer, location_field: String.t}) :: Ecto.Changeset.t
+  def create_from_loc(params) do
+    %VirtualPointField{}
     |> cast(params, [:location_field, :meta_id])
     |> validate_required([:location_field, :meta_id])
     |> validate_loc()
@@ -23,30 +28,23 @@ defmodule Plenario2.Changesets.VirtualPointFieldChangesets do
     |> set_name_loc()
   end
 
-  # TODO: kill this with fire
-  def blank_loc(struct) do
-    struct
-    |> cast(%{}, [:location_field, :meta_id])
+  def new_from_long_lat() do
+    %VirtualPointField{}
+    |> cast(%{}, [:longitude_field, :latitude_field, :meta_id])
   end
 
   @doc """
   Creates a changeset for inserting a new VirtualPointField into the database
   that is sourced from a longitude field and latitude field.
   """
-  @spec create_from_long_lat(struct :: %VirtualPointField{}, params :: %{meta_id: integer, longitude_field: String.t, latitude_field: String.t}) :: Ecto.Changeset.t
-  def create_from_long_lat(struct, params) do
-    struct
+  @spec create_from_long_lat(params :: %{meta_id: integer, longitude_field: String.t, latitude_field: String.t}) :: Ecto.Changeset.t
+  def create_from_long_lat(params) do
+    %VirtualPointField{}
     |> cast(params, [:longitude_field, :latitude_field, :meta_id])
     |> validate_required([:longitude_field, :latitude_field, :meta_id])
     |> validate_long_lat()
     |> cast_assoc(:meta)
     |> set_name_long_lat()
-  end
-
-  # TODO: burn this too
-  def blank_long_lat(struct) do
-    struct
-    |> cast(%{}, [:longitude_field, :latitude_field, :meta_id])
   end
 
   defp set_name_long_lat(changeset) do
