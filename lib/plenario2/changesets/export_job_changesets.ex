@@ -9,14 +9,26 @@ defmodule Plenario2.Changesets.ExportJobChangesets do
   alias Plenario2.Actions.MetaActions
   alias Plenario2.Schemas.ExportJob
 
+  @typedoc """
+  Verbose map of params for create
+  """
+  @type create_params :: %{
+    query: String.t,
+    include_diffs: boolean,
+    user_id: integer,
+    meta_id: integer
+  }
+
+  @create_param_keys [:query, :include_diffs, :user_id, :meta_id]
+
   @doc """
   Creates a changeset for inserting a new ExportJob into the database
   """
-  @spec create(struct :: %ExportJob{}, params :: %{}) :: Ecto.Changeset.t
-  def create(struct, params) do
-    struct
-    |> cast(params, [:query, :include_diffs, :user_id, :meta_id])
-    |> validate_required([:query, :include_diffs, :user_id, :meta_id])
+  @spec create(params :: create_params) :: Ecto.Changeset.t
+  def create(params) do
+    %ExportJob{}
+    |> cast(params, @create_param_keys)
+    |> validate_required(@create_param_keys)
     |> cast_assoc(:user)
     |> cast_assoc(:meta)
     |> set_export_path()

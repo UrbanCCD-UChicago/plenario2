@@ -3,11 +3,10 @@ defmodule Plenario2Web.DataSetConstraintController do
 
   alias Plenario2.Actions.{MetaActions, DataSetConstraintActions}
   alias Plenario2.Changesets.DataSetConstraintChangesets
-  alias Plenario2.Schemas.DataSetConstraint
 
   def get_create(conn, %{"slug" => meta_slug}) do
     meta = MetaActions.get(meta_slug, [with_fields: true])
-    changeset = DataSetConstraintChangesets.blank(%DataSetConstraint{})
+    changeset = DataSetConstraintChangesets.new()
     action = data_set_constraint_path(conn, :do_create, meta_slug)
 
     field_opts = for f <- meta.data_set_fields, do: [{:key, "#{f.name} (#{f.type})"}, {:value, f.name}]

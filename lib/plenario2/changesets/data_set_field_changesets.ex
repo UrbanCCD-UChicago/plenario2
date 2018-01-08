@@ -8,16 +8,50 @@ defmodule Plenario2.Changesets.DataSetFieldChangesets do
 
   alias Plenario2.Schemas.DataSetField
 
+  @typedoc """
+  Verbose map of params for create
+  """
+  @type create_params :: %{
+    name: String.t,
+    type: String.t,
+    opts: String.t,
+    meta_id: integer
+  }
+
+  @new_create_param_keys [:name, :type, :opts, :meta_id]
+
   @valid_types ~w{text integer float boolean timestamptz geometry(polygon,4326)}
+
+  @doc """
+  Creates a blank changeset for creating a webform
+  """
+  @spec new() :: Ecto.Changeset.t
+  def new() do
+    %DataSetField{}
+    |> cast(%{}, @new_create_param_keys)
+  end
 
   @doc """
   Creates a changeset for inserting a new DataSetField into the database
   """
-  @spec create(struct :: %DataSetField{}, params :: %{}) :: Ecto.Changeset.t
-  def create(struct, params \\ %{}) do
-    struct
-    |> cast(params, [:name, :type, :opts, :meta_id])
-    |> validate_required([:name, :type, :opts, :meta_id])
+  @spec create(params :: create_params) :: Ecto.Changeset.t
+  def create(params) do
+    %DataSetField{}
+    |> cast(params, @new_create_param_keys)
+    |> validate_required(@new_create_param_keys)
+    |> cast_assoc(:meta)
+    |> check_name()
+    |> validate_type()
+  end
+
+  @doc """
+  Updates an existing data set field
+  """
+  @spec update(field :: DataSetField, params :: create_params) :: Ecto.Changeset.t
+  def update(field, params \\ %{}) do
+    field
+    |> cast(params, @new_create_param_keys)
+    |> validate_required(@new_create_param_keys)
     |> cast_assoc(:meta)
     |> check_name()
     |> validate_type()
@@ -33,17 +67,13 @@ defmodule Plenario2.Changesets.DataSetFieldChangesets do
   # Converts name values to snake case
   # For example, if a user passes a field named "Event ID", this would return "event_id"
   defp check_name(changeset) do
-    name = case get_field(changeset, :name) do
-      nil ->
-        nil
+    name = get_field(changeset, :name)
+    snaked_name =
+      String.split(name, ~r/\s/, trim: true)
+      |> Enum.map(&String.downcase(&1))
+      |> Enum.join("_")
 
-      name ->
-        String.split(name, ~r/\s/, trim: true)
-        |> Enum.map(&String.downcase(&1))
-        |> Enum.join("_")
-    end
-
-    changeset |> put_change(:name, name)
+    changeset |> put_change(:name, snaked_name)
   end
 
   # Validates the given type of the field is one we support, as defined in @valid_types

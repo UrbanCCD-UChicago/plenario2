@@ -21,14 +21,14 @@ defmodule Plenario2Web.DataSetFieldController do
   end
 
   def new(conn, %{"slug" => slug}) do
-    changeset = DataSetFieldChangesets.create(%DataSetField{})
+    changeset = DataSetFieldChangesets.new()
     render(conn, "new.html", changeset: changeset, slug: slug, field_type_options: @field_type_options)
   end
 
   def create(conn, %{"data_set_field" => params, "slug" => slug}) do
     meta = MetaActions.get(slug)
     changeset_params = Map.merge(params, %{"meta_id" => meta.id})
-    changeset = DataSetFieldChangesets.create(%DataSetField{}, changeset_params)
+    changeset = DataSetFieldChangesets.create(changeset_params)
 
     case Repo.insert(changeset) do
       {:ok, field} ->
@@ -43,13 +43,13 @@ defmodule Plenario2Web.DataSetFieldController do
 
   def edit(conn, %{"slug"=> slug, "id" => id}) do
     field = Repo.get!(DataSetField, id)
-    changeset = DataSetFieldChangesets.create(field)
+    changeset = DataSetFieldChangesets.update(field)
     render(conn, "edit.html", field: field, changeset: changeset, slug: slug, field_type_options: @field_type_options)
   end
 
   def update(conn, %{"slug" => slug, "id" => id, "data_set_field" => field_params}) do
     field = Repo.get!(DataSetField, id)
-    changeset = DataSetFieldChangesets.create(field, field_params)
+    changeset = DataSetFieldChangesets.update(field, field_params)
 
     case Repo.update(changeset) do
       {:ok, _field} ->

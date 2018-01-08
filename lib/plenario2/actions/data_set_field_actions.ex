@@ -40,7 +40,7 @@ defmodule Plenario2.Actions.DataSetFieldActions do
       opts: opts
     }
 
-    DataSetFieldChangesets.create(%DataSetField{}, params)
+    DataSetFieldChangesets.create(params)
     |> Repo.insert()
   end
 
@@ -59,6 +59,15 @@ defmodule Plenario2.Actions.DataSetFieldActions do
       from f in DataSetField,
       where: f.meta_id == ^meta_id
     )
+  end
+
+  @doc """
+  Updates a DataSetField
+  """
+  @spec update(field :: DataSetField, params :: map) :: DataSetField
+  def update(field, params) do
+    DataSetFieldChangesets.update(field, params)
+    |> Repo.update()
   end
 
   def make_primary_key(field) do

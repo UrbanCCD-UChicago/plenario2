@@ -43,7 +43,7 @@ defmodule Plenario2Web.MetaController do
   end
 
   def get_create(conn, _params) do
-    changeset = MetaChangesets.create(%Meta{}, %{})
+    changeset = MetaChangesets.new()
     action = meta_path(conn, :do_create)
 
     render(conn, "create.html", changeset: changeset, action: action)

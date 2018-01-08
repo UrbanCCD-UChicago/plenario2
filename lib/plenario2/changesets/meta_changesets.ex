@@ -9,41 +9,55 @@ defmodule Plenario2.Changesets.MetaChangesets do
   alias Plenario2.Tokens
   alias Plenario2.Schemas.Meta
 
-  @doc """
-  Creates a changeset for inserting a new Meta into the database.
-
-  Params include:
-
-    - name (required)
-    - user_id (required)
-    - source_url (required)
-    - source_type
-    - description
-    - attribution
-    - refresh_rate
-    - refresh_interval
-    - refresh_starts_on
-    - refresh_ends_on
-    - srid
-    - timezone
+  @typedoc """
+  Verbose map of params for create
   """
-  @spec create(struct :: %Meta{}, params :: %{}) :: Ecto.Changeset.t
-  def create(struct, params) do
-    struct
-    |> cast(params, [
-         :name,
-         :user_id,
-         :description,
-         :attribution,
-         :source_url,
-         :source_type,
-         :refresh_rate,
-         :refresh_interval,
-         :refresh_starts_on,
-         :refresh_ends_on,
-         :srid,
-         :timezone
-       ])
+  @type create_params :: %{
+    name: String.t,
+    user_id: integer,
+    description: String.t | nil,
+    attribution: String.t | nil,
+    source_url: String.t,
+    source_type: String.t,
+    refresh_rate: String.t | nil,
+    refresh_interval: integer | nil,
+    refresh_starts_on: Date | nil,
+    refresh_ends_one: Date | nil,
+    srid: integer | nil,
+    timezone: String.t | nil
+  }
+
+  @new_create_param_keys [
+    :name,
+    :user_id,
+    :description,
+    :attribution,
+    :source_url,
+    :source_type,
+    :refresh_rate,
+    :refresh_interval,
+    :refresh_starts_on,
+    :refresh_ends_on,
+    :srid,
+    :timezone
+  ]
+
+  @doc """
+  Creates a blank changeset for creating a webform
+  """
+  @spec new() :: Ecto.Changeset.t
+  def new() do
+    %Meta{}
+    |> cast(%{}, @new_create_param_keys)
+  end
+
+  @doc """
+  Creates a changeset for inserting a new Meta into the database
+  """
+  @spec create(params :: create_params) :: Ecto.Changeset.t
+  def create(params) do
+    %Meta{}
+    |> cast(params, @new_create_param_keys)
     |> validate_required([:name, :user_id, :source_url, :source_type])
     |> cast_assoc(:user)
     |> unique_constraint(:name)
@@ -59,7 +73,7 @@ defmodule Plenario2.Changesets.MetaChangesets do
   @doc """
   Creates a changeset for updating a Meta's name
   """
-  @spec update_name(meta :: %Meta{}, params :: %{name: String.t}) :: Ecto.Changeset.t
+  @spec update_name(meta :: Meta, params :: %{name: String.t}) :: Ecto.Changeset.t
   def update_name(meta, params) do
     meta
     |> cast(params, [:name])
@@ -70,7 +84,7 @@ defmodule Plenario2.Changesets.MetaChangesets do
   @doc """
   Creates a changeset for updating a Meta's user reference
   """
-  @spec update_user(meta :: %Meta{}, params :: %{user_id: integer}) :: Ecto.Changeset.t
+  @spec update_user(meta :: Meta, params :: %{user_id: integer}) :: Ecto.Changeset.t
   def update_user(meta, params) do
     meta
     |> cast(params, [:user_id])
@@ -81,7 +95,7 @@ defmodule Plenario2.Changesets.MetaChangesets do
   @doc """
   Creates a changeset for updating a Meta's source information
   """
-  @spec update_source_info(meta :: %Meta{}, params :: %{source_url: String.t, source_type: String.t}) :: Ecto.Changeset.t
+  @spec update_source_info(meta :: Meta, params :: %{source_url: String.t, source_type: String.t}) :: Ecto.Changeset.t
   def update_source_info(meta, params) do
     meta
     |> cast(params, [:source_url, :source_type])
@@ -93,7 +107,7 @@ defmodule Plenario2.Changesets.MetaChangesets do
   @doc """
   Creates a changeset for updating a Meta's descriptive fields
   """
-  @spec update_description_info(meta :: %Meta{}, params :: %{description: String.t, attribution: String.t}) :: Ecto.Changeset.t
+  @spec update_description_info(meta :: Meta, params :: %{description: String.t, attribution: String.t}) :: Ecto.Changeset.t
   def update_description_info(meta, params) do
     meta
     |> cast(params, [:description, :attribution])
@@ -109,7 +123,7 @@ defmodule Plenario2.Changesets.MetaChangesets do
     - refresh_starts_on
     - refresh_ends_on
   """
-  @spec update_refresh_info(meta :: %Meta{}, params :: %{}) :: Ecto.Changeset.t
+  @spec update_refresh_info(meta :: Meta, params :: %{}) :: Ecto.Changeset.t
   def update_refresh_info(meta, params) do
     meta
     |> cast(params, [:refresh_rate, :refresh_interval, :refresh_starts_on, :refresh_ends_on])
@@ -132,7 +146,7 @@ defmodule Plenario2.Changesets.MetaChangesets do
   Creates a changeset for updating a Meta's next refresh field. This is intended to
   only be called by automated internal processes, mostly run after an EtlJob.
   """
-  @spec update_next_refresh(meta :: %Meta{}, params :: %{next_refresh: %DateTime{}}) :: Ecto.Changeset.t
+  @spec update_next_refresh(meta :: Meta, params :: %{next_refresh: %DateTime{}}) :: Ecto.Changeset.t
   def update_next_refresh(meta, params) do
     meta
     |> cast(params, [:next_refresh])

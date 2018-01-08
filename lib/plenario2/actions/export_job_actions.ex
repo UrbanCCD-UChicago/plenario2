@@ -48,7 +48,7 @@ defmodule Plenario2.Actions.ExportJobActions do
       include_diffs: include_diffs
     }
 
-    ExportJobChangesets.create(%ExportJob{}, params)
+    ExportJobChangesets.create(params)
     |> Repo.insert()
   end
 
