@@ -9,54 +9,50 @@ defmodule Plenario2.Changesets.VirtualDateFieldChangesets do
   alias Plenario2.Actions.{MetaActions, DataSetFieldActions}
   alias Plenario2.Schemas.VirtualDateField
 
+  @typedoc """
+  Verbose map of params for create
+  """
+  @type create_params :: %{
+    meta_id: integer,
+    year_field: String.t,
+    month_field: String.t,
+    day_field: String.t,
+    hour_field: String.t,
+    minute_field: String.t,
+    second_field: String.t
+  }
+
+  @new_create_param_keys [
+    :year_field,
+    :month_field,
+    :day_field,
+    :hour_field,
+    :minute_field,
+    :second_field,
+    :meta_id
+  ]
+
+  @doc """
+  Creates a blank changeset for creating webforms
+  """
+  @spec new() :: Ecto.Changeset.t
+  def new() do
+    %VirtualDateField{}
+    |> cast(%{}, @new_create_param_keys)
+  end
+
   @doc """
   Creates a changeset for inserting a new VirtualDateField into the database.
-
-  Params include:
-
-    - year_field
-    - month_field
-    - day_field
-    - hour_field
-    - minute_field
-    - second_field
-    - meta_id
   """
-  @spec create(struct :: %VirtualDateField{}, params :: %{}) :: Ecto.Changeset.t
-  def create(struct, params) do
-    struct
-    |> cast(params, [
-         :year_field,
-         :month_field,
-         :day_field,
-         :hour_field,
-         :minute_field,
-         :second_field,
-         :meta_id
-       ])
+  @spec create(params :: create_params) :: Ecto.Changeset.t
+  def create(params) do
+    %VirtualDateField{}
+    |> cast(params, @new_create_param_keys)
     |> validate_required([:year_field, :meta_id])
     |> validate_fields()
     |> cast_assoc(:meta)
     |> set_name()
   end
-
-  # TODO: i hate this. this should be cleaned up or folded in somehow
-  @doc """
-  Creates an empty changeset for creating form in the web templates
-  """
-  @spec blank(struct :: %VirtualDateField{}) :: Ecto.Changeset.t
-  def blank(struct) do
-    struct
-    |> cast(%{}, [
-         :year_field,
-         :month_field,
-         :day_field,
-         :hour_field,
-         :minute_field,
-         :second_field,
-         :meta_id
-       ])
-   end
 
   # Sets the name of the field as a function of the field names passed in
   defp set_name(changeset) do

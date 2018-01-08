@@ -43,7 +43,7 @@ defmodule Plenario2.Actions.VirtualDateFieldActions do
       second_field: second
     }
 
-    VirtualDateFieldChangesets.create(%VirtualDateField{}, params)
+    VirtualDateFieldChangesets.create(params)
     |> Repo.insert()
   end
 

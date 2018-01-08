@@ -3,11 +3,10 @@ defmodule Plenario2Web.VirtualDateFieldController do
 
   alias Plenario2.Actions.{MetaActions, VirtualDateFieldActions}
   alias Plenario2.Changesets.VirtualDateFieldChangesets
-  alias Plenario2.Schemas.VirtualDateField
 
   def get_create(conn, %{"slug" => meta_slug}) do
     meta = MetaActions.get(meta_slug, [with_fields: true])
-    changeset = VirtualDateFieldChangesets.blank(%VirtualDateField{})
+    changeset = VirtualDateFieldChangesets.new()
     action = virtual_date_field_path(conn, :do_create, meta_slug)
 
     integer_fields = Enum.filter(meta.data_set_fields, fn f -> f.type == "integer" end)
