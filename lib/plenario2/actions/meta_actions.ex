@@ -10,7 +10,7 @@ defmodule Plenario2.Actions.MetaActions do
 
   alias Plenario2.Changesets.MetaChangesets
   alias Plenario2.Queries.MetaQueries, as: Q
-  alias Plenario2.Actions.AdminUserNoteActions
+  alias Plenario2.Actions.{AdminUserNoteActions, DataSetActions, MetaActions}
   alias Plenario2.Schemas.{Meta, DataSetConstraint}
   alias Plenario2.Repo
 
@@ -296,13 +296,39 @@ defmodule Plenario2.Actions.MetaActions do
   """
   @spec approve(meta :: %Meta{}, admin :: %User{}) :: {:ok, %Meta{} | :error, Ecto.Changeset.t}
   def approve(meta, %User{is_admin: true} = admin) do
+    # advance the state
+    updated_meta =
+      Meta.approve(meta)
+      |> Repo.update()
+
+    # create a note for the user letting them know it's been approved
     AdminUserNoteActions.create_for_meta(
       "Your data set has been approved",
       admin, meta.user, meta, false
     )
 
-    Meta.approve(meta)
-    |> Repo.update()
+    # create the table for the data set
+    create_res =
+      try do
+        DataSetActions.create_data_set_table!(meta)
+        :ok
+      rescue
+        _ -> :error
+      end
+
+    # check that creation succeeded
+    case create_res do
+      :ok -> :ok
+
+      :error ->
+        AdminUserNoteActions.create_for_meta(
+          "An error occurred setting up the database for your data. We are looking into it.",
+          admin, meta.user, meta)
+        MetaActions.mark_erred(meta, admin, create_res)
+    end
+
+    # return updated meta
+    updated_meta
   end
 
   def approve(_, admin), do: {:error, "#{admin.name} is not an admin"}
