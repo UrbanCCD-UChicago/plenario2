@@ -6,6 +6,7 @@ defmodule Plenario2.Changesets.DataSetFieldChangesets do
 
   import Ecto.Changeset
 
+  alias Plenario2.Actions.MetaActions
   alias Plenario2.Schemas.DataSetField
 
   @typedoc """
@@ -55,6 +56,7 @@ defmodule Plenario2.Changesets.DataSetFieldChangesets do
     |> cast_assoc(:meta)
     |> check_name()
     |> validate_type()
+    |> check_meta_state()
   end
 
   # Converts name values to snake case
@@ -76,6 +78,20 @@ defmodule Plenario2.Changesets.DataSetFieldChangesets do
       changeset
     else
       changeset |> add_error(:type, "Invalid type selection")
+    end
+  end
+
+  # Disallow update after the related Meta is in ready state
+  defp check_meta_state(changeset) do
+    meta =
+      get_field(changeset, :meta_id)
+      |> MetaActions.get()
+
+    if meta.state == "ready" do
+      changeset
+      |> add_error(:name, "Cannot alter any fields after the parent data set has been approved. If you need to update this field, please contact the administrators.")
+    else
+      changeset
     end
   end
 end
