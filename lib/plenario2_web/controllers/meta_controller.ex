@@ -32,15 +32,20 @@ defmodule Plenario2Web.MetaController do
       _   -> user.id == meta.user.id
     end
 
-    editing_disabled =
-      case meta.state == "ready" do
-        true -> "disable"
-        false -> ""
-      end
-
     case meta do
-      nil  -> conn |> put_status(:not_found) |> put_view(ErrorView) |> render("404.html")
-      _    -> render(conn, "detail.html", meta: meta, owner: owner, curr_path: curr_path, editing_disabled: editing_disabled)
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> put_view(ErrorView)
+        |> render("404.html")
+
+      _ ->
+        editing_disabled =
+          case meta.state == "ready" do
+            true -> "disable"
+            false -> ""
+          end
+        render(conn, "detail.html", meta: meta, owner: owner, curr_path: curr_path, editing_disabled: editing_disabled)
     end
   end
 
