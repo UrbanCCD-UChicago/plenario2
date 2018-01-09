@@ -93,6 +93,15 @@ defmodule Plenario2Web.MetaController do
     |> redirect(to: meta_path(conn, :detail, meta.slug))
   end
 
+  def ingest_dataset(conn, %{"slug" => slug}) do
+    meta = MetaActions.get(slug, [with_user: true])
+    spawn(Plenario2Etl.Worker, :load, [%{meta_id: meta.id}])
+
+    conn
+    |> put_flash(:success, "#{meta.name} Ingest started!")
+    |> redirect(to: meta_path(conn, :detail, meta.slug))
+  end
+
   def get_update_name(conn, %{"slug" => slug}) do
     meta = MetaActions.get(slug, [with_user: true])
     changeset = MetaChangesets.update_name(meta, %{})

@@ -59,9 +59,9 @@ defmodule Plenario2Etl.Worker do
     meta = MetaActions.get(state[:meta_id])
     job = EtlJobActions.create!(meta.id)
 
-    Logger.info("Downloading file for #{meta.name}")
-    Logger.info("#{meta.name} source url is #{meta.source_url}")
-    Logger.info("#{meta.name} source type is #{meta.source_type}")
+    Logger.info("[#{inspect self()}] [load] Downloading file for #{meta.name}")
+    Logger.info("[#{inspect self()}] [load] #{meta.name} source url is #{meta.source_url}")
+    Logger.info("[#{inspect self()}] [load] #{meta.name} source type is #{meta.source_type}")
 
     path =
       download!(
@@ -70,7 +70,7 @@ defmodule Plenario2Etl.Worker do
         meta.source_type
       )
 
-    Logger.info("File stored at #{path}")
+    Logger.info("[#{inspect self()}] [load] File stored at #{path}")
 
     case meta.source_type do
       "json" -> load_json(meta, path, job)
@@ -86,10 +86,15 @@ defmodule Plenario2Etl.Worker do
   """
   def load_chunk!(sender, meta, job, chunk) do
     rows = Enum.map(chunk, &Keyword.values/1)
+
+    Logger.info("[#{inspect self()}] [load_chunk] Running contains query")
     existing_rows = contains!(meta, rows)
+
+    Logger.info("[#{inspect self()}] [load_chunk] Running upsert query")
     inserted_rows = upsert!(meta, rows)
     pairs = Enum.zip(existing_rows, inserted_rows)
 
+    Logger.info("[#{inspect self()}] [load_chunk] Will possibly update #{Enum.count(pairs)} rows")
     result =
       Enum.map(pairs, fn {existing_row, inserted_row} ->
         create_diffs(meta, job, existing_row, inserted_row)
@@ -101,6 +106,7 @@ defmodule Plenario2Etl.Worker do
   @doc """
   """
   def load_json(meta, path, job) do
+    Logger.info("[#{inspect self()}] [load_json] Prep loader for json at #{path}")
     load_data(meta, path, job, fn path ->
       File.read!(path)
       |> Poison.decode!()
@@ -110,6 +116,7 @@ defmodule Plenario2Etl.Worker do
   @doc """
   """
   def load_csv(meta, path, job) do
+    Logger.info("[#{inspect self()}] [load_csv] Prep loader for csv at #{path}")
     load_data(meta, path, job, fn path ->
       File.stream!(path)
       |> CSV.decode!(headers: true)
@@ -119,6 +126,7 @@ defmodule Plenario2Etl.Worker do
   @doc """
   """
   def load_tsv(meta, path, job) do
+    Logger.info("[#{inspect self()}] [load_tsv] Prep loader for tsv at #{path}")
     load_data(meta, path, job, fn path ->
       File.stream!(path)
       |> CSV.decode!(headers: true, separator: ?\t)
@@ -139,16 +147,20 @@ defmodule Plenario2Etl.Worker do
 
   """
   def load_shape(meta, path, _job) do
+    Logger.info("[#{inspect self()}] [load_shape] Prep loader for shapefile at #{path}")
     Plenario2Etl.Shapefile.load(path, meta.name)
   end
 
   defp load_data(meta, path, job, decode) do
+    Logger.info("[#{inspect self()}] [load_data] Chunking rows and spawning children")
     decode.(path)
     |> Stream.map(&Enum.to_list/1)
     |> Stream.map(&Enum.sort/1)
     |> Stream.chunk_every(100)
     |> Enum.map(fn chunk ->
-         spawn_link(__MODULE__, :load_chunk!, [self(), meta, job, chunk])
+         pid = spawn_link(__MODULE__, :load_chunk!, [self(), meta, job, chunk])
+        Logger.info("[#{inspect self()}] [load_data] Spawned #{inspect pid}")
+        pid
        end)
     |> Enum.map(fn pid ->
          receive do
@@ -218,6 +230,7 @@ defmodule Plenario2Etl.Worker do
     |> Enum.with_index()
     |> Enum.map(fn {{original_value, updated_value}, index} ->
          if original_value !== updated_value do
+           Logger.info("[#{inspect self()}] [create_diffs] diff: #{inspect original_value} changed to #{inspect updated_value}")
            column = Enum.fetch!(columns, index)
 
            # TODO(heyzoos) inspect will render values in a way that is

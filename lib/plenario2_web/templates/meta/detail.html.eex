@@ -257,6 +257,13 @@ div.row { margin-bottom: 2em; }
   </div>
 </div>
 <hr>
+<%= else %>
+<div class="row">
+  <div class="col-md-12">
+    <%= button "Ingest Dataset", to: meta_path(@conn, :ingest_dataset, @meta.slug), class: "btn btn-primary" %>
+  </div>
+</div>
+<hr>
 <% end %>
 
 <div class="row">

@@ -28,6 +28,6 @@ WHERE
 IN
   (
     <%= for {pk, index} <- Enum.with_index(pks) do %>
-      (<%= Enum.join(pk, ~s{),(}) %>)<%= if index != Enum.count(pks) - 1 do %>,<% end %>
+      ('<%= Enum.join(pk, ~s{'),('}) %>')<%= if index != Enum.count(pks) - 1 do %>,<% end %>
     <% end %>
   )
