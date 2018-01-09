@@ -147,6 +147,11 @@ defmodule MetaActionsTests do
       meta = MetaActions.get(meta.id, [with_user: true])
       {:ok, meta} = MetaActions.approve(meta, user)
       assert meta.state == "ready"
+
+      query = """
+      SELECT * FROM #{MetaActions.get_data_set_table_name(context.meta)}
+      """
+      {:ok, _} = Ecto.Adapters.SQL.query(Repo, query)
     end
 
     test "with regular user", context do

@@ -43,7 +43,7 @@ defmodule Plenario2Etl.WorkerTest do
     {:ok, constraint} = DataSetConstraintActions.create(meta.id, ["pk"])
     {:ok, job} = EtlJobActions.create(meta.id)
     VirtualPointFieldActions.create_from_loc(meta.id, "location")
-    DataSetActions.create_data_set_table(meta)
+    DataSetActions.create_data_set_table!(meta)
 
     %{
       meta_id: meta.id,
