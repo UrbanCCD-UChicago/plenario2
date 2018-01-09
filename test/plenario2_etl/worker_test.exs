@@ -235,12 +235,17 @@ defmodule Plenario2Etl.WorkerTest do
   test :contains!, %{meta: meta} do
     Worker.upsert!(meta, @insert_rows)
     rows = Worker.contains!(meta, @upsert_rows)
-    assert [["crackers", {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", 1]] = rows
+    assert [[
+      data: "crackers", 
+      datetime: {{2017, 1, 1}, {_, 0, 0, 0}}, 
+      location: "(0, 1)", 
+      pk: 1
+    ]] = rows
   end
 
   test :create_diffs, %{meta: meta, job: job} do
-    row1 = ["original", "original", "original"]
-    row2 = ["original", "changed", "changed"]
+    row1 = [colA: "original", colB: "original", colC: "original"]
+    row2 = [colA: "original", colB: "changed", colC: "changed"]
     Worker.create_diffs(meta, job, row1, row2)
     diffs = Repo.all(DataSetDiff)
     assert Enum.count(diffs) === 2

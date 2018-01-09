@@ -190,6 +190,7 @@ defmodule Plenario2Etl.Worker do
     columns = MetaActions.get_column_names(meta) |> Enum.sort()
     constraints = MetaActions.get_first_constraint_field_names(meta)
 
+    Logger.info("[#{inspect self()}] [template_query!] Rendering query")
     sql =
       EEx.eval_file(
         template,
@@ -200,8 +201,14 @@ defmodule Plenario2Etl.Worker do
       )
 
     # TODO(heyzoos) log informative messages for failing queries
-    %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, sql, [])
-    rows
+    Logger.info("[#{inspect self()}] [template_query!] Running query")
+    %Postgrex.Result{
+      columns: columns, 
+      rows: rows
+    } = query!(Plenario2.Repo, sql, [])
+
+    atom_columns = Enum.map(columns, &String.to_atom/1)
+    Plenario2Etl.Rows.to_kwlist(rows, atom_columns)
   end
 
   @doc """
@@ -210,28 +217,22 @@ defmodule Plenario2Etl.Worker do
   more readable.
   """
   def create_diffs(meta, job, original, updated) do
-    columns = MetaActions.get_column_names(meta)
-    constraint = MetaActions.get_first_constraint(meta)
-    constraints = MetaActions.get_first_constraint_field_names(meta)
+    Logger.info("[#{inspect self()}] [create_diffs] Diffing #{inspect original} and #{inspect updated}")
 
-    constraint_indices =
-      Enum.map(constraints, fn constraint ->
-        Enum.find_index(columns, &(&1 == constraint))
-      end)
-
-    constraint_values =
-      Enum.map(constraint_indices, fn index ->
-        Enum.at(original, index)
-      end)
-
-    constraint_map = Enum.zip([constraints, constraint_values]) |> Map.new()
+    constraint_id = MetaActions.get_first_constraint(meta).id()
+    constraint_names = MetaActions.get_first_constraint_field_names(meta)
+    constraint_map = Enum.map(constraint_names, fn constraint_name ->
+      constraint_name_atom = String.to_atom(constraint_name)
+      {constraint_name, original[constraint_name_atom]}
+    end) |> Map.new()
 
     List.zip([original, updated])
-    |> Enum.with_index()
-    |> Enum.map(fn {{original_value, updated_value}, index} ->
+    |> Enum.map(fn {original_value, updated_value} ->
          if original_value !== updated_value do
-           Logger.info("[#{inspect self()}] [create_diffs] diff: #{inspect original_value} changed to #{inspect updated_value}")
-           column = Enum.fetch!(columns, index)
+           {column, original_value} = original_value
+           {_column, updated_value} = updated_value
+
+           Logger.info("[#{inspect self()}] [create_diffs] #{column}: #{inspect original_value} changed to #{inspect updated_value}")
 
            # TODO(heyzoos) inspect will render values in a way that is
            # is probably unusable to end users. Need a way to guess the
@@ -240,9 +241,9 @@ defmodule Plenario2Etl.Worker do
            {:ok, diff} =
              DataSetDiffActions.create(
                meta.id(),
-               constraint.id(),
+               constraint_id,
                job.id(),
-               column,
+               Atom.to_string(column),
                inspect(original_value),
                inspect(updated_value),
                DateTime.utc_now(),
