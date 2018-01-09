@@ -1,0 +1,11 @@
+CREATE OR REPLACE FUNCTION
+  parse_pt_long_lat_<%= srid %>(long FLOAT, lat FLOAT)
+RETURNS GEOMETRY(POINT, <%= srid %>) AS $$
+
+  SELECT ST_PointFromText(
+    'POINT(' || long || ' ' || lat || ')',
+    <%= srid %>
+  )
+
+$$
+LANGUAGE 'sql' IMMUTABLE;

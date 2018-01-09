@@ -1,0 +1,20 @@
+CREATE FUNCTION
+  <%= function_name %>()
+RETURNS TRIGGER AS $$
+
+  BEGIN
+    <%= for f <- fields do %>
+    new.<%= f.name %> := parse_timestamp_<%= timezone %>(
+      new.<%= f.year_field %>,
+      <%= if f.month_field do %>new.<%= f.month_field %><% else %>NULL<% end %>,
+      <%= if f.day_field do %>new.<%= f.day_field %><% else %>NULL<% end %>,
+      <%= if f.hour_field do %>new.<%= f.hour_field %><% else %>NULL<% end %>,
+      <%= if f.minute_field do %>new.<%= f.minute_field %><% else %>NULL<% end %>,
+      <%= if f.second_field do %>new.<%= f.second_field %><% else %>NULL<% end %>
+    );
+    <% end %>
+    return new;
+  END
+
+$$
+LANGUAGE 'plpgsql';
