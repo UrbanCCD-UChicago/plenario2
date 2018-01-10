@@ -152,7 +152,13 @@ div.row { margin-bottom: 2em; }
     <td><%= psql_to_human(f.type) %></td>
     <td><%= f.opts %></td>
     <%= if @owner do %>
-      <td><%= link "Edit", to: data_set_field_path(@conn, :edit, @meta.slug, f.id), method: :get %></td>
+      <td>
+        <%= if @editing_disabled != "disable" do %>
+          <%= link "Edit", to: data_set_field_path(@conn, :edit, @meta.slug, f.id), method: :get %>
+        <% else %>
+          &nbsp;
+        <% end %>
+      </td>
     <% end %>
   </tr>
   <% end %>
@@ -160,7 +166,7 @@ div.row { margin-bottom: 2em; }
 
 <div class="row">
   <div class="col-md-12">
-    <%= link raw("<button class='btn btn-primary'>Add a New Field</button>"), to: data_set_field_path(@conn, :new, @meta.slug) %>
+    <%= button "Add a New Field", to: data_set_field_path(@conn, :new, @meta.slug), method: :get, class: "btn btn-primary", disabled: @editing_disabled %>
   </div>
 </div>
 
@@ -187,10 +193,10 @@ div.row { margin-bottom: 2em; }
 
 <div class="row">
   <div class="col-md-6">
-    <%= button "Add a New Location Field From a Single Text Field", to: virtual_point_field_path(@conn, :get_create_loc, @meta.slug), method: :get, class: "btn btn-primary" %>
+    <%= button "Add a New Location Field From a Single Text Field", to: virtual_point_field_path(@conn, :get_create_loc, @meta.slug), method: :get, class: "btn btn-primary", disabled: @editing_disabled %>
   </div>
   <div class="col-md-6">
-    <%= button "Add a New Location Field from a Long/Lat Field Combo", to: virtual_point_field_path(@conn, :get_create_longlat, @meta.slug), method: :get, class: "btn btn-primary pull-right" %>
+    <%= button "Add a New Location Field from a Long/Lat Field Combo", to: virtual_point_field_path(@conn, :get_create_longlat, @meta.slug), method: :get, class: "btn btn-primary pull-right", disabled: @editing_disabled %>
   </div>
 </div>
 
@@ -223,7 +229,7 @@ div.row { margin-bottom: 2em; }
 
 <div class="row">
   <div class="col-md-12">
-    <%= button "Add a New Date Field", to: virtual_date_field_path(@conn, :get_create, @meta.slug), method: :get, class: "btn btn-primary" %>
+    <%= button "Add a New Date Field", to: virtual_date_field_path(@conn, :get_create, @meta.slug), method: :get, class: "btn btn-primary", disabled: @editing_disabled %>
   </div>
 </div>
 
@@ -244,7 +250,7 @@ div.row { margin-bottom: 2em; }
 
 <div class="row">
   <div class="col-md-12">
-    <%= button "Add a New Constraint", to: data_set_constraint_path(@conn, :get_create, @meta.slug), method: :get, class: "btn btn-primary" %>
+    <%= button "Add a New Constraint", to: data_set_constraint_path(@conn, :get_create, @meta.slug), method: :get, class: "btn btn-primary", disabled: @editing_disabled %>
   </div>
 </div>
 

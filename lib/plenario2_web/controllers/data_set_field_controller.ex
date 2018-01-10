@@ -44,7 +44,15 @@ defmodule Plenario2Web.DataSetFieldController do
   def edit(conn, %{"slug"=> slug, "id" => id}) do
     field = Repo.get!(DataSetField, id)
     changeset = DataSetFieldChangesets.update(field)
-    render(conn, "edit.html", field: field, changeset: changeset, slug: slug, field_type_options: @field_type_options)
+
+    meta = MetaActions.get(field.meta_id)
+    disabled =
+      case meta.state == "ready" do
+        true -> "disabled"
+        false -> ""
+      end
+
+    render(conn, "edit.html", field: field, changeset: changeset, slug: slug, field_type_options: @field_type_options, disabled: disabled)
   end
 
   def update(conn, %{"slug" => slug, "id" => id, "data_set_field" => field_params}) do
