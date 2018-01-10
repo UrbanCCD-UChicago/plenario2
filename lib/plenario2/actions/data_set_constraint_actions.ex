@@ -60,6 +60,15 @@ defmodule Plenario2.Actions.DataSetConstraintActions do
   end
 
   @doc """
+  Updates a DataSetConstraint
+  """
+  @spec update(constraint :: DataSetConstraint, parmas :: map) :: DataSetConstraint
+  def update(constraint, params) do
+    DataSetConstraintChangesets.update(constraint, params)
+    |> Repo.update()
+  end
+
+  @doc """
   Deletes a given constraint.
   """
   @spec delete(constraint :: %DataSetConstraint{}) :: {:ok, %DataSetConstraint{} | :error, Ecto.Changeset.t}

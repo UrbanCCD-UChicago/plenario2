@@ -41,6 +41,20 @@ defmodule Plenario2.Changesets.DataSetConstraintChangesets do
     |> set_name()
   end
 
+  @doc """
+  Updates a given unique constraint
+  """
+  @spec update(constraint :: DataSetConstraint, params :: create_params) :: Ecto.Changeset.t
+  def update(constraint, params \\ %{}) do
+    constraint
+    |> cast(params, @new_create_param_keys)
+    |> validate_required(@new_create_param_keys)
+    |> validate_field_names()
+    |> cast_assoc(:meta)
+    |> set_name()
+    |> check_meta_state()
+  end
+
   # Sets the name of the constraint by prefixing `unique_constraint` and then underscore joining the field names.
   # For example, if we have 2 fields to create a constraint as ("name", "location"), the result of this
   # function would be "unique_constraint_name_location"
@@ -71,6 +85,20 @@ defmodule Plenario2.Changesets.DataSetConstraintChangesets do
       changeset
     else
       changeset |> add_error(:field_names, "Field names must exist as registered fields of the data set")
+    end
+  end
+
+  # Disallow update after the related Meta is in ready state
+  defp check_meta_state(changeset) do
+    meta =
+      get_field(changeset, :meta_id)
+      |> MetaActions.get()
+
+    if meta.state == "ready" do
+      changeset
+      |> add_error(:name, "Cannot alter any fields after the parent data set has been approved. If you need to update this field, please contact the administrators.")
+    else
+      changeset
     end
   end
 end
