@@ -96,7 +96,7 @@ defmodule Plenario2.Changesets.DataSetConstraintChangesets do
 
     if meta.state == "ready" do
       changeset
-      |> add_error(:name, "Cannot alter any fields after the parent data set has been approved. If you need to update this field, please contact the administrators.")
+      |> add_error(:field_names, "Cannot alter any fields after the parent data set has been approved. If you need to update this field, please contact the administrators.")
     else
       changeset
     end

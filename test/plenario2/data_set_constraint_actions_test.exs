@@ -70,7 +70,7 @@ defmodule DataSetConstraintActionsTest do
       assert meta.state == "ready"
 
       {:error, error} = DataSetConstraintActions.update(cons, %{field_names: ["date"]})
-      assert error.errors == [name: {"Cannot alter any fields after the parent data set has been approved. If you need to update this field, please contact the administrators.", []}]
+      assert error.errors == [field_names: {"Cannot alter any fields after the parent data set has been approved. If you need to update this field, please contact the administrators.", []}]
     end
   end
 end

@@ -59,6 +59,14 @@ defmodule Plenario2.Actions.DataSetConstraintActions do
     )
   end
 
+  def get(id) do
+    Repo.one(
+      from c in DataSetConstraint,
+      where: c.id == ^id,
+      preload: [meta: :data_set_constraints]
+    )
+  end
+
   @doc """
   Updates a DataSetConstraint
   """
