@@ -193,7 +193,6 @@ defmodule Plenario2Etl.Worker do
     columns = MetaActions.get_column_names(meta) |> Enum.sort()
     constraints = MetaActions.get_first_constraint_field_names(meta)
 
-    Logger.info("[#{inspect self()}] [template_query!] Rendering query")
     sql =
       EEx.eval_file(
         template,
@@ -204,7 +203,6 @@ defmodule Plenario2Etl.Worker do
       )
 
     # TODO(heyzoos) log informative messages for failing queries
-    Logger.info("[#{inspect self()}] [template_query!] Running query")
     %Postgrex.Result{
       columns: columns, 
       rows: rows
@@ -220,8 +218,6 @@ defmodule Plenario2Etl.Worker do
   more readable.
   """
   def create_diffs(meta, job, original, updated) do
-    Logger.info("[#{inspect self()}] [create_diffs] Diffing #{inspect original} and #{inspect updated}")
-
     constraint_id = MetaActions.get_first_constraint(meta).id()
     constraint_names = MetaActions.get_first_constraint_field_names(meta)
     constraint_map = Enum.map(constraint_names, fn constraint_name ->

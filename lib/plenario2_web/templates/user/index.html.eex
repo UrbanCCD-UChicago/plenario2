@@ -7,7 +7,7 @@
           <%= link raw("<button class='btn btn-primary'>Create a New Data Set</button>"), to: meta_path(@conn, :get_create) %>
         </div>
         <div class="col-md-6">
-          <%= link raw("<button class='btn btn-primary'>View all My Data Sets</button>"), to: meta_path(@conn, :get_create) %>
+          <%= link raw("<button class='btn btn-primary'>View all My Data Sets</button>"), to: meta_path(@conn, :list) %>
         </div>
       </div>
 

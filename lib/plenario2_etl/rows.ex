@@ -54,7 +54,7 @@ defmodule Plenario2Etl.Rows do
     valid_keys = Enum.map(rowset1, &to_key(&1, constraints))
     valid_rows = Enum.filter(rowset2, &(to_key(&1, constraints) in valid_keys))
 
-    Enum.zip([Enum.sort(rowset1), Enum.sort(rowset2)])
+    Enum.zip([Enum.sort(rowset1), Enum.sort(valid_rows)])
   end
 
   @doc """

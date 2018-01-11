@@ -8,6 +8,13 @@ defmodule Plenario2Web.MetaController do
   alias Plenario2.Schemas.Meta
   alias Plenario2Web.ErrorView
 
+  @meta_source_type_options [
+    "CSV": "csv", 
+    "TSV": "tsv",
+    "JSON": "json",
+    "Shapefile": "shp"
+  ] 
+
   plug :load_and_authorize_resource,
     model: Meta,
     id_name: "slug",
@@ -46,7 +53,11 @@ defmodule Plenario2Web.MetaController do
     changeset = MetaChangesets.new()
     action = meta_path(conn, :do_create)
 
-    render(conn, "create.html", changeset: changeset, action: action)
+    render(conn, "create.html", 
+      changeset: changeset, 
+      action: action,
+      source_type_options: @meta_source_type_options
+    )
   end
 
   def do_create(conn, %{"meta" => %{"name" => name, "source_url" => source_url}} = params) do
