@@ -104,7 +104,7 @@ defmodule Plenario2Web.MetaController do
     conn
     |> put_status(:bad_request)
     |> put_flash(:error, "Please review and fix errors below.")
-    |> render("create.html", changeset: changeset, action: action)
+    |> render("create.html", changeset: changeset, action: action, source_type_options: @meta_source_type_options)
   end
 
   def submit_for_approval(conn, %{"slug" => slug}) do
