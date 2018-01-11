@@ -88,6 +88,8 @@ defmodule Plenario2Web.MetaController do
       fn (key) -> {String.to_atom(key), Map.get(params["meta"], key, nil)} end)
     |> Enum.filter(fn ({k, v}) -> if v do {k, v} end end)
 
+    Logger.info "Creating: #{inspect(params)}"
+
     MetaActions.create(name, user.id, source_url, details)
     |> create_reply(conn)
   end
@@ -119,7 +121,7 @@ defmodule Plenario2Web.MetaController do
   def ingest_dataset(conn, %{"slug" => slug}) do
     meta = MetaActions.get(slug, [with_user: true])
     spawn(Plenario2Etl.Worker, :load, [%{meta_id: meta.id}])
-
+    Logger.info "Injesting #{meta.id}"
     conn
     |> put_flash(:success, "#{meta.name} Ingest started!")
     |> redirect(to: meta_path(conn, :detail, meta.slug))
@@ -135,7 +137,7 @@ defmodule Plenario2Web.MetaController do
 
   def do_update_name(conn, %{"slug" => slug, "meta" => %{"name" => name}}) do
     meta = MetaActions.get(slug, [with_user: true])
-
+    Logger.info "Updating name: #{name}"
     MetaActions.update_name(meta, name)
     |> update_name_reply(conn, meta)
   end
@@ -164,7 +166,7 @@ defmodule Plenario2Web.MetaController do
 
   def do_update_description(conn, %{"slug" => slug, "meta" => %{"description" => description, "attribution" => attribution}}) do
     meta = MetaActions.get(slug, [with_user: true])
-
+    Logger.info "Updating description: #{description}, attribution: #{attribution}"
     MetaActions.update_description_info(meta, [description: description, attribution: attribution])
     |> update_description_reply(conn, meta)
   end
@@ -193,7 +195,7 @@ defmodule Plenario2Web.MetaController do
 
   def do_update_source_info(conn, %{"slug" => slug, "meta" => %{"source_url" => source_url, "source_type" => source_type}}) do
     meta = MetaActions.get(slug, [with_user: true])
-
+    Logger.info "Updating source url: #{source_url}, source_type: #{source_type}"
     MetaActions.update_source_info(meta, [source_url: source_url, source_type: source_type])
     |> update_source_info_reply(conn, meta)
   end
@@ -223,7 +225,7 @@ defmodule Plenario2Web.MetaController do
 
   def do_update_refresh_info(conn, %{"slug" => slug, "meta" => %{"refresh_rate" => refresh_rate, "refresh_interval" => refresh_interval, "refresh_starts_on" => refresh_starts_on, "refresh_ends_on" => refresh_ends_on}}) do
     meta = MetaActions.get(slug, [with_user: true])
-
+    Logger.info "Updating refresh rate: #{refresh_rate}, refresh interval: #{refresh_interval}, refresh start: #{refresh_starts_on}, refresh end: #{refresh_ends_on}"
     MetaActions.update_refresh_info(meta, [refresh_rate: refresh_rate, refresh_interval: refresh_interval, refresh_starts_on: refresh_starts_on, refresh_ends_on: refresh_ends_on])
     |> update_refresh_info_reply(conn, meta)
   end
