@@ -11,7 +11,13 @@ defmodule Plenario2Web.DataSetConstraintController do
 
     field_opts = for f <- meta.data_set_fields, do: [{:key, "#{f.name} (#{f.type})"}, {:value, f.name}]
 
-    render(conn, "create.html", meta: meta, changeset: changeset, action: action, field_opts: field_opts)
+    disabled =
+      case meta.state == "ready" do
+        true -> "disabled"
+        false -> false
+      end
+
+    render(conn, "create.html", meta: meta, changeset: changeset, action: action, field_opts: field_opts, disabled: disabled)
   end
 
   def do_create(conn, %{"slug" => meta_slug, "data_set_constraint" => params}) do
@@ -31,9 +37,15 @@ defmodule Plenario2Web.DataSetConstraintController do
 
     field_opts = for f <- meta.data_set_fields, do: [{String.to_atom("#{f.name} (#{f.type})"), f.name}]
 
+    disabled =
+      case meta.state == "ready" do
+        true -> "disabled"
+        false -> false
+      end
+
     conn
     |> put_flash(:error, "Please review and fix errors below")
-    |> render("create.html", meta: meta, changeset: changeset, action: action, field_opts: field_opts)
+    |> render("create.html", meta: meta, changeset: changeset, action: action, field_opts: field_opts, disabled: disabled)
   end
 
   def edit(conn, %{"slug" => meta_slug, "id" => cons_id}) do
