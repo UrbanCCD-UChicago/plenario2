@@ -93,10 +93,9 @@ defmodule Plenario2Etl.Worker do
     Logger.info("[#{inspect self()}] [load_chunk] Running upsert query")
     inserted_rows = upsert!(meta, rows)
 
-    # these need to be ordered
-    # these should only contain the rows that will conflict
-    #   based on primary key values
-    pairs = Enum.zip(existing_rows, inserted_rows)
+    constraints = MetaActions.get_first_constraint_field_names(meta)
+    constraint_atoms = for c <- constraints, do: String.to_atom(c)
+    pairs = Plenario2Etl.Rows.pair_rows(existing_rows, inserted_rows, constraint_atoms)
 
     Logger.info("[#{inspect self()}] [load_chunk] Will possibly update #{Enum.count(pairs)} rows")
     result =
