@@ -92,6 +92,10 @@ defmodule Plenario2Etl.Worker do
 
     Logger.info("[#{inspect self()}] [load_chunk] Running upsert query")
     inserted_rows = upsert!(meta, rows)
+
+    # these need to be ordered
+    # these should only contain the rows that will conflict
+    #   based on primary key values
     pairs = Enum.zip(existing_rows, inserted_rows)
 
     Logger.info("[#{inspect self()}] [load_chunk] Will possibly update #{Enum.count(pairs)} rows")
