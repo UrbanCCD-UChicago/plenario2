@@ -65,6 +65,15 @@ defmodule Plenario2.Actions.VirtualDateFieldActions do
   end
 
   @doc """
+  Updates a VirtualDateField
+  """
+  @spec update(field :: VirtualDateField, params :: map) :: VirtualDateField
+  def update(field, params \\ %{}) do
+    VirtualDateFieldChangesets.update(field, params)
+    |> Repo.update()
+  end
+
+  @doc """
   Deletes a given VirtualDateField
   """
   @spec delete(field :: %VirtualDateField{}) :: {:ok, %VirtualDateField{} | :error, Ecto.Changeset.t}
