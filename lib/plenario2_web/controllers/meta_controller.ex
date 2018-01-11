@@ -43,7 +43,7 @@ defmodule Plenario2Web.MetaController do
         editing_disabled =
           case meta.state == "ready" do
             true -> "disable"
-            false -> ""
+            false -> false
           end
         render(conn, "detail.html", meta: meta, owner: owner, curr_path: curr_path, editing_disabled: editing_disabled)
     end

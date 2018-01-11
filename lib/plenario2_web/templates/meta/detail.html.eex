@@ -1,7 +1,3 @@
-<!-- Template Variables -->
-<!-- ================== -->
-<!-- meta          Meta -->
-
 <style>
 div>div:first-child { font-weight: bold; }
 div.row { margin-bottom: 2em; }
@@ -153,7 +149,7 @@ div.row { margin-bottom: 2em; }
     <td><%= f.opts %></td>
     <%= if @owner do %>
       <td>
-        <%= if @editing_disabled != "disable" do %>
+        <%= if !@editing_disabled do %>
           <%= link "Edit", to: data_set_field_path(@conn, :edit, @meta.slug, f.id), method: :get %>
         <% else %>
           &nbsp;
@@ -164,11 +160,13 @@ div.row { margin-bottom: 2em; }
   <% end %>
 </table>
 
+<%= if !@editing_disabled do %>
 <div class="row">
   <div class="col-md-12">
-    <%= button "Add a New Field", to: data_set_field_path(@conn, :new, @meta.slug), method: :get, class: "btn btn-primary", disabled: @editing_disabled %>
+    <%= button "Add a New Field", to: data_set_field_path(@conn, :new, @meta.slug), method: :get, class: "btn btn-primary" %>
   </div>
 </div>
+<% end %>
 
 <hr>
 
@@ -191,14 +189,16 @@ div.row { margin-bottom: 2em; }
   <% end %>
 </table>
 
+<%= if !@editing_disabled do %>
 <div class="row">
   <div class="col-md-6">
-    <%= button "Add a New Location Field From a Single Text Field", to: virtual_point_field_path(@conn, :get_create_loc, @meta.slug), method: :get, class: "btn btn-primary", disabled: @editing_disabled %>
+    <%= button "Add a New Location Field From a Single Text Field", to: virtual_point_field_path(@conn, :get_create_loc, @meta.slug), method: :get, class: "btn btn-primary" %>
   </div>
   <div class="col-md-6">
-    <%= button "Add a New Location Field from a Long/Lat Field Combo", to: virtual_point_field_path(@conn, :get_create_longlat, @meta.slug), method: :get, class: "btn btn-primary pull-right", disabled: @editing_disabled %>
+    <%= button "Add a New Location Field from a Long/Lat Field Combo", to: virtual_point_field_path(@conn, :get_create_longlat, @meta.slug), method: :get, class: "btn btn-primary pull-right" %>
   </div>
 </div>
+<% end %>
 
 <hr>
 
@@ -213,6 +213,9 @@ div.row { margin-bottom: 2em; }
     <th>Hour Field Ref</th>
     <th>MInute Field Ref</th>
     <th>Second Field Ref</th>
+    <%= if @owner and !@editing_disabled do %>
+    <th>&nbsp;</th>
+    <% end %>
   </tr>
   <%= for f <- @meta.virtual_date_fields do %>
   <tr>
@@ -223,15 +226,26 @@ div.row { margin-bottom: 2em; }
     <td><%= f.hour_field || "-" %></td>
     <td><%= f.minute_field || "-" %></td>
     <td><%= f.second_field || "-" %></td>
+    <%= if @owner do %>
+      <td>
+        <%= if !@editing_disabled do %>
+          <%= link "Edit", to: virtual_date_field_path(@conn, :edit, @meta.slug, f.id), method: :get %>
+        <% else %>
+          &nbsp;
+        <% end %>
+      </td>
+    <% end %>
   </tr>
   <% end %>
 </table>
 
+<%= if !@editing_disabled do %>
 <div class="row">
   <div class="col-md-12">
-    <%= button "Add a New Date Field", to: virtual_date_field_path(@conn, :get_create, @meta.slug), method: :get, class: "btn btn-primary", disabled: @editing_disabled %>
+    <%= button "Add a New Date Field", to: virtual_date_field_path(@conn, :get_create, @meta.slug), method: :get, class: "btn btn-primary" %>
   </div>
 </div>
+<% end %>
 
 <hr>
 
@@ -240,19 +254,31 @@ div.row { margin-bottom: 2em; }
 <table class="table table-striped">
   <tr>
     <th>Unique Field Group</th>
+    <%= if @owner do %><th></th><% end %>
   </tr>
   <%= for c <- @meta.data_set_constraints do %>
   <tr>
-    <td><%= c.field_names %></td>
+    <td><%= Enum.join(c.field_names, ", ") %></td>
+    <%= if @owner do %>
+      <td>
+        <%= if !@editing_disabled do %>
+          <%= link "Edit", to: data_set_constraint_path(@conn, :edit, @meta.slug, c.id), method: :get %>
+        <% else %>
+          &nbsp;
+        <% end %>
+      </td>
+    <% end %>
   </tr>
   <% end %>
 </table>
 
+<%= if !@editing_disabled do %>
 <div class="row">
   <div class="col-md-12">
-    <%= button "Add a New Constraint", to: data_set_constraint_path(@conn, :get_create, @meta.slug), method: :get, class: "btn btn-primary", disabled: @editing_disabled %>
+    <%= button "Add a New Constraint", to: data_set_constraint_path(@conn, :get_create, @meta.slug), method: :get, class: "btn btn-primary" %>
   </div>
 </div>
+<% end %>
 
 <hr>
 
