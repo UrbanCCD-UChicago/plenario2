@@ -81,6 +81,7 @@ defmodule Plenario2.Actions.DataSetActions do
 
       {:error, error} ->
         Logger.error("error creating table: #{error.postgres.message}", table_name: table_name)
+        Logger.error(sql)
         raise error
     end
   end
@@ -100,6 +101,7 @@ defmodule Plenario2.Actions.DataSetActions do
 
       {:error, error} ->
         Logger.error("error dropping table: #{error.postgres.message}", table_name: table_name)
+        Logger.error(sql)
         raise error
     end
   end
@@ -119,6 +121,7 @@ defmodule Plenario2.Actions.DataSetActions do
 
       {:error, error} ->
         Logger.error("error adding constraint: #{error.postgres.message}", table_name: table_name, constraint_name: constraint_name)
+        Logger.error(sql)
         raise error
     end
   end
@@ -138,6 +141,7 @@ defmodule Plenario2.Actions.DataSetActions do
 
       {:error, error} ->
         Logger.error("error creating parse timestamp function `#{timezone}`: #{error.postgres.message}")
+        Logger.error(sql)
         raise error
     end
   end
@@ -157,6 +161,7 @@ defmodule Plenario2.Actions.DataSetActions do
 
       {:error, error} ->
         Logger.error("error creating parse timestamp function trigger `#{timezone}`: #{error.postgres.message}")
+        Logger.error(sql)
         raise error
     end
   end
@@ -176,6 +181,7 @@ defmodule Plenario2.Actions.DataSetActions do
 
       {:error, error} ->
         Logger.error("error creating parse long/lat function `#{srid}`: #{error.postgres.message}")
+        Logger.error(sql)
         raise error
     end
   end
@@ -195,6 +201,7 @@ defmodule Plenario2.Actions.DataSetActions do
 
       {:error, error} ->
         Logger.error("error creating parse location function `#{srid}`: #{error.postgres.message}")
+        Logger.error(sql)
         raise error
     end
   end
@@ -214,6 +221,7 @@ defmodule Plenario2.Actions.DataSetActions do
 
       {:error, error} ->
         Logger.error("error creating parse long/lat function trigger `#{srid}`: #{error.postgres.message}")
+        Logger.error(sql)
         raise error
     end
   end
@@ -233,6 +241,7 @@ defmodule Plenario2.Actions.DataSetActions do
 
       {:error, error} ->
         Logger.error("error creating trigger `#{trigger_name}`: #{error.postgres.message}")
+        Logger.error(sql)
         raise error
     end
   end
