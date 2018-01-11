@@ -38,9 +38,21 @@ defmodule Plenario2Web.MetaController do
       nil -> false
       _   -> user.id == meta.user.id
     end
+
     case meta do
-      nil  -> conn |> put_status(:not_found) |> put_view(ErrorView) |> render("404.html")
-      _    -> render(conn, "detail.html", meta: meta, owner: owner, curr_path: curr_path)
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> put_view(ErrorView)
+        |> render("404.html")
+
+      _ ->
+        editing_disabled =
+          case meta.state == "ready" do
+            true -> "disable"
+            false -> false
+          end
+        render(conn, "detail.html", meta: meta, owner: owner, curr_path: curr_path, editing_disabled: editing_disabled)
     end
   end
 
@@ -204,8 +216,9 @@ defmodule Plenario2Web.MetaController do
     meta = MetaActions.get(slug, [with_user: true])
     changeset = MetaChangesets.update_refresh_info(meta, %{})
     action = meta_path(conn, :do_update_refresh_info, slug)
+    rr_choices = Meta.get_refresh_rate_choices()
 
-    render(conn, "update_refresh_info.html", changeset: changeset, action: action)
+    render(conn, "update_refresh_info.html", changeset: changeset, action: action, rr_choices: rr_choices)
   end
 
   def do_update_refresh_info(conn, %{"slug" => slug, "meta" => %{"refresh_rate" => refresh_rate, "refresh_interval" => refresh_interval, "refresh_starts_on" => refresh_starts_on, "refresh_ends_on" => refresh_ends_on}}) do

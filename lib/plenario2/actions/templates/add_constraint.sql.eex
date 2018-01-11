@@ -1,0 +1,8 @@
+ALTER TABLE <%= table_name %>
+  ADD CONSTRAINT <%= constraint_name %> UNIQUE
+  <% len_fields = length(field_names) %>
+  (
+    <%= for {f, i} <- Enum.with_index(field_names) do %>
+      <%= f %><%= if i+1 < len_fields do %>,<% end %>
+    <% end %>
+  );

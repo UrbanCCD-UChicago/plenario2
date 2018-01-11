@@ -54,6 +54,20 @@ defmodule Plenario2.Changesets.VirtualDateFieldChangesets do
     |> set_name()
   end
 
+  @doc """
+  Updates a VirtualDateField
+  """
+  @spec update(field :: VirtualDateField, params :: create_params) :: Ecto.Changeset.t
+  def update(field, params) do
+    field
+    |> cast(params, @new_create_param_keys)
+    |> validate_required([:year_field, :meta_id])
+    |> validate_fields()
+    |> cast_assoc(:meta)
+    |> set_name()
+    |> check_meta_state()
+  end
+
   # Sets the name of the field as a function of the field names passed in
   defp set_name(changeset) do
     yr = get_field(changeset, :year_field)
@@ -107,6 +121,20 @@ defmodule Plenario2.Changesets.VirtualDateFieldChangesets do
       changeset
     else
       changeset |> add_error(:fields, "Field names must exist as registered fields of the data set")
+    end
+  end
+
+  # Disallow update after the related Meta is in ready state
+  defp check_meta_state(changeset) do
+    meta =
+      get_field(changeset, :meta_id)
+      |> MetaActions.get()
+
+    if meta.state == "ready" do
+      changeset
+      |> add_error(:name, "Cannot alter any fields after the parent data set has been approved. If you need to update this field, please contact the administrators.")
+    else
+      changeset
     end
   end
 end

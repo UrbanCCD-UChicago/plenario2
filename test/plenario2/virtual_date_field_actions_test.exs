@@ -1,7 +1,9 @@
 defmodule VirtualDateFieldActionsTests do
   use Plenario2.DataCase, async: true
 
-  alias Plenario2.Actions.{DataSetFieldActions, VirtualDateFieldActions}
+  alias Plenario2.Actions.{DataSetFieldActions, VirtualDateFieldActions, MetaActions}
+
+  alias Plenario2Auth.UserActions
 
   setup context do
     DataSetFieldActions.create(context.meta.id, "year", "integer")
@@ -49,5 +51,39 @@ defmodule VirtualDateFieldActionsTests do
 
     VirtualDateFieldActions.delete(field)
     assert length(VirtualDateFieldActions.list_for_meta(context.meta)) == 0
+  end
+
+  describe "update a virtual date field" do
+    test "when the meta hasn't been approved yet", context do
+      {:ok, field} = VirtualDateFieldActions.create(context.meta.id, "year")
+
+      {:ok, field} = VirtualDateFieldActions.update(field, %{year_field: "month"})
+      assert field.year_field == "month"
+      assert field.name == "_meta_date_month"
+    end
+
+    test "with bad data", context do
+      {:ok, field} = VirtualDateFieldActions.create(context.meta.id, "year")
+      {:error, _} = VirtualDateFieldActions.update(field, %{month_field: "nope"})
+    end
+
+    test "when the meta has already been approved", context do
+      {:ok, field} = VirtualDateFieldActions.create(context.meta.id, "year")
+
+      UserActions.promote_to_admin(context.user)
+      user = UserActions.get_from_id(context.user.id)
+      meta = MetaActions.get(context.meta.id, [with_user: true])
+
+      MetaActions.submit_for_approval(meta)
+      meta = MetaActions.get(meta.id, [with_user: true])
+      MetaActions.approve(meta, user)
+      meta = MetaActions.get(meta.id, [with_user: true])
+      assert meta.state == "ready"
+
+      {:error, error} = VirtualDateFieldActions.update(field, %{year_field: "nope"})
+      assert error.errors == [
+        name: {"Cannot alter any fields after the parent data set has been approved. If you need to update this field, please contact the administrators.", []},
+        fields: {"Field names must exist as registered fields of the data set", []}]
+    end
   end
 end

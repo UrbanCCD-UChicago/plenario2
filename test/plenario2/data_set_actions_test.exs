@@ -29,7 +29,7 @@ defmodule DataSetActionsTest do
   end
 
   test "create a data set table", context do
-    DataSetActions.create_data_set_table(context.meta)
+    DataSetActions.create_data_set_table!(context.meta)
 
     insert = """
     INSERT INTO #{context.table_name}
@@ -46,7 +46,7 @@ defmodule DataSetActionsTest do
   end
 
   test "drop a data set table", context do
-    DataSetActions.create_data_set_table(context.meta)
-    DataSetActions.drop_data_set_table(context.meta)
+    DataSetActions.create_data_set_table!(context.meta)
+    DataSetActions.drop_data_set_table!(context.meta)
   end
 end
