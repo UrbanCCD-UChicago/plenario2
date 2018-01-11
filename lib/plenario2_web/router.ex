@@ -72,6 +72,8 @@ defmodule Plenario2Web.Router do
 
     get "/data-sets/:slug/virtual-dates/create", VirtualDateFieldController, :get_create
     post "/data-sets/:slug/virtual-dates/create", VirtualDateFieldController, :do_create
+    get "/data-sets/:slug/virtual-dates/:id/edit", VirtualDateFieldController, :edit
+    put "/data-sets/:slug/virtual-dates/:id/edit", VirtualDateFieldController, :update
 
     get "/data-sets/:slug/constraints/create", DataSetConstraintController, :get_create
     post "/data-sets/:slug/constraints/create", DataSetConstraintController, :do_create

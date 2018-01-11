@@ -65,6 +65,17 @@ defmodule Plenario2.Actions.VirtualDateFieldActions do
   end
 
   @doc """
+  Gets a VirtualDateField by id
+  """
+  @spec get(id :: id) :: VirtualDateField | nil
+  def get(id) do
+    Repo.one(
+      from f in VirtualDateField,
+      where: f.id == ^id
+    )
+  end
+
+  @doc """
   Updates a VirtualDateField
   """
   @spec update(field :: VirtualDateField, params :: map) :: VirtualDateField

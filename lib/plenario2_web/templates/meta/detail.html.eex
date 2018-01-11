@@ -213,6 +213,9 @@ div.row { margin-bottom: 2em; }
     <th>Hour Field Ref</th>
     <th>MInute Field Ref</th>
     <th>Second Field Ref</th>
+    <%= if @owner and !@editing_disabled do %>
+    <th>&nbsp;</th>
+    <% end %>
   </tr>
   <%= for f <- @meta.virtual_date_fields do %>
   <tr>
@@ -223,6 +226,15 @@ div.row { margin-bottom: 2em; }
     <td><%= f.hour_field || "-" %></td>
     <td><%= f.minute_field || "-" %></td>
     <td><%= f.second_field || "-" %></td>
+    <%= if @owner do %>
+      <td>
+        <%= if !@editing_disabled do %>
+          <%= link "Edit", to: virtual_date_field_path(@conn, :edit, @meta.slug, f.id), method: :get %>
+        <% else %>
+          &nbsp;
+        <% end %>
+      </td>
+    <% end %>
   </tr>
   <% end %>
 </table>
