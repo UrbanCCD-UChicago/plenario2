@@ -9,6 +9,8 @@ defmodule Plenario2Web.AdminController do
   alias Plenario2.Actions.MetaActions
   alias Plenario2.Repo
 
+  require Logger
+
   def index(conn, _) do
     render(conn, "index.html")
   end
@@ -31,6 +33,8 @@ defmodule Plenario2Web.AdminController do
     UserActions.get_from_id(user_id)
     |> UserActions.archive()
 
+    Logger.info "Archived user #{user_id}"
+
     conn
     |> put_flash(:success, "Archived user")
     |> redirect(to: admin_path(conn, :user_index))
@@ -39,6 +43,8 @@ defmodule Plenario2Web.AdminController do
   def activate_user(conn, %{"user_id" => user_id}) do
     UserActions.get_from_id(user_id)
     |> UserActions.activate()
+
+    Logger.info "Activated user #{user_id}"
 
     conn
     |> put_flash(:success, "Activated user")
@@ -49,6 +55,8 @@ defmodule Plenario2Web.AdminController do
     UserActions.get_from_id(user_id)
     |> UserActions.trust()
 
+    Logger.info "Trusted user #{user_id}"
+
     conn
     |> put_flash(:success, "Trusted user")
     |> redirect(to: admin_path(conn, :user_index))
@@ -57,6 +65,8 @@ defmodule Plenario2Web.AdminController do
   def untrust_user(conn, %{"user_id" => user_id}) do
     UserActions.get_from_id(user_id)
     |> UserActions.untrust()
+
+    Logger.info "Untrusted user #{user_id}"
 
     conn
     |> put_flash(:success, "Untrusted user")
@@ -67,6 +77,8 @@ defmodule Plenario2Web.AdminController do
     UserActions.get_from_id(user_id)
     |> UserActions.promote_to_admin()
 
+    Logger.info "User #{user_id} promoted to admin"
+
     conn
     |> put_flash(:success, "Promoted user to admin")
     |> redirect(to: admin_path(conn, :user_index))
@@ -75,6 +87,8 @@ defmodule Plenario2Web.AdminController do
   def strip_admin_privs(conn, %{"user_id" => user_id}) do
     UserActions.get_from_id(user_id)
     |> UserActions.strip_admin()
+
+    Logger.info "User #{user_id} stripped of Admin"
 
     conn
     |> put_flash(:success, "Stripped user of admin privileges")
