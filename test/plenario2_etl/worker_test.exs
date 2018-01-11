@@ -35,6 +35,7 @@ defmodule Plenario2Etl.WorkerTest do
 
   @tsv_fixture_path "test/fixtures/clinics.tsv"
   @csv_fixture_path "test/fixtures/clinics.csv"
+  @csv_updated_fixture_path "test/fixtures/clinics_updated.csv"
   @json_fixture_path "test/fixtures/clinics.json"
   @shp_fixture_path "test/fixtures/Watersheds.zip"
 
@@ -392,7 +393,7 @@ defmodule Plenario2Etl.WorkerTest do
 
       DataSetConstraintActions.create(meta.id, ["location"])
       EtlJobActions.create(meta.id)
-      DataSetActions.create_data_set_table(meta)
+      DataSetActions.create_data_set_table!(meta)
       VirtualPointFieldActions.create_from_loc(meta.id, "location")
 
       %{fixture_meta: meta}
@@ -406,6 +407,24 @@ defmodule Plenario2Etl.WorkerTest do
         Worker.load(%{meta_id: meta.id})
         %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, "select * from clinics", [])
         assert 65 == Enum.count(rows)
+      end
+    end
+
+    test "load/1 loads updated csv fixture", %{fixture_meta: meta} do
+      MetaActions.update_source_info(meta, source_type: "csv")
+
+      get! = load_mock(@csv_fixture_path)
+      with_mock HTTPoison, get!: fn url -> get!.(url) end do
+        Worker.load(%{meta_id: meta.id})
+        %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, "select * from clinics", [])
+        assert 65 == Enum.count(rows)
+      end
+
+      get! = load_mock(@csv_updated_fixture_path)
+      with_mock HTTPoison, get!: fn url -> get!.(url) end do
+        Worker.load(%{meta_id: meta.id})
+        %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, "select * from data_set_diffs", [])
+        assert 1 == Enum.count(rows)
       end
     end
 
