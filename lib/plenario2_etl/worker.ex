@@ -43,6 +43,7 @@ defmodule Plenario2Etl.Worker do
   """
   @spec download!(name :: charlist, source :: charlist, type :: charlist) :: charlist
   def download!(name, source, type) do
+    type = if type === "shp" do "zip" else type end
     %HTTPoison.Response{body: body} = HTTPoison.get!(source)
     path = "/tmp/#{name}.#{type}"
     File.write!(path, body)
@@ -144,14 +145,24 @@ defmodule Plenario2Etl.Worker do
       iex> {:ok, user} = Plenario2Auth.UserActions.create("a", "b", "c@email.com")
       iex> {:ok, meta} = Plenario2.Actions.MetaActions.create("watersheds", user.id, "foo")
       iex> {:ok, job} = Plenario2.Actions.EtlJobActions.create(meta.id)
-      iex> path = "test/fixtures/Watersheds.shp"
+      iex> path = "test/fixtures/Watersheds.zip"
       iex> Plenario2Etl.Worker.load_shape(meta, path, job)
       {:ok, "watersheds"}
 
   """
   def load_shape(meta, path, _job) do
-    Logger.info("[#{inspect self()}] [load_shape] Prep loader for shapefile at #{path}")
-    Plenario2Etl.Shapefile.load(path, meta.name)
+    Logger.info("[#{inspect self()}] [load_shape] Unpacking shapefile at #{path}")
+    {:ok, file_paths} = :zip.unzip(String.to_charlist(path), cwd: '/tmp/')
+
+    Logger.info("[#{inspect self()}] [load_shape] Looking for .shp file")
+    shp = 
+      Enum.find(file_paths, fn path ->
+        String.ends_with?(to_string(path), ".shp")
+      end)
+      |> to_string()
+
+    Logger.info("[#{inspect self()}] [load_shape] Prep loader for shapefile at #{shp}")
+    Plenario2Etl.Shapefile.load(shp, meta.name)
   end
 
   defp load_data(meta, path, job, decode) do
