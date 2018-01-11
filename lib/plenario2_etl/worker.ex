@@ -13,7 +13,6 @@ defmodule Plenario2Etl.Worker do
   }
 
   import Ecto.Adapters.SQL, only: [query!: 3]
-  import Slug, only: [slugify: 1]
   require Logger
   use GenServer
 
@@ -23,12 +22,6 @@ defmodule Plenario2Etl.Worker do
   @doc """
   Entrypoint for the `Worker` `GenServer`. Saves you the hassle of writing out
   `GenServer.start_link`. Calls this module's `init/1` function.
-
-  ## Example
-
-    iex> worker = Worker.start_link(%{meta_id: 5})
-    :ok
-
   """
   def start_link(state) do
     GenServer.start_link(__MODULE__, state)
@@ -47,15 +40,10 @@ defmodule Plenario2Etl.Worker do
   @doc """
   Downloads the file located at the `source` with to /tmp/ with a file name
   of `name`. Returns path of downloaded file.
-
-  ## Example
-
-    iex> download!("file_name", "https://source.url/", "csv")
-    "/tmp/file_name.csv"
-
   """
   @spec download!(name :: charlist, source :: charlist, type :: charlist) :: charlist
   def download!(name, source, type) do
+    type = if type === "shp" do "zip" else type end
     %HTTPoison.Response{body: body} = HTTPoison.get!(source)
     path = "/tmp/#{name}.#{type}"
     File.write!(path, body)
@@ -66,23 +54,15 @@ defmodule Plenario2Etl.Worker do
   Upsert dataset rows from the file specified in `state`. Operations are
   performed in parallel on chunks of the file stream. The first line of
   the file is skipped, assumed to be a header.
-
-  ## Example
-
-    iex> load(%{
-    ...>   meta_id: 4
-    ...> })
-    :ok
-
   """
   @spec load(state :: map) :: map
   def load(state) do
     meta = MetaActions.get(state[:meta_id])
     job = EtlJobActions.create!(meta.id)
 
-    Logger.info("Downloading file for #{meta.name}")
-    Logger.info("#{meta.name} source url is #{meta.source_url}")
-    Logger.info("#{meta.name} source type is #{meta.source_type}")
+    Logger.info("[#{inspect self()}] [load] Downloading file for #{meta.name}")
+    Logger.info("[#{inspect self()}] [load] #{meta.name} source url is #{meta.source_url}")
+    Logger.info("[#{inspect self()}] [load] #{meta.name} source type is #{meta.source_type}")
 
     path =
       download!(
@@ -91,7 +71,7 @@ defmodule Plenario2Etl.Worker do
         meta.source_type
       )
 
-    Logger.info("File stored at #{path}")
+    Logger.info("[#{inspect self()}] [load] File stored at #{path}")
 
     case meta.source_type do
       "json" -> load_json(meta, path, job)
@@ -104,19 +84,21 @@ defmodule Plenario2Etl.Worker do
   @doc """
   This is the main subprocess kicked off by the `load` method that handles
   and ingests a smaller chunk of rows.
-
-  ## Example
-
-    iex> load_chunk!(self(), meta, job, [["some", "rows"]])
-    :ok
-
   """
   def load_chunk!(sender, meta, job, chunk) do
     rows = Enum.map(chunk, &Keyword.values/1)
-    existing_rows = contains!(meta, rows)
-    inserted_rows = upsert!(meta, rows)
-    pairs = Enum.zip(existing_rows, inserted_rows)
 
+    Logger.info("[#{inspect self()}] [load_chunk] Running contains query")
+    existing_rows = contains!(meta, rows)
+
+    Logger.info("[#{inspect self()}] [load_chunk] Running upsert query")
+    inserted_rows = upsert!(meta, rows)
+
+    constraints = MetaActions.get_first_constraint_field_names(meta)
+    constraint_atoms = for c <- constraints, do: String.to_atom(c)
+    pairs = Plenario2Etl.Rows.pair_rows(existing_rows, inserted_rows, constraint_atoms)
+
+    Logger.info("[#{inspect self()}] [load_chunk] Will possibly update #{Enum.count(pairs)} rows")
     result =
       Enum.map(pairs, fn {existing_row, inserted_row} ->
         create_diffs(meta, job, existing_row, inserted_row)
@@ -128,6 +110,7 @@ defmodule Plenario2Etl.Worker do
   @doc """
   """
   def load_json(meta, path, job) do
+    Logger.info("[#{inspect self()}] [load_json] Prep loader for json at #{path}")
     load_data(meta, path, job, fn path ->
       File.read!(path)
       |> Poison.decode!()
@@ -137,6 +120,7 @@ defmodule Plenario2Etl.Worker do
   @doc """
   """
   def load_csv(meta, path, job) do
+    Logger.info("[#{inspect self()}] [load_csv] Prep loader for csv at #{path}")
     load_data(meta, path, job, fn path ->
       File.stream!(path)
       |> CSV.decode!(headers: true)
@@ -146,6 +130,7 @@ defmodule Plenario2Etl.Worker do
   @doc """
   """
   def load_tsv(meta, path, job) do
+    Logger.info("[#{inspect self()}] [load_tsv] Prep loader for tsv at #{path}")
     load_data(meta, path, job, fn path ->
       File.stream!(path)
       |> CSV.decode!(headers: true, separator: ?\t)
@@ -153,21 +138,43 @@ defmodule Plenario2Etl.Worker do
   end
 
   @doc """
-  """
-  def load_shape(meta, path, job) do
-  end
+  Performs the work of loading a shapefile associated with a `Meta` instance.
 
-  defp set_srid(%Geo.Polygon{coordinates: coordinates}, srid) do
-    %Geo.Polygon{coordinates: coordinates, srid: srid}
+  ## Examples
+
+      iex> {:ok, user} = Plenario2Auth.UserActions.create("a", "b", "c@email.com")
+      iex> {:ok, meta} = Plenario2.Actions.MetaActions.create("watersheds", user.id, "foo")
+      iex> {:ok, job} = Plenario2.Actions.EtlJobActions.create(meta.id)
+      iex> path = "test/fixtures/Watersheds.zip"
+      iex> Plenario2Etl.Worker.load_shape(meta, path, job)
+      {:ok, "watersheds"}
+
+  """
+  def load_shape(meta, path, _job) do
+    Logger.info("[#{inspect self()}] [load_shape] Unpacking shapefile at #{path}")
+    {:ok, file_paths} = :zip.unzip(String.to_charlist(path), cwd: '/tmp/')
+
+    Logger.info("[#{inspect self()}] [load_shape] Looking for .shp file")
+    shp = 
+      Enum.find(file_paths, fn path ->
+        String.ends_with?(to_string(path), ".shp")
+      end)
+      |> to_string()
+
+    Logger.info("[#{inspect self()}] [load_shape] Prep loader for shapefile at #{shp}")
+    Plenario2Etl.Shapefile.load(shp, meta.name)
   end
 
   defp load_data(meta, path, job, decode) do
+    Logger.info("[#{inspect self()}] [load_data] Chunking rows and spawning children")
     decode.(path)
     |> Stream.map(&Enum.to_list/1)
     |> Stream.map(&Enum.sort/1)
     |> Stream.chunk_every(100)
     |> Enum.map(fn chunk ->
-         spawn_link(__MODULE__, :load_chunk!, [self(), meta, job, chunk])
+         pid = spawn_link(__MODULE__, :load_chunk!, [self(), meta, job, chunk])
+        Logger.info("[#{inspect self()}] [load_data] Spawned #{inspect pid}")
+        pid
        end)
     |> Enum.map(fn pid ->
          receive do
@@ -178,12 +185,6 @@ defmodule Plenario2Etl.Worker do
 
   @doc """
   Upsert a dataset with a chunk of `rows`.
-
-  ## Example
-
-    iex> upsert!(meta, rows)
-    [[1, "inserted", "row"]]
-
   """
   @spec upsert!(meta :: Meta, rows :: list) :: list
   def upsert!(meta, rows) do
@@ -192,12 +193,6 @@ defmodule Plenario2Etl.Worker do
 
   @doc """
   Query existing rows that might conflict with an insert query using `rows`.
-
-  ## Example
-
-    iex> upsert!(meta, rows)
-    [[1, "might", "conflict"]]
-
   """
   @spec contains!(meta :: Meta, rows :: list) :: list
   def contains!(meta, rows) do
@@ -219,43 +214,35 @@ defmodule Plenario2Etl.Worker do
       )
 
     # TODO(heyzoos) log informative messages for failing queries
-    %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, sql, [])
-    rows
+    %Postgrex.Result{
+      columns: columns, 
+      rows: rows
+    } = query!(Plenario2.Repo, sql, [])
+
+    atom_columns = Enum.map(columns, &String.to_atom/1)
+    Plenario2Etl.Rows.to_kwlist(rows, atom_columns)
   end
 
   @doc """
   Currently the ugly duckling of the worker API, it generates diff entries
   for a pair of rows. Needs to be refactored into something smaller and
   more readable.
-
-  ## Example
-
-    iex> create_diffs!(meta, job, ["a", "b", "c"], ["1", "2", "3"])
-    [%DataSetDiff{}, ...]
-
   """
   def create_diffs(meta, job, original, updated) do
-    columns = MetaActions.get_column_names(meta)
-    constraint = MetaActions.get_first_constraint(meta)
-    constraints = MetaActions.get_first_constraint_field_names(meta)
-
-    constraint_indices =
-      Enum.map(constraints, fn constraint ->
-        Enum.find_index(columns, &(&1 == constraint))
-      end)
-
-    constraint_values =
-      Enum.map(constraint_indices, fn index ->
-        Enum.at(original, index)
-      end)
-
-    constraint_map = Enum.zip([constraints, constraint_values]) |> Map.new()
+    constraint_id = MetaActions.get_first_constraint(meta).id()
+    constraint_names = MetaActions.get_first_constraint_field_names(meta)
+    constraint_map = Enum.map(constraint_names, fn constraint_name ->
+      constraint_name_atom = String.to_atom(constraint_name)
+      {constraint_name, original[constraint_name_atom]}
+    end) |> Map.new()
 
     List.zip([original, updated])
-    |> Enum.with_index()
-    |> Enum.map(fn {{original_value, updated_value}, index} ->
+    |> Enum.map(fn {original_value, updated_value} ->
          if original_value !== updated_value do
-           column = Enum.fetch!(columns, index)
+           {column, original_value} = original_value
+           {_column, updated_value} = updated_value
+
+           Logger.info("[#{inspect self()}] [create_diffs] #{column}: #{inspect original_value} changed to #{inspect updated_value}")
 
            # TODO(heyzoos) inspect will render values in a way that is
            # is probably unusable to end users. Need a way to guess the
@@ -264,9 +251,9 @@ defmodule Plenario2Etl.Worker do
            {:ok, diff} =
              DataSetDiffActions.create(
                meta.id(),
-               constraint.id(),
+               constraint_id,
                job.id(),
-               column,
+               Atom.to_string(column),
                inspect(original_value),
                inspect(updated_value),
                DateTime.utc_now(),

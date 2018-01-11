@@ -62,6 +62,7 @@ defmodule Plenario2Web.Router do
     get "/data-sets/:slug/update/refresh", MetaController, :get_update_refresh_info
     put "/data-sets/:slug/update/refresh", MetaController, :do_update_refresh_info
     post "/data-sets/:slug/submit-for-approval", MetaController, :submit_for_approval
+    post "/data-sets/:slug/ingest-dataset", MetaController, :ingest_dataset
 
     resources "/data-sets/:slug/fields", DataSetFieldController
 

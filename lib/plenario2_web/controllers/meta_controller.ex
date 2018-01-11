@@ -8,6 +8,13 @@ defmodule Plenario2Web.MetaController do
   alias Plenario2.Schemas.Meta
   alias Plenario2Web.ErrorView
 
+  @meta_source_type_options [
+    "CSV": "csv", 
+    "TSV": "tsv",
+    "JSON": "json",
+    "Shapefile": "shp"
+  ] 
+
   plug :load_and_authorize_resource,
     model: Meta,
     id_name: "slug",
@@ -58,7 +65,11 @@ defmodule Plenario2Web.MetaController do
     changeset = MetaChangesets.new()
     action = meta_path(conn, :do_create)
 
-    render(conn, "create.html", changeset: changeset, action: action)
+    render(conn, "create.html", 
+      changeset: changeset, 
+      action: action,
+      source_type_options: @meta_source_type_options
+    )
   end
 
   def do_create(conn, %{"meta" => %{"name" => name, "source_url" => source_url}} = params) do
@@ -93,7 +104,7 @@ defmodule Plenario2Web.MetaController do
     conn
     |> put_status(:bad_request)
     |> put_flash(:error, "Please review and fix errors below.")
-    |> render("create.html", changeset: changeset, action: action)
+    |> render("create.html", changeset: changeset, action: action, source_type_options: @meta_source_type_options)
   end
 
   def submit_for_approval(conn, %{"slug" => slug}) do
@@ -102,6 +113,15 @@ defmodule Plenario2Web.MetaController do
 
     conn
     |> put_flash(:success, "#{meta.name} Submitted for Approval!")
+    |> redirect(to: meta_path(conn, :detail, meta.slug))
+  end
+
+  def ingest_dataset(conn, %{"slug" => slug}) do
+    meta = MetaActions.get(slug, [with_user: true])
+    spawn(Plenario2Etl.Worker, :load, [%{meta_id: meta.id}])
+
+    conn
+    |> put_flash(:success, "#{meta.name} Ingest started!")
     |> redirect(to: meta_path(conn, :detail, meta.slug))
   end
 

@@ -1,4 +1,4 @@
-defmodule Shapefile do
+defmodule Plenario2Etl.Shapefile do
   @moduledoc """
   Explicitly defines this application's interface with shapefiles. By creating
   this contract, we can be flexible with the methods by which we ingest shapes.
@@ -11,16 +11,16 @@ defmodule Shapefile do
 
   @doc """
   Loads records from an unzipped shapefile at `path` to a table named `table`.
-  The table is either created or replaced for the database identified by the
-  `connection` string.
+  The table is either created or replaced for the database configured for
+  `Plenario2.Repo`.
 
   ## Examples
 
-      iex> Shapefile.load(
+      iex> Plenario2Etl.Shapefile.load(
       ...>   "test/fixtures/Watersheds.shp", 
       ...>   "watersheds"
       ...> )
-      :ok
+      {:ok, "watersheds"}
       
   """
   def load(path, table) do
@@ -35,8 +35,8 @@ defmodule Shapefile do
       "-nln", table, "-overwrite"]
 
     case System.cmd("ogr2ogr", args) do
-      {"", 0} -> :ok
-      {error, 1} -> error
+      {"", 0} -> {:ok, table}
+      {error, 1} -> {:error, error}
     end
   end
 end
