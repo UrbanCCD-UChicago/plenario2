@@ -67,4 +67,24 @@ defmodule DataSetActionsTest do
       DataSetActions.drop_data_set_table!(meta)
     end
   end
+
+  test "with a funky field name", context do
+    DataSetFieldActions.create(context.meta.id, "to-day", "integer")
+    VirtualDateFieldActions.create(context.meta.id, "year", "month", "to-day")
+
+    DataSetActions.create_data_set_table!(context.meta)
+
+    insert = """
+    INSERT INTO #{context.table_name}
+    VALUES
+      ('abc123', 1.0, 1.0, 2017, 1, 1, 1);
+    """
+    Ecto.Adapters.SQL.query(Repo, insert)
+
+    query = """
+    SELECT * FROM #{context.table_name}
+    """
+    {:ok, result} = Ecto.Adapters.SQL.query(Repo, query)
+    assert result.rows == [["abc123", 1.0, 1.0, 2017, 1, 1, 1, {{2017, 1, 1}, {0, 0, 0, 0}}, {{2017, 1, 1}, {0, 0, 0, 0}}, %Geo.Point{coordinates: {1.0, 1.0}, srid: 4326}]]
+  end
 end
