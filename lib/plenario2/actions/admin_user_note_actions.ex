@@ -13,6 +13,8 @@ defmodule Plenario2.Actions.AdminUserNoteActions do
 
   alias Plenario2Auth.User
 
+  require Logger
+
   @typedoc """
   Parameter is an ID attribute
   """
@@ -85,6 +87,8 @@ defmodule Plenario2.Actions.AdminUserNoteActions do
       user_id: user_id,
       meta_id: meta_id
     }
+
+    Logger.info "Creating AdminUserNote: #{inspect(params)}"
     AdminUserNoteChangesets.create_for_meta(params)
     |> Repo.insert()
   end

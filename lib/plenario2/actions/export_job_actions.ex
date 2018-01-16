@@ -14,6 +14,8 @@ defmodule Plenario2.Actions.ExportJobActions do
 
   alias Plenario2Auth.User
 
+  require Logger
+
   @typedoc """
   Parameter is an ID attribute
   """
@@ -48,6 +50,7 @@ defmodule Plenario2.Actions.ExportJobActions do
       include_diffs: include_diffs
     }
 
+    Logger.info "Creating Export Job: #{inspect(params)}"
     ExportJobChangesets.create(params)
     |> Repo.insert()
   end

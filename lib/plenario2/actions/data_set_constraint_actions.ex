@@ -12,6 +12,8 @@ defmodule Plenario2.Actions.DataSetConstraintActions do
   alias Plenario2.Schemas.{DataSetConstraint, Meta}
   alias Plenario2.Repo
 
+  require Logger
+
   @typedoc """
   Parameter is an ID attribute
   """
@@ -38,6 +40,7 @@ defmodule Plenario2.Actions.DataSetConstraintActions do
       field_names: field_names
     }
 
+    Logger.info "Creating DataSetConstraint: #{inspect(params)}"
     DataSetConstraintChangesets.create(params)
     |> Repo.insert()
   end
@@ -72,6 +75,7 @@ defmodule Plenario2.Actions.DataSetConstraintActions do
   """
   @spec update(constraint :: DataSetConstraint, parmas :: map) :: DataSetConstraint
   def update(constraint, params) do
+    Logger.info "Updating DataSetConstraint: #{inspect(constraint)}, #{inspect(params)}"
     DataSetConstraintChangesets.update(constraint, params)
     |> Repo.update()
   end
@@ -80,5 +84,8 @@ defmodule Plenario2.Actions.DataSetConstraintActions do
   Deletes a given constraint.
   """
   @spec delete(constraint :: %DataSetConstraint{}) :: {:ok, %DataSetConstraint{} | :error, Ecto.Changeset.t}
-  def delete(constraint), do: Repo.delete(constraint)
+  def delete(constraint) do
+    Logger.info "Deleting DataSetConstraint: #{inspect(constraint)}"
+    Repo.delete(constraint)
+    end
 end
