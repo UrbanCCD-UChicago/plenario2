@@ -12,6 +12,8 @@ defmodule Plenario2.Actions.VirtualPointFieldActions do
   alias Plenario2.Schemas.{VirtualPointField, Meta}
   alias Plenario2.Repo
 
+  require Logger
+
   @typedoc """
   Parameter is an ID attribute
   """
@@ -39,6 +41,8 @@ defmodule Plenario2.Actions.VirtualPointFieldActions do
       latitude_field: latitude
     }
 
+    Logger.info "Creating VirtualPointField from long/lat: #{inspect(params)}"
+
     VirtualPointFieldChangesets.create_from_long_lat(params)
     |> Repo.insert()
   end
@@ -55,6 +59,8 @@ defmodule Plenario2.Actions.VirtualPointFieldActions do
       end
 
     params = %{meta_id: meta_id, location_field: location}
+
+    Logger.info "Creating VirtualPointField from text field: #{inspect(params)}"
 
     VirtualPointFieldChangesets.create_from_loc(params)
     |> Repo.insert()
@@ -81,5 +87,8 @@ defmodule Plenario2.Actions.VirtualPointFieldActions do
   Deletes a given VirtualPointField
   """
   @spec delete(field :: %VirtualPointField{}) :: {:ok, %VirtualPointField{} | :error, Ecto.Changeset.t}
-  def delete(field), do: Repo.delete(field)
+  def delete(field) do
+    Logger.info "Deleting VirtualPointField: #{inspect(field)}"
+    Repo.delete(field)
+    end
 end

@@ -12,6 +12,8 @@ defmodule Plenario2.Actions.DataSetDiffActions do
   alias Plenario2.Schemas.{DataSetDiff, Meta, DataSetConstraint, EtlJob}
   alias Plenario2.Repo
 
+  require Logger
+
   @typedoc """
   Parameter is an ID attribute
   """
@@ -55,6 +57,8 @@ defmodule Plenario2.Actions.DataSetDiffActions do
       changed_on: changed_on,
       constraint_values: constraint_values
     }
+
+    Logger.info "Creating DataSetDiff: #{inspect(params)}"
 
     DataSetDiffChangesets.create(params)
     |> Repo.insert()

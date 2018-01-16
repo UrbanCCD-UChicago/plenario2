@@ -12,6 +12,8 @@ defmodule Plenario2.Actions.DataSetFieldActions do
   alias Plenario2.Schemas.{DataSetField, Meta}
   alias Plenario2.Repo
 
+  require Logger
+
   @typedoc """
   Parameter is an ID attribute
   """
@@ -40,6 +42,7 @@ defmodule Plenario2.Actions.DataSetFieldActions do
       opts: opts
     }
 
+    Logger.info "Creating DataSetField: #{inspect(params)}"
     DataSetFieldChangesets.create(params)
     |> Repo.insert()
   end
@@ -66,6 +69,7 @@ defmodule Plenario2.Actions.DataSetFieldActions do
   """
   @spec update(field :: DataSetField, params :: map) :: DataSetField
   def update(field, params) do
+    Logger.info "Updating DataSetField: #{inspect(field)}, #{inspect(params)}"
     DataSetFieldChangesets.update(field, params)
     |> Repo.update()
   end
@@ -74,5 +78,8 @@ defmodule Plenario2.Actions.DataSetFieldActions do
   Deletes a given data set field
   """
   @spec delete(field :: %DataSetField{}) :: {:ok, %DataSetField{} | :error, Ecto.Changeset.t}
-  def delete(field), do: Repo.delete(field)
+  def delete(field) do
+    Logger.info "Deleting DataSetField: #{inspect(field)}"
+    Repo.delete(field)
+    end
 end
