@@ -1,5 +1,5 @@
 CREATE FUNCTION
-  <%= function_name %>()
+  "<%= function_name %>"()
 RETURNS TRIGGER AS $$
 
   BEGIN

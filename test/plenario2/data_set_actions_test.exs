@@ -49,4 +49,22 @@ defmodule DataSetActionsTest do
     DataSetActions.create_data_set_table!(context.meta)
     DataSetActions.drop_data_set_table!(context.meta)
   end
+
+  describe "with non-alnum characters" do
+    test "create with a dash in the name", context do
+      {:ok, meta} = MetaActions.update_name(context.meta, "chicago - data")
+      DataSetActions.create_data_set_table!(meta)
+    end
+
+    test "create with non latin chars", context do
+      {:ok, meta} = MetaActions.update_name(context.meta, "進撃の巨人")
+      DataSetActions.create_data_set_table!(meta)
+    end
+
+    test "drop", context do
+      {:ok, meta} = MetaActions.update_name(context.meta, "chicago - data")
+      DataSetActions.create_data_set_table!(meta)
+      DataSetActions.drop_data_set_table!(meta)
+    end
+  end
 end

@@ -1,4 +1,4 @@
-ALTER TABLE <%= table_name %>
+ALTER TABLE "<%= table_name %>"
   ADD CONSTRAINT <%= constraint_name %> UNIQUE
   <% len_fields = length(field_names) %>
   (
