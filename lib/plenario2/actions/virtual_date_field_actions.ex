@@ -12,6 +12,8 @@ defmodule Plenario2.Actions.VirtualDateFieldActions do
   alias Plenario2.Schemas.{VirtualDateField, Meta}
   alias Plenario2.Repo
 
+  require Logger
+
   @typedoc """
   Parameter is an ID attribute
   """
@@ -42,6 +44,8 @@ defmodule Plenario2.Actions.VirtualDateFieldActions do
       minute_field: minute,
       second_field: second
     }
+
+    Logger.info "Creating VirtualDateField: #{inspect(params)}"
 
     VirtualDateFieldChangesets.create(params)
     |> Repo.insert()
@@ -80,6 +84,7 @@ defmodule Plenario2.Actions.VirtualDateFieldActions do
   """
   @spec update(field :: VirtualDateField, params :: map) :: VirtualDateField
   def update(field, params \\ %{}) do
+    Logger.info "Updating VirtualDateField: #{inspect(field)}, #{inspect(params)}"
     VirtualDateFieldChangesets.update(field, params)
     |> Repo.update()
   end
@@ -88,5 +93,8 @@ defmodule Plenario2.Actions.VirtualDateFieldActions do
   Deletes a given VirtualDateField
   """
   @spec delete(field :: %VirtualDateField{}) :: {:ok, %VirtualDateField{} | :error, Ecto.Changeset.t}
-  def delete(field), do: Repo.delete(field)
+  def delete(field) do
+    Logger.info "Deleting: #{inspect(field)}"
+    Repo.delete(field)
+    end
 end
