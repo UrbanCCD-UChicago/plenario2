@@ -1,4 +1,4 @@
-CREATE TRIGGER <%= trigger_name %>
-  BEFORE INSERT ON <%= table_name %>
+CREATE TRIGGER "<%= trigger_name %>"
+  BEFORE INSERT ON "<%= table_name %>"
     FOR EACH ROW
-      EXECUTE PROCEDURE <%= function_name %>();
+      EXECUTE PROCEDURE "<%= function_name %>"();
