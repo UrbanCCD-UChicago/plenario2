@@ -20,6 +20,8 @@ defmodule Plenario2Etl.Worker do
   @upsert_template "lib/plenario2_etl/templates/upsert.sql.eex"
   @timeout 10000
 
+  @chunk_size Application.get_env(:plenario2, Plenario2Etl)[:chunk_size]
+
   @doc """
   Entrypoint for the `Worker` `GenServer`. Saves you the hassle of writing out
   `GenServer.start_link`. Calls this module's `init/1` function.
@@ -179,14 +181,25 @@ defmodule Plenario2Etl.Worker do
     decode.(path)
     |> Stream.map(&Enum.to_list/1)
     |> Stream.map(&Enum.sort/1)
-    |> Stream.chunk_every(100)
+    |> Stream.chunk_every(@chunk_size)
     |> Enum.map(fn chunk ->
-         :poolboy.transaction(
-           :worker, 
-           fn pid -> GenServer.call(pid, {:load_chunk!, meta, job, chunk}) end,
-           @timeout
-         )
+         async_load_chunk!(meta, job, chunk)
        end)
+    |> Enum.map(fn task -> 
+         Task.await(task)
+       end)
+  end
+
+  def async_load_chunk!(meta, job, chunk) do
+    Task.async(fn ->
+      :poolboy.transaction(
+        :worker,
+        fn pid -> GenServer.call(pid, {:load_chunk!, meta, job, chunk}) end,
+        @timeout
+      )
+
+      {:ok, self()}
+    end)
   end
 
   def async_load!(meta_id) do
@@ -220,7 +233,7 @@ defmodule Plenario2Etl.Worker do
     columns = MetaActions.get_column_names(meta) |> Enum.sort()
     constraints = MetaActions.get_first_constraint_field_names(meta)
 
-    IO.puts sql =
+    sql =
       EEx.eval_file(
         template,
         table: table,

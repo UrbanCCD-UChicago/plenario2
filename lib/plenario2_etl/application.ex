@@ -1,11 +1,13 @@
 defmodule Plenario2Etl.Application do
   use Application
 
+  @pool_size Application.get_env(:plenario2, Plenario2Etl)[:pool_size]
+
   defp config do
     [
       name: {:local, :worker},
       worker_module: Plenario2Etl.Worker,
-      size: 1000,
+      size: @pool_size,
       max_overflow: 0
     ]
   end

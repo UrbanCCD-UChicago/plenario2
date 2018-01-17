@@ -65,3 +65,8 @@ import_config "prod.secret.exs"
 
 # Configure HTTP API
 config :plenario2, :http, HTTP.Live
+
+# Configure worker settings
+config :plenario2, Plenario2Etl,
+  chunk_size: 100,
+  pool_size: 1000

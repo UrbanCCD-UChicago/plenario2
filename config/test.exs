@@ -7,7 +7,7 @@ config :plenario2, Plenario2Web.Endpoint,
   server: false
 
 # Print only warnings and errors during test
-config :logger, level: :info, metadata: [:request_id]
+config :logger, level: :warn, metadata: [:request_id]
 
 # Configure your database
 config :plenario2, Plenario2.Repo,
@@ -25,3 +25,8 @@ config :plenario2, Plenario2Auth.Guardian,
 
 # Configure HTTP API
 config :plenario2, :http, HTTP.Mock
+
+# Configure worker settings
+config :plenario2, Plenario2Etl,
+  chunk_size: 100,
+  pool_size: 10
