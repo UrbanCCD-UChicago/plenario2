@@ -1,4 +1,6 @@
 defmodule Plenario2Web.DataSetFieldController do
+  require Logger
+
   alias Plenario2.Actions.{DataSetFieldActions, MetaActions}
   alias Plenario2.Changesets.DataSetFieldChangesets
   alias Plenario2.Repo
@@ -49,8 +51,12 @@ defmodule Plenario2Web.DataSetFieldController do
     disabled =
       case meta.state == "ready" do
         true -> "disabled"
-        false -> ""
+        false -> false
       end
+
+    if disabled do
+      Logger.info("disabled")
+    end
 
     render(conn, "edit.html", field: field, changeset: changeset, slug: slug, field_type_options: @field_type_options, disabled: disabled)
   end
