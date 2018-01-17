@@ -18,6 +18,7 @@ defmodule Plenario2Etl.Worker do
 
   @contains_template "lib/plenario2_etl/templates/contains.sql.eex"
   @upsert_template "lib/plenario2_etl/templates/upsert.sql.eex"
+  @timeout 10000
 
   @doc """
   Entrypoint for the `Worker` `GenServer`. Saves you the hassle of writing out
@@ -34,7 +35,15 @@ defmodule Plenario2Etl.Worker do
   """
   @spec init(state :: map) :: {:ok, map}
   def init(state) do
-    {:ok, load(state)}
+    {:ok, state}
+  end
+
+  def handle_call({:load, meta_id_map}, _, state) do
+    {:reply, load(meta_id_map), state}
+  end
+
+  def handle_call({:load_chunk!, meta, job, chunk}, _, state) do
+    {:reply, load_chunk!(meta, job, chunk), state}
   end
 
   @doc """
@@ -85,7 +94,7 @@ defmodule Plenario2Etl.Worker do
   This is the main subprocess kicked off by the `load` method that handles
   and ingests a smaller chunk of rows.
   """
-  def load_chunk!(sender, meta, job, chunk) do
+  def load_chunk!(meta, job, chunk) do
     rows = Enum.map(chunk, &Keyword.values/1)
 
     Logger.info("[#{inspect self()}] [load_chunk] Running contains query")
@@ -99,12 +108,9 @@ defmodule Plenario2Etl.Worker do
     pairs = Plenario2Etl.Rows.pair_rows(existing_rows, inserted_rows, constraint_atoms)
 
     Logger.info("[#{inspect self()}] [load_chunk] Will possibly update #{Enum.count(pairs)} rows")
-    result =
-      Enum.map(pairs, fn {existing_row, inserted_row} ->
-        create_diffs(meta, job, existing_row, inserted_row)
-      end)
-
-    send(sender, {self(), result})
+    Enum.map(pairs, fn {existing_row, inserted_row} ->
+      create_diffs(meta, job, existing_row, inserted_row)
+    end)
   end
 
   @doc """
@@ -172,7 +178,7 @@ defmodule Plenario2Etl.Worker do
     |> Stream.map(&Enum.sort/1)
     |> Stream.chunk_every(100)
     |> Enum.map(fn chunk ->
-         pid = spawn_link(__MODULE__, :load_chunk!, [self(), meta, job, chunk])
+        pid = async_load_chunk!(meta, job, chunk)
         Logger.info("[#{inspect self()}] [load_data] Spawned #{inspect pid}")
         pid
        end)
@@ -181,6 +187,25 @@ defmodule Plenario2Etl.Worker do
            {^pid, result} -> result
          end
        end)
+  end
+
+  def async_load!(meta_id) do
+    Task.async(fn ->
+      :poolboy.transaction(
+        :worker,
+        fn pid -> GenServer.call(pid, {:load, %{meta_id: meta_id}}) end
+      )
+    end)
+  end
+
+  defp async_load_chunk!(meta, job, chunk) do
+    Task.async(fn ->
+      :poolboy.transaction(
+        :worker, 
+        fn pid -> GenServer.call(pid, {:load_chunk!, meta, job, chunk}) end,
+        @timeout
+      )
+    end)
   end
 
   @doc """
