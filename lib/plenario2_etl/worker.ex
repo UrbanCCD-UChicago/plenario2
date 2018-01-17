@@ -220,7 +220,7 @@ defmodule Plenario2Etl.Worker do
     columns = MetaActions.get_column_names(meta) |> Enum.sort()
     constraints = MetaActions.get_first_constraint_field_names(meta)
 
-    sql =
+    IO.puts sql =
       EEx.eval_file(
         template,
         table: table,

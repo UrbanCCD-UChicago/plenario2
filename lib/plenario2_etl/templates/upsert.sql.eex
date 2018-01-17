@@ -13,14 +13,7 @@ INSERT INTO
   "<%= table %>" AS t ("<%= Enum.join(columns, ~s{", "}) %>")
 VALUES
   <%= for {row, index} <- Enum.with_index(rows) do %>
-    <% fmtrow = Enum.map(row, fn val ->
-         cond do                  
-           is_nil(val) -> "null"                           
-           is_binary(val) -> "'" <> val <> "'"
-           true -> val
-         end                                
-       end) %>
-
+    <% fmtrow = Enum.map(row, &Plenario2Etl.Rows.escape/1) %>
     (<%= Enum.join(fmtrow, ", ") %>) <%= if index != last_index do %>,<% end %>
   <% end %>
 ON CONFLICT ("<%= Enum.join(constraints, ~s{","}) %>")
