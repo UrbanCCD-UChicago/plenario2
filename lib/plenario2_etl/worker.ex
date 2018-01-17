@@ -35,14 +35,17 @@ defmodule Plenario2Etl.Worker do
   """
   @spec init(state :: map) :: {:ok, map}
   def init(state) do
+    Logger.info("[#{inspect self()}] [init] Starting worker GenServer")
     {:ok, state}
   end
 
   def handle_call({:load, meta_id_map}, _, state) do
+    Logger.info("[#{inspect self()}] [handle_call] Received :load call")
     {:reply, load(meta_id_map), state}
   end
 
   def handle_call({:load_chunk!, meta, job, chunk}, _, state) do
+    Logger.info("[#{inspect self()}] [handle_call] Received :load_chunk! call")
     {:reply, load_chunk!(meta, job, chunk), state}
   end
 
@@ -178,14 +181,11 @@ defmodule Plenario2Etl.Worker do
     |> Stream.map(&Enum.sort/1)
     |> Stream.chunk_every(100)
     |> Enum.map(fn chunk ->
-        pid = async_load_chunk!(meta, job, chunk)
-        Logger.info("[#{inspect self()}] [load_data] Spawned #{inspect pid}")
-        pid
-       end)
-    |> Enum.map(fn pid ->
-         receive do
-           {^pid, result} -> result
-         end
+         :poolboy.transaction(
+           :worker, 
+           fn pid -> GenServer.call(pid, {:load_chunk!, meta, job, chunk}) end,
+           @timeout
+         )
        end)
   end
 
@@ -193,17 +193,8 @@ defmodule Plenario2Etl.Worker do
     Task.async(fn ->
       :poolboy.transaction(
         :worker,
-        fn pid -> GenServer.call(pid, {:load, %{meta_id: meta_id}}) end
-      )
-    end)
-  end
-
-  defp async_load_chunk!(meta, job, chunk) do
-    Task.async(fn ->
-      :poolboy.transaction(
-        :worker, 
-        fn pid -> GenServer.call(pid, {:load_chunk!, meta, job, chunk}) end,
-        @timeout
+        fn pid -> GenServer.call(pid, {:load, %{meta_id: meta_id}}) end,
+        :infinity
       )
     end)
   end
@@ -238,7 +229,6 @@ defmodule Plenario2Etl.Worker do
         constraints: constraints
       )
 
-    # TODO(heyzoos) log informative messages for failing queries
     %Postgrex.Result{
       columns: columns, 
       rows: rows

@@ -1,8 +1,9 @@
 -- Template Variables
 -- ==================
--- columns          list[charlist]
--- table            charlist
--- constraints      list[charlist]
+-- rows             list[string]
+-- columns          list[string]
+-- table            string
+-- constraints      list[string]
 
 
 <% last_index = Enum.count(rows) - 1 %>
@@ -12,10 +13,15 @@ INSERT INTO
   "<%= table %>" AS t ("<%= Enum.join(columns, ~s{", "}) %>")
 VALUES
   <%= for {row, index} <- Enum.with_index(rows) do %>
-    <%= case index do %>
-      <% ^last_index -> %> ('<%= Enum.join(row, "', '") %>')
-      <% _ -> %> ('<%= Enum.join(row, "', '") %>'),
-    <% end %>
+    <% fmtrow = Enum.map(row, fn val ->
+         cond do                  
+           is_nil(val) -> "null"                           
+           is_binary(val) -> "'" <> val <> "'"
+           true -> val
+         end                                
+       end) %>
+
+    (<%= Enum.join(fmtrow, ", ") %>) <%= if index != last_index do %>,<% end %>
   <% end %>
 ON CONFLICT ("<%= Enum.join(constraints, ~s{","}) %>")
   DO UPDATE SET

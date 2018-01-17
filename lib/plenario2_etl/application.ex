@@ -6,7 +6,7 @@ defmodule Plenario2Etl.Application do
       name: {:local, :worker},
       worker_module: Plenario2Etl.Worker,
       size: 1000,
-      max_overflow: 2
+      max_overflow: 0
     ]
   end
 
@@ -17,7 +17,7 @@ defmodule Plenario2Etl.Application do
     ]
   end
 
-  def start(_type, _args) do
+  def start_link do
     children = [:poolboy.child_spec(:worker, config())]
     Supervisor.start_link(children, opts())
   end

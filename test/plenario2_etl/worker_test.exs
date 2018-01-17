@@ -257,7 +257,7 @@ defmodule Plenario2Etl.WorkerTest do
   end
 
   test :load_chunk, %{meta: meta, job: job} do
-    Worker.load_chunk!(self(), meta, job, Enum.map([
+    Worker.load_chunk!(meta, job, Enum.map([
       %{
         "data" => "crackers",
         "datetime" => "2017-01-01T00:00:00",
