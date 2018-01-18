@@ -13,6 +13,15 @@ defmodule Plenario2Etl.Shapefile do
   Loads records from an unzipped shapefile at `path` to a table named `table`.
   The table is either created or replaced for the database configured for
   `Plenario2.Repo`.
+
+  ## Examples
+
+      iex> Plenario2Etl.Shapefile.load(
+      ...>   "test/fixtures/Watersheds.shp", 
+      ...>   "watersheds"
+      ...> )
+      {:ok, "watersheds"}
+      
   """
   def load(path, table) do
     host = Application.get_env(:plenario2, Plenario2.Repo)[:hostname]

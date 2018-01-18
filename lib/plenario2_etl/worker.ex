@@ -149,6 +149,16 @@ defmodule Plenario2Etl.Worker do
 
   @doc """
   Performs the work of loading a shapefile associated with a `Meta` instance.
+
+  ## Examples
+
+      iex> {:ok, user} = Plenario2Auth.UserActions.create("a", "b", "c@email.com")
+      iex> {:ok, meta} = Plenario2.Actions.MetaActions.create("watersheds", user.id, "foo")
+      iex> {:ok, job} = Plenario2.Actions.EtlJobActions.create(meta.id)
+      iex> path = "test/fixtures/Watersheds.zip"
+      iex> Plenario2Etl.Worker.load_shape(meta, path, job)
+      {:ok, "watersheds"}
+
   """
   def load_shape(meta, path, _job) do
     Logger.info("[#{inspect self()}] [load_shape] Unpacking shapefile at #{path}")
