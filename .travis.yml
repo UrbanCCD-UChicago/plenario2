@@ -14,13 +14,14 @@ services:
 env:
   - MIX_ENV=test
 
+sudo: true
+
 before_install:
-  - sudo apt-get install -y build-essential
-  - sudo apt-get install -y erlang-dev
-  - sudo apt-get install -y postgresql-9.5-postgis-2.3
+  - sudo apt-get install build-essential -y
+  - sudo apt-get install erlang-dev -y
   - sudo add-apt-repository ppa:ubuntugis/ppa -y
   - sudo apt-get update -q
-  - sudo apt-get install -y gdal-bin
+  - sudo apt-get install gdal-bin -y
 
 before_script:
   - psql -U postgres -c "create extension postgis"
