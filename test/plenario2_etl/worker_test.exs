@@ -241,9 +241,9 @@ defmodule Plenario2Etl.WorkerTest do
     Worker.upsert!(meta, @insert_rows)
     rows = Worker.contains!(meta, @upsert_rows)
     assert [[
-      data: "crackers", 
-      datetime: {{2017, 1, 1}, {_, 0, 0, 0}}, 
-      location: "(0, 1)", 
+      data: "crackers",
+      datetime: {{2017, 1, 1}, {_, 0, 0, 0}},
+      location: "(0, 1)",
       pk: 1
     ]] = rows
   end
@@ -370,7 +370,7 @@ defmodule Plenario2Etl.WorkerTest do
 
   describe "integration tests" do
     setup do
-      {:ok, user} = UserActions.create("Trusted User", "password", "user@example.com") 
+      {:ok, user} = UserActions.create("Trusted User", "password", "user@example.com")
       {:ok, meta} = MetaActions.create("clinics", user.id, "source_url")
 
       DataSetFieldActions.create(meta.id, "date", "timestamptz")
@@ -450,17 +450,17 @@ defmodule Plenario2Etl.WorkerTest do
       end
     end
 
-    test "load/1 loads shp fixture" do
-      {:ok, user} = UserActions.create("Trusted User", "password", "shapeuser@example.com") 
-      {:ok, meta} = MetaActions.create("watersheds", user.id, "watersheds_source_url")
-      MetaActions.update_source_info(meta, source_type: "shp")
-      get! = load_mock(@shp_fixture_path)
-
-      with_mock HTTPoison, get!: fn url -> get!.(url) end do
-        Worker.load(%{meta_id: meta.id})
-        %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, "select * from watersheds", [])
-        assert 7 == Enum.count(rows)
-      end
-    end
+    # test "load/1 loads shp fixture" do
+    #   {:ok, user} = UserActions.create("Trusted User", "password", "shapeuser@example.com")
+    #   {:ok, meta} = MetaActions.create("watersheds", user.id, "watersheds_source_url")
+    #   MetaActions.update_source_info(meta, source_type: "shp")
+    #   get! = load_mock(@shp_fixture_path)
+    #
+    #   with_mock HTTPoison, get!: fn url -> get!.(url) end do
+    #     Worker.load(%{meta_id: meta.id})
+    #     %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, "select * from watersheds", [])
+    #     assert 7 == Enum.count(rows)
+    #   end
+    # end
   end
 end

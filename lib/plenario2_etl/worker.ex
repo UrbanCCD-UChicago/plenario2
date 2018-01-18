@@ -150,23 +150,13 @@ defmodule Plenario2Etl.Worker do
 
   @doc """
   Performs the work of loading a shapefile associated with a `Meta` instance.
-
-  ## Examples
-
-      iex> {:ok, user} = Plenario2Auth.UserActions.create("a", "b", "c@email.com")
-      iex> {:ok, meta} = Plenario2.Actions.MetaActions.create("watersheds", user.id, "foo")
-      iex> {:ok, job} = Plenario2.Actions.EtlJobActions.create(meta.id)
-      iex> path = "test/fixtures/Watersheds.zip"
-      iex> Plenario2Etl.Worker.load_shape(meta, path, job)
-      {:ok, "watersheds"}
-
   """
   def load_shape(meta, path, _job) do
     Logger.info("[#{inspect self()}] [load_shape] Unpacking shapefile at #{path}")
     {:ok, file_paths} = :zip.unzip(String.to_charlist(path), cwd: '/tmp/')
 
     Logger.info("[#{inspect self()}] [load_shape] Looking for .shp file")
-    shp = 
+    shp =
       Enum.find(file_paths, fn path ->
         String.ends_with?(to_string(path), ".shp")
       end)
@@ -185,7 +175,7 @@ defmodule Plenario2Etl.Worker do
     |> Enum.map(fn chunk ->
          async_load_chunk!(meta, job, chunk)
        end)
-    |> Enum.map(fn task -> 
+    |> Enum.map(fn task ->
          Task.await(task)
        end)
   end
@@ -243,7 +233,7 @@ defmodule Plenario2Etl.Worker do
       )
 
     %Postgrex.Result{
-      columns: columns, 
+      columns: columns,
       rows: rows
     } = query!(Plenario2.Repo, sql, [])
 
