@@ -15,7 +15,7 @@ env:
   - MIX_ENV=test
 
 before_install:
-  - sudo add-apt-repository ppa:ubuntugis/ppa -yes
+  - sudo add-apt-repository ppa:ubuntugis/ppa -y
   - sudo apt-get update
   - sudo apt-get install gdal-bin -y
   - sudo apt-get install build-essential -y
