@@ -18,11 +18,11 @@ before_install:
   - sudo apt-get install -y build-essential
   - sudo apt-get install -y erlang-dev
   - sudo apt-get install -y postgresql-9.5-postgis-2.3
-
-before_script:
   - sudo add-apt-repository ppa:ubuntugis/ppa -y
   - sudo apt-get update -q
   - sudo apt-get install -y gdal-bin
+
+before_script:
   - psql -U postgres -c "create extension postgis"
   - mix do ecto.create, ecto.migrate
 
