@@ -32,7 +32,7 @@ defmodule Plenario2Etl.Shapefile do
 
     args = ["-f", "PostgreSQL", dbconn, path, "-lco", "GEOMETRY_NAME=geom",
       "-lco", "FID=gid", "-lco", "PRECISION=no", "-nlt", "PROMOTE_TO_MULTI",
-      "-nln", table, "-lco", "OVERWRITE=YES"]
+      "-nln", table, "-lco", "OVERWRITE=YES", "-overwrite"]
 
     case System.cmd("ogr2ogr", args) do
       {"", 0} -> {:ok, table}
