@@ -120,8 +120,8 @@ defmodule Plenario2Web.MetaController do
 
   def ingest_dataset(conn, %{"slug" => slug}) do
     meta = MetaActions.get(slug, [with_user: true])
-    spawn(Plenario2Etl.Worker, :load, [%{meta_id: meta.id}])
-    Logger.info "Injesting #{meta.id}"
+    Plenario2Etl.Worker.async_load!(meta.id)
+    Logger.info "Ingesting #{meta.id}"
     conn
     |> put_flash(:success, "#{meta.name} Ingest started!")
     |> redirect(to: meta_path(conn, :detail, meta.slug))

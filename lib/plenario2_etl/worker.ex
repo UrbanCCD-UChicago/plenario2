@@ -18,6 +18,9 @@ defmodule Plenario2Etl.Worker do
 
   @contains_template "lib/plenario2_etl/templates/contains.sql.eex"
   @upsert_template "lib/plenario2_etl/templates/upsert.sql.eex"
+  @timeout 10000
+
+  @chunk_size Application.get_env(:plenario2, Plenario2Etl)[:chunk_size]
 
   @doc """
   Entrypoint for the `Worker` `GenServer`. Saves you the hassle of writing out
@@ -34,7 +37,18 @@ defmodule Plenario2Etl.Worker do
   """
   @spec init(state :: map) :: {:ok, map}
   def init(state) do
-    {:ok, load(state)}
+    Logger.info("[#{inspect self()}] [init] Starting worker GenServer")
+    {:ok, state}
+  end
+
+  def handle_call({:load, meta_id_map}, _, state) do
+    Logger.info("[#{inspect self()}] [handle_call] Received :load call")
+    {:reply, load(meta_id_map), state}
+  end
+
+  def handle_call({:load_chunk!, meta, job, chunk}, _, state) do
+    Logger.info("[#{inspect self()}] [handle_call] Received :load_chunk! call")
+    {:reply, load_chunk!(meta, job, chunk), state}
   end
 
   @doc """
@@ -85,7 +99,7 @@ defmodule Plenario2Etl.Worker do
   This is the main subprocess kicked off by the `load` method that handles
   and ingests a smaller chunk of rows.
   """
-  def load_chunk!(sender, meta, job, chunk) do
+  def load_chunk!(meta, job, chunk) do
     rows = Enum.map(chunk, &Keyword.values/1)
 
     Logger.info("[#{inspect self()}] [load_chunk] Running contains query")
@@ -99,12 +113,9 @@ defmodule Plenario2Etl.Worker do
     pairs = Plenario2Etl.Rows.pair_rows(existing_rows, inserted_rows, constraint_atoms)
 
     Logger.info("[#{inspect self()}] [load_chunk] Will possibly update #{Enum.count(pairs)} rows")
-    result =
-      Enum.map(pairs, fn {existing_row, inserted_row} ->
-        create_diffs(meta, job, existing_row, inserted_row)
-      end)
-
-    send(sender, {self(), result})
+    Enum.map(pairs, fn {existing_row, inserted_row} ->
+      create_diffs(meta, job, existing_row, inserted_row)
+    end)
   end
 
   @doc """
@@ -170,17 +181,35 @@ defmodule Plenario2Etl.Worker do
     decode.(path)
     |> Stream.map(&Enum.to_list/1)
     |> Stream.map(&Enum.sort/1)
-    |> Stream.chunk_every(100)
+    |> Stream.chunk_every(@chunk_size)
     |> Enum.map(fn chunk ->
-         pid = spawn_link(__MODULE__, :load_chunk!, [self(), meta, job, chunk])
-        Logger.info("[#{inspect self()}] [load_data] Spawned #{inspect pid}")
-        pid
+         async_load_chunk!(meta, job, chunk)
        end)
-    |> Enum.map(fn pid ->
-         receive do
-           {^pid, result} -> result
-         end
+    |> Enum.map(fn task -> 
+         Task.await(task)
        end)
+  end
+
+  def async_load_chunk!(meta, job, chunk) do
+    Task.async(fn ->
+      :poolboy.transaction(
+        :worker,
+        fn pid -> GenServer.call(pid, {:load_chunk!, meta, job, chunk}) end,
+        @timeout
+      )
+
+      {:ok, self()}
+    end)
+  end
+
+  def async_load!(meta_id) do
+    Task.async(fn ->
+      :poolboy.transaction(
+        :worker,
+        fn pid -> GenServer.call(pid, {:load, %{meta_id: meta_id}}) end,
+        :infinity
+      )
+    end)
   end
 
   @doc """
@@ -213,7 +242,6 @@ defmodule Plenario2Etl.Worker do
         constraints: constraints
       )
 
-    # TODO(heyzoos) log informative messages for failing queries
     %Postgrex.Result{
       columns: columns, 
       rows: rows

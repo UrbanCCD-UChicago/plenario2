@@ -71,4 +71,22 @@ defmodule Plenario2Etl.Rows do
   def to_key(row, constraints) do
     List.to_tuple(for constraint <- constraints, do: row[constraint])
   end
+
+  @doc """
+  Prepare a row value for insertion into the database. Handles escaping.
+
+  ## Examples
+
+      iex> row = [nil, "'", "\\"", "--", 10]
+      iex> Enum.map(row, &Plenario2Etl.Rows.escape/1)
+      ["null", "'&#39;'", "'&quot;'", "'--'", 10]
+
+  """
+  def escape(v) when is_binary(v) do
+    {:safe, safe} = Phoenix.HTML.html_escape(v)
+    "'#{safe}'"
+  end
+
+  def escape(v) when is_nil(v), do: "null"
+  def escape(v), do: v
 end
