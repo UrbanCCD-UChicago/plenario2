@@ -242,9 +242,9 @@ defmodule Plenario2Etl.WorkerTest do
     Worker.upsert!(meta, @insert_rows)
     rows = Worker.contains!(meta, @upsert_rows)
     assert [[
-      data: "crackers", 
-      datetime: {{2017, 1, 1}, {_, 0, 0, 0}}, 
-      location: "(0, 1)", 
+      data: "crackers",
+      datetime: {{2017, 1, 1}, {_, 0, 0, 0}},
+      location: "(0, 1)",
       pk: 1
     ]] = rows
   end
@@ -371,7 +371,7 @@ defmodule Plenario2Etl.WorkerTest do
 
   describe "integration tests" do
     setup do
-      {:ok, user} = UserActions.create("Trusted User", "password", "user@example.com") 
+      {:ok, user} = UserActions.create("Trusted User", "password", "user@example.com")
       {:ok, meta} = MetaActions.create("clinics", user.id, "source_url")
 
       DataSetFieldActions.create(meta.id, "date", "timestamptz")
