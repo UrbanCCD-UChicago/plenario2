@@ -71,7 +71,7 @@ defmodule Plenario2Etl.Worker do
   @spec load(state :: map) :: map
   def load(state) do
     meta = MetaActions.get(state[:meta_id])
-    job = EtlJobActions.create!(meta.id)
+    job = EtlJobActions.get(state[:job_id])
 
     Logger.info("[#{inspect self()}] [load] Downloading file for #{meta.name}")
     Logger.info("[#{inspect self()}] [load] #{meta.name} source url is #{meta.source_url}")
@@ -202,12 +202,23 @@ defmodule Plenario2Etl.Worker do
   end
 
   def async_load!(meta_id) do
+    meta = MetaActions.get(meta_id)
+    job = EtlJobActions.create!(meta)
+    {:ok, job} = EtlJobActions.mark_started(job)
+
     Task.async(fn ->
       :poolboy.transaction(
         :worker,
-        fn pid -> GenServer.call(pid, {:load, %{meta_id: meta_id}}) end,
+        fn pid -> 
+          GenServer.call(pid, {:load, %{
+            meta_id: meta_id,
+            job_id: job.id
+          }}) 
+        end,
         :infinity
       )
+
+      EtlJobActions.mark_completed(job)
     end)
   end
 
