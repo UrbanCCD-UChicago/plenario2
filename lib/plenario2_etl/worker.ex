@@ -210,15 +210,20 @@ defmodule Plenario2Etl.Worker do
       :poolboy.transaction(
         :worker,
         fn pid -> 
-          GenServer.call(pid, {:load, %{
-            meta_id: meta_id,
-            job_id: job.id
-          }}) 
+          try do
+            GenServer.call(pid, {:load, %{
+              meta_id: meta_id,
+              job_id: job.id
+            }}) 
+            EtlJobActions.mark_completed(job)
+          rescue 
+            e in RuntimeError ->
+              EtlJobActions.mark_erred(job, %{error_message: inspect(e)})
+          end
         end,
         :infinity
       )
 
-      EtlJobActions.mark_completed(job)
     end)
   end
 
