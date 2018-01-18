@@ -4,6 +4,7 @@ defmodule Plenario2.Actions.EtlJobActions do
   underlying the various public interfaces for EtlJob.
   """
 
+  import Ecto.Changeset
   import Ecto.Query
 
   import Plenario2.Guards, only: [is_id: 1]
@@ -75,21 +76,23 @@ defmodule Plenario2.Actions.EtlJobActions do
     )
   end
 
-  # TODO: this should be converted to an FSM function on the schema, a la Meta states
   def mark_started(job) do
-    EtlJobChangesets.mark_started(job)
+    EtlJob.mark_started(job)
+    |> put_change(:started_on, DateTime.utc_now())
     |> Repo.update()
   end
 
-  # TODO: this should be converted to an FSM function on the schema, a la Meta states
-  def mark_erred(job, error_message) do
-    EtlJobChangesets.mark_erred(job, %{error_message: error_message})
+  def mark_erred(job, params) do
+    EtlJob.mark_erred(job)
+    |> cast(params, [:error_message])
+    |> put_change(:completed_on, DateTime.utc_now())
     |> Repo.update()
   end
 
-  # TODO: this should be converted to an FSM function on the schema, a la Meta states
   def mark_completed(job) do
-    EtlJobChangesets.mark_completed(job)
+    EtlJob.mark_completed(job)
+    |> cast(%{}, [])
+    |> put_change(:completed_on, DateTime.utc_now())
     |> Repo.update()
   end
 end

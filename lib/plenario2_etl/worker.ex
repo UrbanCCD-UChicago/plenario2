@@ -16,11 +16,10 @@ defmodule Plenario2Etl.Worker do
   require Logger
   use GenServer
 
+  @chunk_size Application.get_env(:plenario2, Plenario2Etl)[:chunk_size]
   @contains_template "lib/plenario2_etl/templates/contains.sql.eex"
   @upsert_template "lib/plenario2_etl/templates/upsert.sql.eex"
   @timeout 10000
-
-  @chunk_size Application.get_env(:plenario2, Plenario2Etl)[:chunk_size]
 
   @doc """
   Entrypoint for the `Worker` `GenServer`. Saves you the hassle of writing out

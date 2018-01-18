@@ -30,19 +30,17 @@ defmodule EtlJobActionsTests do
 
   test "mark a job as started", context do
     {:ok, job} = EtlJobActions.create(context.meta.id)
-    EtlJobActions.mark_started(job)
+    {:ok, job} = EtlJobActions.mark_started(job)
 
-    job = EtlJobActions.get(job.id)
-    assert job.state == "running"
+    assert job.state == "started"
     assert job.started_on != nil
   end
 
   test "mark a job as erred", context do
     {:ok, job} = EtlJobActions.create(context.meta.id)
-    EtlJobActions.mark_started(job)
-    EtlJobActions.mark_erred(job, "test")
+    {:ok, job} = EtlJobActions.mark_started(job)
+    {:ok, job} = EtlJobActions.mark_erred(job, %{error_message: "test"})
 
-    job = EtlJobActions.get(job.id)
     assert job.state == "erred"
     assert job.completed_on != nil
     assert job.error_message == "test"
@@ -50,10 +48,9 @@ defmodule EtlJobActionsTests do
 
   test "mark a job as completed", context do
     {:ok, job} = EtlJobActions.create(context.meta.id)
-    EtlJobActions.mark_started(job)
-    EtlJobActions.mark_completed(job)
+    {:ok, job} = EtlJobActions.mark_started(job)
+    {:ok, job} = EtlJobActions.mark_completed(job)
 
-    job = EtlJobActions.get(job.id)
     assert job.state == "completed"
     assert job.completed_on != nil
   end
