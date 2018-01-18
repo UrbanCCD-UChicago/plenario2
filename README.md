@@ -46,6 +46,12 @@ $ asdf global erlang 20.2.2
 $ asdf global elixir 1.6.0-otp-20
 ```
 
+Relevant links:
+
+- https://github.com/asdf-vm/asdf
+- https://github.com/asdf-vm/asdf-erlang
+- https://github.com/asdf-vm/asdf-elixir
+
 ## Running the Tests
 
 You're going to need a local version of Postgres with the PostGIS extension
