@@ -12,7 +12,9 @@ defmodule VirtualPointFieldActionsTests do
   end
 
   test "create virtual point field from long/lat", context do
-    {:ok, field} = VirtualPointFieldActions.create_from_long_lat(context.meta.id, "longitude", "latitude")
+    {:ok, field} =
+      VirtualPointFieldActions.create_from_long_lat(context.meta.id, "longitude", "latitude")
+
     assert field.name == "_meta_point_longitude_latitude"
   end
 

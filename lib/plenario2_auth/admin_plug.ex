@@ -12,6 +12,7 @@ defmodule Plenario2Auth.AdminPlug do
 
   def call(conn, _opts) do
     curr_user = Guardian.Plug.current_resource(conn)
+
     if not curr_user.is_admin do
       ErrorHandler.handle_unauthorized(conn)
     else

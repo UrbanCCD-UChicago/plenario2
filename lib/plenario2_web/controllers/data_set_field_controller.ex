@@ -24,7 +24,14 @@ defmodule Plenario2Web.DataSetFieldController do
 
   def new(conn, %{"slug" => slug}) do
     changeset = DataSetFieldChangesets.new()
-    render(conn, "new.html", changeset: changeset, slug: slug, field_type_options: @field_type_options)
+
+    render(
+      conn,
+      "new.html",
+      changeset: changeset,
+      slug: slug,
+      field_type_options: @field_type_options
+    )
   end
 
   def create(conn, %{"data_set_field" => params, "slug" => slug}) do
@@ -43,11 +50,12 @@ defmodule Plenario2Web.DataSetFieldController do
     end
   end
 
-  def edit(conn, %{"slug"=> slug, "id" => id}) do
+  def edit(conn, %{"slug" => slug, "id" => id}) do
     field = Repo.get!(DataSetField, id)
     changeset = DataSetFieldChangesets.update(field)
 
     meta = MetaActions.get(field.meta_id)
+
     disabled =
       case meta.state == "ready" do
         true -> "disabled"
@@ -58,7 +66,15 @@ defmodule Plenario2Web.DataSetFieldController do
       Logger.info("disabled")
     end
 
-    render(conn, "edit.html", field: field, changeset: changeset, slug: slug, field_type_options: @field_type_options, disabled: disabled)
+    render(
+      conn,
+      "edit.html",
+      field: field,
+      changeset: changeset,
+      slug: slug,
+      field_type_options: @field_type_options,
+      disabled: disabled
+    )
   end
 
   def update(conn, %{"slug" => slug, "id" => id, "data_set_field" => field_params}) do

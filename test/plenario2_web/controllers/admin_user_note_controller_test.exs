@@ -11,7 +11,9 @@ defmodule Plenario2Web.AdminUserNoteControllerTest do
     {:ok, note} = AdminUserNoteActions.create_for_meta("blah blah blah", admin, regular, meta)
 
     conn
-    |> post(admin_user_note_path(conn, :acknowledge, note.id), %{"path" => meta_path(conn, :detail, meta.slug)})
+    |> post(admin_user_note_path(conn, :acknowledge, note.id), %{
+      "path" => meta_path(conn, :detail, meta.slug)
+    })
     |> html_response(:found)
 
     note = AdminUserNoteActions.get(note.id)

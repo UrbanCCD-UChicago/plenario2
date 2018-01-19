@@ -5,7 +5,7 @@ defmodule Plenario2Web.VirtualDateFieldController do
   alias Plenario2.Changesets.VirtualDateFieldChangesets
 
   def get_create(conn, %{"slug" => meta_slug}) do
-    meta = MetaActions.get(meta_slug, [with_fields: true])
+    meta = MetaActions.get(meta_slug, with_fields: true)
     changeset = VirtualDateFieldChangesets.new()
     action = virtual_date_field_path(conn, :do_create, meta_slug)
 
@@ -35,7 +35,7 @@ defmodule Plenario2Web.VirtualDateFieldController do
   end
 
   defp create_reply({:error, changeset}, conn, meta_slug) do
-    meta = MetaActions.get(meta_slug, [with_fields: true])
+    meta = MetaActions.get(meta_slug, with_fields: true)
     action = virtual_date_field_path(conn, :do_create, meta_slug)
 
     integer_fields = Enum.filter(meta.data_set_fields, fn f -> f.type == "integer" end)
@@ -48,7 +48,7 @@ defmodule Plenario2Web.VirtualDateFieldController do
 
   def edit(conn, %{"slug" => meta_slug, "id" => field_id}) do
     field = VirtualDateFieldActions.get(field_id)
-    meta = MetaActions.get(meta_slug, [with_fields: true])
+    meta = MetaActions.get(meta_slug, with_fields: true)
     changeset = VirtualDateFieldChangesets.update(field, %{})
     action = virtual_date_field_path(conn, :update, meta_slug, field_id)
     integer_fields = Enum.filter(meta.data_set_fields, fn f -> f.type == "integer" end)
@@ -60,12 +60,21 @@ defmodule Plenario2Web.VirtualDateFieldController do
         false -> false
       end
 
-    render(conn, "edit.html", field: field, meta: meta, changeset: changeset, action: action, disabled: disabled, fields: fields)
+    render(
+      conn,
+      "edit.html",
+      field: field,
+      meta: meta,
+      changeset: changeset,
+      action: action,
+      disabled: disabled,
+      fields: fields
+    )
   end
 
   def update(conn, %{"slug" => meta_slug, "id" => field_id, "virtual_date_field" => params}) do
     field = VirtualDateFieldActions.get(field_id)
-    meta = MetaActions.get(meta_slug, [with_fields: true])
+    meta = MetaActions.get(meta_slug, with_fields: true)
     changeset = VirtualDateFieldActions.update(field, params)
     action = virtual_date_field_path(conn, :update, meta_slug, field_id)
     integer_fields = Enum.filter(meta.data_set_fields, fn f -> f.type == "integer" end)
@@ -87,7 +96,15 @@ defmodule Plenario2Web.VirtualDateFieldController do
         conn
         |> put_flash(:error, "Please review and fix errors below")
         |> put_status(:bad_request)
-        |> render("edit.html", field: field, meta: meta, changeset: changeset, action: action, disabled: disabled, fields: fields)
+        |> render(
+          "edit.html",
+          field: field,
+          meta: meta,
+          changeset: changeset,
+          action: action,
+          disabled: disabled,
+          fields: fields
+        )
     end
   end
 end

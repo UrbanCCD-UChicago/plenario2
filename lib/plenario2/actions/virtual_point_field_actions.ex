@@ -17,7 +17,7 @@ defmodule Plenario2.Actions.VirtualPointFieldActions do
   @typedoc """
   Parameter is an ID attribute
   """
-  @type id :: String.t | integer
+  @type id :: String.t() | integer
 
   @typedoc """
   Returns a tuple of :ok, VirtualPointField or :error, Ecto.Changeset
@@ -27,7 +27,8 @@ defmodule Plenario2.Actions.VirtualPointFieldActions do
   @doc """
   Create a new VirtualPointField from a long/lat pair
   """
-  @spec create_from_long_lat(meta :: Meta | id, longitude :: String.t, latitude :: String.t) :: ok_field
+  @spec create_from_long_lat(meta :: Meta | id, longitude :: String.t(), latitude :: String.t()) ::
+          ok_field
   def create_from_long_lat(meta, longitude, latitude) do
     meta_id =
       case is_id(meta) do
@@ -41,7 +42,7 @@ defmodule Plenario2.Actions.VirtualPointFieldActions do
       latitude_field: latitude
     }
 
-    Logger.info "Creating VirtualPointField from long/lat: #{inspect(params)}"
+    Logger.info("Creating VirtualPointField from long/lat: #{inspect(params)}")
 
     VirtualPointFieldChangesets.create_from_long_lat(params)
     |> Repo.insert()
@@ -50,7 +51,7 @@ defmodule Plenario2.Actions.VirtualPointFieldActions do
   @doc """
   Create a new VirtualPointField from a single location text field
   """
-  @spec create_from_loc(meta :: Meta | id, location :: String.t) :: ok_field
+  @spec create_from_loc(meta :: Meta | id, location :: String.t()) :: ok_field
   def create_from_loc(meta, location) do
     meta_id =
       case is_id(meta) do
@@ -60,7 +61,7 @@ defmodule Plenario2.Actions.VirtualPointFieldActions do
 
     params = %{meta_id: meta_id, location_field: location}
 
-    Logger.info "Creating VirtualPointField from text field: #{inspect(params)}"
+    Logger.info("Creating VirtualPointField from text field: #{inspect(params)}")
 
     VirtualPointFieldChangesets.create_from_loc(params)
     |> Repo.insert()
@@ -77,18 +78,16 @@ defmodule Plenario2.Actions.VirtualPointFieldActions do
         false -> meta.id
       end
 
-    Repo.all(
-      from f in VirtualPointField,
-      where: f.meta_id == ^meta_id
-    )
+    Repo.all(from(f in VirtualPointField, where: f.meta_id == ^meta_id))
   end
 
   @doc """
   Deletes a given VirtualPointField
   """
-  @spec delete(field :: %VirtualPointField{}) :: {:ok, %VirtualPointField{} | :error, Ecto.Changeset.t}
+  @spec delete(field :: %VirtualPointField{}) ::
+          {:ok, %VirtualPointField{} | :error, Ecto.Changeset.t()}
   def delete(field) do
-    Logger.info "Deleting VirtualPointField: #{inspect(field)}"
+    Logger.info("Deleting VirtualPointField: #{inspect(field)}")
     Repo.delete(field)
-    end
+  end
 end

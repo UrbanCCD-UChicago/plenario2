@@ -19,7 +19,7 @@ defmodule Plenario2.Actions.ExportJobActions do
   @typedoc """
   Parameter is an ID attribute
   """
-  @type id :: String.t | integer
+  @type id :: String.t() | integer
 
   @typedoc """
   Returns a tuple of :ok, ExportJob or :error, Ecto.Changeset
@@ -29,7 +29,12 @@ defmodule Plenario2.Actions.ExportJobActions do
   @doc """
   Creates a new instance of ExportJob
   """
-  @spec create(meta :: Meta | id, user :: User | id, query :: String.t, include_diffs :: boolean) :: ok_job
+  @spec create(
+          meta :: Meta | id,
+          user :: User | id,
+          query :: String.t(),
+          include_diffs :: boolean
+        ) :: ok_job
   def create(meta, user, query, include_diffs \\ false) do
     meta_id =
       case is_id(meta) do
@@ -50,7 +55,8 @@ defmodule Plenario2.Actions.ExportJobActions do
       include_diffs: include_diffs
     }
 
-    Logger.info "Creating Export Job: #{inspect(params)}"
+    Logger.info("Creating Export Job: #{inspect(params)}")
+
     ExportJobChangesets.create(params)
     |> Repo.insert()
   end
@@ -66,9 +72,6 @@ defmodule Plenario2.Actions.ExportJobActions do
         false -> user.id
       end
 
-    Repo.all(
-      from j in ExportJob,
-      where: j.user_id == ^user_id
-    )
+    Repo.all(from(j in ExportJob, where: j.user_id == ^user_id))
   end
 end

@@ -13,18 +13,18 @@ defmodule Plenario2.Changesets.ExportJobChangesets do
   Verbose map of params for create
   """
   @type create_params :: %{
-    query: String.t,
-    include_diffs: boolean,
-    user_id: integer,
-    meta_id: integer
-  }
+          query: String.t(),
+          include_diffs: boolean,
+          user_id: integer,
+          meta_id: integer
+        }
 
   @create_param_keys [:query, :include_diffs, :user_id, :meta_id]
 
   @doc """
   Creates a changeset for inserting a new ExportJob into the database
   """
-  @spec create(params :: create_params) :: Ecto.Changeset.t
+  @spec create(params :: create_params) :: Ecto.Changeset.t()
   def create(params) do
     %ExportJob{}
     |> cast(params, @create_param_keys)

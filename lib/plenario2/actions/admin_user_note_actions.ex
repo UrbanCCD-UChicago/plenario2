@@ -18,7 +18,7 @@ defmodule Plenario2.Actions.AdminUserNoteActions do
   @typedoc """
   Parameter is an ID attribute
   """
-  @type id :: String.t | integer
+  @type id :: String.t() | integer
 
   @typedoc """
   Parameter is an _admin_ User
@@ -60,7 +60,13 @@ defmodule Plenario2.Actions.AdminUserNoteActions do
   @doc """
   Creates a new AdminUserNote related to a Meta.
   """
-  @spec create_for_meta(note :: String.t, admin :: t_admin, user :: User | id, meta :: Meta | id, should_email :: boolean) :: ok_note
+  @spec create_for_meta(
+          note :: String.t(),
+          admin :: t_admin,
+          user :: User | id,
+          meta :: Meta | id,
+          should_email :: boolean
+        ) :: ok_note
   def create_for_meta(note, admin, user, meta, should_email \\ false) do
     admin_id =
       case is_id(admin) do
@@ -88,7 +94,8 @@ defmodule Plenario2.Actions.AdminUserNoteActions do
       meta_id: meta_id
     }
 
-    Logger.info "Creating AdminUserNote: #{inspect(params)}"
+    Logger.info("Creating AdminUserNote: #{inspect(params)}")
+
     AdminUserNoteChangesets.create_for_meta(params)
     |> Repo.insert()
   end

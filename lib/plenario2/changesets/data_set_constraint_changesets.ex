@@ -13,16 +13,16 @@ defmodule Plenario2.Changesets.DataSetConstraintChangesets do
   Verbose map of params for create
   """
   @type create_params :: %{
-    field_names: list(String.t),
-    meta_id: integer
-  }
+          field_names: list(String.t()),
+          meta_id: integer
+        }
 
   @new_create_param_keys [:field_names, :meta_id]
 
   @doc """
   Creates a blank changeset for webforms
   """
-  @spec new() :: Ecto.Changeset.t
+  @spec new() :: Ecto.Changeset.t()
   def new() do
     %DataSetConstraint{}
     |> cast(%{}, @new_create_param_keys)
@@ -31,7 +31,7 @@ defmodule Plenario2.Changesets.DataSetConstraintChangesets do
   @doc """
   Creates a changeset for creating new data set constraints in the database
   """
-  @spec create(params :: create_params) :: Ecto.Changeset.t
+  @spec create(params :: create_params) :: Ecto.Changeset.t()
   def create(params) do
     %DataSetConstraint{}
     |> cast(params, @new_create_param_keys)
@@ -44,7 +44,7 @@ defmodule Plenario2.Changesets.DataSetConstraintChangesets do
   @doc """
   Updates a given unique constraint
   """
-  @spec update(constraint :: DataSetConstraint, params :: create_params) :: Ecto.Changeset.t
+  @spec update(constraint :: DataSetConstraint, params :: create_params) :: Ecto.Changeset.t()
   def update(constraint, params \\ %{}) do
     constraint
     |> cast(params, @new_create_param_keys)
@@ -80,11 +80,13 @@ defmodule Plenario2.Changesets.DataSetConstraintChangesets do
     fields = DataSetFieldActions.list_for_meta(meta)
     known_field_names = for f <- fields, do: f.name
 
-    is_subset = field_names |> Enum.all?(fn (name) -> Enum.member?(known_field_names, name) end)
+    is_subset = field_names |> Enum.all?(fn name -> Enum.member?(known_field_names, name) end)
+
     if is_subset do
       changeset
     else
-      changeset |> add_error(:field_names, "Field names must exist as registered fields of the data set")
+      changeset
+      |> add_error(:field_names, "Field names must exist as registered fields of the data set")
     end
   end
 
@@ -96,7 +98,10 @@ defmodule Plenario2.Changesets.DataSetConstraintChangesets do
 
     if meta.state == "ready" do
       changeset
-      |> add_error(:field_names, "Cannot alter any fields after the parent data set has been approved. If you need to update this field, please contact the administrators.")
+      |> add_error(
+        :field_names,
+        "Cannot alter any fields after the parent data set has been approved. If you need to update this field, please contact the administrators."
+      )
     else
       changeset
     end

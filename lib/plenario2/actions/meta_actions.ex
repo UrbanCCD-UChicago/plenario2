@@ -17,7 +17,7 @@ defmodule Plenario2.Actions.MetaActions do
   @typedoc """
   Parameter is an ID attribute
   """
-  @type id :: String.t | integer
+  @type id :: String.t() | integer
 
   @typedoc """
   Parameter is a keyword list
@@ -27,7 +27,7 @@ defmodule Plenario2.Actions.MetaActions do
   @typedoc """
   Returns a tuple of :ok, Meta or :error, Ecto.Changeset
   """
-  @type ok_meta :: {:ok, Meta} | {:error, Ecto.Changeset.t}
+  @type ok_meta :: {:ok, Meta} | {:error, Ecto.Changeset.t()}
 
   @doc """
   Gets an instance of a Meta by its ID or slug, optionally preloading
@@ -81,7 +81,8 @@ defmodule Plenario2.Actions.MetaActions do
   @doc """
   Creates a new instance of a Meta
   """
-  @spec create(name :: String.t, user :: User | id, source_url :: String.t, details :: kwlist) :: ok_meta
+  @spec create(name :: String.t(), user :: User | id, source_url :: String.t(), details :: kwlist) ::
+          ok_meta
   def create(name, user, source_url, details \\ []) do
     user_id =
       case is_id(user) do
@@ -100,11 +101,13 @@ defmodule Plenario2.Actions.MetaActions do
       srid: 4326,
       timezone: "UTC"
     ]
+
     named = [name: name, user_id: user_id, source_url: source_url]
 
-    params = Keyword.merge(defaults, details)
-    |> Keyword.merge(named)
-    |> Enum.into(%{})
+    params =
+      Keyword.merge(defaults, details)
+      |> Keyword.merge(named)
+      |> Enum.into(%{})
 
     MetaChangesets.create(params)
     |> Repo.insert()
@@ -122,6 +125,7 @@ defmodule Plenario2.Actions.MetaActions do
   @spec get_column_names(meta :: Meta) :: list[charlist]
   def get_column_names(meta) do
     meta = Repo.preload(meta, :data_set_fields)
+
     for field <- meta.data_set_fields() do
       field.name
     end
@@ -178,7 +182,8 @@ defmodule Plenario2.Actions.MetaActions do
   @doc """
   Updates the name of the data set
   """
-  @spec update_name(meta :: %Meta{}, new_name :: String.t) :: {:ok, %Meta{} | :error, Ecto.Changeset.t}
+  @spec update_name(meta :: %Meta{}, new_name :: String.t()) ::
+          {:ok, %Meta{} | :error, Ecto.Changeset.t()}
   def update_name(meta, new_name) do
     MetaChangesets.update_name(meta, %{name: new_name})
     |> Repo.update()
@@ -187,7 +192,8 @@ defmodule Plenario2.Actions.MetaActions do
   @doc """
   updates the user/owner of the data set
   """
-  @spec update_user(meta :: %Meta{}, user :: %User{}) :: {:ok, %Meta{} | :error, Ecto.Changeset.t}
+  @spec update_user(meta :: %Meta{}, user :: %User{}) ::
+          {:ok, %Meta{} | :error, Ecto.Changeset.t()}
   def update_user(meta, user) do
     MetaChangesets.update_user(meta, %{user_id: user.id})
     |> Repo.update()
@@ -196,7 +202,8 @@ defmodule Plenario2.Actions.MetaActions do
   @doc """
   Updates the source_* fields of the Meta
   """
-  @spec update_source_info(meta :: %Meta{}, options :: %{}) :: {:ok, %Meta{} | :error, Ecto.Changeset.t}
+  @spec update_source_info(meta :: %Meta{}, options :: %{}) ::
+          {:ok, %Meta{} | :error, Ecto.Changeset.t()}
   def update_source_info(meta, options \\ []) do
     defaults = [
       source_url: :unchanged,
@@ -216,7 +223,8 @@ defmodule Plenario2.Actions.MetaActions do
   @doc """
   Updates the descriptive fields of the meta
   """
-  @spec update_description_info(meta :: %Meta{}, options :: %{}) :: {:ok, %Meta{} | :error, Ecto.Changeset.t}
+  @spec update_description_info(meta :: %Meta{}, options :: %{}) ::
+          {:ok, %Meta{} | :error, Ecto.Changeset.t()}
   def update_description_info(meta, options \\ []) do
     defaults = [
       description: :unchanged,
@@ -236,7 +244,8 @@ defmodule Plenario2.Actions.MetaActions do
   @doc """
   Updates the refresh_* fields of the Meta
   """
-  @spec update_refresh_info(meta :: %Meta{}, options :: %{}) :: {:ok, %Meta{} | :error, Ecto.Changeset.t}
+  @spec update_refresh_info(meta :: %Meta{}, options :: %{}) ::
+          {:ok, %Meta{} | :error, Ecto.Changeset.t()}
   def update_refresh_info(meta, options \\ []) do
     defaults = [
       refresh_rate: :unchanged,
@@ -264,7 +273,7 @@ defmodule Plenario2.Actions.MetaActions do
   @doc """
   Updates the next refresh field of the Meta
   """
-  @spec update_next_refresh(meta :: %Meta{}) :: {:ok, %Meta{} | :error, Ecto.Changeset.t}
+  @spec update_next_refresh(meta :: %Meta{}) :: {:ok, %Meta{} | :error, Ecto.Changeset.t()}
   def update_next_refresh(meta) do
     current =
       case meta.next_refresh do
@@ -285,7 +294,7 @@ defmodule Plenario2.Actions.MetaActions do
   @doc """
   Handles the state transition of the Meta from new to needing approval
   """
-  @spec submit_for_approval(meta :: %Meta{}) :: {:ok, %Meta{} | :error, Ecto.Changeset.t}
+  @spec submit_for_approval(meta :: %Meta{}) :: {:ok, %Meta{} | :error, Ecto.Changeset.t()}
   def submit_for_approval(meta) do
     Meta.submit_for_approval(meta)
     |> Repo.update()
@@ -294,7 +303,7 @@ defmodule Plenario2.Actions.MetaActions do
   @doc """
   Handles the state transition of the Meta from needing approval to ready
   """
-  @spec approve(meta :: %Meta{}, admin :: %User{}) :: {:ok, %Meta{} | :error, Ecto.Changeset.t}
+  @spec approve(meta :: %Meta{}, admin :: %User{}) :: {:ok, %Meta{} | :error, Ecto.Changeset.t()}
   def approve(meta, %User{is_admin: true} = admin) do
     # advance the state
     updated_meta =
@@ -304,7 +313,10 @@ defmodule Plenario2.Actions.MetaActions do
     # create a note for the user letting them know it's been approved
     AdminUserNoteActions.create_for_meta(
       "Your data set has been approved",
-      admin, meta.user, meta, false
+      admin,
+      meta.user,
+      meta,
+      false
     )
 
     # create the table for the data set
@@ -318,12 +330,17 @@ defmodule Plenario2.Actions.MetaActions do
 
     # check that creation succeeded
     case create_res do
-      :ok -> :ok
+      :ok ->
+        :ok
 
       :error ->
         AdminUserNoteActions.create_for_meta(
           "An error occurred setting up the database for your data. We are looking into it.",
-          admin, meta.user, meta)
+          admin,
+          meta.user,
+          meta
+        )
+
         MetaActions.mark_erred(meta, admin, create_res)
     end
 
@@ -336,11 +353,17 @@ defmodule Plenario2.Actions.MetaActions do
   @doc """
   Handles the state transition of the Meta from needing approval to new
   """
-  @spec disapprove(meta :: %Meta{}, admin :: %User{}, message :: String.t) :: {:ok, %Meta{} | :error, Ecto.Changeset.t}
+  @spec disapprove(meta :: %Meta{}, admin :: %User{}, message :: String.t()) ::
+          {:ok, %Meta{} | :error, Ecto.Changeset.t()}
   def disapprove(meta, %User{is_admin: true} = admin, message) do
     msg = "Approval has been denied:\n\n" <> message
+
     AdminUserNoteActions.create_for_meta(
-      msg, admin, meta.user, meta, true
+      msg,
+      admin,
+      meta.user,
+      meta,
+      true
     )
 
     Meta.disapprove(meta)
@@ -352,11 +375,17 @@ defmodule Plenario2.Actions.MetaActions do
   @doc """
   Handle the state transition of the Meta from whatever to erred
   """
-  @spec mark_erred(meta :: %Meta{}, admin :: %User{}, message :: String.t) :: {:ok, %Meta{} | :error, Ecto.Changeset.t}
+  @spec mark_erred(meta :: %Meta{}, admin :: %User{}, message :: String.t()) ::
+          {:ok, %Meta{} | :error, Ecto.Changeset.t()}
   def mark_erred(meta, %User{is_admin: true} = admin, message) do
     msg = "An error occurred regarding your data set:\n\n" <> message
+
     AdminUserNoteActions.create_for_meta(
-      msg, admin, meta.user, meta, true
+      msg,
+      admin,
+      meta.user,
+      meta,
+      true
     )
 
     Meta.mark_erred(meta)
@@ -368,11 +397,17 @@ defmodule Plenario2.Actions.MetaActions do
   @doc """
   Handle the state transition of the Meta from erred to ready
   """
-  @spec mark_fixed(meta :: %Meta{}, admin :: %User{}, message :: String.t) :: {:ok, %Meta{} | :error, Ecto.Changeset.t}
+  @spec mark_fixed(meta :: %Meta{}, admin :: %User{}, message :: String.t()) ::
+          {:ok, %Meta{} | :error, Ecto.Changeset.t()}
   def mark_fixed(meta, %User{is_admin: true} = admin, message) do
     msg = "Data set error fixed:\n\n" <> message
+
     AdminUserNoteActions.create_for_meta(
-      msg, admin, meta.user, meta, true
+      msg,
+      admin,
+      meta.user,
+      meta,
+      true
     )
 
     Meta.mark_fixed(meta)
@@ -384,6 +419,6 @@ defmodule Plenario2.Actions.MetaActions do
   @doc """
   Deletes a given Meta
   """
-  @spec delete(meta :: %Meta{}) :: {:ok, %Meta{} | :error, Ecto.Changeset.t}
+  @spec delete(meta :: %Meta{}) :: {:ok, %Meta{} | :error, Ecto.Changeset.t()}
   def delete(meta), do: Repo.delete(meta)
 end

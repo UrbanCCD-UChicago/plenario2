@@ -17,7 +17,7 @@ defmodule Plenario2.Actions.DataSetDiffActions do
   @typedoc """
   Parameter is an ID attribute
   """
-  @type id :: String.t | integer
+  @type id :: String.t() | integer
 
   @typedoc """
   Returns a tuple of :ok, DataSetDiff or :error, Ecto.Changeset
@@ -27,7 +27,16 @@ defmodule Plenario2.Actions.DataSetDiffActions do
   @doc """
   Creates a new instance of DataSetDiff.
   """
-  @spec create(meta :: Meta | id, constraint :: DataSetConstraint | id, etl_job :: EtlJob | id, column :: String.t, original :: any, updated :: any, changed_on :: DateTime, constraint_values :: %{}) :: ok_diff
+  @spec create(
+          meta :: Meta | id,
+          constraint :: DataSetConstraint | id,
+          etl_job :: EtlJob | id,
+          column :: String.t(),
+          original :: any,
+          updated :: any,
+          changed_on :: DateTime,
+          constraint_values :: %{}
+        ) :: ok_diff
   def create(meta, constraint, etl_job, column, original, updated, changed_on, constraint_values) do
     meta_id =
       case is_id(meta) do
@@ -58,7 +67,7 @@ defmodule Plenario2.Actions.DataSetDiffActions do
       constraint_values: constraint_values
     }
 
-    Logger.info "Creating DataSetDiff: #{inspect(params)}"
+    Logger.info("Creating DataSetDiff: #{inspect(params)}")
 
     DataSetDiffChangesets.create(params)
     |> Repo.insert()
@@ -75,9 +84,6 @@ defmodule Plenario2.Actions.DataSetDiffActions do
         false -> meta.id
       end
 
-    Repo.all(
-      from d in DataSetDiff,
-      where: d.meta_id == ^meta_id
-    )
+    Repo.all(from(d in DataSetDiff, where: d.meta_id == ^meta_id))
   end
 end

@@ -13,11 +13,11 @@ defmodule Plenario2.Changesets.DataSetFieldChangesets do
   Verbose map of params for create
   """
   @type create_params :: %{
-    name: String.t,
-    type: String.t,
-    opts: String.t,
-    meta_id: integer
-  }
+          name: String.t(),
+          type: String.t(),
+          opts: String.t(),
+          meta_id: integer
+        }
 
   @new_create_param_keys [:name, :type, :opts, :meta_id]
 
@@ -26,7 +26,7 @@ defmodule Plenario2.Changesets.DataSetFieldChangesets do
   @doc """
   Creates a blank changeset for creating a webform
   """
-  @spec new() :: Ecto.Changeset.t
+  @spec new() :: Ecto.Changeset.t()
   def new() do
     %DataSetField{}
     |> cast(%{}, @new_create_param_keys)
@@ -35,7 +35,7 @@ defmodule Plenario2.Changesets.DataSetFieldChangesets do
   @doc """
   Creates a changeset for inserting a new DataSetField into the database
   """
-  @spec create(params :: create_params) :: Ecto.Changeset.t
+  @spec create(params :: create_params) :: Ecto.Changeset.t()
   def create(params) do
     %DataSetField{}
     |> cast(params, @new_create_param_keys)
@@ -48,7 +48,7 @@ defmodule Plenario2.Changesets.DataSetFieldChangesets do
   @doc """
   Updates an existing data set field
   """
-  @spec update(field :: DataSetField, params :: create_params) :: Ecto.Changeset.t
+  @spec update(field :: DataSetField, params :: create_params) :: Ecto.Changeset.t()
   def update(field, params \\ %{}) do
     field
     |> cast(params, @new_create_param_keys)
@@ -63,6 +63,7 @@ defmodule Plenario2.Changesets.DataSetFieldChangesets do
   # For example, if a user passes a field named "Event ID", this would return "event_id"
   defp check_name(changeset) do
     name = get_field(changeset, :name)
+
     snaked_name =
       String.split(name, ~r/\s/, trim: true)
       |> Enum.map(&String.downcase(&1))
@@ -74,6 +75,7 @@ defmodule Plenario2.Changesets.DataSetFieldChangesets do
   # Validates the given type of the field is one we support, as defined in @valid_types
   defp validate_type(changeset) do
     type = get_field(changeset, :type)
+
     if Enum.member?(@valid_types, type) do
       changeset
     else
@@ -89,7 +91,10 @@ defmodule Plenario2.Changesets.DataSetFieldChangesets do
 
     if meta.state == "ready" do
       changeset
-      |> add_error(:name, "Cannot alter any fields after the parent data set has been approved. If you need to update this field, please contact the administrators.")
+      |> add_error(
+        :name,
+        "Cannot alter any fields after the parent data set has been approved. If you need to update this field, please contact the administrators."
+      )
     else
       changeset
     end

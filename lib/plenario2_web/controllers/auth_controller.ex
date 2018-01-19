@@ -45,7 +45,15 @@ defmodule Plenario2Web.AuthController do
     render(conn, "register.html", changeset: changeset, action: action)
   end
 
-  def do_register(conn, %{"user" => %{"email_address" => email, "name" => name, "plaintext_password" => password, "organization" => org, "org_role" => role}}) do
+  def do_register(conn, %{
+        "user" => %{
+          "email_address" => email,
+          "name" => name,
+          "plaintext_password" => password,
+          "organization" => org,
+          "org_role" => role
+        }
+      }) do
     UserActions.create(name, password, email, org, role)
     |> register_reply(conn)
   end

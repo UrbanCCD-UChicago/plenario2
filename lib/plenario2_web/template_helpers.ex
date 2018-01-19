@@ -1,5 +1,4 @@
 defmodule Plenario2Web.TemplateHelpers do
-
   def s_plural(word, length_) do
     case length_ do
       1 -> word
@@ -22,12 +21,15 @@ defmodule Plenario2Web.TemplateHelpers do
   end
 
   def psql_to_human(value) do
-    Map.get(%{
-      "text" => "Text",
-      "integer" => "Integer",
-      "float" => "Decimal",
-      "boolean" => "True/False",
-      "timestamptz" => "Date"
-    }, value)
+    Map.get(
+      %{
+        "text" => "Text",
+        "integer" => "Integer",
+        "float" => "Decimal",
+        "boolean" => "True/False",
+        "timestamptz" => "Date"
+      },
+      value
+    )
   end
 end

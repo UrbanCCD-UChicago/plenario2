@@ -15,10 +15,10 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
   end
 
   describe "GET :new" do
-
     @tag :anon
     test "when anonymous", %{conn: conn} do
-      response = conn
+      response =
+        conn
         |> get(data_set_field_path(conn, :new, "some slug"))
         |> response(:unauthorized)
 
@@ -27,7 +27,8 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
 
     @tag :auth
     test "when logged in", %{conn: conn, meta: meta} do
-      response = conn
+      response =
+        conn
         |> get(data_set_field_path(conn, :new, meta.slug))
         |> response(200)
 
@@ -36,10 +37,10 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
   end
 
   describe "POST :create" do
-
     @tag :anon
     test "when anonymous", %{conn: conn} do
-      response = conn
+      response =
+        conn
         |> get(data_set_field_path(conn, :create, "some slug"))
         |> response(:unauthorized)
 
@@ -49,14 +50,14 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
     @tag :auth
     test "when logged in", %{conn: conn, meta: meta} do
       conn
-        |> post(data_set_field_path(conn, :create, meta.slug), %{
-          "data_set_field" => %{
-            "name" => "foo",
-            "type" => "text",
-            "opts" => "default null"
-          }
-        })
-        |> response(302)
+      |> post(data_set_field_path(conn, :create, meta.slug), %{
+        "data_set_field" => %{
+          "name" => "foo",
+          "type" => "text",
+          "opts" => "default null"
+        }
+      })
+      |> response(302)
 
       fields = DataSetFieldActions.list_for_meta(meta)
 
@@ -65,10 +66,10 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
   end
 
   describe "POST :update" do
-
     @tag :anon
     test "when anonymous", %{conn: conn} do
-      response = conn
+      response =
+        conn
         |> get(data_set_field_path(conn, :update, "some slug", -1))
         |> response(:unauthorized)
 
@@ -78,27 +79,27 @@ defmodule Plenario2Web.DataSetFieldControllerTest do
     @tag :auth
     test "when logged in", %{conn: conn, meta: meta} do
       conn
-        |> post(data_set_field_path(conn, :create, meta.slug), %{
-          "data_set_field" => %{
-            "name" => "foo",
-            "type" => "text",
-            "opts" => "default null"
-          }
-        })
-        |> response(302)
+      |> post(data_set_field_path(conn, :create, meta.slug), %{
+        "data_set_field" => %{
+          "name" => "foo",
+          "type" => "text",
+          "opts" => "default null"
+        }
+      })
+      |> response(302)
 
       fields = DataSetFieldActions.list_for_meta(meta)
       [field | _] = fields
 
       conn
-        |> put(data_set_field_path(conn, :update, meta.slug, field.id), %{
-          "data_set_field" => %{
-            "name" => "FOOS",
-            "type" => "integer",
-            "opts" => "default null"
-          }
-        })
-        |> response(302)
+      |> put(data_set_field_path(conn, :update, meta.slug, field.id), %{
+        "data_set_field" => %{
+          "name" => "FOOS",
+          "type" => "integer",
+          "opts" => "default null"
+        }
+      })
+      |> response(302)
 
       field = Repo.get!(DataSetField, field.id)
 

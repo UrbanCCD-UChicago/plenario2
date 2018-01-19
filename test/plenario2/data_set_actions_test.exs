@@ -7,7 +7,9 @@ defmodule DataSetActionsTest do
     DataSetConstraintActions,
     MetaActions,
     VirtualPointFieldActions,
-    VirtualDateFieldActions}
+    VirtualDateFieldActions
+  }
+
   alias Plenario2.Repo
 
   setup context do
@@ -36,13 +38,27 @@ defmodule DataSetActionsTest do
     VALUES
       ('abc123', 1.0, 1.0, 2017, 1, 1);
     """
+
     Ecto.Adapters.SQL.query(Repo, insert)
 
     query = """
     SELECT * FROM #{context.table_name}
     """
+
     {:ok, result} = Ecto.Adapters.SQL.query(Repo, query)
-    assert result.rows == [["abc123", 1.0, 1.0, 2017, 1, 1, {{2017, 1, 1}, {0, 0, 0, 0}}, %Geo.Point{coordinates: {1.0, 1.0}, srid: 4326}]]
+
+    assert result.rows == [
+             [
+               "abc123",
+               1.0,
+               1.0,
+               2017,
+               1,
+               1,
+               {{2017, 1, 1}, {0, 0, 0, 0}},
+               %Geo.Point{coordinates: {1.0, 1.0}, srid: 4326}
+             ]
+           ]
   end
 
   test "drop a data set table", context do
@@ -79,12 +95,28 @@ defmodule DataSetActionsTest do
     VALUES
       ('abc123', 1.0, 1.0, 2017, 1, 1, 1);
     """
+
     Ecto.Adapters.SQL.query(Repo, insert)
 
     query = """
     SELECT * FROM #{context.table_name}
     """
+
     {:ok, result} = Ecto.Adapters.SQL.query(Repo, query)
-    assert result.rows == [["abc123", 1.0, 1.0, 2017, 1, 1, 1, {{2017, 1, 1}, {0, 0, 0, 0}}, {{2017, 1, 1}, {0, 0, 0, 0}}, %Geo.Point{coordinates: {1.0, 1.0}, srid: 4326}]]
+
+    assert result.rows == [
+             [
+               "abc123",
+               1.0,
+               1.0,
+               2017,
+               1,
+               1,
+               1,
+               {{2017, 1, 1}, {0, 0, 0, 0}},
+               {{2017, 1, 1}, {0, 0, 0, 0}},
+               %Geo.Point{coordinates: {1.0, 1.0}, srid: 4326}
+             ]
+           ]
   end
 end
