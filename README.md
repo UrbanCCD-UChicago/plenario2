@@ -88,3 +88,54 @@ Elixir from their `master` branch and run:
 ```bash
 mix format
 ```
+
+## Building Releases
+
+A quick sidebar about building and deploying releases in Elixir and Erlang: it's
+a flipping mess right now. Erlang, which Elixir is built on top of, is old.
+Like really old. Like almost as old as me (Vince). Given it's advanced age, it
+doesn't like being nimble. So, unlike Python or Ruby or (sadly) even Java,
+deploying Elixir is a pain. Hence, this walk through...
+
+The target environment for releases is Ubuntu 16.04 with locales set to
+`EN_US.UTF8`. Obviously, not everyone is going to have a clean version of
+Xenial as their dev environment, so to make the release build process as clean
+as possible we use Docker.
+
+To build the image, you run:
+
+```bash
+$ docker build --no-cache --tag plenario2-builder:{{ version }} .
+```
+
+**Note** that `--no-cache` is needed to force a clean build of the image. This
+ensures the latest version of the master branch of Plenario is being used.
+
+**Also Note** that `{{ version }}` needs to be replaced with the version specified
+in `mix.exs`.
+
+When this is done, you'll have a squeak clean image with the Plenario source
+code loaded and ready for building. The next step is to add the _secrets_.
+To do this, get the image id (`$ docker images`) and start a container
+(`$docker run -it -d {{ image id }}`). The copy the file to the container
+(get the container id with `$docker ps`):
+
+```bash
+$ docker cp /path/to/your/local/prod.secret.exs {{ container id }}:/plenario2/config/prod.secret.exs
+```
+
+With the container still running, run the release build:
+
+```bash
+$ docker exec -it {{ container id }} mix release --env=prod
+```
+
+Now, make a tarball of the release library and copy it to your host machine:
+
+```bash
+$ docker exec -it {{ container id }} tar czf plenario2-{{ version }}.tar.gz /plenario2/_build/dev/rel/plenario2
+$ docker cp {{ container id }}:/plenario2/plenario2-0.0.5.tar.gz /path/on/your/host
+```
+
+You can unpack it if you want and explore the binaries. But that's it -- the
+release is built and ready for deployment.
