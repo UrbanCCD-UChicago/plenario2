@@ -10,15 +10,33 @@ defmodule Plenario2Etl.Rows do
 
       iex> import Plenario2Etl.Rows
       iex> rows = [[1, 2, 3], [4, 5, 6]]
-      iex> to_kwlist(rows, [:colA, :colB, :colC])
+      iex> to_kwlists(rows, [:colA, :colB, :colC])
       [[colA: 1, colB: 2, colC: 3], [colA: 4, colB: 5, colC: 6]]
 
   """
-  @spec to_kwlist(rows :: list, columns :: list) :: list
-  def to_kwlist(rows, columns) do
+  @spec to_kwlists(rows :: list, columns :: list) :: list
+  def to_kwlists(rows, columns) do
     Enum.map(rows, fn row ->
       Enum.zip(columns, row)
     end)
+  end
+
+  @doc """
+  Convert a list of tuples where the first element is a string to
+  a keyword list.
+
+  ## Examples
+
+      iex> import Plenario2Etl.Rows
+      iex> row = [{"date ", "foo"}, {" address", "bar"}]
+      iex> to_kwlist_from_tuples(row)
+      [date: "foo", address: "bar"]
+
+  """
+  def to_kwlist_from_tuples(row) do
+    for {k, v} <- row do
+      {String.to_atom(Slug.slugify(k, separator: ?_)), v}
+    end
   end
 
   @doc """
@@ -70,6 +88,21 @@ defmodule Plenario2Etl.Rows do
   @spec to_key(row :: list, constraints :: list) :: tuple
   def to_key(row, constraints) do
     List.to_tuple(for constraint <- constraints, do: row[constraint])
+  end
+
+  @doc """
+  Select a subset of a `row`'s values using the keys provided by `columns`.
+
+  ## Examples
+
+      iex> row = [colA: 1, colB: 2, colC: "bar"]
+      iex> Plenario2Etl.Rows.select_columns(row, [:colA, :colC])
+      [colA: 1, colC: "bar"]
+
+  """
+  @spec select_columns(row :: list, columns :: list) :: list
+  def select_columns(row, columns) do
+    for column <- columns, do: {column, row[column]}
   end
 
   @doc """

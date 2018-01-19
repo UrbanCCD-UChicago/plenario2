@@ -9,8 +9,10 @@ defmodule Plenario2Etl.Worker do
   alias Plenario2.Actions.{
     DataSetDiffActions,
     EtlJobActions,
-    MetaActions
+    MetaActions,
   }
+
+  alias Plenario2Etl.Rows
 
   import Ecto.Adapters.SQL, only: [query!: 3]
   require Logger
@@ -167,8 +169,16 @@ defmodule Plenario2Etl.Worker do
 
   defp load_data(meta, path, job, decode) do
     Logger.info("[#{inspect self()}] [load_data] Chunking rows and spawning children")
+
+    columns = 
+      MetaActions.get_column_names(meta) 
+      |> Enum.map(&String.to_atom/1)
+      |> Enum.sort()
+
     decode.(path)
     |> Stream.map(&Enum.to_list/1)
+    |> Stream.map(&Rows.to_kwlist_from_tuples/1)
+    |> Stream.map(&Rows.select_columns(&1, columns))
     |> Stream.map(&Enum.sort/1)
     |> Stream.chunk_every(@chunk_size)
     |> Enum.map(fn chunk ->
@@ -253,7 +263,7 @@ defmodule Plenario2Etl.Worker do
     } = query!(Plenario2.Repo, sql, [])
 
     atom_columns = Enum.map(columns, &String.to_atom/1)
-    Plenario2Etl.Rows.to_kwlist(rows, atom_columns)
+    Plenario2Etl.Rows.to_kwlists(rows, atom_columns)
   end
 
   @doc """
