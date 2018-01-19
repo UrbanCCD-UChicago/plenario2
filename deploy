@@ -26,6 +26,7 @@ aws s3 cp s3://plenario2-releases/plenario2-$TAG.tar.gz _build/prod/
 
 
 echo -e "\n${CYAN}uploading the release archive to $TARGET...${NORM}"
+ssh $TARGET "if [ ! -d \"releases\" ]; then mkdir releases; fi"
 scp _build/prod/plenario2-$TAG.tar.gz $TARGET:releases/
 
 
