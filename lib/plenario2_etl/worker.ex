@@ -206,7 +206,7 @@ defmodule Plenario2Etl.Worker do
     job = EtlJobActions.create!(meta)
     {:ok, job} = EtlJobActions.mark_started(job)
 
-    Task.async(fn ->
+    task = Task.async(fn ->
       :poolboy.transaction(
         :worker,
         fn pid -> 
@@ -217,14 +217,18 @@ defmodule Plenario2Etl.Worker do
             }}) 
             EtlJobActions.mark_completed(job)
           rescue 
-            e in RuntimeError ->
-              EtlJobActions.mark_erred(job, %{error_message: inspect(e)})
+            e in RuntimeError -> IO.inspect(e)
           end
         end,
         :infinity
       )
-
     end)
+
+    %{
+      meta: meta,
+      job: job,
+      task: task
+    }
   end
 
   @doc """
