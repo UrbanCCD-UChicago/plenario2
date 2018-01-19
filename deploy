@@ -1,0 +1,52 @@
+#!/bin/bash
+
+set -e
+
+# uncomment next line if you are having issues and need verbose output
+# set -x
+
+CYAN="\e[1;36m"
+RED="\e[1;31m"
+GREEN="\e[1;32m"
+NORM="\e[0m"
+
+TAG=$1
+if [ -z "$TAG" ]; then echo -e "${RED}you need to specify a release number\nexiting...${NORM}"; exit 1; fi
+
+TARGET=$2
+if [ -z "$TARGET" ]; then echo -e "${RED}you need to specify a target machine to deploy to\nexiting...${NORM}"; exit 1; fi
+
+
+echo -e "${CYAN}we're going to deploy version $TAG to $TARGET...${NORM}"
+
+
+echo -e "\n${CYAN}downloading release archive from s3...${NORM}"
+if [ ! -d "_build/prod" ]; then mkdir -p _build/prod; fi
+aws s3 cp s3://plenario2-releases/plenario2-$TAG.tar.gz _build/prod/
+
+
+echo -e "\n${CYAN}uploading the release archive to $TARGET...${NORM}"
+scp _build/prod/plenario2-$TAG.tar.gz $TARGET:releases/
+
+
+echo -e "\n${CYAN}decompressing archive on $TARGET...${NORM}"
+ssh $TARGET "cd releases && tar xzf plenario2-$TAG.tar.gz"
+
+
+echo -e "\n${CYAN}stopping current version of app on $TARGET...${NORM}"
+ssh $TARGET "if [[ -d \"plenario2/bin/\" ]]; then ./plenario2/bin/plenario2 stop; fi"
+
+
+echo -e "\n${CYAN}unlinking current version on $TARGET...${NORM}"
+ssh $TARGET "if [[ -L \"plenario2\" ]]; then rm plenario2; fi"
+
+
+echo -e "\n${CYAN}symlinking plenario2 to $TAG on $TARGET...${NORM}"
+ssh $TARGET "ln -s releases/$TAG/ plenario2"
+
+
+echo -e "\n${CYAN}starting application back up on $TARGET...${NORM}"
+ssh $TARGET "./plenario2/bin/plenario2 start"
+
+
+echo -e "\n${GREEN}DONE!${NORM}"

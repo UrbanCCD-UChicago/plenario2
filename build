@@ -1,0 +1,65 @@
+#!/bin/bash
+
+set -e
+
+# uncomment next line if you are having issues and need verbose output
+# set -x
+
+CYAN="\e[1;36m"
+RED="\e[1;31m"
+GREEN="\e[1;32m"
+NORM="\e[0m"
+
+echo -e "${CYAN}getting the version number...${NORM}"
+TAG=$(grep 'version' mix.exs | awk '{gsub(/[^0-9\.]/, "")}1')
+echo -e "\n${CYAN}version tag is $TAG${NORM}"
+
+
+echo -e "\n${CYAN}building the docker image for the release version...${NORM}"
+docker build --no-cache --tag plenario2-builder:$TAG .
+
+IMAGE_ID=$(docker images | grep "$TAG" | awk '{print $3}')
+echo -e "\n${CYAN}docker image id is $IMAGE_ID${NORM}"
+
+
+echo -e "\n${CYAN}running the image so we can add the secrets and generate the release...${NORM}"
+docker run -it -d $IMAGE_ID
+
+CONTAINER_ID=$(docker ps | grep "$IMAGE_ID" | awk '{print $1}')
+echo -e "\n${CYAN}container id is $CONTAINER_ID${NORM}"
+
+
+echo -e "\n${CYAN}copying prod secrets to the container...${NORM}"
+docker cp config/prod.secret.exs $CONTAINER_ID:/plenario2/config/prod.secret.exs
+
+
+echo -e "\n${CYAN}building the release...${NORM}"
+docker exec -it $CONTAINER_ID sh -c 'MIX_ENV=prod mix release --env=prod'
+
+
+echo -e "\n${CYAN}making a tarball of the release and copying to your machine...${NORM}"
+if [ ! -d "_build/prod" ]; then mkdir -p _build/prod; fi
+docker exec -it $CONTAINER_ID tar czf plenario2-$TAG.tar.gz /plenario2/_build/prod/rel/plenario2
+docker cp $CONTAINER_ID:/plenario2/plenario2-$TAG.tar.gz _build/prod/
+
+
+echo -e "\n${CYAN}stopping the container...${NORM}"
+docker stop $CONTAINER_ID
+
+
+echo -e "\n${CYAN}extracting tarball and retagging...${NORM}"
+cd _build/prod
+tar xzf plenario2-$TAG.tar.gz
+mv ./plenario2/_build/prod/rel/plenario2 ./$TAG
+rm -r ./plenario2
+rm plenario2-$TAG.tar.gz
+tar czf plenario2-$TAG.tar.gz $TAG
+rm -r $TAG
+cd ../..
+
+
+echo -e "\n${CYAN}uploading release archive to s3...${NORM}"
+aws s3 cp _build/prod/plenario2-$TAG.tar.gz s3://plenario2-releases/
+
+
+echo -e "\n${GREEN}DONE!${NORM}"

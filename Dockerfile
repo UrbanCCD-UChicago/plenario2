@@ -30,6 +30,7 @@ WORKDIR plenario2/
 
 # install dependencies
 
+ENV MIX_ENV=prod
 RUN mix local.hex --force
 RUN mix local.rebar --force
 RUN mix deps.get
@@ -45,6 +46,5 @@ RUN if [ -d "./assets/node_modules" ]; then rm -rf ./assets/node_modules; fi
 RUN cd assets && npm install && cd ..
 
 # compile assets
-
 RUN cd assets && node node_modules/.bin/brunch build --production && cd ..
 RUN mix phx.digest

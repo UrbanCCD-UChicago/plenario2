@@ -102,7 +102,24 @@ The target environment for releases is Ubuntu 16.04 with locales set to
 Xenial as their dev environment, so to make the release build process as clean
 as possible we use Docker.
 
-To build the image, run `./build.bash`.
+To build the image, run `./build`.
 
-You can unpack it if you want and explore the binaries. But that's it -- the
-release is built and ready for deployment.
+**Note:** you will need the following software installed and configured on
+your host/build machine:
+
+- docker
+- awscli
+
+You should be signed into a docker account (`$ docker signin`) and you should
+have your AWS credentials set up (`$ aws config`).
+
+## Deploying Releases
+
+Deployments are naive -- they will download a specific release archive from S3
+to your machine and then upload it to the target server. This is done so that you
+make deliberate choices.
+
+To deploy, run `./deploy {{ version number }} {{ hostname }}`
+
+**Note:** you will need the hostname configured in your local SSH config. You
+should also have configured your AWS credentials set up (`$ aws config`).
