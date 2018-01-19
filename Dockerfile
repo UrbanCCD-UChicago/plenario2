@@ -39,7 +39,7 @@ RUN mix deps.get
 RUN apt-get install curl -y
 RUN curl -sL https://deb.nodesource.com/setup_8.x -o nodesource_setup.sh
 RUN bash nodesource_setup.sh
-RUN apt-get update
+RUN apt-get update -qq
 RUN apt-get install nodejs -y
 RUN if [ -d "./assets/node_modules" ]; then rm -rf ./assets/node_modules; fi
 RUN cd assets && npm install && cd ..
@@ -48,6 +48,3 @@ RUN cd assets && npm install && cd ..
 
 RUN cd assets && node node_modules/.bin/brunch build --production && cd ..
 RUN mix phx.digest
-
-# when this is done, run `docker cp config/prod.secret.exs ${container id}:/plenario2/config/prod.secret.exs`
-# to
