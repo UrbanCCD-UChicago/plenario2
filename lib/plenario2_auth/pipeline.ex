@@ -9,11 +9,11 @@ defmodule Plenario2Auth.AuthenticationPipeline do
     module: Plenario2Auth.Guardian
 
   # if there's a session token, validate it
-  plug Guardian.Plug.VerifySession, claims: %{"typ" => "access"}
+  plug(Guardian.Plug.VerifySession, claims: %{"typ" => "access"})
 
   # if there's a request header token, validate it
-  plug Guardian.Plug.VerifyHeader, claims: %{"typ" => "access"}
+  plug(Guardian.Plug.VerifyHeader, claims: %{"typ" => "access"})
 
   # load the user if either token is valid
-  plug Guardian.Plug.LoadResource, allow_blank: true
+  plug(Guardian.Plug.LoadResource, allow_blank: true)
 end

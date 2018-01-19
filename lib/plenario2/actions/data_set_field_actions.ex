@@ -17,7 +17,7 @@ defmodule Plenario2.Actions.DataSetFieldActions do
   @typedoc """
   Parameter is an ID attribute
   """
-  @type id :: String.t | integer
+  @type id :: String.t() | integer
 
   @typedoc """
   Returns a tuple of :ok, DataSetField or :error, Ecto.Changeset
@@ -27,7 +27,8 @@ defmodule Plenario2.Actions.DataSetFieldActions do
   @doc """
   Crates a new instance of DataSetField
   """
-  @spec create(meta :: Meta | id, name :: String.t, type :: String.t, opts :: String.t) :: ok_field
+  @spec create(meta :: Meta | id, name :: String.t(), type :: String.t(), opts :: String.t()) ::
+          ok_field
   def create(meta, name, type, opts \\ "default null") do
     meta_id =
       case is_id(meta) do
@@ -42,7 +43,8 @@ defmodule Plenario2.Actions.DataSetFieldActions do
       opts: opts
     }
 
-    Logger.info "Creating DataSetField: #{inspect(params)}"
+    Logger.info("Creating DataSetField: #{inspect(params)}")
+
     DataSetFieldChangesets.create(params)
     |> Repo.insert()
   end
@@ -58,10 +60,7 @@ defmodule Plenario2.Actions.DataSetFieldActions do
         false -> meta.id
       end
 
-    Repo.all(
-      from f in DataSetField,
-      where: f.meta_id == ^meta_id
-    )
+    Repo.all(from(f in DataSetField, where: f.meta_id == ^meta_id))
   end
 
   @doc """
@@ -69,7 +68,8 @@ defmodule Plenario2.Actions.DataSetFieldActions do
   """
   @spec update(field :: DataSetField, params :: map) :: DataSetField
   def update(field, params) do
-    Logger.info "Updating DataSetField: #{inspect(field)}, #{inspect(params)}"
+    Logger.info("Updating DataSetField: #{inspect(field)}, #{inspect(params)}")
+
     DataSetFieldChangesets.update(field, params)
     |> Repo.update()
   end
@@ -77,9 +77,9 @@ defmodule Plenario2.Actions.DataSetFieldActions do
   @doc """
   Deletes a given data set field
   """
-  @spec delete(field :: %DataSetField{}) :: {:ok, %DataSetField{} | :error, Ecto.Changeset.t}
+  @spec delete(field :: %DataSetField{}) :: {:ok, %DataSetField{} | :error, Ecto.Changeset.t()}
   def delete(field) do
-    Logger.info "Deleting DataSetField: #{inspect(field)}"
+    Logger.info("Deleting DataSetField: #{inspect(field)}")
     Repo.delete(field)
-    end
+  end
 end

@@ -4,7 +4,6 @@ defmodule Plenario2Web.UserControllerTest do
   alias Plenario2Auth.UserActions
 
   describe ":index" do
-
     @tag :anon
     test "as anonymous", %{conn: conn} do
       conn
@@ -22,7 +21,8 @@ defmodule Plenario2Web.UserControllerTest do
 
   @tag :auth
   test ":get_update_name", %{conn: conn} do
-    res = conn
+    res =
+      conn
       |> get(user_path(conn, :get_update_name))
       |> html_response(:ok)
 
@@ -41,7 +41,8 @@ defmodule Plenario2Web.UserControllerTest do
 
   @tag :auth
   test ":get_update_email", %{conn: conn} do
-    res = conn
+    res =
+      conn
       |> get(user_path(conn, :get_update_email))
       |> html_response(:ok)
 
@@ -49,11 +50,12 @@ defmodule Plenario2Web.UserControllerTest do
   end
 
   describe ":do_update_email" do
-
     @tag :auth
     test "with a good email address", %{conn: conn} do
       conn
-      |> put(user_path(conn, :do_update_email, %{"user" => %{"email_address" => "test2@example.com"}}))
+      |> put(
+        user_path(conn, :do_update_email, %{"user" => %{"email_address" => "test2@example.com"}})
+      )
       |> html_response(:found)
 
       user = UserActions.get_from_email("test2@example.com")
@@ -63,14 +65,19 @@ defmodule Plenario2Web.UserControllerTest do
     @tag :auth
     test "with a bad email address", %{conn: conn} do
       conn
-      |> put(user_path(conn, :do_update_email, %{"user" => %{"email_address" => "i'm not giving my email to a machine"}}))
+      |> put(
+        user_path(conn, :do_update_email, %{
+          "user" => %{"email_address" => "i'm not giving my email to a machine"}
+        })
+      )
       |> html_response(:bad_request)
     end
   end
 
   @tag :auth
   test ":get_update_org_info", %{conn: conn} do
-    res = conn
+    res =
+      conn
       |> get(user_path(conn, :get_update_org_info))
       |> html_response(:ok)
 
@@ -80,7 +87,11 @@ defmodule Plenario2Web.UserControllerTest do
   @tag :auth
   test ":do_update_org_info", %{conn: conn} do
     conn
-    |> put(user_path(conn, :do_update_org_info, %{"user" => %{"organization" => "University of Chicago", "org_role" => "Internet Janitor"}}))
+    |> put(
+      user_path(conn, :do_update_org_info, %{
+        "user" => %{"organization" => "University of Chicago", "org_role" => "Internet Janitor"}
+      })
+    )
     |> html_response(:found)
 
     user = UserActions.get_from_email("regular@example.com")
@@ -90,7 +101,8 @@ defmodule Plenario2Web.UserControllerTest do
 
   @tag :auth
   test ":get_update_password", %{conn: conn} do
-    res = conn
+    res =
+      conn
       |> get(user_path(conn, :get_update_password))
       |> html_response(:ok)
 
@@ -98,14 +110,23 @@ defmodule Plenario2Web.UserControllerTest do
   end
 
   describe ":do_update_password" do
-
     @tag :auth
     test "with a good password", %{conn: conn} do
       conn
-      |> put(user_path(conn, :do_update_password, %{"user" => %{"plaintext_password" => "shh secret"}}))
+      |> put(
+        user_path(conn, :do_update_password, %{"user" => %{"plaintext_password" => "shh secret"}})
+      )
       |> html_response(:found)
 
-      post(conn, auth_path(conn, :do_login, %{"user" => %{"email_address" => "test2@example.com", "plaintext_password" => "shh secret"}}))
+      post(
+        conn,
+        auth_path(conn, :do_login, %{
+          "user" => %{
+            "email_address" => "test2@example.com",
+            "plaintext_password" => "shh secret"
+          }
+        })
+      )
     end
 
     @tag :auth

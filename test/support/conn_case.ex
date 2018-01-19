@@ -51,32 +51,29 @@ defmodule Plenario2Web.ConnCase do
 
     # setup connection
     conn_ = Phoenix.ConnTest.build_conn()
+
     conn =
       cond do
         tags[:auth] ->
           post(
             conn_,
-            auth_path(
-              conn_,
-              :do_login,
-              %{"user" => %{
+            auth_path(conn_, :do_login, %{
+              "user" => %{
                 "email_address" => "regular@example.com",
                 "plaintext_password" => "password"
-              }}
-            )
+              }
+            })
           )
 
         tags[:admin] ->
           post(
             conn_,
-            auth_path(
-              conn_,
-              :do_login,
-              %{"user" => %{
+            auth_path(conn_, :do_login, %{
+              "user" => %{
                 "email_address" => "admin@example.com",
                 "plaintext_password" => "password"
-              }}
-            )
+              }
+            })
           )
 
         tags[:anon] ->

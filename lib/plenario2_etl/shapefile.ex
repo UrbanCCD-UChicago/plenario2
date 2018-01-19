@@ -21,9 +21,23 @@ defmodule Plenario2Etl.Shapefile do
     db = Application.get_env(:plenario2, Plenario2.Repo)[:database]
     dbconn = "PG:host=#{host} user=#{user} dbname=#{db} password=#{password}"
 
-    args = ["-f", "PostgreSQL", dbconn, path, "-lco", "GEOMETRY_NAME=geom",
-      "-lco", "FID=gid", "-lco", "PRECISION=no", "-nlt", "PROMOTE_TO_MULTI",
-      "-nln", table, "-overwrite"]
+    args = [
+      "-f",
+      "PostgreSQL",
+      dbconn,
+      path,
+      "-lco",
+      "GEOMETRY_NAME=geom",
+      "-lco",
+      "FID=gid",
+      "-lco",
+      "PRECISION=no",
+      "-nlt",
+      "PROMOTE_TO_MULTI",
+      "-nln",
+      table,
+      "-overwrite"
+    ]
 
     case System.cmd("ogr2ogr", args) do
       {"", 0} -> {:ok, table}

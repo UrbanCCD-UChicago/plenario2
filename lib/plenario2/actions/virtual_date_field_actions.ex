@@ -17,7 +17,7 @@ defmodule Plenario2.Actions.VirtualDateFieldActions do
   @typedoc """
   Parameter is an ID attribute
   """
-  @type id :: String.t | integer
+  @type id :: String.t() | integer
 
   @typedoc """
   Returns a tuple of :ok, VirtualDateField or :error, Ecto.Changeset
@@ -27,7 +27,15 @@ defmodule Plenario2.Actions.VirtualDateFieldActions do
   @doc """
   Creates a new instance of a VirtualDateField
   """
-  @spec create(meta :: Meta | id, year :: String.t, month :: String.t | nil, day :: String.t | nil, hour :: String.t | nil, minute :: String.t | nil, second :: String.t | nil) :: ok_field
+  @spec create(
+          meta :: Meta | id,
+          year :: String.t(),
+          month :: String.t() | nil,
+          day :: String.t() | nil,
+          hour :: String.t() | nil,
+          minute :: String.t() | nil,
+          second :: String.t() | nil
+        ) :: ok_field
   def create(meta, year, month \\ nil, day \\ nil, hour \\ nil, minute \\ nil, second \\ nil) do
     meta_id =
       case is_id(meta) do
@@ -45,7 +53,7 @@ defmodule Plenario2.Actions.VirtualDateFieldActions do
       second_field: second
     }
 
-    Logger.info "Creating VirtualDateField: #{inspect(params)}"
+    Logger.info("Creating VirtualDateField: #{inspect(params)}")
 
     VirtualDateFieldChangesets.create(params)
     |> Repo.insert()
@@ -62,10 +70,7 @@ defmodule Plenario2.Actions.VirtualDateFieldActions do
         false -> meta.id
       end
 
-    Repo.all(
-      from f in VirtualDateField,
-      where: f.meta_id == ^meta_id
-    )
+    Repo.all(from(f in VirtualDateField, where: f.meta_id == ^meta_id))
   end
 
   @doc """
@@ -73,10 +78,7 @@ defmodule Plenario2.Actions.VirtualDateFieldActions do
   """
   @spec get(id :: id) :: VirtualDateField | nil
   def get(id) do
-    Repo.one(
-      from f in VirtualDateField,
-      where: f.id == ^id
-    )
+    Repo.one(from(f in VirtualDateField, where: f.id == ^id))
   end
 
   @doc """
@@ -84,7 +86,8 @@ defmodule Plenario2.Actions.VirtualDateFieldActions do
   """
   @spec update(field :: VirtualDateField, params :: map) :: VirtualDateField
   def update(field, params \\ %{}) do
-    Logger.info "Updating VirtualDateField: #{inspect(field)}, #{inspect(params)}"
+    Logger.info("Updating VirtualDateField: #{inspect(field)}, #{inspect(params)}")
+
     VirtualDateFieldChangesets.update(field, params)
     |> Repo.update()
   end
@@ -92,9 +95,10 @@ defmodule Plenario2.Actions.VirtualDateFieldActions do
   @doc """
   Deletes a given VirtualDateField
   """
-  @spec delete(field :: %VirtualDateField{}) :: {:ok, %VirtualDateField{} | :error, Ecto.Changeset.t}
+  @spec delete(field :: %VirtualDateField{}) ::
+          {:ok, %VirtualDateField{} | :error, Ecto.Changeset.t()}
   def delete(field) do
-    Logger.info "Deleting: #{inspect(field)}"
+    Logger.info("Deleting: #{inspect(field)}")
     Repo.delete(field)
-    end
+  end
 end

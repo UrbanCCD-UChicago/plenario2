@@ -19,12 +19,13 @@ defmodule Plenario2Web.AdminController do
   # users
 
   def user_index(conn, params) do
-    users = UserQ.list()
-    |> cond_compose(Map.get(params, "active", false), UserQ, :active)
-    |> cond_compose(Map.get(params, "archived", false), UserQ, :archived)
-    |> cond_compose(Map.get(params, "trusted", false), UserQ, :trusted)
-    |> cond_compose(Map.get(params, "admin", false), UserQ, :admin)
-    |> Repo.all()
+    users =
+      UserQ.list()
+      |> cond_compose(Map.get(params, "active", false), UserQ, :active)
+      |> cond_compose(Map.get(params, "archived", false), UserQ, :archived)
+      |> cond_compose(Map.get(params, "trusted", false), UserQ, :trusted)
+      |> cond_compose(Map.get(params, "admin", false), UserQ, :admin)
+      |> Repo.all()
 
     render(conn, "user_list.html", users: users)
   end
@@ -33,7 +34,7 @@ defmodule Plenario2Web.AdminController do
     UserActions.get_from_id(user_id)
     |> UserActions.archive()
 
-    Logger.info "Archived user #{user_id}"
+    Logger.info("Archived user #{user_id}")
 
     conn
     |> put_flash(:success, "Archived user")
@@ -44,7 +45,7 @@ defmodule Plenario2Web.AdminController do
     UserActions.get_from_id(user_id)
     |> UserActions.activate()
 
-    Logger.info "Activated user #{user_id}"
+    Logger.info("Activated user #{user_id}")
 
     conn
     |> put_flash(:success, "Activated user")
@@ -55,7 +56,7 @@ defmodule Plenario2Web.AdminController do
     UserActions.get_from_id(user_id)
     |> UserActions.trust()
 
-    Logger.info "Trusted user #{user_id}"
+    Logger.info("Trusted user #{user_id}")
 
     conn
     |> put_flash(:success, "Trusted user")
@@ -66,7 +67,7 @@ defmodule Plenario2Web.AdminController do
     UserActions.get_from_id(user_id)
     |> UserActions.untrust()
 
-    Logger.info "Untrusted user #{user_id}"
+    Logger.info("Untrusted user #{user_id}")
 
     conn
     |> put_flash(:success, "Untrusted user")
@@ -77,7 +78,7 @@ defmodule Plenario2Web.AdminController do
     UserActions.get_from_id(user_id)
     |> UserActions.promote_to_admin()
 
-    Logger.info "User #{user_id} promoted to admin"
+    Logger.info("User #{user_id} promoted to admin")
 
     conn
     |> put_flash(:success, "Promoted user to admin")
@@ -88,7 +89,7 @@ defmodule Plenario2Web.AdminController do
     UserActions.get_from_id(user_id)
     |> UserActions.strip_admin()
 
-    Logger.info "User #{user_id} stripped of Admin"
+    Logger.info("User #{user_id} stripped of Admin")
 
     conn
     |> put_flash(:success, "Stripped user of admin privileges")
@@ -99,30 +100,39 @@ defmodule Plenario2Web.AdminController do
   # metas
 
   def meta_index(conn, _) do
-    all_metas = MetaActions.list([with_user: true])
+    all_metas = MetaActions.list(with_user: true)
     ready_metas = Enum.filter(all_metas, fn m -> m.state == "ready" end)
     erred_metas = Enum.filter(all_metas, fn m -> m.state == "erred" end)
     approval_metas = Enum.filter(all_metas, fn m -> m.state == "needs_approval" end)
     new_metas = Enum.filter(all_metas, fn m -> m.state == "new" end)
 
-    render(conn, "meta_index.html",
-      all_metas: all_metas, ready_metas: ready_metas,
-      erred_metas: erred_metas, approval_metas: approval_metas,
-      new_metas: new_metas)
+    render(
+      conn,
+      "meta_index.html",
+      all_metas: all_metas,
+      ready_metas: ready_metas,
+      erred_metas: erred_metas,
+      approval_metas: approval_metas,
+      new_metas: new_metas
+    )
   end
 
   def get_meta_approval_review(conn, %{"id" => meta_id}) do
-    meta = MetaActions.get(meta_id, [with_user: true, with_fields: true, with_constraints: true])
+    meta = MetaActions.get(meta_id, with_user: true, with_fields: true, with_constraints: true)
     approve_action = admin_path(conn, :approve_meta, meta_id)
     disapprove_action = admin_path(conn, :disapprove_meta, meta_id)
 
-    render(conn, "meta_approval_review.html",
-      meta: meta, approve_action: approve_action,
-      disapprove_action: disapprove_action)
+    render(
+      conn,
+      "meta_approval_review.html",
+      meta: meta,
+      approve_action: approve_action,
+      disapprove_action: disapprove_action
+    )
   end
 
   def approve_meta(conn, %{"id" => meta_id}) do
-    meta = MetaActions.get(meta_id, [with_user: true])
+    meta = MetaActions.get(meta_id, with_user: true)
     admin = Guardian.Plug.current_resource(conn)
 
     {:ok, _} = MetaActions.approve(meta, admin)
@@ -133,7 +143,7 @@ defmodule Plenario2Web.AdminController do
   end
 
   def disapprove_meta(conn, %{"id" => meta_id, "message" => message}) do
-    meta = MetaActions.get(meta_id, [with_user: true])
+    meta = MetaActions.get(meta_id, with_user: true)
     admin = Guardian.Plug.current_resource(conn)
 
     {:ok, _} = MetaActions.disapprove(meta, admin, message)

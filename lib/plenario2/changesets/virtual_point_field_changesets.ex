@@ -18,7 +18,8 @@ defmodule Plenario2.Changesets.VirtualPointFieldChangesets do
   Creates a changeset for inserting a new VirtualPointField into the database
   that is sourced from a single text field.
   """
-  @spec create_from_loc(params :: %{meta_id: integer, location_field: String.t}) :: Ecto.Changeset.t
+  @spec create_from_loc(params :: %{meta_id: integer, location_field: String.t()}) ::
+          Ecto.Changeset.t()
   def create_from_loc(params) do
     %VirtualPointField{}
     |> cast(params, [:location_field, :meta_id])
@@ -37,7 +38,9 @@ defmodule Plenario2.Changesets.VirtualPointFieldChangesets do
   Creates a changeset for inserting a new VirtualPointField into the database
   that is sourced from a longitude field and latitude field.
   """
-  @spec create_from_long_lat(params :: %{meta_id: integer, longitude_field: String.t, latitude_field: String.t}) :: Ecto.Changeset.t
+  @spec create_from_long_lat(
+          params :: %{meta_id: integer, longitude_field: String.t(), latitude_field: String.t()}
+        ) :: Ecto.Changeset.t()
   def create_from_long_lat(params) do
     %VirtualPointField{}
     |> cast(params, [:longitude_field, :latitude_field, :meta_id])
@@ -67,10 +70,12 @@ defmodule Plenario2.Changesets.VirtualPointFieldChangesets do
     meta = MetaActions.get(meta_id)
     fields = DataSetFieldActions.list_for_meta(meta)
     known_field_names = for f <- fields, do: f.name
+
     if Enum.member?(known_field_names, loc) do
       changeset
     else
-      changeset |> add_error(:fields, "Field names must exist as registered fields of the data set")
+      changeset
+      |> add_error(:fields, "Field names must exist as registered fields of the data set")
     end
   end
 
@@ -85,11 +90,13 @@ defmodule Plenario2.Changesets.VirtualPointFieldChangesets do
     fields = DataSetFieldActions.list_for_meta(meta)
     known_field_names = for f <- fields, do: f.name
 
-    is_subset = field_names |> Enum.all?(fn (name) -> Enum.member?(known_field_names, name) end)
+    is_subset = field_names |> Enum.all?(fn name -> Enum.member?(known_field_names, name) end)
+
     if is_subset do
       changeset
     else
-      changeset |> add_error(:fields, "Field names must exist as registered fields of the data set")
+      changeset
+      |> add_error(:fields, "Field names must exist as registered fields of the data set")
     end
   end
 end
