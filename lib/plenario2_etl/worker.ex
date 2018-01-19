@@ -216,8 +216,9 @@ defmodule Plenario2Etl.Worker do
               job_id: job.id
             }}) 
             EtlJobActions.mark_completed(job)
-          rescue 
-            e in RuntimeError -> IO.inspect(e)
+          catch 
+            :exit, code -> 
+              EtlJobActions.mark_erred(job, %{error_message: inspect(code)})
           end
         end,
         :infinity
