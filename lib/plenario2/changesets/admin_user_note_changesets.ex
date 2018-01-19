@@ -12,12 +12,12 @@ defmodule Plenario2.Changesets.AdminUserNoteChangesets do
   Verbose map of params for create_for_meta
   """
   @type create_meta_params :: %{
-    note: String.t,
-    should_email: boolean,
-    admin_id: integer,
-    user_id: integer,
-    meta_id: integer
-  }
+          note: String.t(),
+          should_email: boolean,
+          admin_id: integer,
+          user_id: integer,
+          meta_id: integer
+        }
 
   @new_create_meta_param_keys [:note, :should_email, :admin_id, :user_id, :meta_id]
 
@@ -29,7 +29,7 @@ defmodule Plenario2.Changesets.AdminUserNoteChangesets do
   @doc """
   Creates a new AdminUserNote that is related to a Meta entity
   """
-  @spec create_for_meta(params :: create_meta_params) :: Ecto.Changeset.t
+  @spec create_for_meta(params :: create_meta_params) :: Ecto.Changeset.t()
   def create_for_meta(params) do
     %AdminUserNote{}
     |> cast(params, @new_create_meta_param_keys)
@@ -60,7 +60,8 @@ defmodule Plenario2.Changesets.AdminUserNoteChangesets do
   @doc """
   Creates a changeset to update a given note's acknowledged bit in the database
   """
-  @spec update_acknowledged(note :: AdminUserNote, params :: %{acknowledged: boolean}) :: Ecto.Changeset.t
+  @spec update_acknowledged(note :: AdminUserNote, params :: %{acknowledged: boolean}) ::
+          Ecto.Changeset.t()
   def update_acknowledged(note, params) do
     note
     |> cast(params, [:acknowledged])

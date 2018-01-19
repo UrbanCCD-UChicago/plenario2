@@ -18,14 +18,13 @@ defmodule Plenario2.Queries.AdminUserNoteQueries do
   @typedoc """
   Parameter is an ID attribute
   """
-  @type id :: String.t | integer
-
+  @type id :: String.t() | integer
 
   @doc """
   Creates a query for a single AdminUserNote entity in the database filtered by its ID
   """
-  @spec from_id(id :: id) :: Ecto.Queryset.t
-  def from_id(id), do: (from n in AdminUserNote, where: n.id == ^id)
+  @spec from_id(id :: id) :: Ecto.Queryset.t()
+  def from_id(id), do: from(n in AdminUserNote, where: n.id == ^id)
 
   @doc """
   Creates a query that gets all AdminUserNote entities in the database. This can be combined
@@ -38,31 +37,31 @@ defmodule Plenario2.Queries.AdminUserNoteQueries do
            |> unread()
            |> Repo.all()
   """
-  def list(), do: (from n in AdminUserNote)
+  def list(), do: from(n in AdminUserNote)
 
   @doc """
   Adds a filter to query selecting notes that have not been acknowledged
   """
-  @spec unread(query :: Ecto.Queryset.t) :: Ecto.Queryset.t
-  def unread(query), do: from n in query, where: n.acknowledged == false
+  @spec unread(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
+  def unread(query), do: from(n in query, where: n.acknowledged == false)
 
   @doc """
   Adds a filter to query selecting notes that have been acknowledged
   """
-  @spec acknowledged(query :: Ecto.Queryset.t) :: Ecto.Queryset.t
-  def acknowledged(query), do: from n in query, where: n.acknowledged == true
+  @spec acknowledged(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
+  def acknowledged(query), do: from(n in query, where: n.acknowledged == true)
 
   @doc """
   Adds a filter to query selecting notes whose user_id matches the ID of the user in the params
   """
-  @spec for_user(query :: Ecto.Queryset.t, user :: %User{}) :: Ecto.Queryset.t
-  def for_user(query, user), do: from n in query, where: n.user_id == ^user.id
+  @spec for_user(query :: Ecto.Queryset.t(), user :: %User{}) :: Ecto.Queryset.t()
+  def for_user(query, user), do: from(n in query, where: n.user_id == ^user.id)
 
   @doc """
   Orders the records returned by the query in descending order of their `inserted_at` value
   """
-  @spec oldest_first(query :: Ecto.Queryset.t) :: Ecto.Queryset.t
-  def oldest_first(query), do: from n in query, order_by: [desc: n.inserted_at]
+  @spec oldest_first(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
+  def oldest_first(query), do: from(n in query, order_by: [desc: n.inserted_at])
 
   @doc """
   Applies a series of query modifiers to a given query. This is used mostly in
@@ -93,6 +92,7 @@ defmodule Plenario2.Queries.AdminUserNoteQueries do
       for_user: nil,
       oldest: false
     ]
+
     opts = Keyword.merge(defaults, opts)
 
     query

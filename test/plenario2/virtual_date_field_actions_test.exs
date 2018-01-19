@@ -29,10 +29,22 @@ defmodule VirtualDateFieldActionsTests do
     {:ok, field} = VirtualDateFieldActions.create(context.meta.id, "year", "month", "day", "hour")
     assert field.name == "_meta_date_year_month_day_hour"
 
-    {:ok, field} = VirtualDateFieldActions.create(context.meta.id, "year", "month", "day", "hour", "minute")
+    {:ok, field} =
+      VirtualDateFieldActions.create(context.meta.id, "year", "month", "day", "hour", "minute")
+
     assert field.name == "_meta_date_year_month_day_hour_minute"
 
-    {:ok, field} = VirtualDateFieldActions.create(context.meta.id, "year", "month", "day", "hour", "minute", "second")
+    {:ok, field} =
+      VirtualDateFieldActions.create(
+        context.meta.id,
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second"
+      )
+
     assert field.name == "_meta_date_year_month_day_hour_minute_second"
   end
 
@@ -72,18 +84,22 @@ defmodule VirtualDateFieldActionsTests do
 
       UserActions.promote_to_admin(context.user)
       user = UserActions.get_from_id(context.user.id)
-      meta = MetaActions.get(context.meta.id, [with_user: true])
+      meta = MetaActions.get(context.meta.id, with_user: true)
 
       MetaActions.submit_for_approval(meta)
-      meta = MetaActions.get(meta.id, [with_user: true])
+      meta = MetaActions.get(meta.id, with_user: true)
       MetaActions.approve(meta, user)
-      meta = MetaActions.get(meta.id, [with_user: true])
+      meta = MetaActions.get(meta.id, with_user: true)
       assert meta.state == "ready"
 
       {:error, error} = VirtualDateFieldActions.update(field, %{year_field: "nope"})
+
       assert error.errors == [
-        name: {"Cannot alter any fields after the parent data set has been approved. If you need to update this field, please contact the administrators.", []},
-        fields: {"Field names must exist as registered fields of the data set", []}]
+               name:
+                 {"Cannot alter any fields after the parent data set has been approved. If you need to update this field, please contact the administrators.",
+                  []},
+               fields: {"Field names must exist as registered fields of the data set", []}
+             ]
     end
   end
 end

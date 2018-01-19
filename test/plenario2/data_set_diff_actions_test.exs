@@ -5,7 +5,8 @@ defmodule DataSetDiffActionsTest do
     DataSetDiffActions,
     EtlJobActions,
     DataSetFieldActions,
-    DataSetConstraintActions}
+    DataSetConstraintActions
+  }
 
   setup context do
     meta = context[:meta]
@@ -20,29 +21,31 @@ defmodule DataSetDiffActionsTest do
   end
 
   test "create a diff", context do
-    {:ok, _} = DataSetDiffActions.create(
-      context.meta.id,
-      context.cons.id,
-      context.job.id,
-      "date",
-      "2017-01-01T00:00:00+00:00",
-      "2017-01-01T00:00:01+00:00",
-      DateTime.utc_now(),
-      %{"event_id": "my-unique-id"}
-    )
+    {:ok, _} =
+      DataSetDiffActions.create(
+        context.meta.id,
+        context.cons.id,
+        context.job.id,
+        "date",
+        "2017-01-01T00:00:00+00:00",
+        "2017-01-01T00:00:01+00:00",
+        DateTime.utc_now(),
+        %{event_id: "my-unique-id"}
+      )
   end
 
   test "list diffs for a data set", context do
-    {:ok, _} = DataSetDiffActions.create(
-      context.meta.id,
-      context.cons.id,
-      context.job.id,
-      "date",
-      "2017-01-01T00:00:00+00:00",
-      "2017-01-01T00:00:01+00:00",
-      DateTime.utc_now(),
-      %{"event_id": "my-unique-id"}
-    )
+    {:ok, _} =
+      DataSetDiffActions.create(
+        context.meta.id,
+        context.cons.id,
+        context.job.id,
+        "date",
+        "2017-01-01T00:00:00+00:00",
+        "2017-01-01T00:00:01+00:00",
+        DateTime.utc_now(),
+        %{event_id: "my-unique-id"}
+      )
 
     assert length(DataSetDiffActions.list_for_meta(context.meta)) == 1
   end

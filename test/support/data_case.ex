@@ -36,7 +36,12 @@ defmodule Plenario2.DataCase do
     {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
 
     # create a meta
-    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
+    {:ok, meta} =
+      MetaActions.create(
+        "Chicago Tree Trimming",
+        user.id,
+        "https://www.example.com/chicago-tree-trimming"
+      )
 
     unless tags[:async] do
       Ecto.Adapters.SQL.Sandbox.mode(Plenario2.Repo, {:shared, self()})

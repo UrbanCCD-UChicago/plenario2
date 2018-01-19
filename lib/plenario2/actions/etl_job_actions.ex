@@ -16,7 +16,7 @@ defmodule Plenario2.Actions.EtlJobActions do
   @typedoc """
   Parameter is an ID attribute
   """
-  @type id :: String.t | integer
+  @type id :: String.t() | integer
 
   @typedoc """
   Returns a tuple of :ok, EtlJob or :error, Ecto.Changeset
@@ -70,10 +70,7 @@ defmodule Plenario2.Actions.EtlJobActions do
         false -> meta.id
       end
 
-    Repo.all(
-      from job in EtlJob,
-      where: job.meta_id == ^meta_id
-    )
+    Repo.all(from(job in EtlJob, where: job.meta_id == ^meta_id))
   end
 
   def mark_started(job) do

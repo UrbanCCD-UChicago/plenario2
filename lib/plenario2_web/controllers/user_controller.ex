@@ -7,13 +7,15 @@ defmodule Plenario2Web.UserController do
   def index(conn, _) do
     user = Guardian.Plug.current_resource(conn)
 
-    unread_notes = AdminUserNoteActions.list([unread: true, for_user: user])
-    archived_notes = AdminUserNoteActions.list([acknowledged: true, for_user: user, oldest_first: true])
+    unread_notes = AdminUserNoteActions.list(unread: true, for_user: user)
 
-    new = MetaActions.list([for_user: user, new: true])
-    awaiting = MetaActions.list([for_user: user, needs_approval: true])
-    ready = MetaActions.list([for_user: user, ready: true, limit_to: 3])
-    erred = MetaActions.list([for_user: user, erred: true])
+    archived_notes =
+      AdminUserNoteActions.list(acknowledged: true, for_user: user, oldest_first: true)
+
+    new = MetaActions.list(for_user: user, new: true)
+    awaiting = MetaActions.list(for_user: user, needs_approval: true)
+    ready = MetaActions.list(for_user: user, ready: true, limit_to: 3)
+    erred = MetaActions.list(for_user: user, erred: true)
 
     conn
     |> render(
@@ -98,7 +100,7 @@ defmodule Plenario2Web.UserController do
   def do_update_org_info(conn, %{"user" => %{"organization" => org, "org_role" => role}}) do
     user = Guardian.Plug.current_resource(conn)
 
-    UserActions.update_org_info(user, [organization: org, org_role: role])
+    UserActions.update_org_info(user, organization: org, org_role: role)
     |> update_org_info_reply(conn)
   end
 

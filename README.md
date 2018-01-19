@@ -77,3 +77,38 @@ $ mix coveralls
 If during development you need to make configuration changes, do that in the
 `config/test.exs` file. If your tests work locally, but something is screwy on
 Travis, update the `config/travis.exs` file.
+
+## Building Releases
+
+A quick sidebar about building and deploying releases in Elixir and Erlang: it's
+a flipping mess right now. Erlang, which Elixir is built on top of, is old.
+Like really old. Like almost as old as me (Vince). Given it's advanced age, it
+doesn't like being nimble. So, unlike Python or Ruby or (sadly) even Java,
+deploying Elixir is a pain. Hence, this walk through...
+
+The target environment for releases is Ubuntu 16.04 with locales set to
+`EN_US.UTF8`. Obviously, not everyone is going to have a clean version of
+Xenial as their dev environment, so to make the release build process as clean
+as possible we use Docker.
+
+To build the image, run `./build`.
+
+**Note:** you will need the following software installed and configured on
+your host/build machine:
+
+- docker
+- awscli
+
+You should be signed into a docker account (`$ docker signin`) and you should
+have your AWS credentials set up (`$ aws config`).
+
+## Deploying Releases
+
+Deployments are naive -- they will download a specific release archive from S3
+to your machine and then upload it to the target server. This is done so that you
+make deliberate choices.
+
+To deploy, run `./deploy {{ version number }} {{ hostname }}`
+
+**Note:** you will need the hostname configured in your local SSH config. You
+should also have configured your AWS credentials set up (`$ aws config`).

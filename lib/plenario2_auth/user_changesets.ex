@@ -34,7 +34,7 @@ defmodule Plenario2Auth.UserChangesets do
   plaintext password and stores the hash in the database, discarding
   the plaintext version.
   """
-  @spec create(user :: %User{}, params :: %{}) :: Ecto.Changeset.t
+  @spec create(user :: %User{}, params :: %{}) :: Ecto.Changeset.t()
   def create(user, params) do
     user
     |> cast(params, [
@@ -57,7 +57,7 @@ defmodule Plenario2Auth.UserChangesets do
   Performs the casting and validation needed to update a user's
   name in the database.
   """
-  @spec update_name(user :: %User{}, params :: %{name: String.t}) :: Ecto.Changeset.t
+  @spec update_name(user :: %User{}, params :: %{name: String.t()}) :: Ecto.Changeset.t()
   def update_name(user, params) do
     user
     |> cast(params, [:name])
@@ -67,7 +67,8 @@ defmodule Plenario2Auth.UserChangesets do
   Performs the casting and validation need to update a user's
   email address in the database.
   """
-  @spec update_email_address(user :: %User{}, params :: %{email_address: String.t}) :: Ecto.Changeset.t
+  @spec update_email_address(user :: %User{}, params :: %{email_address: String.t()}) ::
+          Ecto.Changeset.t()
   def update_email_address(user, params) do
     user
     |> cast(params, [:email_address])
@@ -84,7 +85,8 @@ defmodule Plenario2Auth.UserChangesets do
   plaintext password and stores the hash in the database, discarding
   the plaintext version.
   """
-  @spec update_password(user :: %User{}, params :: %{plaintext_password: String.t}) :: Ecto.Changeset.t
+  @spec update_password(user :: %User{}, params :: %{plaintext_password: String.t()}) ::
+          Ecto.Changeset.t()
   def update_password(user, params) do
     user
     |> cast(params, [:plaintext_password])
@@ -96,7 +98,10 @@ defmodule Plenario2Auth.UserChangesets do
   Performs the casting and validation need to update a user's
   organization information in the database.
   """
-  @spec update_org_info(user :: %User{}, params :: %{organization: String.t, org_role: String.t}) :: Ecto.Changeset.t
+  @spec update_org_info(
+          user :: %User{},
+          params :: %{organization: String.t(), org_role: String.t()}
+        ) :: Ecto.Changeset.t()
   def update_org_info(user, params) do
     user
     |> cast(params, [:organization, :org_role])
@@ -106,7 +111,7 @@ defmodule Plenario2Auth.UserChangesets do
   Performs the casting and validation need to update a user's
   `is_active` flag in the database.
   """
-  @spec update_active(user :: %User{}, params :: %{is_active: boolean}) :: Ecto.Changeset.t
+  @spec update_active(user :: %User{}, params :: %{is_active: boolean}) :: Ecto.Changeset.t()
   def update_active(user, params) do
     user
     |> cast(params, [:is_active])
@@ -116,7 +121,7 @@ defmodule Plenario2Auth.UserChangesets do
   Performs the casting and validation need to update a user's
   `is_trusted` flag in the database.
   """
-  @spec update_trusted(user :: %User{}, params :: %{is_active: boolean}) :: Ecto.Changeset.t
+  @spec update_trusted(user :: %User{}, params :: %{is_active: boolean}) :: Ecto.Changeset.t()
   def update_trusted(user, params) do
     user
     |> cast(params, [:is_trusted])
@@ -126,7 +131,7 @@ defmodule Plenario2Auth.UserChangesets do
   Performs the casting and validation need to update a user's
   `is_admin` flag in the database.
   """
-  @spec update_admin(user :: %User{}, params :: %{is_admin: boolean}) :: Ecto.Changeset.t
+  @spec update_admin(user :: %User{}, params :: %{is_admin: boolean}) :: Ecto.Changeset.t()
   def update_admin(user, params) do
     user
     |> cast(params, [:is_admin, :is_trusted])
@@ -135,7 +140,9 @@ defmodule Plenario2Auth.UserChangesets do
   ##
   # operations
 
-  defp hash_password(%Ecto.Changeset{valid?: true, changes: %{plaintext_password: plaintext}} = changeset) do
+  defp hash_password(
+         %Ecto.Changeset{valid?: true, changes: %{plaintext_password: plaintext}} = changeset
+       ) do
     changeset
     |> put_change(:hashed_password, Bcrypt.hashpwsalt(plaintext))
   end

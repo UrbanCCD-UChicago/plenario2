@@ -18,14 +18,14 @@ defmodule Plenario2.Queries.MetaQueries do
   @doc """
   Creates a query for a single meta entity in the database filtered by its ID
   """
-  @spec from_id(id :: integer) :: Ecto.Queryset.t
-  def from_id(id), do: (from m in Meta, where: m.id == ^id)
+  @spec from_id(id :: integer) :: Ecto.Queryset.t()
+  def from_id(id), do: from(m in Meta, where: m.id == ^id)
 
   @doc """
   Creates a query for a single meta entity in the database filtered by its slug
   """
-  @spec from_slug(slug :: String.t) :: Ecto.Queryset.t
-  def from_slug(slug), do: (from m in Meta, where: m.slug == ^slug)
+  @spec from_slug(slug :: String.t()) :: Ecto.Queryset.t()
+  def from_slug(slug), do: from(m in Meta, where: m.slug == ^slug)
 
   @doc """
   Creates a query that gets all meta entities in the database. This can be combined
@@ -36,85 +36,87 @@ defmodule Plenario2.Queries.MetaQueries do
     iex> new_metas = MetaQueries.list() |> MetaQueries.new() |> Repo.all()
     iex> ready_metas_with_fields = MetaQueries.list() |> MetaQueries.with_data_set_fields() |> MetaQueries.ready() |> Repo.all()
   """
-  def list(), do: (from m in Meta)
+  def list(), do: from(m in Meta)
 
   @doc """
   Preloads the `user` relation
   """
-  @spec with_user(query :: Ecto.Queryset.t) :: Ecto.Queryset.t
-  def with_user(query), do: from m in query, preload: [user: :metas]
+  @spec with_user(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
+  def with_user(query), do: from(m in query, preload: [user: :metas])
 
   @doc """
   Preloads the `data_set_fields` relation
   """
-  @spec with_data_set_fields(query :: Ecto.Queryset.t) :: Ecto.Queryset.t
-  def with_data_set_fields(query), do: from m in query, preload: [data_set_fields: :meta]
+  @spec with_data_set_fields(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
+  def with_data_set_fields(query), do: from(m in query, preload: [data_set_fields: :meta])
 
   @doc """
   Preloads the `data_set_constraints` relation
   """
-  @spec with_data_set_constraints(query :: Ecto.Queryset.t) :: Ecto.Queryset.t
-  def with_data_set_constraints(query), do: from m in query, preload: [data_set_constraints: :meta]
+  @spec with_data_set_constraints(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
+  def with_data_set_constraints(query),
+    do: from(m in query, preload: [data_set_constraints: :meta])
 
   @doc """
   Preloads the `virtual_date_fields` relation
   """
-  @spec with_virtual_date_fields(query :: Ecto.Queryset.t) :: Ecto.Queryset.t
-  def with_virtual_date_fields(query), do: from m in query, preload: [virtual_date_fields: :meta]
+  @spec with_virtual_date_fields(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
+  def with_virtual_date_fields(query), do: from(m in query, preload: [virtual_date_fields: :meta])
 
   @doc """
   Preloads the `virtual_point_fields` relation
   """
-  @spec with_virtual_point_fields(query :: Ecto.Queryset.t) :: Ecto.Queryset.t
-  def with_virtual_point_fields(query), do: from m in query, preload: [virtual_point_fields: :meta]
+  @spec with_virtual_point_fields(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
+  def with_virtual_point_fields(query),
+    do: from(m in query, preload: [virtual_point_fields: :meta])
 
   @doc """
   Preloads the `data_set_diffs` relation
   """
-  @spec with_data_set_diffs(query :: Ecto.Queryset.t) :: Ecto.Queryset.t
-  def with_data_set_diffs(query), do: from m in query, preload: [data_set_diffs: :meta]
+  @spec with_data_set_diffs(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
+  def with_data_set_diffs(query), do: from(m in query, preload: [data_set_diffs: :meta])
 
   @doc """
   Preloads the `admin_user_notes` relation
   """
-  @spec with_admin_user_notes(query :: Ecto.Queryset.t) :: Ecto.Queryset.t
-  def with_admin_user_notes(query), do: from m in query, preload: [admin_user_notes: :meta]
+  @spec with_admin_user_notes(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
+  def with_admin_user_notes(query), do: from(m in query, preload: [admin_user_notes: :meta])
 
   @doc """
   Adds a filter to query selecting metas whose state is new
   """
-  @spec new(query :: Ecto.Queryset.t) :: Ecto.Queryset.t
-  def new(query), do: from m in query, where: m.state == "new"
+  @spec new(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
+  def new(query), do: from(m in query, where: m.state == "new")
 
   @doc """
   Adds a filter to query selecting metas whose state is needs_approval
   """
-  @spec needs_approval(query :: Ecto.Queryset.t) :: Ecto.Queryset.t
-  def needs_approval(query), do: from m in query, where: m.state == "needs_approval"
+  @spec needs_approval(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
+  def needs_approval(query), do: from(m in query, where: m.state == "needs_approval")
 
   @doc """
   Adds a filter to query selecting metas whose state is ready
   """
-  @spec ready(query :: Ecto.Queryset.t) :: Ecto.Queryset.t
-  def ready(query), do: from m in query, where: m.state == "ready"
+  @spec ready(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
+  def ready(query), do: from(m in query, where: m.state == "ready")
 
   @doc """
   Adds a filter to query selecting metas whose state is erred
   """
-  @spec erred(query :: Ecto.Queryset.t) :: Ecto.Queryset.t
-  def erred(query), do: from m in query, where: m.state == "erred"
+  @spec erred(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
+  def erred(query), do: from(m in query, where: m.state == "erred")
 
   @doc """
   Adds a filter to query limiting the results to a given number
   """
-  @spec limit_to(query :: Ecto.Queryset.t, limit :: integer) :: Ecto.Queryset.t
-  def limit_to(query, limit), do: from m in query, limit: ^limit
+  @spec limit_to(query :: Ecto.Queryset.t(), limit :: integer) :: Ecto.Queryset.t()
+  def limit_to(query, limit), do: from(m in query, limit: ^limit)
 
   @doc """
   Adds a filter to query selecting metas whose user's ID matches the given ID
   """
-  @spec for_user(query :: Ecto.Queryset.t, user :: %User{}) :: Ecto.Queryset.t
-  def for_user(query, user), do: from m in query, where: m.user_id == ^user.id
+  @spec for_user(query :: Ecto.Queryset.t(), user :: %User{}) :: Ecto.Queryset.t()
+  def for_user(query, user), do: from(m in query, where: m.user_id == ^user.id)
 
   @doc """
   Applies a series of query modifiers to a given query. This is used mostly in
@@ -148,7 +150,7 @@ defmodule Plenario2.Queries.MetaQueries do
                 limit_to: 5])
            |> Repo.all()
   """
-  @spec handle_opts(query :: Ecto.Queryset.t, opts :: [{atom, any}]) :: Ecto.Queryset.t
+  @spec handle_opts(query :: Ecto.Queryset.t(), opts :: [{atom, any}]) :: Ecto.Queryset.t()
   def handle_opts(query, opts \\ []) do
     defaults = [
       with_user: false,
@@ -165,6 +167,7 @@ defmodule Plenario2.Queries.MetaQueries do
       limit_to: nil,
       for_user: nil
     ]
+
     opts = Keyword.merge(defaults, opts)
 
     query

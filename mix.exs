@@ -6,9 +6,9 @@ defmodule Plenario2.Mixfile do
       app: :plenario2,
       version: "0.0.6",
       elixir: "~> 1.6",
-      elixirc_paths: elixirc_paths(Mix.env),
-      compilers: [:phoenix, :gettext] ++ Mix.compilers,
-      start_permanent: Mix.env == :prod,
+      elixirc_paths: elixirc_paths(Mix.env()),
+      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
+      start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
       test_coverage: [tool: ExCoveralls],
@@ -27,7 +27,7 @@ defmodule Plenario2.Mixfile do
   def application do
     [
       mod: {Plenario2.Application, []},
-      extra_applications: [:logger, :runtime_tools, :edeliver]
+      extra_applications: [:logger, :runtime_tools]
     ]
   end
 
@@ -62,7 +62,6 @@ defmodule Plenario2.Mixfile do
       {:ecto_state_machine, "~> 0.3.0"},
       {:canary, "~> 1.1"},
       {:canada, "~> 1.0"},
-      {:edeliver, "~> 1.4"},
       {:distillery, "~> 1.5"},
       {:slugify, "~> 1.1"}
     ]

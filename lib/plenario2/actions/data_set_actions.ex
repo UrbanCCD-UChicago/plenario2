@@ -6,7 +6,14 @@ defmodule Plenario2.Actions.DataSetActions do
 
   require Logger
 
-  alias Plenario2.Actions.{DataSetConstraintActions, DataSetFieldActions, MetaActions, VirtualDateFieldActions, VirtualPointFieldActions}
+  alias Plenario2.Actions.{
+    DataSetConstraintActions,
+    DataSetFieldActions,
+    MetaActions,
+    VirtualDateFieldActions,
+    VirtualPointFieldActions
+  }
+
   alias Plenario2.Schemas.Meta
   alias Plenario2.Repo
 
@@ -21,15 +28,24 @@ defmodule Plenario2.Actions.DataSetActions do
     # create table
     table_name = MetaActions.get_data_set_table_name(meta)
 
-    ds_fields = for f <- DataSetFieldActions.list_for_meta(meta), do: %{name: f.name, type: f.type, opts: f.opts}
-    dt_fields = for f <- VirtualDateFieldActions.list_for_meta(meta), do: %{name: f.name, type: "TIMESTAMPTZ", opts: "DEFAULT NULL"}
-    pt_fields = for f <- VirtualPointFieldActions.list_for_meta(meta), do: %{name: f.name, type: "GEOMETRY(POINT, #{meta.srid})", opts: "DEFAULT NULL"}
+    ds_fields =
+      for f <- DataSetFieldActions.list_for_meta(meta),
+          do: %{name: f.name, type: f.type, opts: f.opts}
+
+    dt_fields =
+      for f <- VirtualDateFieldActions.list_for_meta(meta),
+          do: %{name: f.name, type: "TIMESTAMPTZ", opts: "DEFAULT NULL"}
+
+    pt_fields =
+      for f <- VirtualPointFieldActions.list_for_meta(meta),
+          do: %{name: f.name, type: "GEOMETRY(POINT, #{meta.srid})", opts: "DEFAULT NULL"}
+
     fields = ds_fields ++ dt_fields ++ pt_fields
 
     :ok = create_table!(table_name, fields)
 
     # add constraints
-    Enum.map(DataSetConstraintActions.list_for_meta(meta), fn (c) ->
+    Enum.map(DataSetConstraintActions.list_for_meta(meta), fn c ->
       :ok = add_constraint!(table_name, c.constraint_name, c.field_names)
     end)
 
@@ -71,7 +87,7 @@ defmodule Plenario2.Actions.DataSetActions do
       EEx.eval_file(
         "#{@template_dir}/create_table.sql.eex",
         [table_name: table_name, fields: fields],
-        [trim: true]
+        trim: true
       )
 
     case Ecto.Adapters.SQL.query(Repo, sql) do
@@ -91,7 +107,7 @@ defmodule Plenario2.Actions.DataSetActions do
       EEx.eval_file(
         "#{@template_dir}/drop_table.sql.eex",
         [table_name: table_name],
-        [trim: true]
+        trim: true
       )
 
     case Ecto.Adapters.SQL.query(Repo, sql) do
@@ -111,7 +127,7 @@ defmodule Plenario2.Actions.DataSetActions do
       EEx.eval_file(
         "#{@template_dir}/add_constraint.sql.eex",
         [table_name: table_name, constraint_name: constraint_name, field_names: field_names],
-        [trim: true]
+        trim: true
       )
 
     case Ecto.Adapters.SQL.query(Repo, sql) do
@@ -120,7 +136,12 @@ defmodule Plenario2.Actions.DataSetActions do
         :ok
 
       {:error, error} ->
-        Logger.error("error adding constraint: #{error.postgres.message}", table_name: table_name, constraint_name: constraint_name)
+        Logger.error(
+          "error adding constraint: #{error.postgres.message}",
+          table_name: table_name,
+          constraint_name: constraint_name
+        )
+
         Logger.error(sql)
         raise error
     end
@@ -131,7 +152,7 @@ defmodule Plenario2.Actions.DataSetActions do
       EEx.eval_file(
         "#{@template_dir}/create_parse_timestamp_function.sql.eex",
         [timezone: timezone],
-        [trim: true]
+        trim: true
       )
 
     case Ecto.Adapters.SQL.query(Repo, sql) do
@@ -140,7 +161,10 @@ defmodule Plenario2.Actions.DataSetActions do
         :ok
 
       {:error, error} ->
-        Logger.error("error creating parse timestamp function `#{timezone}`: #{error.postgres.message}")
+        Logger.error(
+          "error creating parse timestamp function `#{timezone}`: #{error.postgres.message}"
+        )
+
         Logger.error(sql)
         raise error
     end
@@ -151,7 +175,7 @@ defmodule Plenario2.Actions.DataSetActions do
       EEx.eval_file(
         "#{@template_dir}/create_timestamp_trigger_function.sql.eex",
         [function_name: function_name, timezone: timezone, fields: fields],
-        [trim: true]
+        trim: true
       )
 
     case Ecto.Adapters.SQL.query(Repo, sql) do
@@ -160,7 +184,12 @@ defmodule Plenario2.Actions.DataSetActions do
         :ok
 
       {:error, error} ->
-        Logger.error("error creating parse timestamp function trigger `#{timezone}`: #{error.postgres.message}")
+        Logger.error(
+          "error creating parse timestamp function trigger `#{timezone}`: #{
+            error.postgres.message
+          }"
+        )
+
         Logger.error(sql)
         raise error
     end
@@ -171,7 +200,7 @@ defmodule Plenario2.Actions.DataSetActions do
       EEx.eval_file(
         "#{@template_dir}/create_parse_long_lat_function.sql.eex",
         [srid: srid],
-        [trim: true]
+        trim: true
       )
 
     case Ecto.Adapters.SQL.query(Repo, sql) do
@@ -180,7 +209,10 @@ defmodule Plenario2.Actions.DataSetActions do
         :ok
 
       {:error, error} ->
-        Logger.error("error creating parse long/lat function `#{srid}`: #{error.postgres.message}")
+        Logger.error(
+          "error creating parse long/lat function `#{srid}`: #{error.postgres.message}"
+        )
+
         Logger.error(sql)
         raise error
     end
@@ -191,7 +223,7 @@ defmodule Plenario2.Actions.DataSetActions do
       EEx.eval_file(
         "#{@template_dir}/create_parse_location_function.sql.eex",
         [srid: srid],
-        [trim: true]
+        trim: true
       )
 
     case Ecto.Adapters.SQL.query(Repo, sql) do
@@ -200,7 +232,10 @@ defmodule Plenario2.Actions.DataSetActions do
         :ok
 
       {:error, error} ->
-        Logger.error("error creating parse location function `#{srid}`: #{error.postgres.message}")
+        Logger.error(
+          "error creating parse location function `#{srid}`: #{error.postgres.message}"
+        )
+
         Logger.error(sql)
         raise error
     end
@@ -211,7 +246,7 @@ defmodule Plenario2.Actions.DataSetActions do
       EEx.eval_file(
         "#{@template_dir}/create_point_trigger_function.sql.eex",
         [function_name: function_name, srid: srid, fields: fields],
-        [trim: true]
+        trim: true
       )
 
     case Ecto.Adapters.SQL.query(Repo, sql) do
@@ -220,7 +255,10 @@ defmodule Plenario2.Actions.DataSetActions do
         :ok
 
       {:error, error} ->
-        Logger.error("error creating parse long/lat function trigger `#{srid}`: #{error.postgres.message}")
+        Logger.error(
+          "error creating parse long/lat function trigger `#{srid}`: #{error.postgres.message}"
+        )
+
         Logger.error(sql)
         raise error
     end
@@ -231,7 +269,7 @@ defmodule Plenario2.Actions.DataSetActions do
       EEx.eval_file(
         "#{@template_dir}/create_trigger.sql.eex",
         [trigger_name: trigger_name, table_name: table_name, function_name: function_name],
-        [trim: true]
+        trim: true
       )
 
     case Ecto.Adapters.SQL.query(Repo, sql) do

@@ -31,16 +31,19 @@ defmodule MetaQueriesTests do
   test "with_user/1", %{user: user} do
     {:ok, meta} = MetaActions.create("test", user.id, "https://example.com/")
 
-    found = Q.from_slug(meta.slug)
+    found =
+      Q.from_slug(meta.slug)
       |> Q.with_user()
       |> Repo.one()
+
     assert found.user.id == user.id
   end
 
   test "with_data_set_fields/1", %{user: user} do
     {:ok, meta} = MetaActions.create("test", user.id, "https://example.com/")
 
-    found = Q.from_slug(meta.slug)
+    found =
+      Q.from_slug(meta.slug)
       |> Q.with_data_set_fields()
       |> Repo.one()
 
@@ -50,7 +53,8 @@ defmodule MetaQueriesTests do
   test "with_data_set_constraints/1", %{user: user} do
     {:ok, meta} = MetaActions.create("test", user.id, "https://example.com/")
 
-    found = Q.from_slug(meta.slug)
+    found =
+      Q.from_slug(meta.slug)
       |> Q.with_data_set_constraints()
       |> Repo.one()
 
@@ -60,7 +64,8 @@ defmodule MetaQueriesTests do
   test "with_virtual_date_fields/1", %{user: user} do
     {:ok, meta} = MetaActions.create("test", user.id, "https://example.com/")
 
-    found = Q.from_slug(meta.slug)
+    found =
+      Q.from_slug(meta.slug)
       |> Q.with_virtual_date_fields()
       |> Repo.one()
 
@@ -70,7 +75,8 @@ defmodule MetaQueriesTests do
   test "with_virtual_point_fields/1", %{user: user} do
     {:ok, meta} = MetaActions.create("test", user.id, "https://example.com/")
 
-    found = Q.from_slug(meta.slug)
+    found =
+      Q.from_slug(meta.slug)
       |> Q.with_virtual_point_fields()
       |> Repo.one()
 
@@ -80,7 +86,8 @@ defmodule MetaQueriesTests do
   test "with_data_set_diffs/1", %{user: user} do
     {:ok, meta} = MetaActions.create("test", user.id, "https://example.com/")
 
-    found = Q.from_slug(meta.slug)
+    found =
+      Q.from_slug(meta.slug)
       |> Q.with_data_set_diffs()
       |> Repo.one()
 
@@ -93,7 +100,8 @@ defmodule MetaQueriesTests do
     MetaActions.create("test", user.id, "https://example.com/")
     MetaActions.create("test 2", user2.id, "https://example.com/2")
 
-    found = Q.list()
+    found =
+      Q.list()
       |> Q.for_user(user)
       |> Repo.all()
 

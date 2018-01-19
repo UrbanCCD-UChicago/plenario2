@@ -8,7 +8,6 @@ defmodule Plenario2Auth.Abilities do
   alias Plenario2.Schemas.Meta
 
   defimpl Canada.Can, for: User do
-
     @doc """
     For all modification actions, ensure the current user is the owner.
     """

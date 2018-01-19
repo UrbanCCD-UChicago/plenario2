@@ -13,14 +13,14 @@ defmodule Plenario2.Changesets.VirtualDateFieldChangesets do
   Verbose map of params for create
   """
   @type create_params :: %{
-    meta_id: integer,
-    year_field: String.t,
-    month_field: String.t,
-    day_field: String.t,
-    hour_field: String.t,
-    minute_field: String.t,
-    second_field: String.t
-  }
+          meta_id: integer,
+          year_field: String.t(),
+          month_field: String.t(),
+          day_field: String.t(),
+          hour_field: String.t(),
+          minute_field: String.t(),
+          second_field: String.t()
+        }
 
   @new_create_param_keys [
     :year_field,
@@ -35,7 +35,7 @@ defmodule Plenario2.Changesets.VirtualDateFieldChangesets do
   @doc """
   Creates a blank changeset for creating webforms
   """
-  @spec new() :: Ecto.Changeset.t
+  @spec new() :: Ecto.Changeset.t()
   def new() do
     %VirtualDateField{}
     |> cast(%{}, @new_create_param_keys)
@@ -44,7 +44,7 @@ defmodule Plenario2.Changesets.VirtualDateFieldChangesets do
   @doc """
   Creates a changeset for inserting a new VirtualDateField into the database.
   """
-  @spec create(params :: create_params) :: Ecto.Changeset.t
+  @spec create(params :: create_params) :: Ecto.Changeset.t()
   def create(params) do
     %VirtualDateField{}
     |> cast(params, @new_create_param_keys)
@@ -57,7 +57,7 @@ defmodule Plenario2.Changesets.VirtualDateFieldChangesets do
   @doc """
   Updates a VirtualDateField
   """
-  @spec update(field :: VirtualDateField, params :: create_params) :: Ecto.Changeset.t
+  @spec update(field :: VirtualDateField, params :: create_params) :: Ecto.Changeset.t()
   def update(field, params) do
     field
     |> cast(params, @new_create_param_keys)
@@ -115,12 +115,14 @@ defmodule Plenario2.Changesets.VirtualDateFieldChangesets do
     fields = DataSetFieldActions.list_for_meta(meta)
     known_field_names = for f <- fields, do: f.name
 
-    field_names = Enum.filter(field_namez, fn (name) -> name != nil end)
-    is_subset = field_names |> Enum.all?(fn (name) -> Enum.member?(known_field_names, name) end)
+    field_names = Enum.filter(field_namez, fn name -> name != nil end)
+    is_subset = field_names |> Enum.all?(fn name -> Enum.member?(known_field_names, name) end)
+
     if is_subset do
       changeset
     else
-      changeset |> add_error(:fields, "Field names must exist as registered fields of the data set")
+      changeset
+      |> add_error(:fields, "Field names must exist as registered fields of the data set")
     end
   end
 
@@ -132,7 +134,10 @@ defmodule Plenario2.Changesets.VirtualDateFieldChangesets do
 
     if meta.state == "ready" do
       changeset
-      |> add_error(:name, "Cannot alter any fields after the parent data set has been approved. If you need to update this field, please contact the administrators.")
+      |> add_error(
+        :name,
+        "Cannot alter any fields after the parent data set has been approved. If you need to update this field, please contact the administrators."
+      )
     else
       changeset
     end

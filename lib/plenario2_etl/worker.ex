@@ -38,17 +38,17 @@ defmodule Plenario2Etl.Worker do
   """
   @spec init(state :: map) :: {:ok, map}
   def init(state) do
-    Logger.info("[#{inspect self()}] [init] Starting worker GenServer")
+    Logger.info("[#{inspect(self())}] [init] Starting worker GenServer")
     {:ok, state}
   end
 
   def handle_call({:load, meta_id_map}, _, state) do
-    Logger.info("[#{inspect self()}] [handle_call] Received :load call")
+    Logger.info("[#{inspect(self())}] [handle_call] Received :load call")
     {:reply, load(meta_id_map), state}
   end
 
   def handle_call({:load_chunk!, meta, job, chunk}, _, state) do
-    Logger.info("[#{inspect self()}] [handle_call] Received :load_chunk! call")
+    Logger.info("[#{inspect(self())}] [handle_call] Received :load_chunk! call")
     {:reply, load_chunk!(meta, job, chunk), state}
   end
 
@@ -58,7 +58,13 @@ defmodule Plenario2Etl.Worker do
   """
   @spec download!(name :: charlist, source :: charlist, type :: charlist) :: charlist
   def download!(name, source, type) do
-    type = if type === "shp" do "zip" else type end
+    type =
+      if type === "shp" do
+        "zip"
+      else
+        type
+      end
+
     %HTTPoison.Response{body: body} = HTTPoison.get!(source)
     path = "/tmp/#{name}.#{type}"
     File.write!(path, body)
@@ -75,9 +81,9 @@ defmodule Plenario2Etl.Worker do
     meta = MetaActions.get(state[:meta_id])
     job = EtlJobActions.get(state[:job_id])
 
-    Logger.info("[#{inspect self()}] [load] Downloading file for #{meta.name}")
-    Logger.info("[#{inspect self()}] [load] #{meta.name} source url is #{meta.source_url}")
-    Logger.info("[#{inspect self()}] [load] #{meta.name} source type is #{meta.source_type}")
+    Logger.info("[#{inspect(self())}] [load] Downloading file for #{meta.name}")
+    Logger.info("[#{inspect(self())}] [load] #{meta.name} source url is #{meta.source_url}")
+    Logger.info("[#{inspect(self())}] [load] #{meta.name} source type is #{meta.source_type}")
 
     path =
       download!(
@@ -86,7 +92,7 @@ defmodule Plenario2Etl.Worker do
         meta.source_type
       )
 
-    Logger.info("[#{inspect self()}] [load] File stored at #{path}")
+    Logger.info("[#{inspect(self())}] [load] File stored at #{path}")
 
     case meta.source_type do
       "json" -> load_json(meta, path, job)
@@ -103,17 +109,20 @@ defmodule Plenario2Etl.Worker do
   def load_chunk!(meta, job, chunk) do
     rows = Enum.map(chunk, &Keyword.values/1)
 
-    Logger.info("[#{inspect self()}] [load_chunk] Running contains query")
+    Logger.info("[#{inspect(self())}] [load_chunk] Running contains query")
     existing_rows = contains!(meta, rows)
 
-    Logger.info("[#{inspect self()}] [load_chunk] Running upsert query")
+    Logger.info("[#{inspect(self())}] [load_chunk] Running upsert query")
     inserted_rows = upsert!(meta, rows)
 
     constraints = MetaActions.get_first_constraint_field_names(meta)
     constraint_atoms = for c <- constraints, do: String.to_atom(c)
     pairs = Plenario2Etl.Rows.pair_rows(existing_rows, inserted_rows, constraint_atoms)
 
-    Logger.info("[#{inspect self()}] [load_chunk] Will possibly update #{Enum.count(pairs)} rows")
+    Logger.info(
+      "[#{inspect(self())}] [load_chunk] Will possibly update #{Enum.count(pairs)} rows"
+    )
+
     Enum.map(pairs, fn {existing_row, inserted_row} ->
       create_diffs(meta, job, existing_row, inserted_row)
     end)
@@ -122,7 +131,8 @@ defmodule Plenario2Etl.Worker do
   @doc """
   """
   def load_json(meta, path, job) do
-    Logger.info("[#{inspect self()}] [load_json] Prep loader for json at #{path}")
+    Logger.info("[#{inspect(self())}] [load_json] Prep loader for json at #{path}")
+
     load_data(meta, path, job, fn path ->
       File.read!(path)
       |> Poison.decode!()
@@ -132,7 +142,8 @@ defmodule Plenario2Etl.Worker do
   @doc """
   """
   def load_csv(meta, path, job) do
-    Logger.info("[#{inspect self()}] [load_csv] Prep loader for csv at #{path}")
+    Logger.info("[#{inspect(self())}] [load_csv] Prep loader for csv at #{path}")
+
     load_data(meta, path, job, fn path ->
       File.stream!(path)
       |> CSV.decode!(headers: true)
@@ -142,7 +153,8 @@ defmodule Plenario2Etl.Worker do
   @doc """
   """
   def load_tsv(meta, path, job) do
-    Logger.info("[#{inspect self()}] [load_tsv] Prep loader for tsv at #{path}")
+    Logger.info("[#{inspect(self())}] [load_tsv] Prep loader for tsv at #{path}")
+
     load_data(meta, path, job, fn path ->
       File.stream!(path)
       |> CSV.decode!(headers: true, separator: ?\t)
@@ -153,17 +165,18 @@ defmodule Plenario2Etl.Worker do
   Performs the work of loading a shapefile associated with a `Meta` instance.
   """
   def load_shape(meta, path, _job) do
-    Logger.info("[#{inspect self()}] [load_shape] Unpacking shapefile at #{path}")
+    Logger.info("[#{inspect(self())}] [load_shape] Unpacking shapefile at #{path}")
     {:ok, file_paths} = :zip.unzip(String.to_charlist(path), cwd: '/tmp/')
 
-    Logger.info("[#{inspect self()}] [load_shape] Looking for .shp file")
+    Logger.info("[#{inspect(self())}] [load_shape] Looking for .shp file")
+
     shp =
       Enum.find(file_paths, fn path ->
         String.ends_with?(to_string(path), ".shp")
       end)
       |> to_string()
 
-    Logger.info("[#{inspect self()}] [load_shape] Prep loader for shapefile at #{shp}")
+    Logger.info("[#{inspect(self())}] [load_shape] Prep loader for shapefile at #{shp}")
     Plenario2Etl.Shapefile.load(shp, meta.name)
   end
 
@@ -182,11 +195,11 @@ defmodule Plenario2Etl.Worker do
     |> Stream.map(&Enum.sort/1)
     |> Stream.chunk_every(@chunk_size)
     |> Enum.map(fn chunk ->
-         async_load_chunk!(meta, job, chunk)
-       end)
+      async_load_chunk!(meta, job, chunk)
+    end)
     |> Enum.map(fn task ->
-         Task.await(task)
-       end)
+      Task.await(task)
+    end)
   end
 
   def async_load_chunk!(meta, job, chunk) do
@@ -279,37 +292,44 @@ defmodule Plenario2Etl.Worker do
   def create_diffs(meta, job, original, updated) do
     constraint_id = MetaActions.get_first_constraint(meta).id()
     constraint_names = MetaActions.get_first_constraint_field_names(meta)
-    constraint_map = Enum.map(constraint_names, fn constraint_name ->
-      constraint_name_atom = String.to_atom(constraint_name)
-      {constraint_name, original[constraint_name_atom]}
-    end) |> Map.new()
+
+    constraint_map =
+      Enum.map(constraint_names, fn constraint_name ->
+        constraint_name_atom = String.to_atom(constraint_name)
+        {constraint_name, original[constraint_name_atom]}
+      end)
+      |> Map.new()
 
     List.zip([original, updated])
     |> Enum.map(fn {original_value, updated_value} ->
-         if original_value !== updated_value do
-           {column, original_value} = original_value
-           {_column, updated_value} = updated_value
+      if original_value !== updated_value do
+        {column, original_value} = original_value
+        {_column, updated_value} = updated_value
 
-           Logger.info("[#{inspect self()}] [create_diffs] #{column}: #{inspect original_value} changed to #{inspect updated_value}")
+        Logger.info(
+          "[#{inspect(self())}] [create_diffs] #{column}: #{inspect(original_value)} changed to #{
+            inspect(updated_value)
+          }"
+        )
 
-           # TODO(heyzoos) inspect will render values in a way that is
-           # is probably unusable to end users. Need a way to guess the
-           # correct string format for a value.
+        # TODO(heyzoos) inspect will render values in a way that is
+        # is probably unusable to end users. Need a way to guess the
+        # correct string format for a value.
 
-           {:ok, diff} =
-             DataSetDiffActions.create(
-               meta.id(),
-               constraint_id,
-               job.id(),
-               Atom.to_string(column),
-               inspect(original_value),
-               inspect(updated_value),
-               DateTime.utc_now(),
-               constraint_map
-             )
+        {:ok, diff} =
+          DataSetDiffActions.create(
+            meta.id(),
+            constraint_id,
+            job.id(),
+            Atom.to_string(column),
+            inspect(original_value),
+            inspect(updated_value),
+            DateTime.utc_now(),
+            constraint_map
+          )
 
-           diff
-         end
-       end)
+        diff
+      end
+    end)
   end
 end

@@ -1,5 +1,6 @@
 defmodule Plenario2.Schemas.Meta do
   use Ecto.Schema
+
   use EctoStateMachine,
     states: [:new, :needs_approval, :ready, :erred],
     events: [
@@ -7,19 +8,23 @@ defmodule Plenario2.Schemas.Meta do
         name: :submit_for_approval,
         from: [:new],
         to: :needs_approval
-      ], [
+      ],
+      [
         name: :approve,
         from: [:needs_approval],
         to: :ready
-      ], [
+      ],
+      [
         name: :disapprove,
         from: [:needs_approval],
         to: :new
-      ], [
+      ],
+      [
         name: :mark_erred,
         from: [:ready],
         to: :erred
-      ], [
+      ],
+      [
         name: :mark_fixed,
         from: [:erred],
         to: :ready
@@ -71,12 +76,12 @@ defmodule Plenario2.Schemas.Meta do
 
   @refresh_rate_choices [
     "Don't Refresh": nil,
-    "Minutes": "minutes",
-    "Hours": "hours",
-    "Days": "days",
-    "Weeks": "weeks",
-    "Months": "months",
-    "Years": "years"
+    Minutes: "minutes",
+    Hours: "hours",
+    Days: "days",
+    Weeks: "weeks",
+    Months: "months",
+    Years: "years"
   ]
 
   def get_refresh_rate_values(), do: @refresh_rate_values

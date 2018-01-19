@@ -6,10 +6,10 @@ defmodule Plenario2Web.AdminControllerTest do
   alias Plenario2.Actions.MetaActions
 
   describe "GET /admin" do
-
     @tag :admin
     test "as an authenticated user with admin permissions", %{conn: conn} do
-      response = conn
+      response =
+        conn
         |> get(admin_path(conn, :index))
         |> html_response(:ok)
 
@@ -18,7 +18,8 @@ defmodule Plenario2Web.AdminControllerTest do
 
     @tag :auth
     test "as an authenticated user without admin permissions", %{conn: conn} do
-      response = conn
+      response =
+        conn
         |> get(admin_path(conn, :index))
         |> response(:forbidden)
 
@@ -27,7 +28,8 @@ defmodule Plenario2Web.AdminControllerTest do
 
     @tag :anon
     test "as an anonymous user", %{conn: conn} do
-      response = conn
+      response =
+        conn
         |> get(admin_path(conn, :index))
         |> response(:unauthorized)
 
@@ -36,7 +38,6 @@ defmodule Plenario2Web.AdminControllerTest do
   end
 
   describe "GET /admin/users" do
-
     @tag :admin
     test "all", %{conn: conn} do
       {:ok, archived} = UserActions.create("Archived User", "password", "archived@example.com")
@@ -45,8 +46,9 @@ defmodule Plenario2Web.AdminControllerTest do
       {:ok, trusted} = UserActions.create("Trusted User", "password", "trusted@example.com")
       UserActions.trust(trusted)
 
-      response = conn
-        |>get(admin_path(conn, :user_index))
+      response =
+        conn
+        |> get(admin_path(conn, :user_index))
         |> html_response(:ok)
 
       assert response =~ "Admin User"
@@ -63,8 +65,9 @@ defmodule Plenario2Web.AdminControllerTest do
       {:ok, trusted} = UserActions.create("Trusted User", "password", "trusted@example.com")
       UserActions.trust(trusted)
 
-      response = conn
-        |>get(admin_path(conn, :user_index))
+      response =
+        conn
+        |> get(admin_path(conn, :user_index))
         |> html_response(:ok)
 
       assert response =~ "Admin User"
@@ -80,8 +83,9 @@ defmodule Plenario2Web.AdminControllerTest do
       {:ok, trusted} = UserActions.create("Trusted User", "password", "trusted@example.com")
       UserActions.trust(trusted)
 
-      response = conn
-        |>get(admin_path(conn, :user_index))
+      response =
+        conn
+        |> get(admin_path(conn, :user_index))
         |> html_response(:ok)
 
       assert response =~ "Archived User"
@@ -95,8 +99,9 @@ defmodule Plenario2Web.AdminControllerTest do
       {:ok, trusted} = UserActions.create("Trusted User", "password", "trusted@example.com")
       UserActions.trust(trusted)
 
-      response = conn
-        |>get(admin_path(conn, :user_index))
+      response =
+        conn
+        |> get(admin_path(conn, :user_index))
         |> html_response(:ok)
 
       assert response =~ "Admin User"
@@ -111,8 +116,9 @@ defmodule Plenario2Web.AdminControllerTest do
       {:ok, trusted} = UserActions.create("Trusted User", "password", "trusted@example.com")
       UserActions.trust(trusted)
 
-      response = conn
-        |>get(admin_path(conn, :user_index))
+      response =
+        conn
+        |> get(admin_path(conn, :user_index))
         |> html_response(:ok)
 
       assert response =~ "Admin User"
@@ -204,10 +210,11 @@ defmodule Plenario2Web.AdminControllerTest do
   test :meta_index, %{conn: conn, admin_user: admin} do
     {:ok, meta} = MetaActions.create("test", admin.id, "https://example.com/")
 
-    meta = MetaActions.get(meta.id, [with_user: true])
+    meta = MetaActions.get(meta.id, with_user: true)
     MetaActions.submit_for_approval(meta)
 
-    response = conn
+    response =
+      conn
       |> get(admin_path(conn, :meta_index))
       |> html_response(:ok)
 
@@ -222,10 +229,11 @@ defmodule Plenario2Web.AdminControllerTest do
   test :get_meta_approval_review, %{conn: conn, admin_user: admin} do
     {:ok, meta} = MetaActions.create("test", admin.id, "https://example.com/")
 
-    meta = MetaActions.get(meta.id, [with_user: true])
+    meta = MetaActions.get(meta.id, with_user: true)
     MetaActions.submit_for_approval(meta)
 
-    response = conn
+    response =
+      conn
       |> get(admin_path(conn, :get_meta_approval_review, meta.id))
       |> html_response(:ok)
 
@@ -236,12 +244,12 @@ defmodule Plenario2Web.AdminControllerTest do
   test :approve_meta, %{conn: conn, admin_user: admin} do
     {:ok, meta} = MetaActions.create("test", admin.id, "https://example.com/")
 
-    meta = MetaActions.get(meta.id, [with_user: true])
+    meta = MetaActions.get(meta.id, with_user: true)
     MetaActions.submit_for_approval(meta)
 
     post(conn, admin_path(conn, :approve_meta, meta.id))
 
-    meta = MetaActions.get(meta.id, [with_user: true])
+    meta = MetaActions.get(meta.id, with_user: true)
     assert meta.state == "ready"
   end
 
@@ -249,12 +257,12 @@ defmodule Plenario2Web.AdminControllerTest do
   test :disapprove_meta, %{conn: conn, admin_user: admin} do
     {:ok, meta} = MetaActions.create("test", admin.id, "https://example.com/")
 
-    meta = MetaActions.get(meta.id, [with_user: true])
+    meta = MetaActions.get(meta.id, with_user: true)
     MetaActions.submit_for_approval(meta)
 
     post(conn, admin_path(conn, :disapprove_meta, meta.id, message: "test"))
 
-    meta = MetaActions.get(meta.id, [with_user: true])
+    meta = MetaActions.get(meta.id, with_user: true)
     assert meta.state == "new"
   end
 end

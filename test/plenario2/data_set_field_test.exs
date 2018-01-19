@@ -50,16 +50,21 @@ defmodule DataSetFieldTests do
 
       UserActions.promote_to_admin(context.user)
       user = UserActions.get_from_id(context.user.id)
-      meta = MetaActions.get(context.meta.id, [with_user: true])
+      meta = MetaActions.get(context.meta.id, with_user: true)
 
       MetaActions.submit_for_approval(meta)
-      meta = MetaActions.get(meta.id, [with_user: true])
+      meta = MetaActions.get(meta.id, with_user: true)
       MetaActions.approve(meta, user)
-      meta = MetaActions.get(meta.id, [with_user: true])
+      meta = MetaActions.get(meta.id, with_user: true)
       assert meta.state == "ready"
 
       {:error, error} = DataSetFieldActions.update(field, %{type: "integer"})
-      assert error.errors == [name: {"Cannot alter any fields after the parent data set has been approved. If you need to update this field, please contact the administrators.", []}]
+
+      assert error.errors == [
+               name:
+                 {"Cannot alter any fields after the parent data set has been approved. If you need to update this field, please contact the administrators.",
+                  []}
+             ]
     end
   end
 end
