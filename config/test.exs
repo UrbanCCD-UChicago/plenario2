@@ -30,3 +30,7 @@ config :plenario2, :http, HTTP.Mock
 config :plenario2, Plenario2Etl,
   chunk_size: 100,
   pool_size: 10
+
+  # configure bamboo (email)
+  config :plenario2, Plenario2.Mailer,
+    adapter: Bamboo.TestAdapter

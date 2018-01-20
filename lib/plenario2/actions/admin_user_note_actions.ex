@@ -6,7 +6,7 @@ defmodule Plenario2.Actions.AdminUserNoteActions do
 
   import Plenario2.Guards, only: [is_id: 1]
 
-  alias Plenario2.Repo
+  alias Plenario2.{Repo, Mailer, Emails}
   alias Plenario2.Schemas.{AdminUserNote, Meta}
   alias Plenario2.Changesets.AdminUserNoteChangesets
   alias Plenario2.Queries.AdminUserNoteQueries, as: Q
@@ -96,8 +96,16 @@ defmodule Plenario2.Actions.AdminUserNoteActions do
 
     Logger.info("Creating AdminUserNote: #{inspect(params)}")
 
-    AdminUserNoteChangesets.create_for_meta(params)
-    |> Repo.insert()
+    {status, note} =
+      AdminUserNoteChangesets.create_for_meta(params)
+      |> Repo.insert()
+
+    if status == :ok and should_email do
+      Emails.compose_admin_user_note(note)
+      |> Mailer.deliver_now()
+    end
+
+    {status, note}
   end
 
   # def create_for_etl_job(note, admin, user, etl_job, should_email \\ false) do

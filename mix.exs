@@ -27,7 +27,7 @@ defmodule Plenario2.Mixfile do
   def application do
     [
       mod: {Plenario2.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :bamboo, :bamboo_smtp]
     ]
   end
 
@@ -63,7 +63,9 @@ defmodule Plenario2.Mixfile do
       {:canary, "~> 1.1"},
       {:canada, "~> 1.0"},
       {:distillery, "~> 1.5"},
-      {:slugify, "~> 1.1"}
+      {:slugify, "~> 1.1"},
+      {:bamboo, "~> 0.8"},
+      {:bamboo_smtp, "~> 1.4.0"}
     ]
   end
 

@@ -1,4 +1,6 @@
 %{
+  "bamboo": {:hex, :bamboo, "0.8.0", "573889a3efcb906bb9d25a1c4caa4ca22f479235e1b8cc3260d8b88dabeb4b14", [:mix], [{:hackney, "~> 1.6", [hex: :hackney, repo: "hexpm", optional: false]}, {:plug, "~> 1.0", [hex: :plug, repo: "hexpm", optional: false]}, {:poison, ">= 1.5.0", [hex: :poison, repo: "hexpm", optional: false]}], "hexpm"},
+  "bamboo_smtp": {:hex, :bamboo_smtp, "1.4.0", "a01d91406f3a46b3452c84d345d50f75d6facca5e06337358287a97da0426240", [:mix], [{:bamboo, "~> 0.8.0", [hex: :bamboo, repo: "hexpm", optional: false]}, {:gen_smtp, "~> 0.12.0", [hex: :gen_smtp, repo: "hexpm", optional: false]}], "hexpm"},
   "base64url": {:hex, :base64url, "0.0.1", "36a90125f5948e3afd7be97662a1504b934dd5dac78451ca6e9abf85a10286be", [:rebar], [], "hexpm"},
   "bcrypt_elixir": {:hex, :bcrypt_elixir, "1.0.5", "cca70b5c8d9a98a0151c2d2796c728719c9c4b3f8bd2de015758ef577ee5141e", [:make, :mix], [{:elixir_make, "~> 0.4", [hex: :elixir_make, repo: "hexpm", optional: false]}], "hexpm"},
   "canada": {:hex, :canada, "1.0.2", "040e4c47609b0a67d5773ac1fbe5e99f840cef173d69b739beda7c98453e0770", [:mix], [], "hexpm"},
@@ -21,6 +23,7 @@
   "excoveralls": {:hex, :excoveralls, "0.7.5", "339e433e5d3bce09400dc8de7b9040741a409c93917849916c136a0f51fdc183", [:mix], [{:exjsx, ">= 3.0.0", [hex: :exjsx, repo: "hexpm", optional: false]}, {:hackney, ">= 0.12.0", [hex: :hackney, repo: "hexpm", optional: false]}], "hexpm"},
   "exjsx": {:hex, :exjsx, "4.0.0", "60548841e0212df401e38e63c0078ec57b33e7ea49b032c796ccad8cde794b5c", [:mix], [{:jsx, "~> 2.8.0", [hex: :jsx, repo: "hexpm", optional: false]}], "hexpm"},
   "file_system": {:hex, :file_system, "0.2.2", "7f1e9de4746f4eb8a4ca8f2fbab582d84a4e40fa394cce7bfcb068b988625b06", [:mix], [], "hexpm"},
+  "gen_smtp": {:hex, :gen_smtp, "0.12.0", "97d44903f5ca18ca85cb39aee7d9c77e98d79804bbdef56078adcf905cb2ef00", [:rebar3], [], "hexpm"},
   "gen_stage": {:hex, :gen_stage, "0.12.2", "e0e347cbb1ceb5f4e68a526aec4d64b54ad721f0a8b30aa9d28e0ad749419cbb", [:mix], [], "hexpm"},
   "geo": {:hex, :geo, "2.0.0", "4a847aa42fcfac5b9ea23f938e1f4bde1c39c240a5d54b52eb0456530a2d040a", [:mix], [{:ecto, "~> 2.1", [hex: :ecto, repo: "hexpm", optional: true]}, {:poison, "~> 3.0", [hex: :poison, repo: "hexpm", optional: true]}], "hexpm"},
   "geo_postgis": {:hex, :geo_postgis, "1.0.0", "6556003ba92b18f4180cacdeaebf5d9c69c794ac395f2e1a4c15165d503815be", [:mix], [{:geo, "~> 2.0", [hex: :geo, repo: "hexpm", optional: false]}, {:postgrex, "~> 0.13", [hex: :postgrex, repo: "hexpm", optional: false]}], "hexpm"},

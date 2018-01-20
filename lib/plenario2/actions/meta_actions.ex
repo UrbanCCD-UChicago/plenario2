@@ -316,7 +316,7 @@ defmodule Plenario2.Actions.MetaActions do
       admin,
       meta.user,
       meta,
-      false
+      true
     )
 
     # create the table for the data set
