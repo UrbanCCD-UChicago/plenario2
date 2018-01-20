@@ -16,6 +16,6 @@ defmodule Plenario2.Emails do
 
     base()
     |> to(user.email_address)
-  |> text_body(note.note)
+    |> text_body(note.note)
   end
 end

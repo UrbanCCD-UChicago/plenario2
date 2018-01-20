@@ -50,5 +50,4 @@ config :canary,
 import_config "#{Mix.env()}.exs"
 
 # configure bamboo (email)
-config :plenario2, Plenario2.Mailer,
-  adapter: Bamboo.LocalAdapter
+config :plenario2, Plenario2.Mailer, adapter: Bamboo.LocalAdapter

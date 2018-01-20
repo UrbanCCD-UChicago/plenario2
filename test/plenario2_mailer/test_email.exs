@@ -14,8 +14,14 @@ defmodule Plenario2.EmailsTest do
   end
 
   test :compose_admin_user_note, context do
-    {:ok, note} = AdminUserNoteActions.create_for_meta(
-      "This is a test", context[:user], context[:user], context[:meta], true)
+    {:ok, note} =
+      AdminUserNoteActions.create_for_meta(
+        "This is a test",
+        context[:user],
+        context[:user],
+        context[:meta],
+        true
+      )
 
     email = Emails.compose_admin_user_note(note)
     assert email.from == "plenario@uchicago.edu"
