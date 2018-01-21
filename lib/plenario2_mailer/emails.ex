@@ -5,7 +5,12 @@ defmodule Plenario2.Emails do
 
   alias Plenario2Auth.UserActions
 
-  defp base(), do: new_email(from: "plenario@uchicago.edu", subject: "Plenario Notification")
+  defp base() do
+    new_email(
+      from: Application.get_env(:plenario2, :email_sender),
+      subject: Application.get_env(:plenario2, :email_subject)
+    )
+  end
 
   @doc """
   Sends an AdminUserNote to the user
