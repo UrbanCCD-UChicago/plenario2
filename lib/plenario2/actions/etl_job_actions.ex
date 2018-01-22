@@ -74,22 +74,17 @@ defmodule Plenario2.Actions.EtlJobActions do
   end
 
   def mark_started(job) do
-    EtlJob.mark_started(job)
-    |> put_change(:started_on, DateTime.utc_now())
+    EtlJobChangesets.mark_started(job)
     |> Repo.update()
   end
 
-  def mark_erred(job, params) do
-    EtlJob.mark_erred(job)
-    |> cast(params, [:error_message])
-    |> put_change(:completed_on, DateTime.utc_now())
+  def mark_erred(job, params = %{error_message: _}) do
+    EtlJobChangesets.mark_erred(job, params)
     |> Repo.update()
   end
 
   def mark_completed(job) do
-    EtlJob.mark_completed(job)
-    |> cast(%{}, [])
-    |> put_change(:completed_on, DateTime.utc_now())
+    EtlJobChangesets.mark_completed(job)
     |> Repo.update()
   end
 end

@@ -523,7 +523,7 @@ defmodule Plenario2Etl.WorkerTest do
 
         job_id = job.id()
         meta_id = meta.id()
-        assert [job_id, "completed", _, _, meta_id, nil] = row
+        assert [^job_id, "completed", _, _, ^meta_id, nil] = row
       end
     end
 
@@ -541,7 +541,7 @@ defmodule Plenario2Etl.WorkerTest do
 
         job_id = job.id()
         meta_id = meta.id()
-        assert [job_id, "erred", _, _, meta_id, _] = row
+        assert [^job_id, "erred", _, _, ^meta_id, _] = row
       end
     end
   end

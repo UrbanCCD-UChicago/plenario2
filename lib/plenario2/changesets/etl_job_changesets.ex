@@ -19,4 +19,31 @@ defmodule Plenario2.Changesets.EtlJobChangesets do
     |> cast_assoc(:meta)
     |> put_change(:state, "new")
   end
+
+  def mark_started(job) do
+    job
+    |> EtlJob.mark_started()  
+    |> set_started_on()
+  end
+
+  def mark_completed(job) do
+    job
+    |> EtlJob.mark_completed()
+    |> set_completed_on()
+  end
+
+  def mark_erred(job, params) do
+    job
+    |> EtlJob.mark_erred()
+    |> cast(params, [:error_message])
+    |> set_completed_on()
+  end
+  
+  defp set_started_on(changeset) do 
+    put_change(changeset, :started_on, DateTime.utc_now())
+  end
+  
+  defp set_completed_on(changeset) do 
+    put_change(changeset, :completed_on, DateTime.utc_now())
+  end
 end
