@@ -78,17 +78,6 @@ If during development you need to make configuration changes, do that in the
 `config/test.exs` file. If your tests work locally, but something is screwy on
 Travis, update the `config/travis.exs` file.
 
-## Formatting
-
-Code will be required to be formatted with the built in 1.6 formatter that's
-coming in the near future. Until then, our builds do not check for formatting,
-but it is highly encouraged. In order to use the formatter you must build
-Elixir from their `master` branch and run:
-
-```bash
-mix format
-```
-
 ## Building Releases
 
 A quick sidebar about building and deploying releases in Elixir and Erlang: it's

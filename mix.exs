@@ -4,7 +4,7 @@ defmodule Plenario2.Mixfile do
   def project do
     [
       app: :plenario2,
-      version: "0.0.5",
+      version: "0.0.6",
       elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),

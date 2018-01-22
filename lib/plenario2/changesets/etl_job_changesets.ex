@@ -20,27 +20,30 @@ defmodule Plenario2.Changesets.EtlJobChangesets do
     |> put_change(:state, "new")
   end
 
-  # TODO: delete this -- this should be an FSM on the schema
   def mark_started(job) do
     job
-    |> cast(%{}, [])
-    |> put_change(:state, "running")
-    |> put_change(:started_on, DateTime.utc_now())
+    |> EtlJob.mark_started()  
+    |> set_started_on()
   end
 
-  # TODO: delete this -- this should be an FSM on the schema
-  def mark_erred(job, params) do
-    job
-    |> cast(params, [:error_message])
-    |> put_change(:state, "erred")
-    |> put_change(:completed_on, DateTime.utc_now())
-  end
-
-  # TODO: delete this -- this should be an FSM on the schema
   def mark_completed(job) do
     job
-    |> cast(%{}, [])
-    |> put_change(:state, "completed")
-    |> put_change(:completed_on, DateTime.utc_now())
+    |> EtlJob.mark_completed()
+    |> set_completed_on()
+  end
+
+  def mark_erred(job, params) do
+    job
+    |> EtlJob.mark_erred()
+    |> cast(params, [:error_message])
+    |> set_completed_on()
+  end
+  
+  defp set_started_on(changeset) do 
+    put_change(changeset, :started_on, DateTime.utc_now())
+  end
+  
+  defp set_completed_on(changeset) do 
+    put_change(changeset, :completed_on, DateTime.utc_now())
   end
 end

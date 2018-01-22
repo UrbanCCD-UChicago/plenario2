@@ -13,6 +13,15 @@ defmodule Plenario2Etl.Shapefile do
   Loads records from an unzipped shapefile at `path` to a table named `table`.
   The table is either created or replaced for the database configured for
   `Plenario2.Repo`.
+
+  ## Examples
+
+      iex> Plenario2Etl.Shapefile.load(
+      ...>   "test/fixtures/Watersheds.shp", 
+      ...>   "watersheds"
+      ...> )
+      {:ok, "watersheds"}
+      
   """
   def load(path, table) do
     host = Application.get_env(:plenario2, Plenario2.Repo)[:hostname]
@@ -21,23 +30,9 @@ defmodule Plenario2Etl.Shapefile do
     db = Application.get_env(:plenario2, Plenario2.Repo)[:database]
     dbconn = "PG:host=#{host} user=#{user} dbname=#{db} password=#{password}"
 
-    args = [
-      "-f",
-      "PostgreSQL",
-      dbconn,
-      path,
-      "-lco",
-      "GEOMETRY_NAME=geom",
-      "-lco",
-      "FID=gid",
-      "-lco",
-      "PRECISION=no",
-      "-nlt",
-      "PROMOTE_TO_MULTI",
-      "-nln",
-      table,
-      "-overwrite"
-    ]
+    args = ["-f", "PostgreSQL", dbconn, path, "-lco", "GEOMETRY_NAME=geom",
+      "-lco", "FID=gid", "-lco", "PRECISION=no", "-nlt", "PROMOTE_TO_MULTI",
+      "-nln", table, "-lco", "OVERWRITE=YES", "-overwrite"]
 
     case System.cmd("ogr2ogr", args) do
       {"", 0} -> {:ok, table}

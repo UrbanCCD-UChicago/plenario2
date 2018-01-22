@@ -33,11 +33,12 @@ defmodule Plenario2Etl.WorkerTest do
     ["gromit", "2017-01-04T00:00:00+00:00", "(0, 4)", 4]
   ]
 
-  @tsv_fixture_path "test/fixtures/clinics.tsv"
   @csv_fixture_path "test/fixtures/clinics.csv"
   @csv_updated_fixture_path "test/fixtures/clinics_updated.csv"
+  @csv_error_fixture_path "test/fixtures/clinics_error.csv"
   @json_fixture_path "test/fixtures/clinics.json"
   @shp_fixture_path "test/fixtures/Watersheds.zip"
+  @tsv_fixture_path "test/fixtures/clinics.tsv"
 
   setup context do
     meta = context.meta
@@ -57,6 +58,7 @@ defmodule Plenario2Etl.WorkerTest do
       table_name: MetaActions.get_data_set_table_name(meta),
       constraint: constraint,
       job: job,
+      job_id: job.id,
       user: user
     }
   end
@@ -297,9 +299,9 @@ defmodule Plenario2Etl.WorkerTest do
            ] = Enum.sort(rows)
   end
 
-  test :load!, %{meta: meta} do
+  test :load!, %{meta: meta, job: job} do
     with_mock HTTPoison, get!: &mock_csv_data_request/1 do
-      Worker.load(%{meta_id: meta.id})
+      Worker.load(%{meta_id: meta.id, job_id: job.id})
       %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
 
       assert [
@@ -310,13 +312,13 @@ defmodule Plenario2Etl.WorkerTest do
     end
   end
 
-  test "load/1 generates diffs upon upsert", %{meta: meta} do
+  test "load/1 generates diffs upon upsert", %{meta: meta, job: job} do
     with_mock HTTPoison, get!: &mock_csv_data_request/1 do
-      Worker.load(%{meta_id: meta.id})
+      Worker.load(%{meta_id: meta.id, job_id: job.id})
     end
 
     with_mock HTTPoison, get!: &mock_csv_update_request/1 do
-      Worker.load(%{meta_id: meta.id})
+      Worker.load(%{meta_id: meta.id, job_id: job.id})
       %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
       diffs = Repo.all(DataSetDiff)
 
@@ -331,11 +333,11 @@ defmodule Plenario2Etl.WorkerTest do
     end
   end
 
-  test "load/1 ingests json dataset", %{meta: meta} do
+  test "load/1 ingests json dataset", %{meta: meta, job: job} do
     MetaActions.update_source_info(meta, source_type: "json")
 
     with_mock HTTPoison, get!: &mock_json_data_request/1 do
-      Worker.load(%{meta_id: meta.id})
+      Worker.load(%{meta_id: meta.id, job_id: job.id})
     end
 
     %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
@@ -347,15 +349,15 @@ defmodule Plenario2Etl.WorkerTest do
            ] = Enum.sort(rows)
   end
 
-  test "load/1 ingests json dataset and creates diffs", %{meta: meta} do
+  test "load/1 ingests json dataset and creates diffs", %{meta: meta, job: job} do
     MetaActions.update_source_info(meta, source_type: "json")
 
     with_mock HTTPoison, get!: &mock_json_data_request/1 do
-      Worker.load(%{meta_id: meta.id})
+      Worker.load(%{meta_id: meta.id, job_id: job.id})
     end
 
     with_mock HTTPoison, get!: &mock_json_update_request/1 do
-      Worker.load(%{meta_id: meta.id})
+      Worker.load(%{meta_id: meta.id, job_id: job.id})
       %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, @select_query, [])
       diffs = Repo.all(DataSetDiff)
 
@@ -402,31 +404,61 @@ defmodule Plenario2Etl.WorkerTest do
       DataSetFieldActions.create(meta.id, "location", "text")
 
       DataSetConstraintActions.create(meta.id, ["location"])
-      EtlJobActions.create(meta.id)
+      job = EtlJobActions.create!(meta.id)
       DataSetActions.create_data_set_table!(meta)
       VirtualPointFieldActions.create_from_loc(meta.id, "location")
 
-      %{fixture_meta: meta}
+      %{fixture_meta: meta, job: job}
     end
 
-    test "load/1 loads csv fixture", %{fixture_meta: meta} do
+    test "load/1 loads csv fixture", %{fixture_meta: meta, job: job} do
       MetaActions.update_source_info(meta, source_type: "csv")
       get! = load_mock(@csv_fixture_path)
 
       with_mock HTTPoison, get!: fn url -> get!.(url) end do
-        Worker.load(%{meta_id: meta.id})
+        Worker.load(%{meta_id: meta.id, job_id: job.id})
         %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, "select * from clinics", [])
         assert 65 == Enum.count(rows)
       end
     end
 
-    test "load/1 loads updated csv fixture", %{fixture_meta: meta} do
+    test "load/1 loads csv fixture with subset of columns" do
+      {:ok, user} = UserActions.create("subset_user", "subset_user_password", "subset@email.com")
+      {:ok, meta} = MetaActions.create("clinics_subset", user.id, "subset_test_source")
+      {:ok, job} = EtlJobActions.create(meta.id)
+
+      DataSetFieldActions.create(meta.id, "community_area_name", "text")
+      DataSetFieldActions.create(meta.id, "ward", "integer")
+      DataSetFieldActions.create(meta.id, "latitude", "float")
+      DataSetFieldActions.create(meta.id, "longitude", "float")
+      DataSetFieldActions.create(meta.id, "location", "text")
+
+      DataSetConstraintActions.create(meta.id, ["location"])
+      MetaActions.update_source_info(meta, source_type: "csv")
+      DataSetActions.create_data_set_table!(meta)
+      VirtualPointFieldActions.create_from_loc(meta.id, "location")
+
+      get! = load_mock(@csv_fixture_path)
+      with_mock HTTPoison, get!: fn url -> get!.(url) end do
+        Worker.load(%{meta_id: meta.id, job_id: job.id})
+
+        %Postgrex.Result{
+          columns: columns,
+          rows: rows
+        } = query!(Plenario2.Repo, "select * from clinics_subset", [])
+
+        assert 65 == Enum.count(rows)
+        assert ["community_area_name", "ward", "latitude", "longitude", "location"] == columns
+      end
+    end
+
+    test "load/1 loads updated csv fixture", %{fixture_meta: meta, job: job} do
       MetaActions.update_source_info(meta, source_type: "csv")
 
       get! = load_mock(@csv_fixture_path)
 
       with_mock HTTPoison, get!: fn url -> get!.(url) end do
-        Worker.load(%{meta_id: meta.id})
+        Worker.load(%{meta_id: meta.id, job_id: job.id})
         %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, "select * from clinics", [])
         assert 65 == Enum.count(rows)
       end
@@ -434,45 +466,83 @@ defmodule Plenario2Etl.WorkerTest do
       get! = load_mock(@csv_updated_fixture_path)
 
       with_mock HTTPoison, get!: fn url -> get!.(url) end do
-        Worker.load(%{meta_id: meta.id})
+        Worker.load(%{meta_id: meta.id, job_id: job.id})
         %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, "select * from data_set_diffs", [])
         assert 1 == Enum.count(rows)
       end
     end
 
-    test "load/1 loads tsv fixture", %{fixture_meta: meta} do
+    test "load/1 loads tsv fixture", %{fixture_meta: meta, job: job} do
       MetaActions.update_source_info(meta, source_type: "tsv")
       get! = load_mock(@tsv_fixture_path)
 
       with_mock HTTPoison, get!: fn url -> get!.(url) end do
-        Worker.load(%{meta_id: meta.id})
+        Worker.load(%{meta_id: meta.id, job_id: job.id})
         %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, "select * from clinics", [])
         assert 65 == Enum.count(rows)
       end
     end
 
-    test "load/1 loads json fixture", %{fixture_meta: meta} do
+    test "load/1 loads json fixture", %{fixture_meta: meta, job: job} do
       MetaActions.update_source_info(meta, source_type: "json")
       get! = load_mock(@json_fixture_path)
 
       with_mock HTTPoison, get!: fn url -> get!.(url) end do
-        Worker.load(%{meta_id: meta.id})
+        Worker.load(%{meta_id: meta.id, job_id: job.id})
         %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, "select * from clinics", [])
         assert 65 == Enum.count(rows)
       end
     end
 
-    # test "load/1 loads shp fixture" do
-    #   {:ok, user} = UserActions.create("Trusted User", "password", "shapeuser@example.com")
-    #   {:ok, meta} = MetaActions.create("watersheds", user.id, "watersheds_source_url")
-    #   MetaActions.update_source_info(meta, source_type: "shp")
-    #   get! = load_mock(@shp_fixture_path)
-    #
-    #   with_mock HTTPoison, get!: fn url -> get!.(url) end do
-    #     Worker.load(%{meta_id: meta.id})
-    #     %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, "select * from watersheds", [])
-    #     assert 7 == Enum.count(rows)
-    #   end
-    # end
+    test "load/1 loads shp fixture" do
+      {:ok, user} = UserActions.create("Trusted User", "password", "shapeuser@example.com") 
+      {:ok, meta} = MetaActions.create("watersheds", user.id, "watersheds_source_url")
+      {:ok, job} = EtlJobActions.create(meta)
+
+      MetaActions.update_source_info(meta, source_type: "shp")
+      get! = load_mock(@shp_fixture_path)
+
+      with_mock HTTPoison, get!: fn url -> get!.(url) end do
+        Worker.load(%{meta_id: meta.id, job_id: job.id})
+        %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, "select * from watersheds", [])
+        assert 7 == Enum.count(rows)
+      end
+    end
+
+    test "async_load/1 loads csv fixture and completes job state", %{fixture_meta: meta} do
+      MetaActions.update_source_info(meta, source_type: "csv")
+
+      get! = load_mock(@csv_fixture_path)
+      with_mock HTTPoison, get!: fn url -> get!.(url) end do
+        %{task: task, job: job, meta: meta} = Worker.async_load!(meta.id)
+        Task.await(task)
+
+        query = "select * from etl_jobs where id = #{job.id}"
+        %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, query, [])
+        [row | _] = rows
+
+        job_id = job.id()
+        meta_id = meta.id()
+        assert [^job_id, "completed", _, _, ^meta_id, nil] = row
+      end
+    end
+
+    test "async_load/1 loads csv fixture and errs job state", %{fixture_meta: meta} do
+      MetaActions.update_source_info(meta, source_type: "csv")
+
+      get! = load_mock(@csv_error_fixture_path)
+      with_mock HTTPoison, get!: fn url -> get!.(url) end do
+        %{task: task, job: job, meta: meta} = Worker.async_load!(meta.id)
+        Task.await(task)
+
+        query = "select * from etl_jobs where id = #{job.id}"
+        %Postgrex.Result{rows: rows} = query!(Plenario2.Repo, query, [])
+        [row | _] = rows
+
+        job_id = job.id()
+        meta_id = meta.id()
+        assert [^job_id, "erred", _, _, ^meta_id, _] = row
+      end
+    end
   end
 end

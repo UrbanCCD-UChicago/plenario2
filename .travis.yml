@@ -7,17 +7,18 @@ otp_release:
 
 addons:
   postgresql: '9.5'
+  apt:
+    packages:
+    - build-essential
+    - gdal-bin
+    - postgresql-9.5-postgis-2.3
+    - erlang-dev
 
 services:
   - postgresql
 
 env:
   - MIX_ENV=test
-
-before_install:
-  - sudo apt-get install build-essential
-  - sudo apt-get install erlang-dev
-  - sudo apt-get install -y postgresql-9.5-postgis-2.3
 
 before_script:
   - psql -U postgres -c "create extension postgis"
