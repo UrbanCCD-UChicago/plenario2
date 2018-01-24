@@ -1,6 +1,14 @@
 defmodule Plenario2.ModelRegistry do
   use GenServer
 
+  @type_map %{
+    "boolean" => :boolean,
+    "float" => :float,
+    "integer" => :integer,
+    "text" => :string,
+    "timestamptz" => :date
+  }
+
   # Client api 
 
   def start_link(args) do
@@ -31,7 +39,7 @@ defmodule Plenario2.ModelRegistry do
           Map.merge(state, register_meta(meta))
       end
 
-    {:reply, state[slug], state}
+    {:reply, Map.fetch!(state, slug), state}
   end
 
   def handle_call(request, sender, state) do
@@ -53,15 +61,19 @@ defmodule Plenario2.ModelRegistry do
     table = meta.slug()
     fields = 
       Enum.map(meta.data_set_fields(), fn field ->
-        {field.name(), field.type()}
+        {String.to_atom(field.name()), Map.fetch!(@type_map, field.type())}
       end)
     create_module(module, table, fields)
-    %{table => module}
+
+    %{
+      meta.id() => String.to_atom(module),
+      meta.slug() => String.to_atom(module)
+    }
   end
 
   defp create_module(module, table, fields) do
     Module.create(String.to_atom(module), quote do
-      use Plenario2Web, :model
+      use Ecto.Schema
       schema unquote(table) do
         unquote(for {name, type} <- fields do
           quote do
