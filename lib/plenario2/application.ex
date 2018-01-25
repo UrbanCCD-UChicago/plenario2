@@ -19,6 +19,9 @@ defmodule Plenario2.Application do
       # Start the quantum scheduler
       supervisor(Plenario2Etl.Scheduler, []),
 
+      # Start the model registry
+      supervisor(Plenario2.ModelRegistry, [%{}]),
+
       # Start the etl supervisor
       supervisor(Plenario2Etl.Application, [])
     ]
