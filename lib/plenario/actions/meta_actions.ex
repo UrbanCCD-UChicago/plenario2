@@ -114,6 +114,27 @@ defmodule Plenario.Actions.MetaActions do
   end
 
   @doc """
+  Updates a given Meta's next import attribute.
+  """
+  @spec update_next_import(meta :: Meta) :: ok_meta
+  def update_next_import(meta) do
+    current =
+      case meta.next_import do
+        nil -> DateTime.utc_now()
+        _ -> meta.next_refresh
+      end
+
+    rate = meta.refresh_rate
+    interval = meta.refresh_interval
+
+    shifted = Timex.shift(current, [{String.to_atom(rate), interval}])
+    params = %{next_import: shifted}
+
+    MetaChangesets.update(meta, params)
+|> Repo.update()
+  end
+
+  @doc """
   Updates a given Meta's bounding box.
 
   ## Example
@@ -342,8 +363,8 @@ defmodule Plenario.Actions.MetaActions do
     col_names = MetaActions.get_column_names(meta)
   """
   def get_column_names(meta) do
-    fields = DataSetFieldActions.get(for_meta: meta)
-    field_names = for f <- fields do f.name end
+    fields = DataSetFieldActions.list(for_meta: meta)
+    field_names = for f <- fields, do: f.name
 
     field_names
   end

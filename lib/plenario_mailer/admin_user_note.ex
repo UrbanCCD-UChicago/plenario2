@@ -17,7 +17,7 @@ defmodule PlenarioMailer.Schemas.AdminUserNote do
     field(:should_email, :boolean, default: false)
     field(:acknowledged, :boolean, default: false)
 
-    timestamps()
+    timestamps(type: :utc_datetime)
 
     belongs_to(:admin, Plenario.Schemas.User, foreign_key: :admin_id)
     belongs_to(:user, Plenario.Schemas.User, foreign_key: :user_id)

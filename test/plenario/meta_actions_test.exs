@@ -1,299 +1,374 @@
-defmodule MetaActionsTests do
-  use Plenario.DataCase, async: true
+defmodule Plenario.Testing.MetaActionsTest do
+  use Plenario.Testing.DataCase, async: true
 
-  alias Plenario.Actions.MetaActions
+  alias Plenario.Repo
 
-  alias PlenarioAuth.UserActions
+  alias Plenario.Actions.{
+    DataSetActions,
+    DataSetFieldActions,
+    MetaActions,
+    UserActions,
+    VirtualDateFieldActions,
+    VirtualPointFieldActions,
+    UniqueConstraintActions
+  }
+  
+  test "new" do
+    changeset = MetaActions.new()
 
-  test "list all metas" do
-    {:ok, user2} = UserActions.create("Test User", "password", "test2@example.com")
-
-    MetaActions.create(
-      "Chicago Pothole Fills",
-      user2.id,
-      "https://www.example.com/chicago-pothole-fills"
-    )
-
-    metas = MetaActions.list()
-    assert metas != []
-    assert length(metas) == 2
+    assert changeset.action == nil
+    refute changeset.valid?
   end
 
-  test "list metas for a single user", context do
-    {:ok, user2} = UserActions.create("Test User", "password", "test2@example.com")
+  describe "create" do
+    test "with user struct", %{meta: meta} do
+      # this is done in data case setup
+      assert meta.user_id
+      assert meta.table_name
+    end
 
-    MetaActions.create(
-      "Chicago Pothole Fills",
-      user2.id,
-      "https://www.example.com/chicago-pothole-fills"
-    )
-
-    metas = MetaActions.list_for_user(context.user)
-    assert length(metas) == 1
+    test "with user id", %{user: user} do
+      {:ok, _} = MetaActions.create("a new meta", user.id, "https://example.com/new-meta", "csv")
+    end
   end
 
-  test "get a meta from a id", context do
-    found = MetaActions.get(context.meta.id)
-    assert found.slug == context.meta.slug
+  describe "update" do
+    test "name", %{meta: meta} do
+      new_name = "stuff and nonsense"
+      {:ok, _} = MetaActions.update(meta, name: new_name)
+
+      meta = MetaActions.get(meta.id)
+      assert meta.name == new_name
+    end
+
+    test "source url", %{meta: meta} do
+      new_url = "https://example.com/stuff.csv"
+      {:ok, _} = MetaActions.update(meta, source_url: new_url)
+
+      meta = MetaActions.get(meta.id)
+      assert meta.source_url == new_url
+    end
+
+    test "source type", %{meta: meta} do
+      new_type = "json"
+      {:ok, _} = MetaActions.update(meta, source_type: new_type)
+
+      meta = MetaActions.get(meta.id)
+      assert meta.source_type == new_type
+    end
+
+    test "description", %{meta: meta} do
+      new_descr = "blah blah blah"
+      {:ok, _} = MetaActions.update(meta, description: new_descr)
+
+      meta = MetaActions.get(meta.id)
+      assert meta.description == new_descr
+    end
+
+    test "attribution", %{meta: meta} do
+      new_attr = "some city you've never heard of"
+      {:ok, _} = MetaActions.update(meta, attribution: new_attr)
+
+      meta = MetaActions.get(meta.id)
+      assert meta.attribution == new_attr
+    end
+
+    test "refresh rate and interval", %{meta: meta} do
+      # bad -- must set interval when setting rate != nil
+      new_rr = "years"
+      {:error, _} = MetaActions.update(meta, refresh_rate: new_rr)
+
+      # bad -- must set rate when setting interval
+      new_int = 1
+      {:error, _} = MetaActions.update(meta, refresh_interval: new_int)
+
+      # good
+      {:ok, _} = MetaActions.update(meta, refresh_rate: new_rr, refresh_interval: new_int)
+
+      meta = MetaActions.get(meta.id)
+      assert meta.refresh_rate == new_rr
+
+      # bad rr value
+      {:error, _} = MetaActions.update(meta, refresh_rate: "fortnight")
+    end
+
+    test "refresh starts on", %{meta: meta} do
+      new_rso = ~D[2018-01-01]
+      {:ok, _} = MetaActions.update(meta, refresh_starts_on: new_rso)
+
+      meta = MetaActions.get(meta.id)
+      assert meta.refresh_starts_on == new_rso
+    end
+
+    test "refresh ends on", %{meta: meta} do
+      # bad -- must set rso if setting reo
+      new_reo = ~D[2018-01-01]
+      {:error, _} = MetaActions.update(meta, refresh_ends_on: new_reo)
+
+      # good
+      new_rso = ~D[2017-01-01]
+      {:ok, _} = MetaActions.update(meta, refresh_starts_on: new_rso)
+
+      meta = MetaActions.get(meta.id)
+      new_reo = ~D[2018-01-01]
+      {:ok, _} = MetaActions.update(meta, refresh_ends_on: new_reo)
+
+      # bad -- reo must be later than rso
+      new_reo = ~D[2017-01-01]
+      new_rso = ~D[2018-01-01]
+
+      meta = MetaActions.get(meta.id)
+
+      {:error, _} = MetaActions.update(meta, refresh_starts_on: new_rso, refresh_ends_on: new_reo)
+    end
   end
 
-  test "get a meta from a slug", context do
-    found = MetaActions.get(context.meta.slug)
-    assert found.id == context.meta.id
+  describe "update_user" do
+    test "with user struct", %{meta: meta} do
+      {:ok, user} = UserActions.create("new user", "new-user@example.com", "password")
+
+      {:ok, _} = MetaActions.update_user(meta, user)
+      meta = MetaActions.get(meta.id)
+
+      assert meta.user_id == user.id
+    end
+
+    test "with user id", %{meta: meta} do
+      {:ok, user} = UserActions.create("new user", "new-user@example.com", "password")
+
+      {:ok, _} = MetaActions.update_user(meta, user.id)
+      meta = MetaActions.get(meta.id)
+
+      assert meta.user_id == user.id
+    end
   end
 
-  test "update name", context do
-    MetaActions.update_name(context.meta, "Chicago Tree Trimming - 2017")
-    updated = MetaActions.get(context.meta.id)
-    assert updated.name == "Chicago Tree Trimming - 2017"
+  test "update_latest_import", %{meta: meta} do
+    dt = DateTime.utc_now()
+    {:ok, _} = MetaActions.update_latest_import(meta, dt)
+
+    meta = MetaActions.get(meta.id)
+    assert meta.latest_import == dt
   end
 
-  test "update owner", context do
-    {:ok, user2} = UserActions.create("Test User2", "password", "test2@example.com")
+  test "update_bbox", %{meta: meta} do
+    bbox = Geo.WKT.decode("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    {:ok, _} = MetaActions.update_bbox(meta, bbox)
 
-    MetaActions.update_user(context.meta, user2)
-    updated = MetaActions.get(context.meta.id)
-    assert updated.user_id == user2.id
+    meta = MetaActions.get(meta.id)
+    assert meta.bbox == bbox
   end
 
-  test "update source info", context do
-    MetaActions.update_source_info(
-      context.meta,
-      source_url: "https://example.com/tree-trim.json",
-      source_type: "json"
-    )
+  test "update_time_range", %{meta: meta} do
+    {_, lower, _} = DateTime.from_iso8601("2017-01-01T00:00:00.0Z")
+    {_, upper, _} = DateTime.from_iso8601("2018-12-31T00:00:00.0Z")
+    {:ok, _} = MetaActions.update_time_range(meta, lower, upper)
 
-    updated = MetaActions.get(context.meta.id)
-    assert updated.source_url == "https://example.com/tree-trim.json"
-    assert updated.source_type == "json"
+    meta = MetaActions.get(meta.id)
+    assert meta.time_range == [lower, upper]
   end
 
-  test "update description info", context do
-    MetaActions.update_description_info(
-      context.meta,
-      description: "blah blah blah",
-      attribution: "City of Chicago"
-    )
+  test "submit_for_approval", %{meta: meta} do
+    {:ok, _} = MetaActions.submit_for_approval(meta)
 
-    updated = MetaActions.get(context.meta.id)
-    assert updated.description == "blah blah blah"
-    assert updated.attribution == "City of Chicago"
-  end
-
-  test "update refresh info", context do
-    changes = [
-      refresh_rate: "days",
-      refresh_interval: 1,
-      refresh_starts_on: %{year: 2017, month: 11, day: 1, hour: 0, minute: 0},
-      refresh_ends_on: %{year: 2017, month: 12, day: 1, hour: 23, minute: 59}
-    ]
-
-    MetaActions.update_refresh_info(context.meta, changes)
-    updated = MetaActions.get(context.meta.id)
-    assert updated.refresh_rate == "days"
-    assert updated.refresh_interval == 1
-    assert updated.refresh_starts_on != nil
-    assert updated.refresh_ends_on != nil
-  end
-
-  #  test "update bbox" do
-  #    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-  #    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
-  #  end
-
-  #  test "update timerange" do
-  #    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
-  #    {:ok, meta} = MetaActions.create("Chicago Tree Trimming", user.id, "https://www.example.com/chicago-tree-trimming")
-  #  end
-
-  test "update next refresh", context do
-    {:ok, meta} =
-      MetaActions.update_refresh_info(
-        context.meta,
-        refresh_starts_on: Timex.shift(DateTime.utc_now(), years: -1),
-        refresh_ends_on: nil,
-        refresh_rate: "minutes",
-        refresh_interval: 1
-      )
-
-    {:ok, meta} = MetaActions.update_next_refresh(meta)
-
-    assert meta.next_refresh != nil
-
-    original = context.meta.next_refresh
-
-    {:ok, meta} = MetaActions.update_next_refresh(meta)
-    assert meta.next_refresh != original
-  end
-
-  test "delete a meta", context do
-    MetaActions.delete(context.meta)
-    found = MetaActions.get(context.meta.id)
-    assert found == nil
-  end
-
-  test "bad refresh info", context do
-    {:error, changeset} =
-      MetaActions.create(
-        "Chicago Tree Trimming",
-        context.user.id,
-        "https://www.example.com/chicago-tree-trimming",
-        refresh_rate: "fortnight",
-        refresh_interval: 3
-      )
-
-    assert changeset.errors == [refresh_rate: {"Invalid value `fortnight`", []}]
-
-    {:error, changeset} =
-      MetaActions.create(
-        "Chicago Tree Trimming",
-        context.user.id,
-        "https://www.example.com/chicago-tree-trimming",
-        source_type: "application/html"
-      )
-
-    assert changeset.errors == [source_type: {"Invalid type `application/html`", []}]
-
-    starts = DateTime.utc_now()
-    ends = Timex.shift(starts, months: -1)
-
-    {:error, changeset} =
-      MetaActions.create(
-        "Chicago Tree Trimming",
-        context.user.id,
-        "https://www.example.com/chicago-tree-trimming",
-        refresh_starts_on: starts,
-        refresh_ends_on: ends
-      )
-
-    assert changeset.errors == [
-             refresh_ends_on: {"Invalid: end date cannot precede start date", []}
-           ]
-  end
-
-  test "submit meta for for approval", context do
-    assert context.meta.state == "new"
-
-    {:ok, meta} = MetaActions.submit_for_approval(context.meta)
-
+    meta = MetaActions.get(meta.id)
     assert meta.state == "needs_approval"
   end
 
-  describe "approve meta" do
-    test "with admin", context do
-      UserActions.promote_to_admin(context.user)
-      {:ok, meta} = MetaActions.submit_for_approval(context.meta)
+  test "approve", %{meta: meta} do
+    {:ok, m} = MetaActions.submit_for_approval(meta)
+    {:ok, _} = MetaActions.approve(m)
 
-      user = UserActions.get_from_id(context.user.id)
-      meta = MetaActions.get(meta.id, with_user: true)
-      {:ok, meta} = MetaActions.approve(meta, user)
-      assert meta.state == "ready"
+    meta = MetaActions.get(meta.id)
+    assert meta.state == "awaiting_first_import"
+  end
 
-      query = """
-      SELECT * FROM #{MetaActions.get_data_set_table_name(context.meta)}
-      """
+  test "disapprove", %{meta: meta} do
+    {:ok, m} = MetaActions.submit_for_approval(meta)
+    {:ok, _} = MetaActions.disapprove(m)
 
-      {:ok, _} = Ecto.Adapters.SQL.query(Repo, query)
+    meta = MetaActions.get(meta.id)
+    assert meta.state == "new"
+  end
+
+  test "mark_first_import", %{meta: meta} do
+    {:ok, m} = MetaActions.submit_for_approval(meta)
+    {:ok, m} = MetaActions.approve(m)
+    {:ok, _} = MetaActions.mark_first_import(m)
+
+    meta = MetaActions.get(meta.id)
+    assert meta.state == "ready"
+    refute meta.first_import == nil
+  end
+
+  test "mark_erred", %{meta: meta} do
+    {:ok, m} = MetaActions.submit_for_approval(meta)
+    {:ok, m} = MetaActions.approve(m)
+    {:ok, m} = MetaActions.mark_first_import(m)
+    {:ok, _} = MetaActions.mark_erred(m)
+
+    meta = MetaActions.get(meta.id)
+    assert meta.state == "erred"
+  end
+
+  test "mark_fixed", %{meta: meta} do
+    {:ok, m} = MetaActions.submit_for_approval(meta)
+    {:ok, m} = MetaActions.approve(m)
+    {:ok, m} = MetaActions.mark_first_import(m)
+    {:ok, m} = MetaActions.mark_erred(m)
+    {:ok, _} = MetaActions.mark_fixed(m)
+
+    meta = MetaActions.get(meta.id)
+    assert meta.state == "ready"
+  end
+
+  describe "get" do
+    test "with an id", %{meta: meta}  do
+      assert MetaActions.get(meta.id)
     end
 
-    test "with regular user", context do
-      {:ok, meta} = MetaActions.submit_for_approval(context.meta)
+    test "with a slug", %{meta: meta} do
+      assert MetaActions.get(meta.slug)
+    end
 
-      user = UserActions.get_from_id(context.user.id)
-      meta = MetaActions.get(meta.id, with_user: true)
+    test "with opts", %{meta: meta} do
+      {:ok, yr} = DataSetFieldActions.create(meta, "year", "integer")
+      {:ok, loc} = DataSetFieldActions.create(meta, "location", "text")
+      {:ok, _} = VirtualDateFieldActions.create(meta.id, yr.id)
+      {:ok, _} = VirtualPointFieldActions.create(meta.id, loc.id)
+      {:ok, _} = UniqueConstraintActions.create(meta, [yr.id])
 
-      {:error, error} = MetaActions.approve(meta, user)
-      assert error =~ "not an admin"
+      meta =
+        MetaActions.get(
+          meta.id, with_virtual_dates: true, with_virtual_points: true, with_constraints: true)
+      assert length(meta.virtual_dates) == 1
+      assert length(meta.virtual_points) == 1
+      assert length(meta.unique_constraints) == 1
     end
   end
 
-  describe "disapprove meta" do
-    test "with admin", context do
-      UserActions.promote_to_admin(context.user)
-      {:ok, meta} = MetaActions.submit_for_approval(context.meta)
-
-      user = UserActions.get_from_id(context.user.id)
-      meta = MetaActions.get(meta.id, with_user: true)
-      {:ok, meta} = MetaActions.disapprove(meta, user, "bad stuff")
-      assert meta.state == "new"
+  describe "list" do
+    test "vanilla" do
+      all_metas = MetaActions.list()
+      assert length(all_metas) == 1
     end
 
-    test "with regular user", context do
-      {:ok, meta} = MetaActions.submit_for_approval(context.meta)
+    test "new_only" do
+      new_metas = MetaActions.list(new_only: true)
+      assert length(new_metas) == 1
+    end
 
-      meta = MetaActions.get(meta.id, with_user: true)
-      {:error, error} = MetaActions.disapprove(meta, context.user, "bad stuff")
-      assert error =~ "not an admin"
+    test "needs_approval_only" do
+      na_metas = MetaActions.list(needs_approval_only: true)
+      assert length(na_metas) == 0
+    end
+
+    test "awaiting_first_import_only" do
+      afi_metas = MetaActions.list(awaiting_first_import_only: true)
+      assert length(afi_metas) == 0
+    end
+
+    test "ready_only" do
+      ready_metas = MetaActions.list(ready_only: true)
+      assert length(ready_metas) == 0
+    end
+
+    test "erred_only" do
+      erred_metas = MetaActions.list(erred_only: true)
+      assert length(erred_metas) == 0
+    end
+
+    test "with_user", %{user: user} do
+      meta =
+        MetaActions.list(with_user: true)
+        |> List.first()
+
+      assert meta.user.id == user.id
+    end
+
+    test "with_fields", %{meta: meta} do
+      {:ok, field} = DataSetFieldActions.create(meta, "id", "integer")
+
+      meta =
+        MetaActions.list(with_fields: true)
+        |> List.first()
+
+      meta_field = List.first(meta.fields)
+      assert meta_field.id == field.id
+    end
+
+    test "for_user", %{user: user} do
+      users_metas = MetaActions.list(for_user: user)
+      assert length(users_metas) == 1
+    end
+
+    test "ready only and for user", %{user: user} do
+      users_ready_metas = MetaActions.list(for_user: user, ready_only: true)
+      assert length(users_ready_metas) == 0
     end
   end
 
-  describe "mark meta as erred" do
-    test "with admin", context do
-      UserActions.promote_to_admin(context.user)
+  test "compute_time_range!", %{meta: meta} do
+    {:ok, pk} = DataSetFieldActions.create(meta, "id", "integer")
+    {:ok, _} = DataSetFieldActions.create(meta, "observation", "float")
+    {:ok, _} = DataSetFieldActions.create(meta, "date", "timestamptz")
+    {:ok, yr} = DataSetFieldActions.create(meta, "year", "integer")
+    {:ok, mo} = DataSetFieldActions.create(meta, "month", "integer")
+    {:ok, day} = DataSetFieldActions.create(meta, "day", "integer")
+    {:ok, lat} = DataSetFieldActions.create(meta, "lat", "float")
+    {:ok, lon} = DataSetFieldActions.create(meta, "lon", "float")
+    {:ok, _} = VirtualDateFieldActions.create(meta.id, yr.id, month_field_id: mo.id, day_field_id: day.id)
+    {:ok, _} = VirtualPointFieldActions.create(meta.id, lat.id, lon.id)
+    {:ok, _} = UniqueConstraintActions.create(meta.id, [pk.id])
 
-      user = UserActions.get_from_id(context.user.id)
-      meta = MetaActions.get(context.meta.id, with_user: true)
-      {:ok, meta} = MetaActions.submit_for_approval(meta)
-      meta = MetaActions.get(meta.id, with_user: true)
-      {:ok, meta} = MetaActions.approve(meta, user)
+    DataSetActions.up!(meta)
 
-      {:ok, meta} = MetaActions.mark_erred(meta, user, "something bad happened on our end")
-      assert meta.state == "erred"
-    end
+    insert = """
+    INSERT INTO "#{meta.table_name}" VALUES
+      (1, 1.1, '2018-01-01 00:00:00 z', 2017, 1, 1, 10.9, 20.1),
+      (2, 1.1, '2018-01-01 00:00:00 z', 2017, 1, 1, 10.9, 20.1),
+      (3, 1.1, '2018-01-01 00:00:00 z', 2017, 1, 1, 10.9, 20.1),
+      (4, 1.1, '2018-01-01 00:00:00 z', 2017, 1, 1, 10.9, 20.1),
+      (5, 1.1, '2019-01-01 00:00:00 z', 2016, 1, 1, 10.9, 20.1);
+    """
+    {:ok, _} = Ecto.Adapters.SQL.query(Repo, insert)
 
-    test "with regular user", context do
-      UserActions.promote_to_admin(context.user)
-
-      user = UserActions.get_from_id(context.user.id)
-      meta = MetaActions.get(context.meta.id, with_user: true)
-      {:ok, meta} = MetaActions.submit_for_approval(meta)
-      meta = MetaActions.get(meta.id, with_user: true)
-      {:ok, meta} = MetaActions.approve(meta, user)
-
-      user = UserActions.get_from_id(user.id)
-      UserActions.strip_admin(user)
-      user = UserActions.get_from_id(user.id)
-
-      {:error, error} = MetaActions.mark_erred(meta, user, "something bad happened on our end")
-      assert error =~ "not an admin"
-    end
+    {:ok, range} = MetaActions.compute_time_range!(meta)
+    assert range.upper == {{2019, 1, 1}, {0, 0, 0, 0}}
+    assert range.lower == {{2016, 1, 1}, {0, 0, 0, 0}}
   end
 
-  describe "mark meta as fixed" do
-    test "with admin", context do
-      UserActions.promote_to_admin(context.user)
+  test "compute_bbox!", %{meta: meta} do
+    {:ok, pk} = DataSetFieldActions.create(meta, "id", "integer")
+    {:ok, _} = DataSetFieldActions.create(meta, "observation", "float")
+    {:ok, _} = DataSetFieldActions.create(meta, "date", "timestamptz")
+    {:ok, yr} = DataSetFieldActions.create(meta, "year", "integer")
+    {:ok, mo} = DataSetFieldActions.create(meta, "month", "integer")
+    {:ok, day} = DataSetFieldActions.create(meta, "day", "integer")
+    {:ok, lat} = DataSetFieldActions.create(meta, "lat", "float")
+    {:ok, lon} = DataSetFieldActions.create(meta, "lon", "float")
+    {:ok, _} = VirtualDateFieldActions.create(meta.id, yr.id, month_field_id: mo.id, day_field_id: day.id)
+    {:ok, _} = VirtualPointFieldActions.create(meta.id, lat.id, lon.id)
+    {:ok, _} = UniqueConstraintActions.create(meta.id, [pk.id])
 
-      user = UserActions.get_from_id(context.user.id)
-      meta = MetaActions.get(context.meta.id, with_user: true)
-      {:ok, meta} = MetaActions.submit_for_approval(meta)
-      meta = MetaActions.get(meta.id, with_user: true)
-      {:ok, meta} = MetaActions.approve(meta, user)
-      meta = MetaActions.get(meta.id, with_user: true)
-      {:ok, meta} = MetaActions.mark_erred(meta, user, "something bad happened")
-      meta = MetaActions.get(meta.id, with_user: true)
+    DataSetActions.up!(meta)
 
-      {:ok, meta} = MetaActions.mark_fixed(meta, user, "something good happened")
-      assert meta.state == "ready"
-    end
+    insert = """
+    INSERT INTO "#{meta.table_name}" VALUES
+      (1, 1.1, '2018-01-01 00:00:00 z', 2017, 1, 1, 10.9, 21.1),
+      (2, 1.1, '2018-01-01 00:00:00 z', 2017, 1, 1, 10.8, 22.2),
+      (3, 1.1, '2018-01-01 00:00:00 z', 2017, 1, 1, 10.7, 23.3),
+      (4, 1.1, '2018-01-01 00:00:00 z', 2017, 1, 1, 10.6, 24.4),
+      (5, 1.1, '2019-01-01 00:00:00 z', 2016, 1, 1, 10.5, 25.5);
+    """
+    {:ok, _} = Ecto.Adapters.SQL.query(Repo, insert)
 
-    test "with regular user", context do
-      UserActions.promote_to_admin(context.user)
-
-      user = UserActions.get_from_id(context.user.id)
-      meta = MetaActions.get(context.meta.id, with_user: true)
-      {:ok, meta} = MetaActions.submit_for_approval(meta)
-      meta = MetaActions.get(meta.id, with_user: true)
-      {:ok, meta} = MetaActions.approve(meta, user)
-      meta = MetaActions.get(meta.id, with_user: true)
-      {:ok, meta} = MetaActions.mark_erred(meta, user, "something bad happened")
-      meta = MetaActions.get(meta.id, with_user: true)
-
-      user = UserActions.get_from_id(user.id)
-      UserActions.strip_admin(user)
-      user = UserActions.get_from_id(user.id)
-
-      {:error, error} = MetaActions.mark_fixed(meta, user, "something good happened")
-      assert error =~ "not an admin"
-    end
+    bbox = MetaActions.compute_bbox!(meta)
+    assert bbox == %Geo.Polygon{
+      coordinates: [
+        [{21.1, 10.9}, {25.5, 10.9}, {25.5, 10.5}, {21.1, 10.5}, {21.1, 10.9}]
+      ],
+      srid: 4326
+    }
   end
 end

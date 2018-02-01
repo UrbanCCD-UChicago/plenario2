@@ -1,3 +1,3 @@
-defmodule PlenarioEtl.SupervisorTest do
+defmodule PlenarioEtl.Testing.SupervisorTest do
   use ExUnit.Case
 end

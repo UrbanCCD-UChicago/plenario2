@@ -30,14 +30,16 @@ defmodule Plenario.Changesets.MetaChangesets do
     refresh_rate: String.t() | nil,
     refresh_interval: integer | nil,
     refresh_starts_on: DateTime | nil,
-    refresh_ends_on: DateTime | nil
+    refresh_ends_on: DateTime | nil,
+    next_import: DateTime | nil
   }
 
   @create_param_keys [:name, :user_id, :source_url, :source_type]
 
   @update_param_keys [
     :name, :source_url, :source_type, :description, :attribution,
-    :refresh_rate, :refresh_interval, :refresh_starts_on, :refresh_ends_on
+    :refresh_rate, :refresh_interval, :refresh_starts_on, :refresh_ends_on,
+    :next_import
   ]
 
   @doc """

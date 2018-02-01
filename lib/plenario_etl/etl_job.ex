@@ -33,6 +33,8 @@ defmodule PlenarioEtl.Schemas.EtlJob do
     field(:completed_on, :utc_datetime)
     field(:error_message, :string)
 
+    timestamps(type: :utc_datetime)
+
     belongs_to(:meta, Plenario.Schemas.Meta)
     has_many(:data_set_diffs, PlenarioEtl.Schemas.DataSetDiff)
   end

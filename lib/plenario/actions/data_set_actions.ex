@@ -11,7 +11,7 @@ defmodule Plenario.Actions.DataSetActions do
     VirtualPointFieldActions
   }
 
-  @template_dir "lib/sql-templates"
+  @template_dir "lib/plenario/actions/sql-templates"
 
   def up!(meta) when not is_integer(meta), do: up!(meta.id)
   def up!(meta_id) when is_integer(meta_id) do

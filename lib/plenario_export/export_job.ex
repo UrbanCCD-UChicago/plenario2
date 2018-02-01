@@ -18,7 +18,7 @@ defmodule PlenarioExport.Schemas.ExportJob do
     field(:export_ttl, :utc_datetime)
     field(:diffs_path, :string)
 
-    timestamps()
+    timestamps(type: :utc_datetime)
 
     belongs_to(:user, Plenario.Schemas.User)
     belongs_to(:meta, Plenario.Schemas.Meta)

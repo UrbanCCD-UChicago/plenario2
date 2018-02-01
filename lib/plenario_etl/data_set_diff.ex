@@ -19,8 +19,10 @@ defmodule PlenarioEtl.Schemas.DataSetDiff do
     field(:changed_on, :utc_datetime)
     field(:constraint_values, :map)
 
+    timestamps(type: :utc_datetime)
+
     belongs_to(:meta, Plenario.Schemas.Meta)
-    belongs_to(:data_set_constraint, Plenario.Schemas.UniqueConstraint)
+    belongs_to(:unique_constraint, Plenario.Schemas.UniqueConstraint)
     belongs_to(:etl_job, PlenarioEtl.Schemas.EtlJob)
   end
 end

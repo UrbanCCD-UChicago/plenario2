@@ -18,7 +18,7 @@ defmodule PlenarioEtl.Changesets.DataSetDiffChangesets do
           changed_on: DateTime,
           constraint_values: list({String.t(), any}),
           meta_id: integer,
-          data_set_constraint_id: integer,
+          unique_constraint_id: integer,
           etl_job_id: integer
         }
 
@@ -29,7 +29,7 @@ defmodule PlenarioEtl.Changesets.DataSetDiffChangesets do
     :changed_on,
     :constraint_values,
     :meta_id,
-    :data_set_constraint_id,
+    :unique_constraint_id,
     :etl_job_id
   ]
 
@@ -42,7 +42,7 @@ defmodule PlenarioEtl.Changesets.DataSetDiffChangesets do
     |> cast(params, @param_keys)
     |> validate_required(@param_keys)
     |> cast_assoc(:meta)
-    |> cast_assoc(:data_set_constraint)
+    |> cast_assoc(:unique_constraint)
     |> cast_assoc(:etl_job)
   end
 end

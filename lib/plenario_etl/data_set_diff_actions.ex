@@ -26,7 +26,7 @@ defmodule PlenarioEtl.Actions.DataSetDiffActions do
   def create(meta_id, constraint_id, etl_job_id, column, original, updated, changed_on, constraint_values) do
     params = %{
       meta_id: meta_id,
-      data_set_constraint_id: constraint_id,
+      unique_constraint_id: constraint_id,
       etl_job_id: etl_job_id,
       column: column,
       original: original,
