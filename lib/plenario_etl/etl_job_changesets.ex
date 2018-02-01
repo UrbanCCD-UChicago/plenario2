@@ -6,7 +6,7 @@ defmodule Plenario.Changesets.EtlJobChangesets do
 
   import Ecto.Changeset
 
-  alias Plenario.Schemas.EtlJob
+  alias PlenarioEtl.Schemas.EtlJob
 
   @doc """
   Creates a changeset for inserting new EtlJobs into the database
@@ -17,12 +17,11 @@ defmodule Plenario.Changesets.EtlJobChangesets do
     |> cast(params, [:meta_id])
     |> validate_required([:meta_id])
     |> cast_assoc(:meta)
-    |> put_change(:state, "new")
   end
 
   def mark_started(job) do
     job
-    |> EtlJob.mark_started()  
+    |> EtlJob.mark_started()
     |> set_started_on()
   end
 
@@ -38,12 +37,12 @@ defmodule Plenario.Changesets.EtlJobChangesets do
     |> cast(params, [:error_message])
     |> set_completed_on()
   end
-  
-  defp set_started_on(changeset) do 
+
+  defp set_started_on(changeset) do
     put_change(changeset, :started_on, DateTime.utc_now())
   end
-  
-  defp set_completed_on(changeset) do 
+
+  defp set_completed_on(changeset) do
     put_change(changeset, :completed_on, DateTime.utc_now())
   end
 end

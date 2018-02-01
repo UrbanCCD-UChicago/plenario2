@@ -1,22 +1,20 @@
-defmodule Plenario.Actions.EtlJobActions do
+defmodule PlenarioEtl.Actions.EtlJobActions do
   @moduledoc """
   This module provides a common API for the business logic
   underlying the various public interfaces for EtlJob.
   """
 
   import Ecto.Changeset
+
   import Ecto.Query
 
-  import Plenario.Guards, only: [is_id: 1]
 
-  alias Plenario.Changesets.EtlJobChangesets
-  alias Plenario.Schemas.{EtlJob, Meta}
+  alias PlenarioEtl.Changesets.EtlJobChangesets
+  alias PlenarioEtl.Schemas.EtlJob
+
+  alias Plenario.Schemas.Meta
+
   alias Plenario.Repo
-
-  @typedoc """
-  Parameter is an ID attribute
-  """
-  @type id :: String.t() | integer
 
   @typedoc """
   Returns a tuple of :ok, EtlJob or :error, Ecto.Changeset
@@ -26,22 +24,17 @@ defmodule Plenario.Actions.EtlJobActions do
   @doc """
   Creates a new instance of EtlJob
   """
-  @spec create(meta :: Meta | id) :: ok_job
-  def create(meta) do
-    meta_id =
-      case is_id(meta) do
-        true -> meta
-        false -> meta.id
-      end
-
-    EtlJobChangesets.create(%{meta_id: meta_id})
+  @spec create(meta :: Meta | integer) :: ok_job
+  def create(meta) when not is_integer(meta), do: create(meta.id)
+  def create(meta) when is_integer(meta) do
+    EtlJobChangesets.create(%{meta_id: meta})
     |> Repo.insert()
   end
 
   @doc """
   Creates a new instance of EtlJob
   """
-  @spec create!(meta :: Meta | id) :: {:ok, EtlJob}
+  @spec create!(meta :: Meta | integer) :: EtlJob
   def create!(meta) do
     {:ok, job} = create(meta)
     job
@@ -50,27 +43,29 @@ defmodule Plenario.Actions.EtlJobActions do
   @doc """
   Gets a single EtlJob from a given ID
   """
-  @spec get(id :: id) :: EtlJob
+  @spec get(id :: integer) :: EtlJob
   def get(id), do: Repo.get_by(EtlJob, id: id)
 
   @doc """
-  Gets a list of all EtlJobs
+  Lists all entries for EtlJobs in the database, optionally filtered
+  to only include results whose Meta relationship matches the `meta` param.
+
+  ## Examples
+
+    all_jobs = EtlJobActions.list()
+    my_metas_jobs = EtlJobActions.list(meta)
   """
   @spec list() :: list(EtlJob)
-  def list(), do: Repo.all(EtlJob)
-
-  @doc """
-  Gets a list of all EtlJobs related to a given Meta
-  """
-  @spec list_for_meta(meta :: Meta | id) :: list(EtlJob)
-  def list_for_meta(meta) do
-    meta_id =
-      case is_id(meta) do
-        true -> meta
-        false -> meta.id
+  def list(), do: list(nil)
+  def list(meta) when not is_integer(meta.id) and not is_nil(meta), do: list(meta.id)
+  def list(meta) when is_integer(meta) or is_nil(meta) do
+    query =
+      case is_nil(meta) do
+        true -> from(j in EtlJob)
+        false -> from(j in EtlJob, where: j.meta_id == ^meta)
       end
 
-    Repo.all(from(job in EtlJob, where: job.meta_id == ^meta_id))
+    Repo.all(query)
   end
 
   def mark_started(job) do

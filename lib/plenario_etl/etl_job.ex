@@ -1,4 +1,13 @@
 defmodule PlenarioEtl.Schemas.EtlJob do
+  @moduledoc """
+  Defines the schema for EtlJob.
+
+  - `state` is the state of the job
+  - `started_on` is the start timestamp of the job
+  - `completed_on` is the ending timetamp of the job
+  - `error_message` is the error trace if an error occurred
+  """
+
   use Ecto.Schema
   use EctoStateMachine,
     states: [:new, :started, :erred, :completed],

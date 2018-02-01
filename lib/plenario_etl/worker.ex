@@ -6,11 +6,12 @@ defmodule PlenarioEtl.Worker do
   with `:sys.get_state/1`.
   """
 
-  alias Plenario.Actions.{
+  alias Plenario.Actions.MetaActions
+
+  alias PlenarioEtl.Actions.{
     DataSetDiffActions,
-    EtlJobActions,
-    MetaActions,
-  }
+    EtlJobActions
+}
 
   alias PlenarioEtl.Rows
 
@@ -183,8 +184,8 @@ defmodule PlenarioEtl.Worker do
   defp load_data(meta, path, job, decode) do
     Logger.info("[#{inspect self()}] [load_data] Chunking rows and spawning children")
 
-    columns = 
-      MetaActions.get_column_names(meta) 
+    columns =
+      MetaActions.get_column_names(meta)
       |> Enum.map(&String.to_atom/1)
       |> Enum.sort()
 
@@ -222,15 +223,15 @@ defmodule PlenarioEtl.Worker do
     task = Task.async(fn ->
       :poolboy.transaction(
         :worker,
-        fn pid -> 
+        fn pid ->
           try do
             GenServer.call(pid, {:load, %{
               meta_id: meta_id,
               job_id: job.id
-            }}) 
+            }})
             EtlJobActions.mark_completed(job)
-          catch 
-            :exit, code -> 
+          catch
+            :exit, code ->
               EtlJobActions.mark_erred(job, %{error_message: inspect(code)})
           end
         end,

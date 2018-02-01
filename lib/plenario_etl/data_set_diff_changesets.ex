@@ -1,4 +1,4 @@
-defmodule Plenario.Changesets.DataSetDiffChangesets do
+defmodule PlenarioEtl.Changesets.DataSetDiffChangesets do
   @moduledoc """
   This module provides functions for creating changesets for
   DataSetDiff structs.

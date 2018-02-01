@@ -1,4 +1,4 @@
-defmodule Plenario.Actions.DataSetDiffActions do
+defmodule PlenarioEtl.Actions.DataSetDiffActions do
   @moduledoc """
   This module provides a common API for the business logic
   underlying the various public interfaces for DataSetDiff.
@@ -6,18 +6,13 @@ defmodule Plenario.Actions.DataSetDiffActions do
 
   import Ecto.Query
 
-  import Plenario.Guards, only: [is_id: 1]
+  alias PlenarioEtl.Changesets.DataSetDiffChangesets
+  alias PlenarioEtl.Schemas.DataSetDiff
 
-  alias Plenario.Changesets.DataSetDiffChangesets
-  alias Plenario.Schemas.{DataSetDiff, Meta, DataSetConstraint, EtlJob}
+  alias Plenario.Schemas.{Meta, DataSetConstraint, EtlJob}
   alias Plenario.Repo
 
   require Logger
-
-  @typedoc """
-  Parameter is an ID attribute
-  """
-  @type id :: String.t() | integer
 
   @typedoc """
   Returns a tuple of :ok, DataSetDiff or :error, Ecto.Changeset
@@ -27,35 +22,8 @@ defmodule Plenario.Actions.DataSetDiffActions do
   @doc """
   Creates a new instance of DataSetDiff.
   """
-  @spec create(
-          meta :: Meta | id,
-          constraint :: DataSetConstraint | id,
-          etl_job :: EtlJob | id,
-          column :: String.t(),
-          original :: any,
-          updated :: any,
-          changed_on :: DateTime,
-          constraint_values :: %{}
-        ) :: ok_diff
-  def create(meta, constraint, etl_job, column, original, updated, changed_on, constraint_values) do
-    meta_id =
-      case is_id(meta) do
-        true -> meta
-        false -> meta.id
-      end
-
-    constraint_id =
-      case is_id(constraint) do
-        true -> constraint
-        false -> constraint.id
-      end
-
-    etl_job_id =
-      case is_id(etl_job) do
-        true -> etl_job
-        false -> etl_job.id
-      end
-
+  @spec create(meta_id :: integer, constraint_id :: integer, etl_job_id :: integer, column :: String.t(), original :: any, updated :: any, changed_on :: DateTime, constraint_values :: map) :: ok_diff
+  def create(meta_id, constraint_id, etl_job_id, column, original, updated, changed_on, constraint_values) do
     params = %{
       meta_id: meta_id,
       data_set_constraint_id: constraint_id,
@@ -74,16 +42,24 @@ defmodule Plenario.Actions.DataSetDiffActions do
   end
 
   @doc """
-  Lists all the diffs related to a given Meta.
+  Lists all entries for DataSetDiff in the database, optionally filtered
+  to only include results whose Meta relationship matches the `meta` param.
+
+  ## Examples
+
+    all_diffs = DataSetDiffActions.list()
+    my_metas_diffs = DataSetDiffActions.list(meta)
   """
-  @spec list_for_meta(meta :: Meta | id) :: list(DataSetDiff)
-  def list_for_meta(meta) do
-    meta_id =
-      case is_id(meta) do
-        true -> meta
-        false -> meta.id
+  @spec list(meta :: Meta | integer | nil) :: list(DataSetDiff)
+  def list(), do: list(nil)
+  def list(meta) when not is_integer(meta) and not is_nil(meta), do: list(meta.id)
+  def list(meta) when is_integer(meta) or is_nil(meta) do
+    query =
+      case is_nil(meta) do
+        true -> from(d in DataSetDiff)
+        false -> from(d in DataSetDiff, where: d.meta_id == ^meta_id)
       end
 
-    Repo.all(from(d in DataSetDiff, where: d.meta_id == ^meta_id))
+    Repo.all(query)
   end
 end
