@@ -1,6 +1,11 @@
 defmodule PlenarioWeb.AuthController do
   use PlenarioWeb, :controller
-  alias PlenarioAuth.{UserChangesets, UserActions, User, Guardian}
+
+  alias Plenario.Schemas.User
+  alias Plenario.Changesets.UserChangesets
+  alias Plenario.Actions.UserActions
+
+  alias PlenarioAuth.Guardian
 
   def get_login(conn, _params) do
     changeset = UserChangesets.create(%User{}, %{})

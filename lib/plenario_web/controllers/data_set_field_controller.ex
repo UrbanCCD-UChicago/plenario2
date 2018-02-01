@@ -7,14 +7,6 @@ defmodule PlenarioWeb.DataSetFieldController do
   alias Plenario.Schemas.DataSetField
   use PlenarioWeb, :controller
 
-  @field_type_options [
-    {"Text", "text"},
-    {"Integer", "integer"},
-    {"Decimal", "float"},
-    {"True/False", "boolean"},
-    {"Date", "timestamptz"}
-  ]
-
   def index(conn, %{"slug" => slug}) do
     meta = MetaActions.get(slug)
     fields = DataSetFieldActions.list_for_meta(meta)
@@ -30,7 +22,7 @@ defmodule PlenarioWeb.DataSetFieldController do
       "new.html",
       changeset: changeset,
       slug: slug,
-      field_type_options: @field_type_options
+      field_type_options: DataSetField.get_type_choices()
     )
   end
 
@@ -72,7 +64,7 @@ defmodule PlenarioWeb.DataSetFieldController do
       field: field,
       changeset: changeset,
       slug: slug,
-      field_type_options: @field_type_options,
+      field_type_options: DataSetField.get_type_choices(),
       disabled: disabled
     )
   end

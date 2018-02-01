@@ -1,7 +1,7 @@
 defmodule PlenarioWeb.AdminUserNoteController do
   use PlenarioWeb, :controller
 
-  alias Plenario.Actions.AdminUserNoteActions
+  alias PlenarioMailer.Actions.AdminUserNoteActions
 
   def acknowledge(conn, %{"id" => note_id, "path" => path}) do
     AdminUserNoteActions.get(note_id)

@@ -1,12 +1,8 @@
 defmodule PlenarioWeb.AdminController do
   use PlenarioWeb, :controller
 
-  import Plenario.Queries.Utils
-
-  alias PlenarioAuth.UserActions
-  alias PlenarioAuth.UserQueries, as: UserQ
-
-  alias Plenario.Actions.MetaActions
+  alias Plenario.Actions.{MetaActions, UserActions}
+  alias Plenario.Queries.UserQueries, as: UserQ
   alias Plenario.Repo
 
   require Logger

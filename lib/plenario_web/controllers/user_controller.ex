@@ -1,8 +1,10 @@
 defmodule PlenarioWeb.UserController do
   use PlenarioWeb, :controller
 
-  alias Plenario.Actions.{MetaActions, AdminUserNoteActions}
-  alias PlenarioAuth.{UserActions, UserChangesets}
+  alias Plenario.Actions.{MetaActions, UserActions}
+  alias Plenario.Changesets.UserChangesets
+
+  alias PlenarioMailer.Actions.AdminUserNoteActions
 
   def index(conn, _) do
     user = Guardian.Plug.current_resource(conn)

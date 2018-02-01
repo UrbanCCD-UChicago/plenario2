@@ -1,4 +1,4 @@
-<h3>Create a New Data Set Constraint</h3>
+<h3>Create a New Unique Constraint</h3>
 
 <%= form_for @changeset, @action, fn f -> %>
 
