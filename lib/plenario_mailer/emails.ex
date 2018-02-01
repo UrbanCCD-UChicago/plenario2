@@ -1,9 +1,9 @@
 defmodule Plenario.Emails do
   import Bamboo.Email
 
-  alias Plenario.Schemas.AdminUserNote
+  alias PlenarioMailer.Schemas.AdminUserNote
 
-  alias PlenarioAuth.UserActions
+  alias Plenario.Actions.UserActions
 
   defp base() do
     new_email(

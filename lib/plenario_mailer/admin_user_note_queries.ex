@@ -1,4 +1,4 @@
-defmodule Plenario.Queries.AdminUserNoteQueries do
+defmodule PlenarioMailer.Queries.AdminUserNoteQueries do
   @moduledoc """
   This module provides functions for building and composing Ecto
   queries. This is beneficial for streamlining the way we interact
@@ -10,10 +10,10 @@ defmodule Plenario.Queries.AdminUserNoteQueries do
 
   import Plenario.Queries.Utils
 
-  alias Plenario.Schemas.AdminUserNote
-  alias Plenario.Queries.AdminUserNoteQueries
+  alias PlenarioMailer.Schemas.AdminUserNote
+  alias PlenarioMailer.Queries.AdminUserNoteQueries
 
-  alias PlenarioAuth.User
+  alias Plenario.Schemas.User
 
   @typedoc """
   Parameter is an ID attribute

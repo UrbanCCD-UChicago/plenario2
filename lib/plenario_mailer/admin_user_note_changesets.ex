@@ -1,4 +1,4 @@
-defmodule Plenario.Changesets.AdminUserNoteChangesets do
+defmodule PlenarioMailer.Changesets.AdminUserNoteChangesets do
   @moduledoc """
   This module provides functions for creating changesets for
   AdminUserNote structs.
@@ -6,7 +6,7 @@ defmodule Plenario.Changesets.AdminUserNoteChangesets do
 
   import Ecto.Changeset
 
-  alias Plenario.Schemas.AdminUserNote
+  alias PlenarioMailer.Schemas.AdminUserNote
 
   @typedoc """
   Verbose map of params for create_for_meta
