@@ -6,17 +6,17 @@
 use Mix.Config
 
 # Configure the database
-config :plenario2, Plenario2.Repo, types: Plenario2.PostGISTypes
+config :plenario, Plenario.Repo, types: Plenario.PostGISTypes
 
 # General application configuration
-config :plenario2, ecto_repos: [Plenario2.Repo]
+config :plenario, ecto_repos: [Plenario.Repo]
 
 # Configures the endpoint
-config :plenario2, Plenario2Web.Endpoint,
+config :plenario, PlenarioWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "jCp/RnOfjaRob73dORfNI9QvsP5719peAhXoo6SP2N41Kw+5Ofq9N0Zu6cyzqGI4",
-  render_errors: [view: Plenario2Web.ErrorView, accepts: ~w(html json)],
-  pubsub: [name: Plenario2.PubSub, adapter: Phoenix.PubSub.PG2]
+  render_errors: [view: PlenarioWeb.ErrorView, accepts: ~w(html json)],
+  pubsub: [name: Plenario.PubSub, adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger
 config :logger, :console,
@@ -24,32 +24,32 @@ config :logger, :console,
   metadata: [:request_id]
 
 # Configure s3 buckets
-config :plenario2, :s3_export_bucket, "plenario_exports_#{Mix.env()}"
+config :plenario, :s3_export_bucket, "plenario_exports_#{Mix.env()}"
 
-config :plenario2, :s3_export_ttl, days: 5
+config :plenario, :s3_export_ttl, days: 5
 
 # configure quantum scheduler
 
-config :plenario2, :refresh_offest, minutes: 1
+config :plenario, :refresh_offest, minutes: 1
 
-config :plenario2, Plenario2.Scheduler,
+config :plenario, Plenario.Scheduler,
   global: true,
   jobs: [
     # run the find refreshable metas every minute (offset is 1 minute above)
-    {"* * * * *", {Plenario2.Etl.ScheduledJobs, :find_refreshable_metas, []}}
+    {"* * * * *", {Plenario.Etl.ScheduledJobs, :find_refreshable_metas, []}}
   ]
 
 # configure canary
 config :canary,
-  repo: Plenario2.Repo,
-  unauthorized_handler: {Plenario2Auth.ErrorHandler, :handle_unauthorized},
-  not_found_handler: {Plenario2Auth.ErrorHandler, :handle_not_found}
+  repo: Plenario.Repo,
+  unauthorized_handler: {PlenarioAuth.ErrorHandler, :handle_unauthorized},
+  not_found_handler: {PlenarioAuth.ErrorHandler, :handle_not_found}
 
 # configure bamboo (email)
-config :plenario2, Plenario2.Mailer, adapter: Bamboo.LocalAdapter
+config :plenario, Plenario.Mailer, adapter: Bamboo.LocalAdapter
 
-config :plenario2, :email_sender, "plenario@uchicago.edu"
-config :plenario2, :email_subject, "Plenario Notification"
+config :plenario, :email_sender, "plenario@uchicago.edu"
+config :plenario, :email_subject, "Plenario Notification"
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

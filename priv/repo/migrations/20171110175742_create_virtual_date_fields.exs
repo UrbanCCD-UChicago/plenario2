@@ -1,4 +1,4 @@
-defmodule Plenario2.Repo.Migrations.CreateVirtualDateFields do
+defmodule Plenario.Repo.Migrations.CreateVirtualDateFields do
   use Ecto.Migration
 
   def change do

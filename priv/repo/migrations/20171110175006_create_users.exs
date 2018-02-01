@@ -1,4 +1,4 @@
-defmodule Plenario2.Repo.Migrations.CreateUsers do
+defmodule Plenario.Repo.Migrations.CreateUsers do
   use Ecto.Migration
 
   def change do

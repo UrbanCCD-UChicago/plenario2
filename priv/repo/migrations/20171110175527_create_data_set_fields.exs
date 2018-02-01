@@ -1,4 +1,4 @@
-defmodule Plenario2.Repo.Migrations.CreateDataSetFields do
+defmodule Plenario.Repo.Migrations.CreateDataSetFields do
   use Ecto.Migration
 
   def change do

@@ -1,4 +1,4 @@
-defmodule Plenario2.Repo.Migrations.AlterMetaRefreshDates do
+defmodule Plenario.Repo.Migrations.AlterMetaRefreshDates do
   use Ecto.Migration
 
   def change do

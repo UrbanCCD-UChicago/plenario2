@@ -1,0 +1,2 @@
+defmodule PlenarioAuth do
+end

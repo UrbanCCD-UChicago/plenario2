@@ -1,4 +1,4 @@
-defmodule Plenario2.Repo.Migrations.CreateVirtualPointFields do
+defmodule Plenario.Repo.Migrations.CreateVirtualPointFields do
   use Ecto.Migration
 
   def change do

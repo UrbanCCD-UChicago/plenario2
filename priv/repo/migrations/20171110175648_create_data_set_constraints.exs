@@ -1,4 +1,4 @@
-defmodule Plenario2.Repo.Migrations.CreateDataSetConstraints do
+defmodule Plenario.Repo.Migrations.CreateDataSetConstraints do
   use Ecto.Migration
 
   def change do

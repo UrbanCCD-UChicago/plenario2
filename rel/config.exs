@@ -44,8 +44,8 @@ end
 # when running `mix release`, the first release in the file
 # will be used by default
 
-release :plenario2 do
-  set version: current_version(:plenario2)
+release :plenario do
+  set version: current_version(:plenario)
   set applications: [
     :runtime_tools
   ]

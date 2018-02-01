@@ -1,4 +1,4 @@
-defmodule Plenario2.DataCase do
+defmodule Plenario.DataCase do
   @moduledoc """
   This module defines the setup for tests requiring
   access to the application's data layer.
@@ -14,23 +14,23 @@ defmodule Plenario2.DataCase do
 
   use ExUnit.CaseTemplate
 
-  alias Plenario2.Actions.MetaActions
+  alias Plenario.Actions.MetaActions
 
-  alias Plenario2Auth.UserActions
+  alias PlenarioAuth.UserActions
 
   using do
     quote do
-      alias Plenario2.Repo
+      alias Plenario.Repo
 
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
-      import Plenario2.DataCase
+      import Plenario.DataCase
     end
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Plenario2.Repo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
 
     # create a user
     {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
@@ -44,7 +44,7 @@ defmodule Plenario2.DataCase do
       )
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Plenario2.Repo, {:shared, self()})
+      Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
     end
 
     {

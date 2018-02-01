@@ -1,4 +1,4 @@
-defmodule Plenario2.Repo.Migrations.CreateMetas do
+defmodule Plenario.Repo.Migrations.CreateMetas do
   use Ecto.Migration
 
   def change do
