@@ -4,9 +4,11 @@ defmodule PlenarioMailer.Actions.AdminUserNoteActions do
   underlying the various public interfaces for AdminUserNotes.
   """
 
-  alias Plenario.{Repo, Mailer, Emails}
+  alias Plenario.Repo
   alias Plenario.Schemas.{Meta, User}
 
+  alias PlenarioMailer
+  alias PlenarioMailer.Emails
   alias PlenarioMailer.Schemas.AdminUserNote
   alias PlenarioMailer.Changesets.AdminUserNoteChangesets
   alias PlenarioMailer.Queries.AdminUserNoteQueries, as: Q

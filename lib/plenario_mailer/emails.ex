@@ -1,4 +1,4 @@
-defmodule Plenario.Emails do
+defmodule PlenarioMailer.Emails do
   import Bamboo.Email
 
   alias PlenarioMailer.Schemas.AdminUserNote
