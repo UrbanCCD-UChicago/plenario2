@@ -1,7 +1,7 @@
 use Mix.Config
 
 # Configure the database and application repo
-config :plenario, Plenario.Repo, types: Plenario.PostGISTypes
+config :plenario, Plenario.Repo, types: Plenario.PostGisTypes
 
 config :plenario, ecto_repos: [Plenario.Repo]
 

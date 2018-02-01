@@ -10,7 +10,7 @@ defmodule Plenario.Repo.Migrations.CreateDataSetDiffs do
       add :constraint_values, :json
 
       add :meta_id, references(:metas), null: false
-      add :unique_constraint_id, references(:unique_constrainsts), null: false
+      add :unique_constraint_id, references(:unique_constraints), null: false
       add :etl_job_id, references(:etl_jobs), null: false
 
       timestamps(type: :timestamptz)
