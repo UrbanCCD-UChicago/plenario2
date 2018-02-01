@@ -5,7 +5,7 @@
 # Inside the script, you can read and write to any of your
 # repositories directly:
 #
-#     Plenario2.Repo.insert!(%Plenario2.SomeSchema{})
+#     Plenario.Repo.insert!(%Plenario.SomeSchema{})
 #
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
