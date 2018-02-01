@@ -1,4 +1,4 @@
-defmodule Plenario2.Repo.Migrations.CreateExportJobs do
+defmodule Plenario.Repo.Migrations.CreateExportJobs do
   use Ecto.Migration
 
   def change do

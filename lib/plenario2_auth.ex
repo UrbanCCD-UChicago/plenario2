@@ -1,2 +1,2 @@
-defmodule Plenario2Auth do
+defmodule PlenarioAuth do
 end

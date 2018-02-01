@@ -1,4 +1,4 @@
-defmodule Plenario2Web.ConnCase do
+defmodule PlenarioWeb.ConnCase do
   @moduledoc """
   This module defines the test case to be used by
   tests that require setting up a connection.
@@ -17,26 +17,26 @@ defmodule Plenario2Web.ConnCase do
 
   use Phoenix.ConnTest
 
-  import Plenario2Web.Router.Helpers
+  import PlenarioWeb.Router.Helpers
 
-  alias Plenario2Auth.UserActions
+  alias PlenarioAuth.UserActions
 
-  @endpoint Plenario2Web.Endpoint
+  @endpoint PlenarioWeb.Endpoint
 
   using do
     quote do
       # Import conveniences for testing with connections
       use Phoenix.ConnTest
-      import Plenario2Web.Router.Helpers
+      import PlenarioWeb.Router.Helpers
 
       # The default endpoint for testing
-      @endpoint Plenario2Web.Endpoint
+      @endpoint PlenarioWeb.Endpoint
     end
   end
 
   setup tags do
     # sandbox the db connection
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Plenario2.Repo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
 
     # create an admin user
     {:ok, admin_user} = UserActions.create("Admin User", "password", "admin@example.com")
@@ -46,7 +46,7 @@ defmodule Plenario2Web.ConnCase do
     {:ok, reg_user} = UserActions.create("Regular User", "password", "regular@example.com")
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Plenario2.Repo, {:shared, self()})
+      Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
     end
 
     # setup connection

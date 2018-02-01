@@ -6,7 +6,7 @@ use Mix.Config
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we use it
 # with brunch.io to recompile .js and .css sources.
-config :plenario2, Plenario2Web.Endpoint,
+config :plenario, PlenarioWeb.Endpoint,
   http: [port: 4000],
   debug_errors: true,
   code_reloader: true,
@@ -37,13 +37,13 @@ config :plenario2, Plenario2Web.Endpoint,
 # different ports.
 
 # Watch static and templates for browser reloading.
-config :plenario2, Plenario2Web.Endpoint,
+config :plenario, PlenarioWeb.Endpoint,
   live_reload: [
     patterns: [
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
       ~r{priv/gettext/.*(po)$},
-      ~r{lib/plenario2_web/views/.*(ex)$},
-      ~r{lib/plenario2_web/templates/.*(eex)$}
+      ~r{lib/plenario_web/views/.*(ex)$},
+      ~r{lib/plenario_web/templates/.*(eex)$}
     ]
   ]
 
@@ -55,20 +55,20 @@ config :logger, :console, level: :info, format: "[$level] $message\n"
 config :phoenix, :stacktrace_depth, 20
 
 # Configure your database
-config :plenario2, Plenario2.Repo,
+config :plenario, Plenario.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "password",
-  database: "plenario2_dev",
+  database: "plenario_dev",
   hostname: "localhost",
   pool_size: 10
 
 # Configure Guardian
-config :plenario2, Plenario2Auth.Guardian,
+config :plenario, PlenarioAuth.Guardian,
   issuer: "Plenario",
   secret_key: "qwertyuiopASDFGHJKLzxcvbnm1234567890QWERTYUIOPasdfghjklZXCVBNM!@"
 
 # Configure worker settings
-config :plenario2, Plenario2Etl,
+config :plenario, PlenarioEtl,
   chunk_size: 100,
   pool_size: 10

@@ -1,2 +1,2 @@
-defmodule Plenario2Etl do
+defmodule PlenarioEtl do
 end

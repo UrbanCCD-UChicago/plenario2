@@ -1,12 +1,12 @@
-defmodule Plenario2Web do
+defmodule PlenarioWeb do
   @moduledoc """
   The entrypoint for defining your web interface, such
   as controllers, views, channels and so on.
 
   This can be used in your application as:
 
-      use Plenario2Web, :controller
-      use Plenario2Web, :view
+      use PlenarioWeb, :controller
+      use PlenarioWeb, :view
 
   The definitions below will be executed for every view,
   controller, etc, so keep them short and clean, focused
@@ -19,10 +19,10 @@ defmodule Plenario2Web do
 
   def controller do
     quote do
-      use Phoenix.Controller, namespace: Plenario2Web
+      use Phoenix.Controller, namespace: PlenarioWeb
       import Plug.Conn
-      import Plenario2Web.Router.Helpers
-      import Plenario2Web.Gettext
+      import PlenarioWeb.Router.Helpers
+      import PlenarioWeb.Gettext
       import Canary.Plugs
     end
   end
@@ -30,8 +30,8 @@ defmodule Plenario2Web do
   def view do
     quote do
       use Phoenix.View,
-        root: "lib/plenario2_web/templates",
-        namespace: Plenario2Web
+        root: "lib/plenario_web/templates",
+        namespace: PlenarioWeb
 
       # Import convenience functions from controllers
       import Phoenix.Controller, only: [get_flash: 2, view_module: 1]
@@ -39,9 +39,9 @@ defmodule Plenario2Web do
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML
 
-      import Plenario2Web.Router.Helpers
-      import Plenario2Web.ErrorHelpers
-      import Plenario2Web.Gettext
+      import PlenarioWeb.Router.Helpers
+      import PlenarioWeb.ErrorHelpers
+      import PlenarioWeb.Gettext
     end
   end
 
@@ -56,7 +56,7 @@ defmodule Plenario2Web do
   def channel do
     quote do
       use Phoenix.Channel
-      import Plenario2Web.Gettext
+      import PlenarioWeb.Gettext
     end
   end
 

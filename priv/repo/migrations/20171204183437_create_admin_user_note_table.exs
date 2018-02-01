@@ -1,4 +1,4 @@
-defmodule Plenario2.Repo.Migrations.CreateAdminUserNoteTable do
+defmodule Plenario.Repo.Migrations.CreateAdminUserNoteTable do
   use Ecto.Migration
 
   def change do

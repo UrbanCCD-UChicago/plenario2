@@ -1,4 +1,4 @@
-defmodule Plenario2Web.ChannelCase do
+defmodule PlenarioWeb.ChannelCase do
   @moduledoc """
   This module defines the test case to be used by
   channel tests.
@@ -21,15 +21,15 @@ defmodule Plenario2Web.ChannelCase do
       use Phoenix.ChannelTest
 
       # The default endpoint for testing
-      @endpoint Plenario2Web.Endpoint
+      @endpoint PlenarioWeb.Endpoint
     end
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Plenario2.Repo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Plenario2.Repo, {:shared, self()})
+      Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
     end
 
     :ok

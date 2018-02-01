@@ -1,4 +1,4 @@
-defmodule Plenario2.Repo.Migrations.AddEtlJobError do
+defmodule Plenario.Repo.Migrations.AddEtlJobError do
   use Ecto.Migration
 
   def change do

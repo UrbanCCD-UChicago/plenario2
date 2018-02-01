@@ -1,6 +1,6 @@
-defmodule Plenario2 do
+defmodule Plenario do
   @moduledoc """
-  Plenario2 keeps the contexts that define your domain
+  Plenario keeps the contexts that define your domain
   and business logic.
 
   Contexts are also responsible for managing your data, regardless

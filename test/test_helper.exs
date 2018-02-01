@@ -1,3 +1,3 @@
 ExUnit.start()
 
-Ecto.Adapters.SQL.Sandbox.mode(Plenario2.Repo, :manual)
+Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, :manual)

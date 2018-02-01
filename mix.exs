@@ -1,9 +1,9 @@
-defmodule Plenario2.Mixfile do
+defmodule Plenario.Mixfile do
   use Mix.Project
 
   def project do
     [
-      app: :plenario2,
+      app: :plenario,
       version: "0.0.6",
       elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -26,7 +26,7 @@ defmodule Plenario2.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      mod: {Plenario2.Application, []},
+      mod: {Plenario.Application, []},
       extra_applications: [:logger, :runtime_tools, :bamboo, :bamboo_smtp]
     ]
   end

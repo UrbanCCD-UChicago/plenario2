@@ -1,4 +1,4 @@
-defmodule Plenario2.Repo.Migrations.CreateDataSetDiffs do
+defmodule Plenario.Repo.Migrations.CreateDataSetDiffs do
   use Ecto.Migration
 
   def change do
