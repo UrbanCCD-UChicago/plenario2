@@ -1,4 +1,4 @@
-defmodule Plenario.Schemas.EtlJob do
+defmodule PlenarioEtl.Schemas.EtlJob do
   use Ecto.Schema
   use EctoStateMachine,
     states: [:new, :started, :erred, :completed],
@@ -15,7 +15,7 @@ defmodule Plenario.Schemas.EtlJob do
         name: :mark_completed,
         from: [:started],
         to: :completed
-      ]  
+      ]
     ]
 
   schema "etl_jobs" do
@@ -25,6 +25,6 @@ defmodule Plenario.Schemas.EtlJob do
     field(:error_message, :string)
 
     belongs_to(:meta, Plenario.Schemas.Meta)
-    has_many(:data_set_diffs, Plenario.Schemas.DataSetDiff)
+    has_many(:data_set_diffs, PlenarioEtl.Schemas.DataSetDiff)
   end
 end

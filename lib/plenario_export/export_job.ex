@@ -1,4 +1,4 @@
-defmodule Plenario.Schemas.ExportJob do
+defmodule PlenarioExport.Schemas.ExportJob do
   use Ecto.Schema
 
   schema "export_jobs" do

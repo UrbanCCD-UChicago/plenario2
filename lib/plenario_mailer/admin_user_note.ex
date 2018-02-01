@@ -1,4 +1,4 @@
-defmodule Plenario.Schemas.AdminUserNote do
+defmodule PlenarioMailer.Schemas.AdminUserNote do
   use Ecto.Schema
 
   schema "admin_user_notes" do
