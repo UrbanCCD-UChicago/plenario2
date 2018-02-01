@@ -6,8 +6,10 @@ config :plenario, PlenarioWeb.Endpoint,
   http: [port: 4001],
   server: false
 
+
 # Print only warnings and errors during test
 config :logger, level: :warn
+
 
 # Configure your database
 config :plenario, Plenario.Repo,
@@ -17,6 +19,7 @@ config :plenario, Plenario.Repo,
   database: "plenario_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
+
 
 # Configure Guardian
 config :plenario, PlenarioAuth.Guardian,
