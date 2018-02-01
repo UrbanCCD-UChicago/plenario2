@@ -1,0 +1,16 @@
+CREATE OR REPLACE FUNCTION
+  parse_pt_location_4326(location TEXT)
+RETURNS GEOMETRY(POINT, 4326) AS $$
+
+  SELECT ST_PointFromText(
+    'POINT(' || subq.lon || ' ' || subq.lat || ')',
+    4326
+  )
+  FROM (
+    SELECT
+      FLOAT8((REGEXP_MATCHES($1, '([+-]?\\d+\\.\\d+)[^\\d]*([+-]?\\d+\\.\\d+)'))[1]) AS lat,
+      FLOAT8((REGEXP_MATCHES($1, '([+-]?\\d+\\.\\d+)[^\\d]*([+-]?\\d+\\.\\d+)'))[2]) AS lon
+  ) AS subq
+
+$$
+LANGUAGE 'sql' IMMUTABLE;

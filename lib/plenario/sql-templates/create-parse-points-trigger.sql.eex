@@ -1,0 +1,16 @@
+CREATE OR REPLACE FUNCTION "<%= function_name %>"()
+RETURNS TRIGGER AS $$
+
+  BEGIN
+    <%= for field <- fields do %>
+    new."<%= field.name %>" :=
+      <%= if field.loc_field do %>
+      parse_pt_location_4326(new."<%= field.loc_field.name %>");
+      <% else %>
+      parse_pt_lat_lon_4326(new."<%= field.lat_field.name %>", new."<%= field.lon_field.name %>");
+      <% end %>
+    <% end %>
+    return new;
+  END
+$$
+LANGUAGE 'plpgsql';
