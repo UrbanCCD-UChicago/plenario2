@@ -1,188 +1,239 @@
 defmodule Plenario.Queries.MetaQueries do
   @moduledoc """
-  This module provides functions for building and composing Ecto
-  queries. This is beneficial for streamlining the way we interact
-  with the database from other business logic and web controller
-  modules.
+  This module provides a stable API for composing Ecto Queries using the Meta
+  schema. Functions included in this module can be used as-is or in pipes to
+  compose/filter basic queries.
+
+  This module also provides a :handle_opts function to streamline the
+  application of composable queries. This is useful in higher level APIs where
+  basic queries, such as :list, can also be filtered based on other parameters.
   """
 
   import Ecto.Query
 
-  import Plenario.Queries.Utils
+  import Geo.PostGIS, only: [st_intersects: 2]
 
-  alias Plenario.Queries.MetaQueries
-  alias Plenario.Schemas.Meta
+  import Plenario.Queries.Utils, only: [tstzrange_intersects: 2]
 
-  alias PlenarioAuth.User
+  alias Plenario.Queries.{Utils, MetaQueries}
+
+  alias Plenario.Schemas.{Meta, User}
 
   @doc """
-  Creates a query for a single meta entity in the database filtered by its ID
+  Creates an Ecto Query to list all the Metas in the database.
+
+  ## Example
+
+    all_metas =
+      MetaQueries.list()
+      |> Repo.all()
   """
-  @spec from_id(id :: integer) :: Ecto.Queryset.t()
-  def from_id(id), do: from(m in Meta, where: m.id == ^id)
+  @spec list() :: Ecto.Query.t()
+  def list(), do: (from m in Meta)
 
   @doc """
-  Creates a query for a single meta entity in the database filtered by its slug
-  """
-  @spec from_slug(slug :: String.t()) :: Ecto.Queryset.t()
-  def from_slug(slug), do: from(m in Meta, where: m.slug == ^slug)
-
-  @doc """
-  Creates a query that gets all meta entities in the database. This can be combined
-  with other filters and preloads.
+  Creates an Ecto Query to get a single Meta from the database by either
+  its id or slug field.
 
   ## Examples
 
-    iex> new_metas = MetaQueries.list() |> MetaQueries.new() |> Repo.all()
-    iex> ready_metas_with_fields = MetaQueries.list() |> MetaQueries.with_data_set_fields() |> MetaQueries.ready() |> Repo.all()
+    meta =
+      MetaQueries.get(123)
+      |> Repo.one()
+
+    meta =
+      MetaQueries.get("this-is-a-slug")
+      |> Repo.one()
   """
-  def list(), do: from(m in Meta)
+  @spec get(id :: integer) :: Ecto.Query.t()
+  def get(id) when is_integer(id), do: from m in Meta, where: m.id == ^id
+
+  @spec get(slug :: String.t()) :: Ecto.Query.t()
+  def get(slug) when is_bitstring(slug), do: from m in Meta, where: m.slug == ^slug
 
   @doc """
-  Preloads the `user` relation
+  A composable query that filters a given query to only include results whose
+  state field is "new".
+
+  ## Example
+
+    MetaQueries.list()
+    |> MetaQueries.new_only()
+    |> Repo.all()
   """
-  @spec with_user(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
-  def with_user(query), do: from(m in query, preload: [user: :metas])
+  @spec new_only(query :: Ecto.Query.t()) :: Ecto.Query.t()
+  def new_only(query), do: from m in query, where: m.state == "new"
 
   @doc """
-  Preloads the `data_set_fields` relation
+  A composable query that filters a given query to only include results whose
+  state field is "needs_approval".
+
+  ## Example
+
+    MetaQueries.list()
+    |> MetaQueries.needs_approval_only()
+    |> Repo.all()
   """
-  @spec with_data_set_fields(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
-  def with_data_set_fields(query), do: from(m in query, preload: [data_set_fields: :meta])
+  @spec needs_approval_only(query :: Ecto.Query.t()) :: Ecto.Query.t()
+  def needs_approval_only(query), do: from m in query, where: m.state == "needs_approval"
 
   @doc """
-  Preloads the `data_set_constraints` relation
+  A composable query that filters a given query to only include results whose
+  state field is "awaiting_first_import".
+
+  ## Example
+
+    MetaQueries.list()
+    |> MetaQueries.awaiting_first_import_only()
+    |> Repo.all()
   """
-  @spec with_data_set_constraints(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
-  def with_data_set_constraints(query),
-    do: from(m in query, preload: [data_set_constraints: :meta])
+  @spec awaiting_first_import_only(query :: Ecto.Query.t()) :: Ecto.Query.t()
+  def awaiting_first_import_only(query), do: from m in query, where: m.state == "awaiting_first_import"
 
   @doc """
-  Preloads the `virtual_date_fields` relation
+  A composable query that filters a given query to only include results whose
+  state field is "ready".
+
+  ## Example
+
+    MetaQueries.list()
+    |> MetaQueries.ready_only()
+    |> Repo.all()
   """
-  @spec with_virtual_date_fields(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
-  def with_virtual_date_fields(query), do: from(m in query, preload: [virtual_date_fields: :meta])
+  @spec ready_only(query :: Ecto.Query.t()) :: Ecto.Query.t()
+  def ready_only(query), do: from m in query, where: m.state == "ready"
 
   @doc """
-  Preloads the `virtual_point_fields` relation
+  A composable query that filters a given query to only include results whose
+  state field is "erred".
+
+  ## Example
+
+    MetaQueries.list()
+    |> MetaQueries.erred_only()
+    |> Repo.all()
   """
-  @spec with_virtual_point_fields(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
-  def with_virtual_point_fields(query),
-    do: from(m in query, preload: [virtual_point_fields: :meta])
+  @spec erred_only(query :: Ecto.Query.t()) :: Ecto.Query.t()
+  def erred_only(query), do: from m in query, where: m.state == "erred"
 
   @doc """
-  Preloads the `data_set_diffs` relation
+  A composable query that preloads the User related to the returned Metas.
   """
-  @spec with_data_set_diffs(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
-  def with_data_set_diffs(query), do: from(m in query, preload: [data_set_diffs: :meta])
+  @spec with_user(query :: Ecto.Query.t()) :: Ecto.Query.t()
+  def with_user(query), do: from m in query, preload: [user: :metas]
 
   @doc """
-  Preloads the `admin_user_notes` relation
+  A composable query that preloads the DataSetFields related to the returned Metas.
   """
-  @spec with_admin_user_notes(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
-  def with_admin_user_notes(query), do: from(m in query, preload: [admin_user_notes: :meta])
+  @spec with_fields(query :: Ecto.Query.t()) :: Ecto.Query.t()
+  def with_fields(query), do: from m in query, preload: [fields: :meta]
 
   @doc """
-  Adds a filter to query selecting metas whose state is new
+  A composable query that preloads the VirtualDateFields related to the returned Metas.
   """
-  @spec new(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
-  def new(query), do: from(m in query, where: m.state == "new")
+  @spec with_virtual_dates(query :: Ecto.Query.t()) :: Ecto.Query.t()
+  def with_virtual_dates(query), do: from m in query, preload: [virtual_dates: :meta]
 
   @doc """
-  Adds a filter to query selecting metas whose state is needs_approval
+  A composable query that preloads the VirtualPointFields related to the returned Metas.
   """
-  @spec needs_approval(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
-  def needs_approval(query), do: from(m in query, where: m.state == "needs_approval")
+  @spec with_virtual_points(query :: Ecto.Query.t()) :: Ecto.Query.t()
+  def with_virtual_points(query), do: from m in query, preload: [virtual_points: :meta]
 
   @doc """
-  Adds a filter to query selecting metas whose state is ready
+  A composable query that preloads the UniqueConstraints related to the returned Metas.
   """
-  @spec ready(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
-  def ready(query), do: from(m in query, where: m.state == "ready")
+  @spec with_constraints(query :: Ecto.Query.t()) :: Ecto.Query.t()
+  def with_constraints(query), do: from m in query, preload: [unique_constraints: :meta]
 
   @doc """
-  Adds a filter to query selecting metas whose state is erred
+  A composable query that filters returned Metas whose relation to User
+  is the user passed as the filter value.
   """
-  @spec erred(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
-  def erred(query), do: from(m in query, where: m.state == "erred")
+  @spec for_user(query :: Ecto.Query.t(), user :: User) :: Ecto.Query.t()
+  def for_user(query, user) when not is_integer(user), do: for_user(query, user.id)
+
+  @spec for_user(query :: Ecto.Query.t(), user_id :: integer) :: Ecto.Query.t()
+  def for_user(query, user_id) when is_integer(user_id), do: from m in query, where: m.user_id == ^user_id
 
   @doc """
-  Adds a filter to query limiting the results to a given number
+  A composable query that filters returned Metas whose bounding box intersects
+  with the bounding box param.
   """
-  @spec limit_to(query :: Ecto.Queryset.t(), limit :: integer) :: Ecto.Queryset.t()
-  def limit_to(query, limit), do: from(m in query, limit: ^limit)
+  @spec bbox_intersects(query :: Ecto.Query.t(), user :: User) :: Ecto.Query.t()
+  def bbox_intersects(query, bbox), do: from m in query, where: st_intersects(m.bbox, ^bbox)
 
   @doc """
-  Adds a filter to query selecting metas whose user's ID matches the given ID
+  A composable query that filters returned Metas whose time range intersects
+  with the time range param.
   """
-  @spec for_user(query :: Ecto.Queryset.t(), user :: %User{}) :: Ecto.Queryset.t()
-  def for_user(query, user), do: from(m in query, where: m.user_id == ^user.id)
+  @spec time_range_intersects(query :: Ecto.Query.t(), user :: User) :: Ecto.Query.t()
+  def time_range_intersects(query, time_range), do: from m in query, where: tstzrange_intersects(m.time_range, ^time_range)
 
   @doc """
-  Applies a series of query modifiers to a given query. This is used mostly in
-  web controller list functions to allow for easy filtering.
+  Conditionally applies boolean and filter composable queries to the given
+  query.
 
-  Available filter keys with their associated functions and argument types:
+  ## Params
 
-  | key name            | function                  | args types | default |
-  | ------------------- | ------------------------- | ---------- | ------- |
-  | with_user           | with_user                 | boolean    | false   |
-  | with_fields         | with_data_set_fields      | boolean    | false   |
-  | with_virtual_dates  | with_virtual_date_fields  | boolean    | false   |
-  | with_virtual_points | with_virtual_point_fields | boolean    | false   |
-  | with_constraints    | with_data_set_constraints | boolean    | false   |
-  | with_diffs          | with_data_set_diffs       | boolean    | false   |
-  | new                 | new                       | boolean    | false   |
-  | needs_approval      | needs_approval            | boolean    | false   |
-  | ready               | ready                     | boolean    | false   |
-  | erred               | erred                     | boolean    | false   |
-  | limit_to            | limit_to                  | integer    | nil     |
-  | for_user            | for_user                  | %User{}    | nil     |
+  | key / function              | default value | default action     |
+  | --------------------------- | ------------- | ------------------ |
+  | :new_only                   | false         | doesn't apply func |
+  | :needs_approval_only        | false         | doesn't apply func |
+  | :awaiting_first_import_only | false         | doesn't apply func |
+  | :ready_only                 | false         | doesn't apply func |
+  | :erred_only                 | false         | doesn't apply func |
+  | :with_user                  | false         | doesn't apply func |
+  | :with_fields                | false         | doesn't apply func |
+  | :with_virtual_dates         | false         | doesn't apply func |
+  | :with_virtual_points        | false         | doesn't apply func |
+  | :with_constraints           | false         | doesn't apply func |
+  | :for_user                   | :dont_use_me  | doesn't apply func |
+  | :bbox_intersects            | :dont_use_me  | doesn't apply func |
+  | :time_range_intersects      | :dont_use_me  | doesn't apply func |
 
   ## Examples
 
-    iex> my_first_5_ready_metas =
-           MetaQueries.list()
-           |> MetaQueries.handle_opts([
-                for_user: me,
-                with_user: true,
-                ready: true,
-                limit_to: 5])
-           |> Repo.all()
+    new_metas =
+      MetaQueries.list()
+      |> MetaQueries.handle_opts(new_only: true)
+
+    my_erred_metas =
+      MetaQueries.list()
+      |> MetaQueries.handle_opts(for_user: me, erred_only: true)
   """
-  @spec handle_opts(query :: Ecto.Queryset.t(), opts :: [{atom, any}]) :: Ecto.Queryset.t()
   def handle_opts(query, opts \\ []) do
     defaults = [
+      new_only: false,
+      needs_approval_only: false,
+      awaiting_first_import_only: false,
+      ready_only: false,
+      erred_only: false,
       with_user: false,
       with_fields: false,
       with_virtual_dates: false,
       with_virtual_points: false,
       with_constraints: false,
-      with_diffs: false,
-      with_notes: false,
-      new: false,
-      needs_approval: false,
-      ready: false,
-      erred: false,
-      limit_to: nil,
-      for_user: nil
+      for_user: :dont_use_me,
+      bbox_intersects: :dont_use_me,
+      time_range_intersects: :dont_use_me
     ]
 
     opts = Keyword.merge(defaults, opts)
 
     query
-    |> cond_compose(opts[:with_user], MetaQueries, :with_user)
-    |> cond_compose(opts[:with_fields], MetaQueries, :with_data_set_fields)
-    |> cond_compose(opts[:with_virtual_dates], MetaQueries, :with_virtual_date_fields)
-    |> cond_compose(opts[:with_virtual_points], MetaQueries, :with_virtual_point_fields)
-    |> cond_compose(opts[:with_constraints], MetaQueries, :with_data_set_constraints)
-    |> cond_compose(opts[:with_diffs], MetaQueries, :with_data_set_diffs)
-    |> cond_compose(opts[:with_notes], MetaQueries, :with_admin_user_notes)
-    |> cond_compose(opts[:new], MetaQueries, :new)
-    |> cond_compose(opts[:needs_approval], MetaQueries, :needs_approval)
-    |> cond_compose(opts[:ready], MetaQueries, :ready)
-    |> cond_compose(opts[:erred], MetaQueries, :erred)
-    |> filter_compose(opts[:limit_to], MetaQueries, :limit_to)
-    |> filter_compose(opts[:for_user], MetaQueries, :for_user)
+    |> Utils.bool_compose(opts[:new_only], MetaQueries, :new_only)
+    |> Utils.bool_compose(opts[:needs_approval_only], MetaQueries, :needs_approval_only)
+    |> Utils.bool_compose(opts[:awaiting_first_import_only], MetaQueries, :awaiting_first_import_only)
+    |> Utils.bool_compose(opts[:ready_only], MetaQueries, :ready_only)
+    |> Utils.bool_compose(opts[:erred_only], MetaQueries, :erred_only)
+    |> Utils.bool_compose(opts[:with_user], MetaQueries, :with_user)
+    |> Utils.bool_compose(opts[:with_fields], MetaQueries, :with_fields)
+    |> Utils.bool_compose(opts[:with_virtual_dates], MetaQueries, :with_virtual_dates)
+    |> Utils.bool_compose(opts[:with_virtual_points], MetaQueries, :with_virtual_points)
+    |> Utils.bool_compose(opts[:with_constraints], MetaQueries, :with_constraints)
+    |> Utils.filter_compose(opts[:for_user], MetaQueries, :for_user)
+    |> Utils.filter_compose(opts[:bbox_intersects], MetaQueries, :bbox_intersects)
+    |> Utils.filter_compose(opts[:time_range_intersects], MetaQueries, :time_range_intersects)
   end
 end
