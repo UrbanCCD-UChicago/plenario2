@@ -1,102 +1,93 @@
 defmodule Plenario.Changesets.DataSetFieldChangesets do
   @moduledoc """
-  This module provides functions for creating changesets for
-  DataSetField structs.
+  This module defines functions used to create Ecto Changesets for various
+  states of the DataSetField schema.
   """
 
   import Ecto.Changeset
 
-  alias Plenario.Actions.MetaActions
+  import Plenario.Changesets.Utils, only: [validate_meta_state: 1]
+
   alias Plenario.Schemas.DataSetField
 
   @typedoc """
-  Verbose map of params for create
+  A verbose map of parameter types for :create/1
   """
   @type create_params :: %{
-          name: String.t(),
-          type: String.t(),
-          opts: String.t(),
-          meta_id: integer
-        }
+    name: String.t(),
+    type: String.t(),
+    meta_id: integer
+  }
 
-  @new_create_param_keys [:name, :type, :opts, :meta_id]
-
-  @valid_types ~w{text integer float boolean timestamptz geometry(polygon,4326)}
-
-  @doc """
-  Creates a blank changeset for creating a webform
+  @typedoc """
+  A verbose map of paramaters for :update/2
   """
-  @spec new() :: Ecto.Changeset.t()
-  def new() do
-    %DataSetField{}
-    |> cast(%{}, @new_create_param_keys)
-  end
+  @type update_params :: %{
+    name: String.t(),
+    type: String.t()
+  }
+
+  @create_param_keys [:name, :type, :meta_id]
+
+  @update_param_keys [:name, :type]
 
   @doc """
-  Creates a changeset for inserting a new DataSetField into the database
+  Generates a changeset for creating a new Field. Creating a new field is only
+  allowed when the related Meta's state is still "new". Once it's no longer
+  new, fields cannot be added.
+
+  ## Examples
+
+    empty_changeset_for_form =
+      DataSetFieldChangesets.create(%{})
+
+    result =
+      DataSetFieldChangesets.create(%{some: "stuff"})
+      |> Repo.insert()
+    case result do
+      {:ok, field} -> do_something(with: field)
+      {:error, changeset} -> do_something_else(with: changeset)
+    end
   """
   @spec create(params :: create_params) :: Ecto.Changeset.t()
   def create(params) do
     %DataSetField{}
-    |> cast(params, @new_create_param_keys)
-    |> validate_required(@new_create_param_keys)
+    |> cast(params, @create_param_keys)
+    |> validate_required(@create_param_keys)
     |> cast_assoc(:meta)
-    |> check_name()
     |> validate_type()
+    |> validate_meta_state()
   end
 
   @doc """
-  Updates an existing data set field
+  Generates a changeset for updating a DataSetField's name and/or type. Updating
+  is restricted to fields whose Meta's state is still "new". Once it's
+  no longer new, the field cannot be changed.
+
+  ## Example
+
+    result =
+      DataSetFieldChangesets.update(field, %{type: "i dunno"})
+      |> Repo.update()
+    case result do
+      {:ok, field} -> do_something(with: field)
+      {:error, changeset} -> do_something_else(with: changeset)
+    end
   """
-  @spec update(field :: DataSetField, params :: create_params) :: Ecto.Changeset.t()
-  def update(field, params \\ %{}) do
+  @spec update(field :: DataSetField, params :: update_params) :: Ecto.Changeset.t()
+  def update(field, params) do
     field
-    |> cast(params, @new_create_param_keys)
-    |> validate_required(@new_create_param_keys)
-    |> cast_assoc(:meta)
-    |> check_name()
+    |> cast(params, @update_param_keys)
+    |> validate_required(@update_param_keys)
     |> validate_type()
-    |> check_meta_state()
+    |> validate_meta_state()
   end
 
-  # Converts name values to snake case
-  # For example, if a user passes a field named "Event ID", this would return "event_id"
-  defp check_name(changeset) do
-    name = get_field(changeset, :name)
-
-    snaked_name =
-      String.split(name, ~r/\s/, trim: true)
-      |> Enum.map(&String.downcase(&1))
-      |> Enum.join("_")
-
-    changeset |> put_change(:name, snaked_name)
-  end
-
-  # Validates the given type of the field is one we support, as defined in @valid_types
-  defp validate_type(changeset) do
-    type = get_field(changeset, :type)
-
-    if Enum.member?(@valid_types, type) do
-      changeset
-    else
-      changeset |> add_error(:type, "Invalid type selection")
+  defp validate_type(%Ecto.Changeset{valid?: true, changes: %{type: type}} = changeset) do
+    case Enum.member?(DataSetField.get_type_values(), type) do
+      true -> changeset
+      false -> add_error(changeset, :type, "Not a valid type")
     end
   end
-
-  # Disallow update after the related Meta is in ready state
-  defp check_meta_state(changeset) do
-    meta =
-      get_field(changeset, :meta_id)
-      |> MetaActions.get()
-
-    if meta.state == "ready" do
-      changeset
-      |> add_error(
-        :name,
-        "Cannot alter any fields after the parent data set has been approved. If you need to update this field, please contact the administrators."
-      )
-    else
-      changeset
-    end
-  end
+  defp validate_type(changeset), do: changeset
 end
