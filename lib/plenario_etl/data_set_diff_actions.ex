@@ -57,7 +57,7 @@ defmodule PlenarioEtl.Actions.DataSetDiffActions do
     query =
       case is_nil(meta) do
         true -> from(d in DataSetDiff)
-        false -> from(d in DataSetDiff, where: d.meta_id == ^meta_id)
+        false -> from(d in DataSetDiff, where: d.meta_id == ^meta)
       end
 
     Repo.all(query)

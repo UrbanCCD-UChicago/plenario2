@@ -1,4 +1,4 @@
-defmodule Plenario.Actions.ExportJobActions do
+defmodule PlenarioExport.Actions.ExportJobActions do
   @moduledoc """
   This module provides a common API for the business logic
   underlying the various public interfaces for ExportJob.
@@ -6,20 +6,15 @@ defmodule Plenario.Actions.ExportJobActions do
 
   import Ecto.Query
 
-  import Plenario.Guards, only: [is_id: 1]
 
-  alias Plenario.Changesets.ExportJobChangesets
-  alias Plenario.Schemas.ExportJob
+  alias PlenarioExport.Changesets.ExportJobChangesets
+  alias PlenarioExport.Schemas.ExportJob
+
   alias Plenario.Repo
 
-  alias PlenarioAuth.User
+  alias Plenario.Schemas.User
 
   require Logger
-
-  @typedoc """
-  Parameter is an ID attribute
-  """
-  @type id :: String.t() | integer
 
   @typedoc """
   Returns a tuple of :ok, ExportJob or :error, Ecto.Changeset
@@ -29,28 +24,13 @@ defmodule Plenario.Actions.ExportJobActions do
   @doc """
   Creates a new instance of ExportJob
   """
-  @spec create(
-          meta :: Meta | id,
-          user :: User | id,
-          query :: String.t(),
-          include_diffs :: boolean
-        ) :: ok_job
-  def create(meta, user, query, include_diffs \\ false) do
-    meta_id =
-      case is_id(meta) do
-        true -> meta
-        false -> meta.id
-      end
-
-    user_id =
-      case is_id(user) do
-        true -> user
-        false -> user.id
-      end
-
+  @spec create(meta :: Meta | integer, user :: User | integer, query :: String.t(), include_diffs :: boolean) :: ok_job
+  def create(meta, user, query, include_diffs \\ false) when not is_integer(meta), do: create(meta.id, user, query, include_diffs)
+  def create(meta, user, query, include_diffs \\ false) when not is_integer(user), do: create(meta, user.id, query, include_diffs)
+  def create(meta, user, query, include_diffs \\ false) when is_integer(meta) and is_integer(user) do
     params = %{
-      meta_id: meta_id,
-      user_id: user_id,
+      meta_id: meta,
+      user_id: user,
       query: query,
       include_diffs: include_diffs
     }
@@ -62,16 +42,24 @@ defmodule Plenario.Actions.ExportJobActions do
   end
 
   @doc """
-  Gets a list of all ExportJobs for a given User
+  Lists all entries for ExportJobs in the database, optionally filtered
+  to only include results whose User relationship matches the `user` param.
+
+  ## Examples
+
+    all_exports = ExportJobActions.list()
+    my_exports = ExportJobActions.list(me)
   """
-  @spec list_for_user(user :: User | id) :: list(ExportJob)
-  def list_for_user(user) do
-    user_id =
-      case is_id(user) do
-        true -> user
-        false -> user.id
+  @spec list(user :: User | integer | nil) :: list(ExportJob)
+  def list(), do: list(nil)
+  def list(user) when not is_integer(user) and not is_nil(user), do: list(user.id)
+  def list(user) when is_integer(user) or is_nil(user) do
+    query =
+      case is_nil(user) do
+        true -> from(j in ExportJob)
+        false -> from(j in ExportJob, where: j.user_id == ^user)
       end
 
-    Repo.all(from(j in ExportJob, where: j.user_id == ^user_id))
+    Repo.all(query)
   end
 end

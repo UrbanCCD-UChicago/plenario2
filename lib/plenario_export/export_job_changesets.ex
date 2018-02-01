@@ -1,4 +1,4 @@
-defmodule Plenario.Changesets.ExportJobChangesets do
+defmodule PlenarioExport.Changesets.ExportJobChangesets do
   @moduledoc """
   This module provides functions for creating changesets for
   ExportJob structs.
@@ -7,7 +7,8 @@ defmodule Plenario.Changesets.ExportJobChangesets do
   import Ecto.Changeset
 
   alias Plenario.Actions.MetaActions
-  alias Plenario.Schemas.ExportJob
+
+  alias PlenarioExport.Schemas.ExportJob
 
   @typedoc """
   Verbose map of params for create
