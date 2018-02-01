@@ -4,8 +4,7 @@ defmodule PlenarioAuth.Abilities do
   want the user who owns a meta to be able to edit it.
   """
 
-  alias PlenarioAuth.User
-  alias Plenario.Schemas.Meta
+  alias Plenario.Schemas.{Meta, User}
 
   defimpl Canada.Can, for: User do
     @doc """
