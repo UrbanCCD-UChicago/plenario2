@@ -33,7 +33,7 @@ defmodule PlenarioWeb.UserController do
 
   def get_update_name(conn, _) do
     user = Guardian.Plug.current_resource(conn)
-    changeset = UserChangesets.update_name(user, %{})
+    changeset = UserActions.update(user)
     action = user_path(conn, :do_update_name)
 
     render(conn, "update_name.html", changeset: changeset, action: action)
@@ -42,7 +42,7 @@ defmodule PlenarioWeb.UserController do
   def do_update_name(conn, %{"user" => %{"name" => name}}) do
     user = Guardian.Plug.current_resource(conn)
 
-    UserActions.update_name(user, name)
+    UserActions.update(user, name: name)
     |> update_name_reply(conn)
   end
 
@@ -63,7 +63,7 @@ defmodule PlenarioWeb.UserController do
 
   def get_update_email(conn, _) do
     user = Guardian.Plug.current_resource(conn)
-    changeset = UserChangesets.update_email_address(user, %{})
+    changeset = UserActions.update(user)
     action = user_path(conn, :do_update_email)
 
     render(conn, "update_email.html", changeset: changeset, action: action)
@@ -72,7 +72,7 @@ defmodule PlenarioWeb.UserController do
   def do_update_email(conn, %{"user" => %{"email_address" => email}}) do
     user = Guardian.Plug.current_resource(conn)
 
-    UserActions.update_email_address(user, email)
+    UserActions.update(user, email: email)
     |> update_email_reply(conn)
   end
 
@@ -93,16 +93,16 @@ defmodule PlenarioWeb.UserController do
 
   def get_update_org_info(conn, _) do
     user = Guardian.Plug.current_resource(conn)
-    changeset = UserChangesets.update_org_info(user, %{})
+    changeset = UserActions.update(user)
     action = user_path(conn, :do_update_org_info)
 
     render(conn, "update_org_info.html", changeset: changeset, action: action)
   end
 
-  def do_update_org_info(conn, %{"user" => %{"organization" => org, "org_role" => role}}) do
+  def do_update_org_info(conn, %{"user" => %{"bio" => bio}}) do
     user = Guardian.Plug.current_resource(conn)
 
-    UserActions.update_org_info(user, organization: org, org_role: role)
+    UserActions.update(user, bio: bio)
     |> update_org_info_reply(conn)
   end
 
@@ -132,7 +132,7 @@ defmodule PlenarioWeb.UserController do
   def do_update_password(conn, %{"user" => %{"plaintext_password" => password}}) do
     user = Guardian.Plug.current_resource(conn)
 
-    UserActions.update_password(user, password)
+    UserActions.change_password(user, password)
     |> update_password_reply(conn)
   end
 

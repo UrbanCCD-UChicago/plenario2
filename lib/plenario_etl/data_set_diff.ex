@@ -20,7 +20,7 @@ defmodule PlenarioEtl.Schemas.DataSetDiff do
     field(:constraint_values, :map)
 
     belongs_to(:meta, Plenario.Schemas.Meta)
-    belongs_to(:data_set_constraint, Plenario.Schemas.DataSetConstraint)
+    belongs_to(:data_set_constraint, Plenario.Schemas.UniqueConstraint)
     belongs_to(:etl_job, PlenarioEtl.Schemas.EtlJob)
   end
 end

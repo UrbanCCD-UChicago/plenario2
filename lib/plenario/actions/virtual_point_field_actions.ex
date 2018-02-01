@@ -84,7 +84,7 @@ defmodule Plenario.Actions.VirtualPointFieldActions do
       VirtualPointFieldActions.update(field, lat_field_id: some_lat_field.id)
   """
   @spec update(field :: VirtualDateField, opts :: Keyword.t()) :: ok_field
-  def update(field, opts) do
+  def update(field, opts \\ []) do
     params = Enum.into(opts, %{})
     VirtualPointFieldChangesets.update(field, params)
     |> Repo.update()

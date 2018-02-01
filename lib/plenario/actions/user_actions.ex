@@ -58,7 +58,7 @@ defmodule Plenario.Actions.UserActions do
     {:ok, _} = UserActions.update(user, bio: "just some person")
   """
   @spec update(user :: User, opts :: Keyword.t()) :: ok_user
-  def update(user, opts) do
+  def update(user, opts \\ []) do
     params = Enum.into(opts, %{})
     UserChangesets.update(user, params)
     |> Repo.update()

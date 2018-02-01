@@ -4,7 +4,6 @@ defmodule PlenarioWeb.MetaController do
   require Logger
 
   alias Plenario.Actions.MetaActions
-  alias Plenario.Changesets.MetaChangesets
   alias Plenario.Schemas.Meta
   alias PlenarioWeb.ErrorView
 
@@ -76,7 +75,7 @@ defmodule PlenarioWeb.MetaController do
   end
 
   def get_create(conn, _params) do
-    changeset = MetaChangesets.new()
+    changeset = MetaActions.new()
     action = meta_path(conn, :do_create)
 
     render(
@@ -161,7 +160,7 @@ defmodule PlenarioWeb.MetaController do
 
   def get_update_name(conn, %{"slug" => slug}) do
     meta = MetaActions.get(slug, with_user: true)
-    changeset = MetaChangesets.update_name(meta, %{})
+    changeset = MetaActions.update(meta)
     action = meta_path(conn, :do_update_name, slug)
 
     render(conn, "update_name.html", changeset: changeset, action: action)
@@ -171,7 +170,7 @@ defmodule PlenarioWeb.MetaController do
     meta = MetaActions.get(slug, with_user: true)
     Logger.info("Updating name: #{name}")
 
-    MetaActions.update_name(meta, name)
+    MetaActions.update(meta, name: name)
     |> update_name_reply(conn, meta)
   end
 
@@ -192,7 +191,7 @@ defmodule PlenarioWeb.MetaController do
 
   def get_update_description(conn, %{"slug" => slug}) do
     meta = MetaActions.get(slug, with_user: true)
-    changeset = MetaChangesets.update_description_info(meta, %{})
+    changeset = MetaActions.update(meta)
     action = meta_path(conn, :do_update_description, slug)
 
     render(conn, "update_description.html", changeset: changeset, action: action, meta: meta)
@@ -205,7 +204,7 @@ defmodule PlenarioWeb.MetaController do
     meta = MetaActions.get(slug, with_user: true)
     Logger.info("Updating description: #{description}, attribution: #{attribution}")
 
-    MetaActions.update_description_info(meta, description: description, attribution: attribution)
+    MetaActions.update(meta, description: description, attribution: attribution)
     |> update_description_reply(conn, meta)
   end
 
@@ -226,7 +225,7 @@ defmodule PlenarioWeb.MetaController do
 
   def get_update_source_info(conn, %{"slug" => slug}) do
     meta = MetaActions.get(slug, with_user: true)
-    changeset = MetaChangesets.update_source_info(meta, %{})
+    changeset = MetaActions.update(meta)
     action = meta_path(conn, :do_update_source_info, slug)
 
     render(conn, "update_source_info.html", changeset: changeset, action: action)
@@ -239,7 +238,7 @@ defmodule PlenarioWeb.MetaController do
     meta = MetaActions.get(slug, with_user: true)
     Logger.info("Updating source url: #{source_url}, source_type: #{source_type}")
 
-    MetaActions.update_source_info(meta, source_url: source_url, source_type: source_type)
+    MetaActions.update(meta, source_url: source_url, source_type: source_type)
     |> update_source_info_reply(conn, meta)
   end
 
@@ -260,7 +259,7 @@ defmodule PlenarioWeb.MetaController do
 
   def get_update_refresh_info(conn, %{"slug" => slug}) do
     meta = MetaActions.get(slug, with_user: true)
-    changeset = MetaChangesets.update_refresh_info(meta, %{})
+    changeset = MetaActions.update(meta)
     action = meta_path(conn, :do_update_refresh_info, slug)
     rr_choices = Meta.get_refresh_rate_choices()
 
@@ -290,7 +289,7 @@ defmodule PlenarioWeb.MetaController do
       }, refresh end: #{refresh_ends_on}"
     )
 
-    MetaActions.update_refresh_info(
+    MetaActions.update(
       meta,
       refresh_rate: refresh_rate,
       refresh_interval: refresh_interval,

@@ -24,7 +24,7 @@ defmodule PlenarioMailer.Actions.AdminUserNoteActions do
   Gets a single AdminUserNote by ID, optionally preloading relations.
   See the notes for AdminUserNoteQueries.handle_opts
   """
-  @spec get(id :: id, opts :: Keyword.t()) :: AdminUserNote | nil
+  @spec get(id :: integer, opts :: Keyword.t()) :: AdminUserNote | nil
   def get(id, opts \\ []) do
     Q.from_id(id)
     |> Q.handle_opts(opts)
@@ -69,7 +69,7 @@ defmodule PlenarioMailer.Actions.AdminUserNoteActions do
 
     if status == :ok and should_email do
       Emails.compose_admin_user_note(note)
-      |> Mailer.deliver_now()
+      |> PlenarioMailer.deliver_now()
     end
 
     {status, note}

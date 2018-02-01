@@ -1,21 +1,30 @@
 defmodule PlenarioWeb.DataSetFieldController do
+  use PlenarioWeb, :controller
+
   require Logger
 
   alias Plenario.Actions.{DataSetFieldActions, MetaActions}
   alias Plenario.Changesets.DataSetFieldChangesets
   alias Plenario.Repo
   alias Plenario.Schemas.DataSetField
-  use PlenarioWeb, :controller
+
+  plug(
+    :load_and_authorize_resource,
+    model: DataSetField,
+    id_name: "slug",
+    id_field: "slug",
+    except: [:detail, :list, :get_create, :do_create]
+  )
 
   def index(conn, %{"slug" => slug}) do
     meta = MetaActions.get(slug)
-    fields = DataSetFieldActions.list_for_meta(meta)
+    fields = DataSetFieldActions.list(for_meta: meta)
 
     render(conn, "index.html", slug: slug, meta: meta, fields: fields)
   end
 
   def new(conn, %{"slug" => slug}) do
-    changeset = DataSetFieldChangesets.new()
+    changeset = DataSetFieldActions.new()
 
     render(
       conn,
@@ -44,7 +53,7 @@ defmodule PlenarioWeb.DataSetFieldController do
 
   def edit(conn, %{"slug" => slug, "id" => id}) do
     field = Repo.get!(DataSetField, id)
-    changeset = DataSetFieldChangesets.update(field)
+    changeset = DataSetFieldActions.update(field)
 
     meta = MetaActions.get(field.meta_id)
 

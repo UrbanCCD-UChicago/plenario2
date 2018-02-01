@@ -23,7 +23,7 @@ defmodule PlenarioMailer.Queries.AdminUserNoteQueries do
   @doc """
   Creates a query for a single AdminUserNote entity in the database filtered by its ID
   """
-  @spec from_id(id :: id) :: Ecto.Queryset.t()
+  @spec from_id(id :: integer) :: Ecto.Queryset.t()
   def from_id(id), do: from(n in AdminUserNote, where: n.id == ^id)
 
   @doc """
@@ -96,9 +96,9 @@ defmodule PlenarioMailer.Queries.AdminUserNoteQueries do
     opts = Keyword.merge(defaults, opts)
 
     query
-    |> cond_compose(opts[:unread], AdminUserNoteQueries, :unread)
-    |> cond_compose(opts[:acknowledged], AdminUserNoteQueries, :acknowledged)
-    |> cond_compose(opts[:oldest_first], AdminUserNoteQueries, :oldest_first)
+    |> bool_compose(opts[:unread], AdminUserNoteQueries, :unread)
+    |> bool_compose(opts[:acknowledged], AdminUserNoteQueries, :acknowledged)
+    |> bool_compose(opts[:oldest_first], AdminUserNoteQueries, :oldest_first)
     |> filter_compose(opts[:for_user], AdminUserNoteQueries, :for_user)
   end
 end

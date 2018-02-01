@@ -8,7 +8,7 @@ defmodule PlenarioWeb.AuthController do
   alias PlenarioAuth.Guardian
 
   def get_login(conn, _params) do
-    changeset = UserChangesets.create(%User{}, %{})
+    changeset = UserActions.new()
     user = Guardian.Plug.current_resource(conn)
     action = auth_path(conn, :do_login)
 
@@ -20,7 +20,7 @@ defmodule PlenarioWeb.AuthController do
   end
 
   def do_login(conn, %{"user" => %{"email_address" => email, "plaintext_password" => password}}) do
-    UserActions.authenticate(email, password)
+    PlenarioAuth.authenticate(email, password)
     |> login_reply(conn)
   end
 
@@ -44,7 +44,7 @@ defmodule PlenarioWeb.AuthController do
   end
 
   def get_register(conn, _params) do
-    changeset = UserChangesets.create(%User{}, %{})
+    changeset = UserActions.new()
     action = auth_path(conn, :do_register)
 
     render(conn, "register.html", changeset: changeset, action: action)
@@ -54,12 +54,10 @@ defmodule PlenarioWeb.AuthController do
         "user" => %{
           "email_address" => email,
           "name" => name,
-          "plaintext_password" => password,
-          "organization" => org,
-          "org_role" => role
+          "plaintext_password" => password
         }
       }) do
-    UserActions.create(name, password, email, org, role)
+    UserActions.create(name, email, password)
     |> register_reply(conn)
   end
 

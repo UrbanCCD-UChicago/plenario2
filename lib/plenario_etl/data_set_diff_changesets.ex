@@ -6,7 +6,7 @@ defmodule PlenarioEtl.Changesets.DataSetDiffChangesets do
 
   import Ecto.Changeset
 
-  alias Plenario.Schemas.DataSetDiff
+  alias PlenarioEtl.Schemas.DataSetDiff
 
   @typedoc """
   Verbose map of params for create

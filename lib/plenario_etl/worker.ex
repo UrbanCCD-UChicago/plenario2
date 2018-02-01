@@ -6,7 +6,7 @@ defmodule PlenarioEtl.Worker do
   with `:sys.get_state/1`.
   """
 
-  alias Plenario.Actions.MetaActions
+  alias Plenario.Actions.{MetaActions, UniqueConstraintActions}
 
   alias PlenarioEtl.Actions.{
     DataSetDiffActions,
@@ -88,7 +88,7 @@ defmodule PlenarioEtl.Worker do
 
     path =
       download!(
-        MetaActions.get_data_set_table_name(meta),
+        meta.table_name,
         meta.source_url,
         meta.source_type
       )
@@ -116,7 +116,8 @@ defmodule PlenarioEtl.Worker do
     Logger.info("[#{inspect(self())}] [load_chunk] Running upsert query")
     inserted_rows = upsert!(meta, rows)
 
-    constraints = MetaActions.get_first_constraint_field_names(meta)
+    cons = List.first(UniqueConstraintActions.list(meta))
+    constraints = UniqueConstraintActions.get_field_names(cons)
     constraint_atoms = for c <- constraints, do: String.to_atom(c)
     pairs = PlenarioEtl.Rows.pair_rows(existing_rows, inserted_rows, constraint_atoms)
 
@@ -263,9 +264,10 @@ defmodule PlenarioEtl.Worker do
   end
 
   defp template_query!(template, meta, rows) do
-    table = MetaActions.get_data_set_table_name(meta)
+    table = meta.table_name
     columns = MetaActions.get_column_names(meta) |> Enum.sort()
-    constraints = MetaActions.get_first_constraint_field_names(meta)
+    cons = List.first(UniqueConstraintActions.list(meta))
+    constraints = UniqueConstraintActions.get_field_names(cons)
 
     sql =
       EEx.eval_file(
@@ -291,8 +293,9 @@ defmodule PlenarioEtl.Worker do
   more readable.
   """
   def create_diffs(meta, job, original, updated) do
-    constraint_id = MetaActions.get_first_constraint(meta).id()
-    constraint_names = MetaActions.get_first_constraint_field_names(meta)
+    cons = List.first(UniqueConstraintActions.list(meta))
+    constraint_id = cons.id
+    constraint_names = UniqueConstraintActions.get_field_names(cons)
 
     constraint_map =
       Enum.map(constraint_names, fn constraint_name ->

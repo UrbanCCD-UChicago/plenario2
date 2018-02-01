@@ -1,12 +1,11 @@
 defmodule PlenarioWeb.DataSetConstraintController do
   use PlenarioWeb, :controller
 
-  alias Plenario.Actions.{MetaActions, DataSetConstraintActions}
-  alias Plenario.Changesets.DataSetConstraintChangesets
+  alias Plenario.Actions.{MetaActions, UniqueConstraintActions}
 
   def get_create(conn, %{"slug" => meta_slug}) do
     meta = MetaActions.get(meta_slug, with_fields: true)
-    changeset = DataSetConstraintChangesets.new()
+    changeset = UniqueConstraintActions.new()
     action = data_set_constraint_path(conn, :do_create, meta_slug)
 
     field_opts =
@@ -30,7 +29,7 @@ defmodule PlenarioWeb.DataSetConstraintController do
   end
 
   def do_create(conn, %{"slug" => meta_slug, "data_set_constraint" => params}) do
-    DataSetConstraintActions.create(params["meta_id"], params["field_names"])
+    UniqueConstraintActions.create(params["meta_id"], params["field_names"])
     |> create_reply(conn, meta_slug)
   end
 
@@ -66,9 +65,9 @@ defmodule PlenarioWeb.DataSetConstraintController do
   end
 
   def edit(conn, %{"slug" => meta_slug, "id" => cons_id}) do
-    cons = DataSetConstraintActions.get(cons_id)
+    cons = UniqueConstraintActions.get(cons_id)
     meta = MetaActions.get(meta_slug, with_fields: true)
-    changeset = DataSetConstraintChangesets.update(cons)
+    changeset = UniqueConstraintActions.update(cons)
     action = data_set_constraint_path(conn, :update, meta_slug, cons_id)
 
     field_opts =
@@ -92,9 +91,9 @@ defmodule PlenarioWeb.DataSetConstraintController do
   end
 
   def update(conn, %{"slug" => meta_slug, "id" => cons_id, "data_set_constraint" => cons_params}) do
-    cons = DataSetConstraintActions.get(cons_id)
+    cons = UniqueConstraintActions.get(cons_id)
     meta = MetaActions.get(meta_slug, with_fields: true)
-    changeset = DataSetConstraintActions.update(cons, cons_params)
+    changeset = UniqueConstraintActions.update(cons, cons_params)
 
     disabled =
       case meta.state == "ready" do

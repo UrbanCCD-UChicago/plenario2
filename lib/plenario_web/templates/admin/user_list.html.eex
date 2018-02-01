@@ -45,7 +45,7 @@ span.strike {text-decoration:line-through}
   <div class="col-md-6 h"><%= u.name %></div>
   <div class="col-md-2"><%= u.organization || "-" %></div>
   <div class="col-md-2"><%= u.org_role || "-" %></div>
-  <div class="col-md-2"><%= PlenarioAuth.User.get_status_name(u) %></div>
+  <div class="col-md-2"><%= Plenario.Schemas.User.get_status_name(u) %></div>
 </div>
 
 <div class="row">

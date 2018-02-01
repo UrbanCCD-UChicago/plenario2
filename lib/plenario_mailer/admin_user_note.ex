@@ -19,10 +19,10 @@ defmodule PlenarioMailer.Schemas.AdminUserNote do
 
     timestamps()
 
-    belongs_to(:admin, PlenarioAuth.User, foreign_key: :admin_id)
-    belongs_to(:user, PlenarioAuth.User, foreign_key: :user_id)
+    belongs_to(:admin, Plenario.Schemas.User, foreign_key: :admin_id)
+    belongs_to(:user, Plenario.Schemas.User, foreign_key: :user_id)
     belongs_to(:meta, Plenario.Schemas.Meta)
-    belongs_to(:etl_job, Plenario.Schemas.EtlJob)
-    belongs_to(:export_job, Plenario.Schemas.ExportJob)
+    belongs_to(:etl_job, PlenarioEtl.Schemas.EtlJob)
+    belongs_to(:export_job, PlenarioExport.Schemas.ExportJob)
   end
 end

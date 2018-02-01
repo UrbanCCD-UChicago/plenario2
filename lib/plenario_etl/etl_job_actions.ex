@@ -4,8 +4,6 @@ defmodule PlenarioEtl.Actions.EtlJobActions do
   underlying the various public interfaces for EtlJob.
   """
 
-  import Ecto.Changeset
-
   import Ecto.Query
 
 
@@ -57,7 +55,7 @@ defmodule PlenarioEtl.Actions.EtlJobActions do
   """
   @spec list() :: list(EtlJob)
   def list(), do: list(nil)
-  def list(meta) when not is_integer(meta.id) and not is_nil(meta), do: list(meta.id)
+  def list(meta) when not is_integer(meta) and not is_nil(meta), do: list(meta.id)
   def list(meta) when is_integer(meta) or is_nil(meta) do
     query =
       case is_nil(meta) do

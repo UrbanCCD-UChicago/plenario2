@@ -17,10 +17,10 @@ defmodule PlenarioMailer.Emails do
   """
   @spec compose_admin_user_note(note :: AdminUserNote) :: Bamboo.Email.t()
   def compose_admin_user_note(note) do
-    user = UserActions.get_from_id(note.user_id)
+    user = UserActions.get(note.user_id)
 
     base()
-    |> to(user.email_address)
-    |> text_body(note.note)
+    |> to(user.email)
+    |> text_body(note.message)
   end
 end

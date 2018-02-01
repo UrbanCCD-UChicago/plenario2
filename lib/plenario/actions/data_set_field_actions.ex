@@ -64,7 +64,7 @@ defmodule Plenario.Actions.DataSetFieldActions do
     {:ok, _} = DataSetFieldActions.update(field, type: "text")
   """
   @spec update(field :: DataSetField, opts :: Keyword.t()) :: list(DataSetField)
-  def update(field, opts) do
+  def update(field, opts \\ []) do
     params = Enum.into(opts, %{})
     DataSetFieldChangesets.update(field, params)
     |> Repo.update()

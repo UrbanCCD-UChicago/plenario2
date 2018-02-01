@@ -4,11 +4,15 @@ defmodule Plenario.Actions.UniqueConstraintActions do
   structs -- creating, updating, listing, getting, ...
   """
 
+  import Ecto.Query
+
   alias Plenario.Repo
 
   alias Plenario.Changesets.UniqueConstraintChangesets
 
   alias Plenario.Schemas.{DataSetField, UniqueConstraint}
+
+  alias Plenario.Actions.DataSetFieldActions
 
   @typedoc """
   Either a tuple of {:ok, constraint} or {:error, changeset}
@@ -60,11 +64,28 @@ defmodule Plenario.Actions.UniqueConstraintActions do
       UniqueConstraintActions.update([some_id_field.id, some_other_field.id])
   """
   @spec update(constraint :: UniqueConstraint, field_ids :: list(DataSetField | integer)) :: ok_constraint
-  def update(constraint, field_ids) do
+  def update(constraint, field_ids \\ []) do
     field_ids = extract_field_ids(field_ids)
     params = %{field_ids: field_ids}
     UniqueConstraintChangesets.update(constraint, params)
     |> Repo.update()
+  end
+
+  @doc """
+  Gets a list of UniqueConstraints, optionally filtered by their relationship
+  to Meta given the `meta` param.
+  """
+  @spec list(meta :: Meta | integer | nil) :: list(UniqueConstraint)
+  def list(), do: list(nil)
+  def list(meta) when not is_integer(meta) and not is_nil(meta), do: list(meta.id)
+  def list(meta) when is_integer(meta) or is_nil(meta) do
+    query =
+      case is_nil(meta) do
+        true -> from(u in UniqueConstraint)
+        false -> from(u in UniqueConstraint, where: u.meta_id == ^meta)
+      end
+
+    Repo.all(query)
   end
 
   @doc """
@@ -76,6 +97,16 @@ defmodule Plenario.Actions.UniqueConstraintActions do
   """
   @spec get(id :: integer) :: UniqueConstraint | nil
   def get(id), do: Repo.get_by(UniqueConstraint, id: id)
+
+  @doc """
+  Gets a list field names for the fields this constraint is built with.
+  """
+  def get_field_names(constraint) do
+    fields = DataSetFieldActions.list(by_ids: constraint.field_ids)
+    names = for f <- fields do f.name end
+
+    names
+  end
 
   defp extract_field_ids(field_list) do
     field_ids =

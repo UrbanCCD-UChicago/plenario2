@@ -1,4 +1,4 @@
-defmodule Plenario.Changesets.EtlJobChangesets do
+defmodule PlenarioEtl.Changesets.EtlJobChangesets do
   @moduledoc """
   This module provides functions for creating changesets for
   EtlJob structs.

@@ -9,7 +9,7 @@ defmodule PlenarioEtl.Actions.DataSetDiffActions do
   alias PlenarioEtl.Changesets.DataSetDiffChangesets
   alias PlenarioEtl.Schemas.DataSetDiff
 
-  alias Plenario.Schemas.{Meta, DataSetConstraint, EtlJob}
+  alias Plenario.Schemas.Meta
   alias Plenario.Repo
 
   require Logger

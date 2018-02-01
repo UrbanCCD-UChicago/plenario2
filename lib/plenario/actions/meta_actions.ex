@@ -72,7 +72,7 @@ defmodule Plenario.Actions.MetaActions do
     {:ok, _} = MetaActions.update(meta, source_url: "https://exmaple.com/new", source_type: "json")
   """
   @spec update(meta :: Meta, opts :: Keyword.t()) :: ok_meta
-  def update(meta, opts) do
+  def update(meta, opts \\ []) do
     params = Enum.into(opts, %{})
     MetaChangesets.update(meta, params)
     |> Repo.update()
@@ -332,5 +332,19 @@ defmodule Plenario.Actions.MetaActions do
     MetaQueries.get(identifier)
     |> MetaQueries.handle_opts(opts)
     |> Repo.one()
+  end
+
+  @doc """
+  Gets a list of the field names for a given meta.
+
+  ## Example
+
+    col_names = MetaActions.get_column_names(meta)
+  """
+  def get_column_names(meta) do
+    fields = DataSetFieldActions.get(for_meta: meta)
+    field_names = for f <- fields do f.name end
+
+    field_names
   end
 end

@@ -21,4 +21,12 @@ defmodule Plenario.Schemas.User do
 
     has_many :metas, Plenario.Schemas.Meta
   end
+
+  def get_status_name(user) do
+    cond do
+      user.is_active == false -> "Archived User"
+      user.is_admin -> "Admin"
+      user.is_active -> "Regular User"
+    end
+  end
 end

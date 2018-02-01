@@ -1,9 +1,13 @@
 defmodule PlenarioWeb.AdminController do
   use PlenarioWeb, :controller
 
+  import Plenario.Queries.Utils
+
   alias Plenario.Actions.{MetaActions, UserActions}
   alias Plenario.Queries.UserQueries, as: UserQ
   alias Plenario.Repo
+
+  alias PlenarioMailer.Actions.AdminUserNoteActions
 
   require Logger
 
@@ -17,17 +21,17 @@ defmodule PlenarioWeb.AdminController do
   def user_index(conn, params) do
     users =
       UserQ.list()
-      |> cond_compose(Map.get(params, "active", false), UserQ, :active)
-      |> cond_compose(Map.get(params, "archived", false), UserQ, :archived)
-      |> cond_compose(Map.get(params, "trusted", false), UserQ, :trusted)
-      |> cond_compose(Map.get(params, "admin", false), UserQ, :admin)
+      |> bool_compose(Map.get(params, "active", false), UserQ, :active)
+      |> bool_compose(Map.get(params, "archived", false), UserQ, :archived)
+      |> bool_compose(Map.get(params, "trusted", false), UserQ, :trusted)
+      |> bool_compose(Map.get(params, "admin", false), UserQ, :admin)
       |> Repo.all()
 
     render(conn, "user_list.html", users: users)
   end
 
   def archive_user(conn, %{"user_id" => user_id}) do
-    UserActions.get_from_id(user_id)
+    UserActions.get(user_id)
     |> UserActions.archive()
 
     Logger.info("Archived user #{user_id}")
@@ -38,7 +42,7 @@ defmodule PlenarioWeb.AdminController do
   end
 
   def activate_user(conn, %{"user_id" => user_id}) do
-    UserActions.get_from_id(user_id)
+    UserActions.get(user_id)
     |> UserActions.activate()
 
     Logger.info("Activated user #{user_id}")
@@ -48,30 +52,8 @@ defmodule PlenarioWeb.AdminController do
     |> redirect(to: admin_path(conn, :user_index))
   end
 
-  def trust_user(conn, %{"user_id" => user_id}) do
-    UserActions.get_from_id(user_id)
-    |> UserActions.trust()
-
-    Logger.info("Trusted user #{user_id}")
-
-    conn
-    |> put_flash(:success, "Trusted user")
-    |> redirect(to: admin_path(conn, :user_index))
-  end
-
-  def untrust_user(conn, %{"user_id" => user_id}) do
-    UserActions.get_from_id(user_id)
-    |> UserActions.untrust()
-
-    Logger.info("Untrusted user #{user_id}")
-
-    conn
-    |> put_flash(:success, "Untrusted user")
-    |> redirect(to: admin_path(conn, :user_index))
-  end
-
   def promote_to_admin(conn, %{"user_id" => user_id}) do
-    UserActions.get_from_id(user_id)
+    UserActions.get(user_id)
     |> UserActions.promote_to_admin()
 
     Logger.info("User #{user_id} promoted to admin")
@@ -82,8 +64,8 @@ defmodule PlenarioWeb.AdminController do
   end
 
   def strip_admin_privs(conn, %{"user_id" => user_id}) do
-    UserActions.get_from_id(user_id)
-    |> UserActions.strip_admin()
+    UserActions.get(user_id)
+    |> UserActions.strip_admin_privs()
 
     Logger.info("User #{user_id} stripped of Admin")
 
@@ -129,9 +111,7 @@ defmodule PlenarioWeb.AdminController do
 
   def approve_meta(conn, %{"id" => meta_id}) do
     meta = MetaActions.get(meta_id, with_user: true)
-    admin = Guardian.Plug.current_resource(conn)
-
-    {:ok, _} = MetaActions.approve(meta, admin)
+    {:ok, _} = MetaActions.approve(meta)
 
     conn
     |> put_flash(:success, "'#{meta.name}' marked as approved")
@@ -142,7 +122,8 @@ defmodule PlenarioWeb.AdminController do
     meta = MetaActions.get(meta_id, with_user: true)
     admin = Guardian.Plug.current_resource(conn)
 
-    {:ok, _} = MetaActions.disapprove(meta, admin, message)
+    {:ok, _} = MetaActions.disapprove(meta)
+    {:ok, _} = AdminUserNoteActions.create_for_meta(message, admin, meta.user, false)
 
     conn
     |> put_flash(:success, "'#{meta.name}' marked as disapproved")

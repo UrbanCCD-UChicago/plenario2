@@ -39,11 +39,7 @@ defmodule PlenarioExport.Changesets.ExportJobChangesets do
 
   # Creates a path name for dumping the table contents to S3
   defp set_export_path(changeset) do
-    table_name =
-      get_field(changeset, :meta_id)
-      |> MetaActions.get()
-      |> MetaActions.get_data_set_table_name()
-
+    table_name = MetaActions.get(get_field(changeset, :meta_id)).table_name
     bucket = Application.get_env(:plenario, :s3_export_bucket)
     now = DateTime.utc_now() |> DateTime.to_iso8601()
     file_name = "#{bucket}/#{table_name}.#{now}.csv"
@@ -54,11 +50,7 @@ defmodule PlenarioExport.Changesets.ExportJobChangesets do
   # Creates a path name for dumping diffs to S3
   defp set_diffs_path(changeset) do
     if get_field(changeset, :include_diffs) == true do
-      table_name =
-        get_field(changeset, :meta_id)
-        |> MetaActions.get()
-        |> MetaActions.get_data_set_table_name()
-
+      table_name = MetaActions.get(get_field(changeset, :meta_id)).table_name
       bucket = Application.get_env(:plenario, :s3_export_bucket)
       now = DateTime.utc_now() |> DateTime.to_iso8601()
       file_name = "#{bucket}/#{table_name}_diffs.#{now}.csv"

@@ -77,7 +77,7 @@ defmodule Plenario.Actions.VirtualDateFieldActions do
       VirtualDateFieldActions.update(field, day_field_id: some_day_field.id)
   """
   @spec update(field :: VirtualDateField, opts :: Keyword.t()) :: ok_field
-  def update(field, opts) do
+  def update(field, opts \\ []) do
     params = Enum.into(opts, %{})
     VirtualDateFieldChangesets.update(field, params)
     |> Repo.update()

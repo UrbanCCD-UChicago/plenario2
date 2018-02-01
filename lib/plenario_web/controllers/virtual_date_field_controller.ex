@@ -6,7 +6,7 @@ defmodule PlenarioWeb.VirtualDateFieldController do
 
   def get_create(conn, %{"slug" => meta_slug}) do
     meta = MetaActions.get(meta_slug, with_fields: true)
-    changeset = VirtualDateFieldChangesets.new()
+    changeset = VirtualDateFieldActions.new()
     action = virtual_date_field_path(conn, :do_create, meta_slug)
 
     integer_fields = Enum.filter(meta.data_set_fields, fn f -> f.type == "integer" end)
@@ -19,11 +19,11 @@ defmodule PlenarioWeb.VirtualDateFieldController do
     VirtualDateFieldActions.create(
       params["meta_id"],
       params["year_field"],
-      params["month_field"],
-      params["day_field"],
-      params["hour_field"],
-      params["minute_field"],
-      params["second_field"]
+      month_field_id: params["month_field"],
+      day_field_id: params["day_field"],
+      hour_field_id: params["hour_field"],
+      minute_field_id: params["minute_field"],
+      second_field_id: params["second_field"]
     )
     |> create_reply(conn, meta_slug)
   end
