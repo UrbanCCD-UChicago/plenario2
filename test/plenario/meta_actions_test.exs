@@ -7,17 +7,15 @@ defmodule Plenario.Testing.MetaActionsTest do
     DataSetActions,
     DataSetFieldActions,
     MetaActions,
-    UserActions,
     VirtualDateFieldActions,
     VirtualPointFieldActions,
     UniqueConstraintActions
   }
-  
+
   test "new" do
     changeset = MetaActions.new()
 
     assert changeset.action == nil
-    refute changeset.valid?
   end
 
   describe "create" do
@@ -123,29 +121,9 @@ defmodule Plenario.Testing.MetaActionsTest do
     end
   end
 
-  describe "update_user" do
-    test "with user struct", %{meta: meta} do
-      {:ok, user} = UserActions.create("new user", "new-user@example.com", "password")
-
-      {:ok, _} = MetaActions.update_user(meta, user)
-      meta = MetaActions.get(meta.id)
-
-      assert meta.user_id == user.id
-    end
-
-    test "with user id", %{meta: meta} do
-      {:ok, user} = UserActions.create("new user", "new-user@example.com", "password")
-
-      {:ok, _} = MetaActions.update_user(meta, user.id)
-      meta = MetaActions.get(meta.id)
-
-      assert meta.user_id == user.id
-    end
-  end
-
   test "update_latest_import", %{meta: meta} do
     dt = DateTime.utc_now()
-    {:ok, _} = MetaActions.update_latest_import(meta, dt)
+    {:ok, _} = MetaActions.update(meta, latest_import: dt)
 
     meta = MetaActions.get(meta.id)
     assert meta.latest_import == dt
@@ -333,9 +311,9 @@ defmodule Plenario.Testing.MetaActionsTest do
     """
     {:ok, _} = Ecto.Adapters.SQL.query(Repo, insert)
 
-    {:ok, range} = MetaActions.compute_time_range!(meta)
-    assert range.upper == {{2019, 1, 1}, {0, 0, 0, 0}}
-    assert range.lower == {{2016, 1, 1}, {0, 0, 0, 0}}
+    {lower, upper} = MetaActions.compute_time_range!(meta)
+    assert {:ok, upper, 0} == DateTime.from_iso8601("2019-01-01T00:00:00Z")
+    assert {:ok, lower, 0} == DateTime.from_iso8601("2016-01-01T00:00:00Z")
   end
 
   test "compute_bbox!", %{meta: meta} do

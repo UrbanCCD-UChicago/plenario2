@@ -123,7 +123,7 @@ defmodule PlenarioWeb.UserController do
 
   def get_update_password(conn, _) do
     user = Guardian.Plug.current_resource(conn)
-    changeset = UserChangesets.update_password(user, %{})
+    changeset = UserChangesets.update(user, %{})
     action = user_path(conn, :do_update_password)
 
     render(conn, "update_password.html", changeset: changeset, action: action)

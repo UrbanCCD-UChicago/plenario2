@@ -116,7 +116,7 @@ defmodule PlenarioEtl.Worker do
     Logger.info("[#{inspect(self())}] [load_chunk] Running upsert query")
     inserted_rows = upsert!(meta, rows)
 
-    cons = List.first(UniqueConstraintActions.list(meta))
+    cons = List.first(UniqueConstraintActions.list(for_meta: meta))
     constraints = UniqueConstraintActions.get_field_names(cons)
     constraint_atoms = for c <- constraints, do: String.to_atom(c)
     pairs = PlenarioEtl.Rows.pair_rows(existing_rows, inserted_rows, constraint_atoms)
@@ -266,7 +266,7 @@ defmodule PlenarioEtl.Worker do
   defp template_query!(template, meta, rows) do
     table = meta.table_name
     columns = MetaActions.get_column_names(meta) |> Enum.sort()
-    cons = List.first(UniqueConstraintActions.list(meta))
+    cons = List.first(UniqueConstraintActions.list(for_meta: meta))
     constraints = UniqueConstraintActions.get_field_names(cons)
 
     sql =
@@ -293,7 +293,7 @@ defmodule PlenarioEtl.Worker do
   more readable.
   """
   def create_diffs(meta, job, original, updated) do
-    cons = List.first(UniqueConstraintActions.list(meta))
+    cons = List.first(UniqueConstraintActions.list(for_meta: meta))
     constraint_id = cons.id
     constraint_names = UniqueConstraintActions.get_field_names(cons)
 

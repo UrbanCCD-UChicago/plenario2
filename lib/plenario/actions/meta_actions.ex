@@ -1,10 +1,16 @@
 defmodule Plenario.Actions.MetaActions do
   @moduledoc """
-  This module provides a high level API for interacting with Meta structs --
-  creation, updating, archiving, admin status, listing...
+  This module provides a high level API for interacting with the
+  Meta schema -- creating, updating, getting, ...
   """
 
   alias Plenario.Repo
+
+  alias Plenario.Schemas.{Meta, User}
+
+  alias Plenario.Changesets.MetaChangesets
+
+  alias Plenario.Queries.MetaQueries
 
   alias Plenario.Actions.{
     DataSetActions,
@@ -13,47 +19,28 @@ defmodule Plenario.Actions.MetaActions do
     VirtualPointFieldActions
   }
 
-  alias Plenario.Changesets.MetaChangesets
-
-  alias Plenario.Queries.MetaQueries
-
-  alias Plenario.Schemas.{Meta, User}
-
-  @typedoc """
-  Either a tuple of {:ok, meta} or {:error, changeset}
-  """
-  @type ok_meta :: {:ok, Meta} | {:error, Ecto.Changeset.t()}
+  @type ok_instance :: {:ok, Meta} | {:error, Ecto.Changeset.t()}
 
   @doc """
-  This is a convenience function for generating changesets to more easily create
-  webforms in Phoenix templates.
-
-  ## Example
-
-    changeset = MetaActions.new()
-    render(conn, "create.html", changeset: changeset)
-    # And then in your template: <%= form_for @changeset, ... %>
+  This is a convenience function for generating empty changesets to more
+  easily construct forms in Phoenix templates.
   """
   @spec new() :: Ecto.Changeset.t()
-  def new(), do: MetaChangesets.create(%{})
+  def new(), do: MetaChangesets.new()
 
   @doc """
-  Create a new Meta entry in the database.
+  Create a new instance of Meta in the database.
 
-  ## Example
-
-    {:ok, meta} = MetaActions.create("test", user, "https://example.com", "csv")
+  If the related Meta instance's state field is not "new" though, this
+  will wrror out -- you cannot add a new Meta to and active Meta.
   """
-  @spec create(name :: String.t(), user :: User, source_url :: String.t(), source_type :: String.t()) :: ok_meta
-  def create(name, user, source_url, source_type) when not is_integer(user) do
-    create(name, user.id, source_url, source_type)
-  end
-
-  @spec create(name :: String.t(), user_id :: integer, source_url :: String.t(), source_type :: String.t()) :: ok_meta
-  def create(name, user_id, source_url, source_type) when is_integer(user_id) do
+  @spec create(name :: String.t(), user :: User | integer, source_url :: String.t(), source_type :: String.t()) :: ok_instance
+  def create(name, user, source_url, source_type) when not is_integer(user),
+    do: create(name, user.id, source_url, source_type)
+  def create(name, user, source_url, source_type) when is_integer(user) do
     params = %{
       name: name,
-      user_id: user_id,
+      user_id: user,
       source_url: source_url,
       source_type: source_type
     }
@@ -62,61 +49,47 @@ defmodule Plenario.Actions.MetaActions do
   end
 
   @doc """
-  Updates a given Meta's name, source url, source type, description,
-  attribution, refresh rate, refresh interval, refresh starts on,
-  and/or refresh ends on.
-
-  ## Example
-
-    {:ok, meta} = MetaActions.create("test", user, "https://example.com", "csv")
-    {:ok, _} = MetaActions.update(meta, source_url: "https://exmaple.com/new", source_type: "json")
+  This is a convenience function for generating prepopulated changesets
+  to more easily construct change forms in Phoenix templates.
   """
-  @spec update(meta :: Meta, opts :: Keyword.t()) :: ok_meta
-  def update(meta, opts \\ []) do
+  @spec edit(instance :: Meta) :: Ecto.Changeset.t()
+  def edit(instance), do: MetaChangesets.update(instance, %{})
+
+  @doc """
+  Updates a given Meta's attributes.
+
+  If the related Meta instance's state field is not "new" though, this
+  will wrror out -- you cannot add a new Meta to and active Meta.
+  """
+  @spec update(instance :: Meta, opts :: Keyword.t()) :: ok_instance
+  def update(instance, opts \\ []) do
     params = Enum.into(opts, %{})
-    MetaChangesets.update(meta, params)
+    MetaChangesets.update(instance, params)
     |> Repo.update()
   end
 
   @doc """
-  Updates a given Meta's user relation.
-
-  ## Example
-
-    {:ok, meta} = MetaActions.create("test", user, "https://example.com", "csv")
-    {:ok, _} = MetaActions.update_user(meta, someone_else)
+  Convenience function for updating a Meta's bbox attribute.
   """
-  @spec update_user(meta :: Meta, user :: User) :: ok_meta
-  def update_user(meta, user) when not is_integer(user) do
-    update_user(meta, user.id)
-  end
-
-  @spec update_user(meta :: Meta, user_id :: integer) :: ok_meta
-  def update_user(meta, user_id) when is_integer(user_id) do
-    params = %{user_id: user_id}
-    MetaChangesets.update_user(meta, params)
-    |> Repo.update()
-  end
+  @spec update_bbox(meta :: Meta, bbox :: Geo.Polygon) :: ok_instance
+  def update_bbox(meta, bbox), do: update(meta, bbox: bbox)
 
   @doc """
-  Updates a given Meta's latest import attribute.
-
-  ## Example
-
-    {:ok, meta} = MetaActions.create("test", user, "https://example.com", "csv")
-    {:ok, _} = MetaActions.update_latest_import(meta, DateTime.utc_now())
+  Convenience function for updating a Meta's time_range attribute.
   """
-  @spec update_latest_import(meta :: Meta, timestamp :: DateTime.t()) :: ok_meta
-  def update_latest_import(meta, timestamp) do
-    params = %{latest_import: timestamp}
-    MetaChangesets.update_latest_import(meta, params)
-    |> Repo.update()
-  end
+  @spec update_time_range(meta :: Meta, lower :: DateTime, upper :: DateTime) :: ok_instance
+  def update_time_range(meta, lower, upper), do: update(meta, time_range: [lower, upper])
 
   @doc """
-  Updates a given Meta's next import attribute.
+  Convenience function for updating a Meta's latest_import attribute.
   """
-  @spec update_next_import(meta :: Meta) :: ok_meta
+  @spec update_latest_import(meta :: Meta, timestamp :: DateTime) :: ok_instance
+  def update_latest_import(meta, timestamp), do: update(meta, latest_import: timestamp)
+
+  @doc """
+  Convenience function for updating a Meta's next_import attribute.
+  """
+  @spec update_next_import(meta :: Meta) :: ok_instance
   def update_next_import(meta) do
     current =
       case meta.next_import do
@@ -128,47 +101,14 @@ defmodule Plenario.Actions.MetaActions do
     interval = meta.refresh_interval
 
     shifted = Timex.shift(current, [{String.to_atom(rate), interval}])
-    params = %{next_import: shifted}
 
-    MetaChangesets.update(meta, params)
-|> Repo.update()
-  end
-
-  @doc """
-  Updates a given Meta's bounding box.
-
-  ## Example
-
-    bbox = Geo.WKT.decode("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
-    {:ok, meta} = MetaActions.create("test", user, "https://example.com", "csv")
-    {:ok, _} = MetaActions.update_bbox(meta, bbox)
-  """
-  @spec update_bbox(meta :: Meta, bbox :: Geo.Polygon) :: ok_meta
-  def update_bbox(meta, bbox) do
-    params = %{bbox: bbox}
-    MetaChangesets.update_bbox(meta, params)
-    |> Repo.update()
-  end
-
-  @doc """
-  Updates a given Meta's time range attribute.
-
-  ## Example
-
-    {:ok, meta} = MetaActions.create("test", user, "https://example.com", "csv")
-    {:ok, _} = MetaActions.update_time_range(meta, ~D[2017-01-01], ~D[2018-01-01])
-  """
-  @spec update_time_range(meta :: Meta, lower :: DateTime.t(), upper :: DateTime.t()) :: ok_meta
-  def update_time_range(meta, lower, upper) do
-    params = %{time_range: [lower, upper]}
-    MetaChangesets.update_time_range(meta, params)
-    |> Repo.update()
+    update(meta, next_import: shifted)
   end
 
   @doc """
   Marks the given Meta as needs approval in the database.
   """
-  @spec submit_for_approval(meta :: Meta) :: ok_meta
+  @spec submit_for_approval(meta :: Meta) :: ok_instance
   def submit_for_approval(meta) do
     Meta.submit_for_approval(meta)
     |> Repo.update()
@@ -202,7 +142,7 @@ defmodule Plenario.Actions.MetaActions do
   @doc """
   Marks the given Meta as new in the database.
   """
-  @spec disapprove(meta :: Meta) :: ok_meta
+  @spec disapprove(meta :: Meta) :: ok_instance
   def disapprove(meta) do
     Meta.disapprove(meta)
     |> Repo.update()
@@ -212,9 +152,9 @@ defmodule Plenario.Actions.MetaActions do
   Marks the given Meta as ready in the database and sets the Meta's first_import
   date to the current timestamp.
   """
-  @spec mark_first_import(meta :: Meta) :: ok_meta
+  @spec mark_first_import(meta :: Meta) :: ok_instance
   def mark_first_import(meta) do
-    MetaChangesets.update_first_import(meta, %{first_import: DateTime.utc_now()})
+    MetaChangesets.update(meta, %{first_import: DateTime.utc_now()})
     |> Repo.update()
 
     meta = get(meta.id)
@@ -225,7 +165,7 @@ defmodule Plenario.Actions.MetaActions do
   @doc """
   Marks the given Meta as erred in the database.
   """
-  @spec mark_erred(meta :: Meta) :: ok_meta
+  @spec mark_erred(meta :: Meta) :: ok_instance
   def mark_erred(meta) do
     Meta.mark_erred(meta)
     |> Repo.update()
@@ -234,17 +174,53 @@ defmodule Plenario.Actions.MetaActions do
   @doc """
   Marks the given Meta as ready after having erred in the database.
   """
-  @spec mark_fixed(meta :: Meta) :: ok_meta
+  @spec mark_fixed(meta :: Meta) :: ok_instance
   def mark_fixed(meta) do
     Meta.mark_fixed(meta)
     |> Repo.update()
   end
 
   @doc """
+  Gets a list of Meta from the database.
+
+  This can be optionally filtered using the opts. See
+  MetaQueries.handle_opts for more details.
+  """
+  @spec list(opts :: Keyword.t() | nil) :: list(Meta)
+  def list(opts \\ []) do
+    MetaQueries.list()
+    |> MetaQueries.handle_opts(opts)
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets a single Meta from the database.
+
+  This can be optionally filtered using the opts. See
+  MetaQueries.handle_opts for more details.
+  """
+  @spec get(identifier :: String.t() | integer, opts :: Keyword.t() | nil) :: Meta | nil
+  def get(identifier, opts \\ []) do
+    MetaQueries.get(identifier)
+    |> MetaQueries.handle_opts(opts)
+    |> Repo.one()
+  end
+
+  @doc """
+  Gets a list of the field names for a given Meta.
+  """
+  def get_column_names(meta) do
+    fields = DataSetFieldActions.list(for_meta: meta)
+    field_names = for f <- fields, do: f.name
+
+    field_names
+  end
+
+  @doc """
   Selects all dates in the data set's table and finds the minimum and maximum
   values. From those values, it creates a TsTzRange.
   """
-  @spec compute_time_range!(meta :: Meta) :: {:ok, Plenario.TsTzRange}
+  @spec compute_time_range!(meta :: Meta) :: {DateTime, DateTime}
   def compute_time_range!(meta) do
     dsfs =
       DataSetFieldActions.list(for_meta: meta)
@@ -274,7 +250,7 @@ defmodule Plenario.Actions.MetaActions do
     upper = List.first(sorted)
     lower = List.last(sorted)
 
-    Plenario.TsTzRange.dump([lower, upper])
+    {lower, upper}
   end
 
   @doc """
@@ -319,53 +295,10 @@ defmodule Plenario.Actions.MetaActions do
     max_y = List.first(sorted_ys)
     min_y = List.last(sorted_ys)
 
-    %Geo.Polygon{coordinates: [[{max_x, min_y}, {min_x, min_y}, {min_x, max_y}, {max_x, max_y}, {max_x, min_y}]], srid: 4326}
-  end
-
-  @doc """
-  Gets a list of Metas from the database. This can be optionally filtered using
-  the opts. See MetaQueries.handle_opts for more details.
-
-  ## Examples
-
-    all_metas = MetaActions.list()
-    ready_metas = MetaActions.list(ready_only: true)
-    my_erred_metas = MetaActions.list(erred_only: true, for_user: me)
-  """
-  @spec list(opts :: Keyword.t() | nil) :: list(Meta)
-  def list(opts \\ []) do
-    MetaQueries.list()
-    |> MetaQueries.handle_opts(opts)
-    |> Repo.all()
-  end
-
-  @doc """
-  Gets a single Meta by either their id or slug.
-
-  ## Examples
-
-    meta = MetaActions.get(123)
-    meta = MetaActions.get("this-is-a-slug")
-    meta = MetaActions.get("this-is-a-slug", with_user: true)
-  """
-  @spec get(identifier :: integer | String.t(), opts :: Keyword.t()) :: Meta | nil
-  def get(identifier, opts \\ []) do
-    MetaQueries.get(identifier)
-    |> MetaQueries.handle_opts(opts)
-    |> Repo.one()
-  end
-
-  @doc """
-  Gets a list of the field names for a given meta.
-
-  ## Example
-
-    col_names = MetaActions.get_column_names(meta)
-  """
-  def get_column_names(meta) do
-    fields = DataSetFieldActions.list(for_meta: meta)
-    field_names = for f <- fields, do: f.name
-
-    field_names
+    %Geo.Polygon{coordinates: [[
+      {max_x, min_y}, {min_x, min_y},
+      {min_x, max_y}, {max_x, max_y},
+      {max_x, min_y}]],
+    srid: 4326}
   end
 end

@@ -7,7 +7,6 @@ defmodule Plenario.Testing.UserActionsTest do
     changeset = UserActions.new()
 
     assert changeset.action == nil
-    refute changeset.valid?
   end
 
   test "create", %{user: user} do

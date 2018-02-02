@@ -1,104 +1,82 @@
 defmodule Plenario.Actions.VirtualPointFieldActions do
   @moduledoc """
-  This module provides a high level API for interacting with VirtualPointField
-  structs -- creating, updating, listing, getting, ...
+  This module provides a high level API for interacting with the
+  VirtualPointField schema -- creating, updating, getting, ...
   """
 
   alias Plenario.Repo
 
-  alias Plenario.Changesets.VirtualPointFieldChangesets
+  alias Plenario.Schemas.{Meta, VirtualPointField}
 
-  alias Plenario.Schemas.VirtualPointField
+  alias Plenario.Changesets.VirtualPointFieldChangesets
 
   alias Plenario.Queries.VirtualPointFieldQueries
 
-  @typedoc """
-  Either a tuple of {:ok, field} or {:error, changeset}
-  """
-  @type ok_field :: {:ok, VirtualPointField} | {:error, Ecto.Changeset.t()}
+  @type ok_instance :: {:ok, VirtualPointField} | {:error, Ecto.Changeset.t()}
 
   @doc """
-  This is a convenience function for generating changesets to more easily create
-  webforms in Phoenix templates.
-
-  ## Example
-
-    changeset = VirtualPointFieldActions.new()
-    render(conn, "create.html", changeset: changeset)
-    # And then in your template: <%= form_for @changeset, ... %>
+  This is a convenience function for generating empty changesets to more
+  easily construct forms in Phoenix templates.
   """
   @spec new() :: Ecto.Changeset.t()
-  def new(), do: VirtualPointFieldChangesets.create(%{})
+  def new(), do: VirtualPointFieldChangesets.new()
 
   @doc """
-  Creates a new VirtualPointField in the database. If the related Meta instance's
-  state field is not "new" though, this will error out -- you cannot add a
-  new field to an active meta.
+  Create a new instance of VirtualPointField in the database.
 
-  ## Examples
-
-    {:ok, field} =
-      VirtualPointFieldActions.create(
-        meta.id, some_lat_field.id, some_lon_field.id
-      )
-
-    {:ok, field} =
-      VirtualPointFieldActions.create(meta.id, some_loc_field.id)
+  If the related Meta instance's state field is not "new" though, this
+  will wrror out -- you cannot add a new VirtualPointField to and active Meta.
   """
-  @spec create(meta_id :: integer, lat_field_id :: integer, lon_field_id :: integer) :: ok_field
-  def create(meta_id, lat_field_id, lon_field_id) do
+  @spec create(meta :: Meta | integer, lat_field_id :: integer, lon_fiel_id :: integer) :: ok_instance
+  def create(meta, lat_field_id, lon_field_id) when not is_integer(meta),
+    do: create(meta.id, lat_field_id, lon_field_id)
+  def create(meta, lat_field_id, lon_field_id) when is_integer(meta) do
     params = %{
-      meta_id: meta_id,
+      meta_id: meta,
       lat_field_id: lat_field_id,
       lon_field_id: lon_field_id
     }
-    VirtualPointFieldChangesets.create(params)
-    |> Repo.insert()
+    create(params)
   end
 
-  @spec create(meta_id :: integer, loc_field_id :: integer) :: ok_field
-  def create(meta_id, loc_field_id) do
+  @spec create(meta :: Meta | integer, loc_field_id :: integer) :: ok_instance
+  def create(meta, loc_field_id) when not is_integer(meta),
+    do: create(meta.id, loc_field_id)
+  def create(meta, loc_field_id) when is_integer(meta) do
     params = %{
-      meta_id: meta_id,
+      meta_id: meta,
       loc_field_id: loc_field_id
     }
-    VirtualPointFieldChangesets.create(params)
-    |> Repo.insert()
+    create(params)
   end
 
+  defp create(params), do: VirtualPointFieldChangesets.create(params) |> Repo.insert()
+
   @doc """
-  Updates a given VirtualPointField's referenced DataSetFields. If the related
-  Meta instance's state field is not "new" though, this will error out --
-  you cannot update a field on an active meta.
-
-  The :opts param is a keyword list of the *_field_id attributes and are
-  expected to be the ID attributes of the fields.
-
-  ## Example
-
-    {:ok, field} =
-      VirtualPointFieldActions.create(
-        meta.id, some_lat_field.id, some_lon_field.id
-      )
-    {:ok, _} =
-      VirtualPointFieldActions.update(field, lat_field_id: some_lat_field.id)
+  This is a convenience function for generating prepopulated changesets
+  to more easily construct change forms in Phoenix templates.
   """
-  @spec update(field :: VirtualDateField, opts :: Keyword.t()) :: ok_field
-  def update(field, opts \\ []) do
+  @spec edit(instance :: VirtualPointField) :: Ecto.Changeset.t()
+  def edit(instance), do: VirtualPointFieldChangesets.update(instance, %{})
+
+  @doc """
+  Updates a given VirtualPointField's attributes.
+
+  If the related Meta instance's state field is not "new" though, this
+  will wrror out -- you cannot add a new VirtualPointField to and active Meta.
+  """
+  @spec update(instance :: VirtualPointField, opts :: Keyword.t()) :: ok_instance
+  def update(instance, opts \\ []) do
     params = Enum.into(opts, %{})
-    VirtualPointFieldChangesets.update(field, params)
+    VirtualPointFieldChangesets.update(instance, params)
     |> Repo.update()
   end
 
   @doc """
-  Gets a list of VirtualPointFields from the database. This can be optionally
-  filtered using the opts. See VirtualDateFieldQueries.handle_opts for
-  more details.
+  Gets a list of VirtualPointField from the database.
 
-  ## Examples
-
-    all_fields = VirtualPointFieldActions.list()
-    my_metas_fields = VirtualPointFieldActions.list(for_meta: my_meta)
+  This can be optionally filtered using the opts. See
+  VirtualPointFieldQueries.handle_opts for more details.
   """
   @spec list(opts :: Keyword.t() | nil) :: list(VirtualPointField)
   def list(opts \\ []) do
@@ -108,12 +86,11 @@ defmodule Plenario.Actions.VirtualPointFieldActions do
   end
 
   @doc """
-  Gets a single VirtualPointField by its id attribute.
+  Gets a single VirtualPointField from the database.
 
-  ## Example
-
-    field = VirtualPointFieldActions.get(123)
+  This can be optionally filtered using the opts. See
+  VirtualPointFieldQueries.handle_opts for more details.
   """
-  @spec get(id :: integer) :: VirtualPointField | nil
-  def get(id), do: Repo.get_by(VirtualPointField, id: id)
+  @spec get(identifier :: integer) :: VirtualPointField | nil
+  def get(identifier), do: Repo.get_by(VirtualPointField, id: identifier)
 end

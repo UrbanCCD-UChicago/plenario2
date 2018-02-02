@@ -11,7 +11,8 @@ defmodule Plenario.Schemas.DataSetField do
     "float",
     "boolean",
     "timestamptz",
-    "geometry"
+    "geometry",
+    "jsonb"
   ]
 
   @type_choices [
@@ -20,7 +21,8 @@ defmodule Plenario.Schemas.DataSetField do
     Decimal: "float",
     "True/False": "boolean",
     Date: "timestamptz",
-    "Raw GIS Field": "geometry"
+    "Raw GIS Field": "geometry",
+    JSON: "jsonb"
   ]
 
   schema "data_set_fields" do

@@ -15,7 +15,6 @@ defmodule Plenario.Testing.VirtualPointFieldActionsTest do
     changeset = VirtualPointFieldActions.new()
 
     assert changeset.action == nil
-    refute changeset.valid?
   end
 
   describe "create" do

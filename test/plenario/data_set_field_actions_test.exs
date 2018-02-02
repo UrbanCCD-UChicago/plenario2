@@ -1,17 +1,12 @@
 defmodule Plenario.Testing.DataSetFieldActionsTest do
   use Plenario.Testing.DataCase, async: true
 
-  alias Plenario.Repo
-
-  alias Plenario.Actions.DataSetFieldActions
-
-  alias Plenario.Schemas.Meta
+  alias Plenario.Actions.{DataSetFieldActions, MetaActions}
 
   test "new" do
     changeset = DataSetFieldActions.new()
 
     assert changeset.action == nil
-    refute changeset.valid?
   end
 
   describe "create" do
@@ -57,9 +52,7 @@ defmodule Plenario.Testing.DataSetFieldActionsTest do
     end
 
     test "when meta is no longer new", %{meta: meta, field: field} do
-      {:ok, _} =
-        Meta.submit_for_approval(meta)
-        |> Repo.update()
+      {:ok, _} = MetaActions.submit_for_approval(meta)
 
       {:error, _} = DataSetFieldActions.update(field, name: "not gonna happen")
     end

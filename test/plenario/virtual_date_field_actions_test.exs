@@ -18,7 +18,6 @@ defmodule Plenario.Testing.VirtualDateFieldActionsTest do
     changeset = VirtualDateFieldActions.new()
 
     assert changeset.action == nil
-    refute changeset.valid?
   end
 
   describe "create" do

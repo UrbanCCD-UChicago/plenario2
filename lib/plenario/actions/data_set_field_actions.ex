@@ -1,51 +1,38 @@
 defmodule Plenario.Actions.DataSetFieldActions do
   @moduledoc """
-  This module provides a high level API for interacting with DataSetField
-  structs -- creating, updating, listing, getting, ...
+  This module provides a high level API for interacting with the
+  DataSetField schema -- creating, updating, getting, ...
   """
 
   alias Plenario.Repo
 
-  alias Plenario.Changesets.DataSetFieldChangesets
+  alias Plenario.Schemas.{Meta, DataSetField}
 
-  alias Plenario.Schemas.{DataSetField, Meta}
+  alias Plenario.Changesets.DataSetFieldChangesets
 
   alias Plenario.Queries.DataSetFieldQueries
 
-  @typedoc """
-  Either a tuple of {:ok, field} or {:error, changeset}
-  """
-  @type ok_field :: {:ok, DataSetField} | {:error, Ecto.Changeset.t()}
+  @type ok_instance :: {:ok, DataSetField} | {:error, Ecto.Changeset.t()}
 
   @doc """
-  This is a convenience function for generating changesets to more easily create
-  webforms in Phoenix templates.
-
-  ## Example
-
-    changeset = DataSetFieldActions.new()
-    render(conn, "create.html", changeset: changeset)
-    # And then in your template: <%= form_for @changeset, ... %>
+  This is a convenience function for generating empty changesets to more
+  easily construct forms in Phoenix templates.
   """
   @spec new() :: Ecto.Changeset.t()
-  def new(), do: DataSetFieldChangesets.create(%{})
+  def new(), do: DataSetFieldChangesets.new()
 
   @doc """
-  Create a new DataSetField in the database. If the related Meta instance's
-  state field is not "new" though, this will error out -- you cannot add
-  a new field to an active meta.
+  Create a new instance of DataSetField in the database.
 
-  ## Example
-
-    {:ok, field} = DataSetFieldActions.create(meta, "some_id", "integer")
+  If the related Meta instance's state field is not "new" though, this
+  will wrror out -- you cannot add a new DataSetField to and active Meta.
   """
-  @spec create(meta :: Meta, name :: String.t(), type :: String.t()) :: ok_field
-  def create(meta, name, type) when not is_integer(meta), do: create(meta.id, name, type)
-
-  @spec create(meta_id :: integer, name :: String.t(), type :: String.t()) :: ok_field
-  def create(meta_id, name, type) do
+  @spec create(meta :: Meta | integer, name :: String.t(), type :: String.t()) :: ok_instance
+  def create(meta, name, type) when not is_integer(meta),
+    do: create(meta.id, name, type)
+  def create(meta, name, type) when is_integer(meta) do
     params = %{
-      meta_id: meta_id,
+      meta_id: meta,
       name: name,
       type: type
     }
@@ -54,31 +41,30 @@ defmodule Plenario.Actions.DataSetFieldActions do
   end
 
   @doc """
-  Updates a given DataSetField's name and/or type. If the related Meta
-  instance's state field is not "new" though, this will error out -- you cannot
-  update a field on an active meta.
-
-  ## Example
-
-    {:ok, field} = DataSetFieldActions.create(meta, "some_id", "integer")
-    {:ok, _} = DataSetFieldActions.update(field, type: "text")
+  This is a convenience function for generating prepopulated changesets
+  to more easily construct change forms in Phoenix templates.
   """
-  @spec update(field :: DataSetField, opts :: Keyword.t()) :: list(DataSetField)
-  def update(field, opts \\ []) do
+  @spec edit(instance :: DataSetField) :: Ecto.Changeset.t()
+  def edit(instance), do: DataSetFieldChangesets.update(instance, %{})
+
+  @doc """
+  Updates a given DataSetField's attributes.
+
+  If the related Meta instance's state field is not "new" though, this
+  will wrror out -- you cannot add a new DataSetField to and active Meta.
+  """
+  @spec update(instance :: DataSetField, opts :: Keyword.t()) :: ok_instance
+  def update(instance, opts \\ []) do
     params = Enum.into(opts, %{})
-    DataSetFieldChangesets.update(field, params)
+    DataSetFieldChangesets.update(instance, params)
     |> Repo.update()
   end
 
   @doc """
-  Gets a list of DataSetFields from the database. This can be optionally
-  filtered using the opts. See DataSetFieldQueries.handle_opts for more details.
+  Gets a list of DataSetField from the database.
 
-  ## Examples
-
-    all_fields = DataSetFieldActions.list()
-    my_metas_fields = DataSetFieldActions.list(for_meta: my_meta)
-    specific_fields = DataSetFieldActions.list(by_ids: [123, 234, 345])
+  This can be optionally filtered using the opts. See
+  DataSetFieldQueries.handle_opts for more details.
   """
   @spec list(opts :: Keyword.t() | nil) :: list(DataSetField)
   def list(opts \\ []) do
@@ -88,12 +74,8 @@ defmodule Plenario.Actions.DataSetFieldActions do
   end
 
   @doc """
-  Gets a single DataSetField by its id attribute.
-
-  ## Example
-
-    field = DataSetFieldActions.get(123)
+  Gets a single DataSetField from the database.
   """
-  @spec get(id :: integer) :: DataSetField | nil
-  def get(id), do: Repo.get_by(DataSetField, id: id)
+  @spec get(identifier :: integer) :: DataSetField | nil
+  def get(identifier), do: Repo.get_by(DataSetField, id: identifier)
 end

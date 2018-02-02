@@ -12,7 +12,6 @@ defmodule Plenario.Testing.UniqueConstraintActionsTest do
   test "new" do
     changeset = UniqueConstraintActions.new()
     refute changeset.action
-    refute changeset.valid?
   end
 
   describe "create" do
@@ -35,6 +34,6 @@ defmodule Plenario.Testing.UniqueConstraintActionsTest do
     {:ok, uc} = UniqueConstraintActions.create(meta, [pk])
 
     constraint = UniqueConstraintActions.get(uc.id)
-    {:ok, _} = UniqueConstraintActions.update(constraint, [other.id])
+    {:ok, _} = UniqueConstraintActions.update(constraint, field_ids: [other.id])
   end
 end
