@@ -1,0 +1,29 @@
+<h2>Editing My Info</h2>
+
+<div class="row col-lg-6">
+  <%= form_for @changeset, @action, fn f -> %>
+
+    <div class="form-group">
+      <%= label f, "Name", class: "control-label" %>
+      <%= text_input f, :name, class: "form-control" %>
+      <%= error_tag f, :name %>
+    </div>
+
+    <div class="form-group">
+      <%= label f, "Email", class: "control-label" %>
+      <%= text_input f, :email, class: "form-control" %>
+      <%= error_tag f, :email %>
+    </div>
+
+    <div class="form-group">
+      <%= label f, "Bio", class: "control-label" %>
+      <%= textarea f, :bio, class: "form-control" %>
+      <%= error_tag f, :bio %>
+    </div>
+
+    <div class="from-group">
+      <%= submit "Update My Info", class: "btn btn-primary" %>
+    </div>
+
+  <% end %>
+</div>

@@ -1,9 +1,0 @@
-<div class="navbar navbar-default">
-  <div class="container-fluid">
-    <ul class="nav navbar-nav">
-      <li><%= link "Admin Home", to: admin_path(@conn, :index) %></li>
-      <li><%= link "Users", to: admin_path(@conn, :user_index) %></li>
-      <li><%= link "Metas", to: admin_path(@conn, :meta_index) %></li>
-    </ul>
-  </div>
-</div>

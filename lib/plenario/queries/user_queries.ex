@@ -41,11 +41,14 @@ defmodule Plenario.Queries.UserQueries do
       UserQueries.get("test@example.com")
       |> Repo.one()
   """
-  @spec get(id :: integer) :: Ecto.Query.t()
-  def get(id) when is_integer(id), do: from u in User, where: u.id == ^id
-
-  @spec get(email :: String.t()) :: Ecto.Query.t()
-  def get(email) when is_bitstring(email), do: from u in User, where: u.email == ^email
+  @spec get(identifier :: String.t() | integer) :: Ecto.Query.t()
+  def get(identifier) when is_integer(identifier), do: get("#{identifier}")
+  def get(identifier) when is_binary(identifier) do
+    case Regex.match?(~r/@/, identifier) do
+      true -> from u in User, where: u.email == ^identifier
+      false -> from u in User, where: u.id == ^identifier
+    end
+  end
 
   @doc """
   A composable query that filters a given query to only include results whose

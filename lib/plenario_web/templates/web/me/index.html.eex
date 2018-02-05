@@ -1,0 +1,28 @@
+<div class="row">
+  <div class="col-lg-9">
+    <div class="row">
+      <h3>My Data Sets</h3>
+    </div>
+  </div>
+
+  <div class="col-lg-3">
+    <div class="row">
+      <h3>My Info</h3>
+      <p>
+        <strong>Name:</strong> <%= @user.name %><br>
+        <strong>Email:</strong> <%= @user.email %><br>
+        <strong>Bio:</strong> <%= @user.bio || "-" %>
+      </p>
+      <p>
+        <%= link "Update Info", to: me_path(@conn, :edit) %><br>
+        <%= link "Change Password", to: me_path(@conn, :edit_password) %>
+      </p>
+    </div>
+
+    <hr>
+
+    <div class="row">
+      <h3>My Messages</h3>
+    </div>
+  </div>
+</div>

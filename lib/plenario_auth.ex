@@ -15,7 +15,7 @@ defmodule PlenarioAuth do
   defp check_password(nil, _), do: {:error, "Incorrect email or password"}
 
   defp check_password(user, password) do
-    case Comeonin.Bcrypt.checkpw(password, user.hashed_password) do
+    case Comeonin.Bcrypt.checkpw(password, user.password_hash) do
       true -> {:ok, user}
       false -> {:error, "Incorrect email or password"}
     end

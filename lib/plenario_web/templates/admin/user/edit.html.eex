@@ -1,0 +1,49 @@
+<h2>Editing <%= @user.name %></h2>
+
+<div class="row col-lg-6">
+  <%= form_for @changeset, @action, fn f -> %>
+
+    <div class="form-group">
+      <%= label f, "Name", class: "control-label" %>
+      <%= text_input f, :name, class: "form-control" %>
+      <%= error_tag f, :name %>
+    </div>
+
+    <div class="form-group">
+      <%= label f, "Email", class: "control-label" %>
+      <%= text_input f, :email, class: "form-control" %>
+      <%= error_tag f, :email %>
+    </div>
+
+    <div class="form-group">
+      <%= label f, "Bio", class: "control-label" %>
+      <%= textarea f, :bio, class: "form-control" %>
+      <%= error_tag f, :bio %>
+    </div>
+
+    <div class="from-group">
+      <div class="row">
+        <div class="col-lg-4">
+          <%= submit "Update Info", class: "btn btn-primary" %>
+        </div>
+        <div class="col-lg-4">
+          <%= if @user.is_admin do %>
+          <%= button "Strip Admin", to: user_path(@conn, :strip_admin_privs, @user.id), method: :post, class: "btn btn-danger" %>
+          <% else %>
+          <%= button "Make Admin", to: user_path(@conn, :promote_to_admin, @user.id), method: :post, class: "btn btn-success" %>
+          <% end %>
+        </div>
+        <div class="col-lg-4">
+          <%= if @user.is_active do %>
+          <%= button "Archive", to: user_path(@conn, :archive, @user.id), method: :post, class: "btn btn-danger" %>
+          <% else %>
+          <%= button "Activate", to: user_path(@conn, :activate, @user.id), method: :post, class: "btn btn-success" %>
+          <% end %>
+        </div>
+      </div>
+
+
+    </div>
+
+  <% end %>
+</div>
