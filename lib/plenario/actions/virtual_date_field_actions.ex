@@ -32,9 +32,8 @@ defmodule Plenario.Actions.VirtualDateFieldActions do
   """
   @spec create(meta :: Meta | integer, year_field_id :: integer, opts :: Keyword.t()) :: ok_instance
   def create(meta, year_field_id), do: create(meta, year_field_id, [])
-  def create(meta, year_field_id, opts) when not is_integer(meta),
-    do: create(meta.id, year_field_id, opts)
-  def create(meta, year_field_id, opts) when is_integer(meta) do
+  def create(%Meta{} = meta, year_field_id, opts), do: create(meta.id, year_field_id, opts)
+  def create(meta, year_field_id, opts) do
     params =
       [meta_id: meta, year_field_id: year_field_id]
       |> Keyword.merge(opts)
@@ -84,4 +83,10 @@ defmodule Plenario.Actions.VirtualDateFieldActions do
   """
   @spec get(identifier :: integer) :: VirtualDateField | nil
   def get(identifier), do: Repo.get_by(VirtualDateField, id: identifier)
+
+  @doc """
+  Deletes a given VirtualDateField from the database.
+  """
+  @spec delete(field :: VirtualDateField) :: {:ok, VirtualDateField}
+  def delete(field), do: Repo.delete(field)
 end

@@ -1,7 +1,12 @@
 defmodule PlenarioWeb.Web.DataSetController do
   use PlenarioWeb, :web_controller
 
-  alias Plenario.Actions.{DataSetFieldActions, MetaActions}
+  alias Plenario.Actions.{
+    DataSetFieldActions,
+    MetaActions,
+    VirtualDateFieldActions,
+    VirtualPointFieldActions
+  }
 
   alias Plenario.Schemas.{DataSetField, Meta, UniqueConstraint}
 
@@ -14,10 +19,10 @@ defmodule PlenarioWeb.Web.DataSetController do
   # )
 
   def show(conn, %{"id" => id}) do
-    meta = MetaActions.get(id,
-      with_user: true, with_fields: true, with_constraints: true,
-      with_virtual_dates: true, with_virtual_points: true)
-    render(conn, "show.html", meta: meta)
+    meta = MetaActions.get(id, with_user: true, with_fields: true, with_constraints: true)
+    virtual_dates = VirtualDateFieldActions.list(for_meta: meta, with_fields: true)
+    virtual_points = VirtualPointFieldActions.list(for_meta: meta, with_fields: true)
+    render(conn, "show.html", meta: meta, virtual_dates: virtual_dates, virtual_points: virtual_points)
   end
 
   def new(conn, _) do

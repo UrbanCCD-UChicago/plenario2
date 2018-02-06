@@ -1,0 +1,35 @@
+<h2>Creating a New Virtual Point</h2>
+
+<div class="row col-lg-6">
+
+  <%= form_for @changeset, @action, fn f -> %>
+
+  <%= hidden_input f, :meta_id, value: @dsid %>
+
+  <div class="form-group">
+    <%= label f, "Location Column", class: "control-label" %>
+    <%= select f, :loc_field_id, @field_choices, class: "form-control" %>
+    <%= error_tag f, :loc_field_id %>
+  </div>
+
+  <div class="form-group"><strong>Or</strong></div>
+
+  <div class="form-group">
+    <%= label f, "Latitude Column", class: "control-label" %>
+    <%= select f, :lat_field_id, @field_choices, class: "form-control" %>
+    <%= error_tag f, :lat_field_id %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, "Longitude Column", class: "control-label" %>
+    <%= select f, :lon_field_id, @field_choices, class: "form-control" %>
+    <%= error_tag f, :lon_field_id %>
+  </div>
+
+  <div class="form-group">
+    <%= submit "Create", class: "btn btn-primary" %>
+  </div>
+
+  <% end %>
+
+</div>

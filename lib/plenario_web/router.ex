@@ -62,6 +62,8 @@ defmodule PlenarioWeb.Router do
     resources "/data-sets", DataSetController
     resources "/data-sets/:dsid/fields", DataSetFieldController
     resources "/data-sets/:dsid/constraints", UniqueConstraintController
+    resources "/data-sets/:dsid/virtual-dates", VirtualDateController
+    resources "/data-sets/:dsid/virtual-points", VirtualPointController
   end
 
   ##

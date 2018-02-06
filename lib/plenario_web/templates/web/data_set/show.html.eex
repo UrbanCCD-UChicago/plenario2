@@ -134,8 +134,7 @@
     <h3>
       Computed Date Fields
       <%= if is_owner do %>
-        <%= link "Add a New Date Field", to: "/", target: "_blank", class: "btn btn-success pull-right" %>
-        <%= link "Edit", to: data_set_path(@conn, :edit, @meta.id), class: "btn btn-danger pull-right", style: "margin-right:5px" %>
+        <%= link "Add a New Date Field", to: virtual_date_path(@conn, :new, @meta.id), class: "btn btn-success pull-right" %>
       <% end %>
     </h3>
     <table class="table table-striped">
@@ -147,17 +146,19 @@
           <th>Hour Ref</th>
           <th>Minute Ref</th>
           <th>Second Ref</th>
+          <%= if is_owner do %><th></th><% end %>
         </tr>
       </thead>
       <tbody>
-        <%= for f <- @meta.virtual_dates do %>
+        <%= for f <- @virtual_dates do %>
         <tr>
           <td><%= f.year_field.name %></td>
-          <td><%= f.month_field.name %></td>
-          <td><%= f.day_field.name %></td>
-          <td><%= f.hour_field.name %></td>
-          <td><%= f.minute_field.name %></td>
-          <td><%= f.second_field.name %></td>
+          <td><%= if f.month_field do %><%= f.month_field.name %><% else %>-<% end %></td>
+          <td><%= if f.day_field do %><%= f.day_field.name %><% else %>-<% end %></td>
+          <td><%= if f.hour_field do %><%= f.hour_field.name %><% else %>-<% end %></td>
+          <td><%= if f.minute_field do %><%= f.minute_field.name %><% else %>-<% end %></td>
+          <td><%= if f.second_field do %><%= f.second_field.name %><% else %>-<% end %></td>
+          <%= if is_owner do %><td><%= link "Edit", to: virtual_date_path(@conn, :edit, @meta.id, f.id) %></td><% end %>
         <% end %>
       </tbody>
     </table>
@@ -166,8 +167,7 @@
     <h3>
       Computed Point Fields
       <%= if is_owner do %>
-        <%= link "Add a New Point Field", to: "/", target: "_blank", class: "btn btn-success pull-right" %>
-        <%= link "Edit", to: data_set_path(@conn, :edit, @meta.id), class: "btn btn-danger pull-right", style: "margin-right:5px" %>
+        <%= link "Add a New Point Field", to: virtual_point_path(@conn, :new, @meta.id), class: "btn btn-success pull-right" %>
       <% end %>
     </h3>
     <table class="table table-striped">
@@ -176,14 +176,16 @@
           <th>Location Ref</th>
           <th>Latitude Ref</th>
           <th>Longitude Ref</th>
+          <%= if is_owner do %><th></th><% end %>
         </tr>
       </thead>
       <tbody>
-        <%= for f <- @meta.virtual_points do %>
+        <%= for f <- @virtual_points do %>
         <tr>
-          <td><%= f.loc_field.name %></td>
-          <td><%= f.lat_field.name %></td>
-          <td><%= f.lon_field.name %></td>
+          <td><%= if f.loc_field do %><%= f.loc_field.name %><% else %>-<% end %></td>
+          <td><%= if f.lat_field do %><%= f.lat_field.name %><% else %>-<% end %></td>
+          <td><%= if f.lon_field do %><%= f.lon_field.name %><% else %>-<% end %></td>
+          <%= if is_owner do %><td><%= link "Edit", to: virtual_point_path(@conn, :edit, @meta.id, f.id) %></td><% end %>
         <% end %>
       </tbody>
     </table>

@@ -28,9 +28,8 @@ defmodule Plenario.Actions.VirtualPointFieldActions do
   will wrror out -- you cannot add a new VirtualPointField to and active Meta.
   """
   @spec create(meta :: Meta | integer, lat_field_id :: integer, lon_fiel_id :: integer) :: ok_instance
-  def create(meta, lat_field_id, lon_field_id) when not is_integer(meta),
-    do: create(meta.id, lat_field_id, lon_field_id)
-  def create(meta, lat_field_id, lon_field_id) when is_integer(meta) do
+  def create(%Meta{} = meta, lat_field_id, lon_field_id), do: create(meta.id, lat_field_id, lon_field_id)
+  def create(meta, lat_field_id, lon_field_id) do
     params = %{
       meta_id: meta,
       lat_field_id: lat_field_id,
@@ -40,9 +39,8 @@ defmodule Plenario.Actions.VirtualPointFieldActions do
   end
 
   @spec create(meta :: Meta | integer, loc_field_id :: integer) :: ok_instance
-  def create(meta, loc_field_id) when not is_integer(meta),
-    do: create(meta.id, loc_field_id)
-  def create(meta, loc_field_id) when is_integer(meta) do
+  def create(%Meta{} = meta, loc_field_id), do: create(meta.id, loc_field_id)
+  def create(meta, loc_field_id) do
     params = %{
       meta_id: meta,
       loc_field_id: loc_field_id
@@ -93,4 +91,10 @@ defmodule Plenario.Actions.VirtualPointFieldActions do
   """
   @spec get(identifier :: integer) :: VirtualPointField | nil
   def get(identifier), do: Repo.get_by(VirtualPointField, id: identifier)
+
+  @doc """
+  Deletes a given VirtualPointField from the database.
+  """
+  @spec delete(field :: VirtualPointField) :: {:ok, VirtualPointField}
+  def delete(field), do: Repo.delete(field)
 end

@@ -1,0 +1,51 @@
+<h2>Creating a New Virtual Date</h2>
+
+<div class="row col-lg-6">
+
+  <%= form_for @changeset, @action, fn f -> %>
+
+  <%= hidden_input f, :meta_id, value: @dsid %>
+
+  <div class="form-group">
+    <%= label f, "Year Column", class: "control-label" %>
+    <%= select f, :year_field_id, @field_choices, class: "form-control" %>
+    <%= error_tag f, :year_field_id %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, "Month Column", class: "control-label" %>
+    <%= select f, :month_field_id, @field_choices, class: "form-control" %>
+    <%= error_tag f, :month_field_id %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, "Day Column", class: "control-label" %>
+    <%= select f, :day_field_id, @field_choices, class: "form-control" %>
+    <%= error_tag f, :day_field_id %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, "Hour Column", class: "control-label" %>
+    <%= select f, :hour_field_id, @field_choices, class: "form-control" %>
+    <%= error_tag f, :hour_field_id %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, "Minute Column", class: "control-label" %>
+    <%= select f, :minute_field_id, @field_choices, class: "form-control" %>
+    <%= error_tag f, :minute_field_id %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, "Second Column", class: "control-label" %>
+    <%= select f, :second_field_id, @field_choices, class: "form-control" %>
+    <%= error_tag f, :second_field_id %>
+  </div>
+
+  <div class="form-group">
+    <%= submit "Create", class: "btn btn-primary" %>
+  </div>
+
+  <% end %>
+
+</div>
