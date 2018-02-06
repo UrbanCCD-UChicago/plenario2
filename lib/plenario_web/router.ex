@@ -60,6 +60,7 @@ defmodule PlenarioWeb.Router do
     put "/me/change-password", MeController, :update_password
 
     resources "/data-sets", DataSetController
+    resources "/data-sets/:dsid/fields", DataSetFieldController
   end
 
   ##

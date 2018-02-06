@@ -85,13 +85,13 @@
   <div class="col-lg-6">
     <h3>
       Data Set Fields
-      <%= if is_owner do %><%= link "Edit", to: data_set_path(@conn, :edit, @meta.id), class: "btn btn-danger pull-right" %><% end %>
     </h3>
     <table class="table table-striped">
       <thead>
         <tr>
           <th>Name</th>
           <th>Type</th>
+          <%= if is_owner do %><th></th><% end %>
         </tr>
       </thead>
       <tbody>
@@ -99,6 +99,7 @@
         <tr>
           <td><%= f.name %></td>
           <td><%= f.type %></td>
+          <%= if is_owner do %><td><%= link "Edit", to: data_set_field_path(@conn, :edit, @meta.id, f.id) %></td><% end %>
         <% end %>
       </tbody>
     </table>

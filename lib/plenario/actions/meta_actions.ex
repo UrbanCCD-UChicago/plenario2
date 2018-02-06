@@ -334,8 +334,6 @@ defmodule Plenario.Actions.MetaActions do
     maxes =
       Enum.reduce(counts, %{}, fn {{k, _}, c}, acc ->
         curr = Map.get(acc, k, 0)
-        IO.puts("k=#{k} ; c=#{c}, ; curr=#{curr} ; acc=#{inspect(acc)}")
-        # if c > curr, do: Map.merge(acc, %{String.to_atom(k) => c})
         if c > curr do
           Map.update(acc, k, c, &(&1 - &1 + c))
         else

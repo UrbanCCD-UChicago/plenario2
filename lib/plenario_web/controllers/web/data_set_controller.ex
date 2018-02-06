@@ -30,7 +30,8 @@ defmodule PlenarioWeb.Web.DataSetController do
   def create(conn, %{"meta" => %{"name" => name, "user_id" => user_id, "source_url" => source_url, "source_type" => source_type}}) do
     case MetaActions.create(name, user_id, source_url, source_type) do
       {:ok, meta} ->
-        MetaActions.guess_field_types(meta)
+        field_types = MetaActions.guess_field_types(meta)
+        for {name, type} <- field_types, do: DataSetFieldActions.create(meta, "#{name}", type)
 
         conn
         |> put_flash(:success, "Created data set #{meta.name}")
@@ -62,18 +63,24 @@ defmodule PlenarioWeb.Web.DataSetController do
       refresh_rate_choices: refresh_rate_choices)
   end
 
-  def update(conn, %{"id" => id} = params) do
+  def update(conn, %{"id" => id, "meta" => %{"force_fields_reset" => force_fields_reset}} = params) do
     meta = MetaActions.get(id)
-    update_params =
-      Map.get(params, "meta")
-      |> Enum.into([])
+    update_params = Map.get(params, "meta")
+    original_source = meta.source_url
+    updated_source = Map.get(update_params, "source_url")
+    reset_fields = original_source != updated_source
+    force_fields_reset = force_fields_reset == "true"
 
+    update_params = Enum.into(update_params, [])
     case MetaActions.update(meta, update_params) do
       {:ok, meta} ->
-        field_types = MetaActions.guess_field_types(meta)
-        fields = DataSetFieldActions.list(for_meta: meta)
-        for f <- fields, do: DataSetFieldActions.delete(f)
-        for {name, type} <- field_types, do: DataSetFieldActions.create(meta, "#{name}", type)
+        if reset_fields or force_fields_reset do
+          IO.puts("resetting fields: #{reset_fields} or #{force_fields_reset}")
+          field_types = MetaActions.guess_field_types(meta)
+          fields = DataSetFieldActions.list(for_meta: meta)
+          for f <- fields, do: DataSetFieldActions.delete(f)
+          for {name, type} <- field_types, do: DataSetFieldActions.create(meta, "#{name}", type)
+        end
 
         conn
         |> put_flash(:success, "Successfully updated #{meta.name}!")
