@@ -2,12 +2,23 @@
   <div class="col-lg-9">
     <div class="row">
       <h3>My Data Sets</h3>
+      <hr>
     </div>
+    <div class="row">
+      <%= link "Create a New Data Set", to: data_set_path(@conn, :new), class: "btn btn-success" %>
+    </div>
+    <%= for meta <- @metas do %>
+    <div class="row">
+      <h4><%= meta.name %></h4>
+      <%= link "View Details and Edit", to: data_set_path(@conn, :show, meta.id) %>
+    </div>
+    <% end %>
   </div>
 
   <div class="col-lg-3">
     <div class="row">
       <h3>My Info</h3>
+      <hr>
       <p>
         <strong>Name:</strong> <%= @user.name %><br>
         <strong>Email:</strong> <%= @user.email %><br>
@@ -23,6 +34,7 @@
 
     <div class="row">
       <h3>My Messages</h3>
+      <hr>
     </div>
   </div>
 </div>

@@ -35,9 +35,9 @@ defmodule Plenario.Actions.MetaActions do
   will wrror out -- you cannot add a new Meta to and active Meta.
   """
   @spec create(name :: String.t(), user :: User | integer, source_url :: String.t(), source_type :: String.t()) :: ok_instance
-  def create(name, user, source_url, source_type) when not is_integer(user),
+  def create(name, user, source_url, source_type) when not is_integer(user) and not is_bitstring(user),
     do: create(name, user.id, source_url, source_type)
-  def create(name, user, source_url, source_type) when is_integer(user) do
+  def create(name, user, source_url, source_type) when is_integer(user) or is_bitstring(user) do
     params = %{
       name: name,
       user_id: user,
@@ -301,4 +301,64 @@ defmodule Plenario.Actions.MetaActions do
       {max_x, min_y}]],
     srid: 4326}
   end
+
+  def guess_field_types(meta) do
+    %HTTPoison.Response{body: body} = HTTPoison.get!(meta.source_url)
+    path = "/tmp/#{meta.slug}.#{meta.source_type}"
+    File.write!(path, body)
+
+    first_thousand =
+      File.stream!(path)
+      |> Enum.take(1_001)  # first row is headers
+      |> CSV.decode!(headers: true)
+
+    guesses =
+      for row <- first_thousand do
+        for {key, value} <- row do
+          cond do
+            check_boolean(value) -> {key, "boolean"}
+            check_integer(value) -> {key, "integer"}
+            check_float(value) -> {key, "float"}
+            check_date(value) -> {key, "timestamptz"}
+            check_json(value) -> {key, "jsonb"}
+            true -> {key, "text"}
+          end
+        end
+      end
+      |> List.flatten()
+
+    counts =
+      Enum.reduce(guesses, %{}, fn x, acc -> Map.update(acc, x, 1, &(&1 + 1)) end)
+      |> Enum.into([])
+
+    maxes =
+      Enum.reduce(counts, %{}, fn {{k, _}, c}, acc ->
+        curr = Map.get(acc, k, 0)
+        IO.puts("k=#{k} ; c=#{c}, ; curr=#{curr} ; acc=#{inspect(acc)}")
+        # if c > curr, do: Map.merge(acc, %{String.to_atom(k) => c})
+        if c > curr do
+          Map.update(acc, k, c, &(&1 - &1 + c))
+        else
+          acc
+        end
+      end)
+
+    col_types =
+      Enum.reduce(maxes, %{}, fn {col, max_c}, acc ->
+        {{_, type}, _} = Enum.find(counts, fn {{k, _}, c} -> "#{k}" == "#{col}" and c == max_c end)
+        Map.merge(acc, %{col => type})
+      end)
+
+    col_types
+  end
+
+  defp check_boolean(value), do: Regex.match?(~r/^t|true|f|false$/i, value)
+
+  defp check_integer(value), do: Regex.match?(~r/^-?\d+$/, value)
+
+  defp check_float(value), do: Regex.match?(~r/^-?\d+\.\d+$/, value)
+
+  defp check_date(value), do: Regex.match?(~r/\d{2,4}-|\/\d{2}-|\/\d{2,4}(.\d{1,2}:\d{1,2}:\d{1,2})?/, value)
+
+  defp check_json(value), do: Regex.match?(~r/^[[{].+[]}]$/, value)
 end

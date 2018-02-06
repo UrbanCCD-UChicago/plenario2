@@ -58,6 +58,8 @@ defmodule PlenarioWeb.Router do
     put "/me/update", MeController, :update
     get "/me/change-password", MeController, :edit_password
     put "/me/change-password", MeController, :update_password
+
+    resources "/data-sets", DataSetController
   end
 
   ##

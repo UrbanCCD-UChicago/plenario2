@@ -45,11 +45,13 @@ defmodule Plenario.Queries.MetaQueries do
       MetaQueries.get("this-is-a-slug")
       |> Repo.one()
   """
-  @spec get(id :: integer) :: Ecto.Query.t()
-  def get(id) when is_integer(id), do: from m in Meta, where: m.id == ^id
-
-  @spec get(slug :: String.t()) :: Ecto.Query.t()
-  def get(slug) when is_bitstring(slug), do: from m in Meta, where: m.slug == ^slug
+  @spec get(id :: integer | String.t()) :: Ecto.Query.t()
+  def get(identifier) do
+    case is_integer(identifier) or Regex.match?(~r/^\d+$/, identifier) do
+      true -> from m in Meta, where: m.id == ^identifier
+      false -> from m in Meta, where: m.slug == ^identifier
+    end
+  end
 
   @doc """
   A composable query that filters a given query to only include results whose

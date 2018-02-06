@@ -53,6 +53,7 @@ defmodule Plenario.Changesets.MetaChangesets do
     |> unique_constraint(:source_url)
     |> unique_constraint(:name)
     |> cast_assoc(:user)
+    |> test_source_url()
     |> validate_source_type()
     |> set_slug()
     |> set_table_name()
@@ -66,12 +67,28 @@ defmodule Plenario.Changesets.MetaChangesets do
     |> unique_constraint(:source_url)
     |> unique_constraint(:name)
     |> cast_assoc(:user)
+    |> test_source_url()
     |> validate_source_type()
     |> validate_refresh_rate()
     |> validate_refresh_interval()
     |> validate_refresh_ends_on()
     |> set_slug()
   end
+
+  defp test_source_url(%Ecto.Changeset{valid?: true, changes: %{source_url: source_url}} = changeset) do
+    case HTTPoison.options(source_url) do
+      {:ok, response} ->
+        if response.status_code == 200 do
+          changeset
+        else
+          add_error(changeset, :source_url, "Could not find document at URL")
+        end
+
+      {:error, _} ->
+        add_error(changeset, :source_url, "Could not connect to URL")
+    end
+  end
+  defp test_source_url(changeset), do: changeset
 
   defp validate_source_type(%Ecto.Changeset{valid?: true, changes: %{source_type: source_type}} = changeset) do
     case Enum.member?(Meta.get_source_type_values(), source_type) do

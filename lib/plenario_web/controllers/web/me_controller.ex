@@ -1,13 +1,14 @@
 defmodule PlenarioWeb.Web.MeController do
   use PlenarioWeb, :web_controller
 
-  alias Plenario.Actions.UserActions
+  alias Plenario.Actions.{MetaActions, UserActions}
 
   alias PlenarioAuth
 
   def index(conn, _) do
     user = Guardian.Plug.current_resource(conn)
-    render(conn, "index.html", user: user)
+    metas = MetaActions.list(for_user: user)
+    render(conn, "index.html", user: user, metas: metas)
   end
 
   def edit(conn, _) do

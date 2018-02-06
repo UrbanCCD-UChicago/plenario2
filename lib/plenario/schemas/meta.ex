@@ -121,4 +121,20 @@ defmodule Plenario.Schemas.Meta do
   """
   @spec get_source_type_choices() :: Keyword.t()
   def get_source_type_choices(), do: @source_type_choices
+
+  @doc """
+  Returns a friendly string for displaying refresh interval and rate.
+  """
+  @spec get_refresh_cadence(meta :: Meta) :: String.t()
+  def get_refresh_cadence(meta) do
+    if meta.refresh_rate do
+      if meta.refresh_interval > 1 do
+        "#{meta.refresh_interval} #{meta.refresh_rate}s"
+      else
+        "#{meta.refresh_interval} #{meta.refresh_rate}"
+      end
+    else
+      "-"
+    end
+  end
 end

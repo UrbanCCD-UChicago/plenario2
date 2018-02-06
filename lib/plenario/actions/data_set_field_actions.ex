@@ -78,4 +78,6 @@ defmodule Plenario.Actions.DataSetFieldActions do
   """
   @spec get(identifier :: integer) :: DataSetField | nil
   def get(identifier), do: Repo.get_by(DataSetField, id: identifier)
+
+  def delete(field), do: Repo.delete(field)
 end
