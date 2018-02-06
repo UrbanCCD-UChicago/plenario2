@@ -38,10 +38,10 @@ defmodule Plenario.Queries.DataSetFieldQueries do
   to Meta is the meta passed as the filter value.
   """
   @spec for_meta(query :: Ecto.Query.t(), meta :: Meta) :: Ecto.Query.t()
-  def for_meta(query, meta) when not is_integer(meta), do: for_meta(query, meta.id)
+  def for_meta(query, meta) when not is_integer(meta) and not is_bitstring(meta), do: for_meta(query, meta.id)
 
   @spec for_meta(query :: Ecto.Query.t(), meta_id :: integer) :: Ecto.Query.t()
-  def for_meta(query, meta_id) when is_integer(meta_id), do: from f in query, where: f.meta_id == ^meta_id
+  def for_meta(query, meta_id) when is_integer(meta_id) or is_bitstring(meta_id), do: from f in query, where: f.meta_id == ^meta_id
 
   @doc """
   Conditionally applies boolean and filter composable queries to the given

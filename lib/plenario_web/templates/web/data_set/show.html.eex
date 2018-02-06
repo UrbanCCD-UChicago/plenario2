@@ -108,20 +108,21 @@
     <h3>
       Constraints
       <%= if is_owner do %>
-        <%= link "Add a New Constraint", to: "/", target: "_blank", class: "btn btn-success pull-right" %>
-        <%= link "Edit", to: data_set_path(@conn, :edit, @meta.id), class: "btn btn-danger pull-right", style: "margin-right:5px" %>
+        <%= link "Add a New Constraint", to: unique_constraint_path(@conn, :new, @meta.id), class: "btn btn-success pull-right" %>
       <% end %>
     </h3>
     <table class="table table-striped">
       <thead>
         <tr>
           <th>Unique Field Set</th>
+          <%= if is_owner do %><th></th><% end %>
         </tr>
       </thead>
       <tbody>
         <%= for uc <- @meta.unique_constraints do %>
         <tr>
           <td><%= Enum.join(Plenario.Actions.UniqueConstraintActions.get_field_names(uc), ", ") %></td>
+          <%= if is_owner do %><td><%= link "Edit", to: unique_constraint_path(@conn, :edit, @meta.id, uc.id) %></td><% end %>
         <% end %>
       </tbody>
     </table>

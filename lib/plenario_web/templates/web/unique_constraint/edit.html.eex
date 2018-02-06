@@ -1,0 +1,18 @@
+<h2>Editing <%= @constraint.name %></h2>
+
+<div class="row col-lg-6">
+  <%= form_for @changeset, @action, fn f -> %>
+  <%= hidden_input f, :meta_id, value: @constraint.meta_id %>
+
+  <div class="form-group">
+    <%= label f, "Unique Field Set", class: "control-label" %>
+    <%= multiple_select f, :field_ids, @field_choices, class: "form-control" %>
+    <%= error_tag f, :field_ids %>
+  </div>
+
+  <div class="form-group">
+    <%= submit "Save", class: "btn btn-primary" %>
+    <%= button "Delete Constraint", to: unique_constraint_path(@conn, :delete, @constraint.meta_id, @constraint.id), method: :delete, class: "btn btn-danger pull-right" %>
+  </div>
+  <% end %>
+</div>

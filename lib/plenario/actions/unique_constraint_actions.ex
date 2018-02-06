@@ -30,9 +30,8 @@ defmodule Plenario.Actions.UniqueConstraintActions do
   will wrror out -- you cannot add a new UniqueConstraint to and active Meta.
   """
   @spec create(meta :: Meta | integer, field_ids :: list(DataSetField | integer)) :: ok_instance
-  def create(meta, field_ids) when not is_integer(meta),
-    do: create(meta.id, field_ids)
-  def create(meta, field_ids) when is_integer(meta) do
+  def create(%Meta{} = meta, field_ids), do: create(meta.id, field_ids)
+  def create(meta, field_ids) do
     params = %{
       meta_id: meta,
       field_ids: extract_field_ids(field_ids)
@@ -84,6 +83,12 @@ defmodule Plenario.Actions.UniqueConstraintActions do
   def get(identifier), do: Repo.get_by(UniqueConstraint, id: identifier)
 
   @doc """
+  Deletes a given UniqueConstraint from the database.
+  """
+  @spec delete(constraint :: UniqueConstraint) :: {:ok, UniqueConstraint}
+  def delete(constraint), do: Repo.delete(constraint)
+
+  @doc """
   Gets a list field names for the fields this constraint is built with.
   """
   @spec get_field_names(constraint :: UniqueConstraint) :: list(String.t())
@@ -97,7 +102,7 @@ defmodule Plenario.Actions.UniqueConstraintActions do
   defp extract_field_ids(field_list) do
     field_ids =
       for field <- field_list do
-        case is_integer(field) do
+        case is_integer(field) or is_bitstring(field) do
           true -> field
           false -> field.id
         end
