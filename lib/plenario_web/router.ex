@@ -80,6 +80,11 @@ defmodule PlenarioWeb.Router do
     post "/users/:id/strip-admin-privs", UserController, :strip_admin_privs
     post "/users/:id/activate", UserController, :activate
     post "/users/:id/archive", UserController, :archive
+
+    resources "/metas", MetaController
+    get "/metas/:id/review", MetaController, :review
+    post "/metas/:id/approve", MetaController, :approve
+    post "/metas/:id/disapprove", MetaController, :disapprove
   end
 
   ##
