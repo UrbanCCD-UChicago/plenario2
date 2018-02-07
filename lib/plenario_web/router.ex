@@ -60,6 +60,8 @@ defmodule PlenarioWeb.Router do
     put "/me/change-password", MeController, :update_password
 
     resources "/data-sets", DataSetController
+    post "/data-sets/:id/submit-for-approval", DataSetController, :submit_for_approval
+
     resources "/data-sets/:dsid/fields", DataSetFieldController
     resources "/data-sets/:dsid/constraints", UniqueConstraintController
     resources "/data-sets/:dsid/virtual-dates", VirtualDateController

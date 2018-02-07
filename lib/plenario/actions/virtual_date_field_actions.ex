@@ -6,6 +6,8 @@ defmodule Plenario.Actions.VirtualDateFieldActions do
 
   alias Plenario.Repo
 
+  alias Plenario.Actions.MetaActions
+
   alias Plenario.Schemas.{Meta, VirtualDateField}
 
   alias Plenario.Changesets.VirtualDateFieldChangesets
@@ -87,6 +89,12 @@ defmodule Plenario.Actions.VirtualDateFieldActions do
   @doc """
   Deletes a given VirtualDateField from the database.
   """
-  @spec delete(field :: VirtualDateField) :: {:ok, VirtualDateField}
-  def delete(field), do: Repo.delete(field)
+  @spec delete(field :: VirtualDateField) :: {:ok, VirtualDateField} | {:error, String.t()}
+  def delete(field) do
+    meta = MetaActions.get(field.meta_id)
+    case meta.state do
+      "new" -> Repo.delete(field)
+      _ -> {:error, "Meta is locked."}
+    end
+  end
 end

@@ -1,4 +1,7 @@
-<h2>Updating Virtual Point</h2>
+<h2>
+  Updating Virtual Date
+  <%= link "Back to Parent Data Set", to: data_set_path(@conn, :show, @field.meta_id), class: "btn btn-primary pull-right" %>
+</h2>
 
 <div class="row col-lg-6">
 

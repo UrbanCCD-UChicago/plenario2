@@ -5,6 +5,8 @@ defmodule PlenarioWeb.Web.VirtualPointController do
 
   alias Plenario.Schemas.VirtualPointField
 
+  alias PlenarioWeb.Web.ControllerUtils
+
   def new(conn, %{"dsid" => dsid}) do
     changeset = VirtualPointFieldActions.new()
     action = virtual_point_path(conn, :create, dsid)
@@ -30,6 +32,7 @@ defmodule PlenarioWeb.Web.VirtualPointController do
         conn
         |> put_status(:bad_request)
         |> put_flash(:error, "Please review errors below.")
+        |> ControllerUtils.flash_base_errors(changeset)
         |> render("create.html", changeset: changeset, action: action, dsid: dsid, field_choices: field_choices)
     end
   end
@@ -57,6 +60,7 @@ defmodule PlenarioWeb.Web.VirtualPointController do
         conn
         |> put_status(:bad_request)
         |> put_flash(:error, "Please review errors below.")
+        |> ControllerUtils.flash_base_errors(changeset)
         |> render("edit.html", dsid: dsid, changeset: changeset, action: action, dsid: dsid, field_choices: field_choices)
     end
   end
@@ -69,9 +73,10 @@ defmodule PlenarioWeb.Web.VirtualPointController do
         |> put_flash(:success, "Successfully deleted virtual point")
         |> redirect(to: data_set_path(conn, :show, field.meta_id))
 
-      {:error, cs} ->
-        for e <- cs.errors, do: put_flash(conn, :error, e.message)
-        redirect(conn, to: data_set_path(conn, :show, field.meta_id))
+      {:error, message} ->
+        conn
+        |> put_flash(:error, "Could not delete field: #{message}")
+        |> redirect(to: data_set_path(conn, :show, field.meta_id))
     end
   end
 end

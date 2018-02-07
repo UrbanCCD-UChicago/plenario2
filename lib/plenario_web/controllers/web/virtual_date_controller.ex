@@ -5,6 +5,8 @@ defmodule PlenarioWeb.Web.VirtualDateController do
 
   alias Plenario.Schemas.VirtualDateField
 
+  alias PlenarioWeb.Web.ControllerUtils
+
   def new(conn, %{"dsid" => dsid}) do
     changeset = VirtualDateFieldActions.new()
     action = virtual_date_path(conn, :create, dsid)
@@ -26,6 +28,7 @@ defmodule PlenarioWeb.Web.VirtualDateController do
         conn
         |> put_status(:bad_request)
         |> put_flash(:error, "Please review errors below.")
+        |> ControllerUtils.flash_base_errors(changeset)
         |> render("create.html", changeset: changeset, action: action, dsid: dsid, field_choices: field_choices)
     end
   end
@@ -53,6 +56,7 @@ defmodule PlenarioWeb.Web.VirtualDateController do
         conn
         |> put_status(:bad_request)
         |> put_flash(:error, "Please review errors below.")
+        |> ControllerUtils.flash_base_errors(changeset)
         |> render("edit.html", changeset: changeset, action: action, dsid: dsid, field_choices: field_choices)
     end
   end
@@ -65,9 +69,10 @@ defmodule PlenarioWeb.Web.VirtualDateController do
         |> put_flash(:success, "Successfully deleted virtual date")
         |> redirect(to: data_set_path(conn, :show, field.meta_id))
 
-      {:error, cs} ->
-        for e <- cs.errors, do: put_flash(conn, :error, e.message)
-        redirect(conn, to: data_set_path(conn, :show, field.meta_id))
+      {:error, message} ->
+        conn
+        |> put_flash(:error, "Could not delete field: #{message}")
+        |> redirect(to: data_set_path(conn, :show, field.meta_id))
     end
   end
 end

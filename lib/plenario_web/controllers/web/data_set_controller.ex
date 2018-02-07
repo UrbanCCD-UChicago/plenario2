@@ -10,6 +10,8 @@ defmodule PlenarioWeb.Web.DataSetController do
 
   alias Plenario.Schemas.{DataSetField, Meta, UniqueConstraint}
 
+  alias PlenarioWeb.Web.ControllerUtils
+
   # plug(
   #   :load_and_authorize_resource,
   #   model: Meta,
@@ -80,7 +82,6 @@ defmodule PlenarioWeb.Web.DataSetController do
     case MetaActions.update(meta, update_params) do
       {:ok, meta} ->
         if reset_fields or force_fields_reset do
-          IO.puts("resetting fields: #{reset_fields} or #{force_fields_reset}")
           field_types = MetaActions.guess_field_types(meta)
           fields = DataSetFieldActions.list(for_meta: meta)
           for f <- fields, do: DataSetFieldActions.delete(f)
@@ -99,6 +100,7 @@ defmodule PlenarioWeb.Web.DataSetController do
         conn
         |> put_status(:bad_request)
         |> put_flash(:error, "Please review errors below.")
+        |> ControllerUtils.flash_base_errors(changeset)
         |> render(
           "edit.html", meta: meta, changeset: changeset, action: action,
           source_type_choices: source_type_choices,
@@ -108,5 +110,17 @@ defmodule PlenarioWeb.Web.DataSetController do
   end
 
   def submit_for_approval(conn, %{"id" => id}) do
+    meta = MetaActions.get(id)
+    case MetaActions.submit_for_approval(meta) do
+      {:ok, _} ->
+        conn
+        |> put_flash(:success, "#{meta.name} submitted for approval.")
+        |> redirect(to: data_set_path(conn, :show, id))
+
+      {:error, _} ->
+        conn
+        |> put_flash(:error, "Something went wrong submitting this for approval.")
+        |> redirect(to: data_set_path(conn, :show, id))
+    end
   end
 end

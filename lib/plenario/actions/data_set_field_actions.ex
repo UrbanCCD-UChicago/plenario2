@@ -6,6 +6,8 @@ defmodule Plenario.Actions.DataSetFieldActions do
 
   alias Plenario.Repo
 
+  alias Plenario.Actions.MetaActions
+
   alias Plenario.Schemas.{Meta, DataSetField}
 
   alias Plenario.Changesets.DataSetFieldChangesets
@@ -82,6 +84,12 @@ defmodule Plenario.Actions.DataSetFieldActions do
   @doc """
   Deletes a given DataSetField from the database.
   """
-  @spec delete(field :: DataSetField) :: {:ok, DataSetField}
-  def delete(field), do: Repo.delete(field)
+  @spec delete(field :: DataSetField) :: {:ok, DataSetField} | {:error, String.t()}
+  def delete(field) do
+    meta = MetaActions.get(field.meta_id)
+    case meta.state do
+      "new" -> Repo.delete(field)
+      _ -> {:error, "Meta is locked."}
+    end
+  end
 end

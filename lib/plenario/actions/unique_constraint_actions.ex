@@ -12,7 +12,7 @@ defmodule Plenario.Actions.UniqueConstraintActions do
 
   alias Plenario.Queries.UniqueConstraintQueries
 
-  alias Plenario.Actions.DataSetFieldActions
+  alias Plenario.Actions.{DataSetFieldActions, MetaActions}
 
   @type ok_instance :: {:ok, UniqueConstraint} | {:error, Ecto.Changeset.t()}
 
@@ -86,7 +86,13 @@ defmodule Plenario.Actions.UniqueConstraintActions do
   Deletes a given UniqueConstraint from the database.
   """
   @spec delete(constraint :: UniqueConstraint) :: {:ok, UniqueConstraint}
-  def delete(constraint), do: Repo.delete(constraint)
+  def delete(constraint) do
+    meta = MetaActions.get(constraint.meta_id)
+    case meta.state do
+      "new" -> Repo.delete(constraint)
+      _ -> {:error, "Meta is locked."}
+    end
+  end
 
   @doc """
   Gets a list field names for the fields this constraint is built with.

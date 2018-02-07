@@ -67,6 +67,7 @@ defmodule Plenario.Changesets.MetaChangesets do
     |> unique_constraint(:source_url)
     |> unique_constraint(:name)
     |> cast_assoc(:user)
+    |> validate_state()
     |> test_source_url()
     |> validate_source_type()
     |> validate_refresh_rate()
@@ -74,6 +75,14 @@ defmodule Plenario.Changesets.MetaChangesets do
     |> validate_refresh_ends_on()
     |> set_slug()
   end
+
+  defp validate_state(%Ecto.Changeset{valid?: true} = changeset) do
+    case get_field(changeset, :state) do
+      "new" -> changeset
+      _ -> add_error(changeset, :base, "Cannot edit a data set once it's in process.")
+    end
+  end
+  defp validate_state(changeset), do: changeset
 
   defp test_source_url(%Ecto.Changeset{valid?: true, changes: %{source_url: source_url}} = changeset) do
     case HTTPoison.options(source_url) do

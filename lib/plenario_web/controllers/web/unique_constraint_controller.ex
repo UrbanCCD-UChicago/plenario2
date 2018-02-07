@@ -5,6 +5,8 @@ defmodule PlenarioWeb.Web.UniqueConstraintController do
 
   alias Plenario.Schemas.UniqueConstraint
 
+  alias PlenarioWeb.Web.ControllerUtils
+
   def new(conn, %{"dsid" => dsid}) do
     changeset = UniqueConstraintActions.new()
     action = unique_constraint_path(conn, :create, dsid)
@@ -25,6 +27,7 @@ defmodule PlenarioWeb.Web.UniqueConstraintController do
         conn
         |> put_status(:bad_request)
         |> put_flash(:error, "Please review errors below.")
+        |> ControllerUtils.flash_base_errors(changeset)
         |> render("create.html", changeset: changeset, action: action, dsid: meta_id, field_choices: field_choices)
     end
   end
@@ -37,7 +40,7 @@ defmodule PlenarioWeb.Web.UniqueConstraintController do
     render(conn, "edit.html", constraint: constraint, changeset: changeset, action: action, field_choices: field_choices)
   end
 
-  def update(conn, %{"dsid" => dsid, "id" => id, "data_set_constraint" => %{"field_ids" => field_ids}}) do
+  def update(conn, %{"dsid" => dsid, "id" => id, "unique_constraint" => %{"field_ids" => field_ids}}) do
     constraint = UniqueConstraintActions.get(id)
     case UniqueConstraintActions.update(constraint, field_ids: field_ids) do
       {:ok, constraint} ->
@@ -51,6 +54,7 @@ defmodule PlenarioWeb.Web.UniqueConstraintController do
         conn
         |> put_status(:bad_request)
         |> put_flash(:error, "Please review errors below.")
+        |> ControllerUtils.flash_base_errors(changeset)
         |> render("edit.html", constraint: constraint, changeset: changeset, action: action, field_choices: field_choices)
     end
   end
@@ -63,9 +67,10 @@ defmodule PlenarioWeb.Web.UniqueConstraintController do
         |> put_flash(:success, "Successfully deleted constraint #{constraint.name}")
         |> redirect(to: data_set_path(conn, :show, constraint.meta_id))
 
-      {:error, cs} ->
-        for e <- cs.errors, do: put_flash(conn, :error, e.message)
-        redirect(conn, to: data_set_path(conn, :show, constraint.meta_id))
+      {:error, message} ->
+        conn
+        |> put_flash(:error, "Could not delete constraint: #{message}")
+        |> redirect(to: data_set_path(conn, :show, constraint.meta_id))
     end
   end
 end

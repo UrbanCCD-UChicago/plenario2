@@ -5,6 +5,8 @@ defmodule PlenarioWeb.Web.DataSetFieldController do
 
   alias Plenario.Schemas.DataSetField
 
+  alias PlenarioWeb.Web.ControllerUtils
+
   def edit(conn, %{"dsid" => _, "id" => id}) do
     field = DataSetFieldActions.get(id)
     changeset = DataSetFieldActions.edit(field)
@@ -27,6 +29,7 @@ defmodule PlenarioWeb.Web.DataSetFieldController do
         conn
         |> put_status(:bad_request)
         |> put_flash(:error, "Please review errors below.")
+        |> ControllerUtils.flash_base_errors(changeset)
         |> render("edit.html", field: field, changeset: changeset, action: action, type_choices: type_choices)
     end
   end
@@ -39,9 +42,10 @@ defmodule PlenarioWeb.Web.DataSetFieldController do
         |> put_flash(:success, "Successfully deleted field #{field.name}")
         |> redirect(to: data_set_path(conn, :show, field.meta_id))
 
-      {:error, cs} ->
-        for e <- cs.errors, do: put_flash(conn, :error, e.message)
-        redirect(conn, to: data_set_path(conn, :show, field.meta_id))
+      {:error, message} ->
+        conn
+        |> put_flash(:error, "Could not delete field: #{message}")
+        |> redirect(to: data_set_path(conn, :show, field.meta_id))
     end
   end
 end

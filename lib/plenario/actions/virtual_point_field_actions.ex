@@ -6,6 +6,8 @@ defmodule Plenario.Actions.VirtualPointFieldActions do
 
   alias Plenario.Repo
 
+  alias Plenario.Actions.MetaActions
+
   alias Plenario.Schemas.{Meta, VirtualPointField}
 
   alias Plenario.Changesets.VirtualPointFieldChangesets
@@ -95,6 +97,12 @@ defmodule Plenario.Actions.VirtualPointFieldActions do
   @doc """
   Deletes a given VirtualPointField from the database.
   """
-  @spec delete(field :: VirtualPointField) :: {:ok, VirtualPointField}
-  def delete(field), do: Repo.delete(field)
+  @spec delete(field :: VirtualPointField) :: {:ok, VirtualPointField} | {:error, String.t()}
+  def delete(field) do
+    meta = MetaActions.get(field.meta_id)
+    case meta.state do
+      "new" -> Repo.delete(field)
+      _ -> {:error, "Meta is locked."}
+    end
+  end
 end

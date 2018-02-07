@@ -1,8 +1,8 @@
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css" async>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.css" async>
 
-<script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js"></script>
+<script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js" async></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js" async></script>
 
 <style>
   #map { height: 500px }
@@ -12,6 +12,7 @@
 
 <h2>
   <%= @meta.name %>
+  <%= if is_owner and @meta.state == "new" do %><%= button "Submit for Approval", to: data_set_path(@conn, :submit_for_approval, @meta.id), class: "btn btn-success pull-right" %><% end %>
 </h2>
 
 <hr>
@@ -20,7 +21,9 @@
   <div class="col-lg-6">
     <h3>
       General Info
-      <%= if is_owner do %><%= link "Edit", to: data_set_path(@conn, :edit, @meta.id), class: "btn btn-danger pull-right" %><% end %>
+      <%= if is_owner do %>
+        <%= link "Edit", to: data_set_path(@conn, :edit, @meta.id), class: "btn btn-danger pull-right" %>
+      <% end %>
     </h3>
     <table class="table table-striped">
       <tbody>
