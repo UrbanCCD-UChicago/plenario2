@@ -42,6 +42,10 @@ defmodule Plenario.Changesets.MetaChangesets do
     :latest_import, :next_import, :bbox, :time_range
   ]
 
+  @acceptible_post_new_update_keys MapSet.new([
+    :first_import, :latest_import, :next_import, :bbox, :time_range
+  ])
+
   @spec new() :: Ecto.Changeset.t()
   def new(), do: %Meta{} |> cast(%{}, @create_keys)
 
@@ -76,10 +80,15 @@ defmodule Plenario.Changesets.MetaChangesets do
     |> set_slug()
   end
 
-  defp validate_state(%Ecto.Changeset{valid?: true} = changeset) do
+  defp validate_state(%Ecto.Changeset{valid?: true, changes: changes} = changeset) do
     case get_field(changeset, :state) do
       "new" -> changeset
-      _ -> add_error(changeset, :base, "Cannot edit a data set once it's in process.")
+      _ ->
+        change_keys = MapSet.new(Map.keys(changes))
+        case MapSet.size(MapSet.difference(change_keys, @acceptible_post_new_update_keys)) > 0 do
+          false -> changeset
+          true -> add_error(changeset, :base, "Cannot edit a data set once it's in process.")
+        end
     end
   end
   defp validate_state(changeset), do: changeset

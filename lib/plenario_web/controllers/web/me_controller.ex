@@ -56,7 +56,7 @@ defmodule PlenarioWeb.Web.MeController do
         case new == confirm do
           true ->
             case UserActions.update(user, password: new) do
-              {:ok, user} ->
+              {:ok, _} ->
                 conn
                 |> put_flash(:success, "Password updated!")
                 |> redirect(to: me_path(conn, :index))

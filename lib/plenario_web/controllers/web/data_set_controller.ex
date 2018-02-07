@@ -8,7 +8,7 @@ defmodule PlenarioWeb.Web.DataSetController do
     VirtualPointFieldActions
   }
 
-  alias Plenario.Schemas.{DataSetField, Meta, UniqueConstraint}
+  alias Plenario.Schemas.Meta
 
   alias PlenarioWeb.Web.ControllerUtils
 

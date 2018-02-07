@@ -154,7 +154,7 @@ defmodule Plenario.Actions.MetaActions do
   """
   @spec mark_first_import(meta :: Meta) :: ok_instance
   def mark_first_import(meta) do
-    MetaChangesets.update(meta, %{first_import: DateTime.utc_now()})
+    {:ok, _} = MetaChangesets.update(meta, %{first_import: DateTime.utc_now()})
     |> Repo.update()
 
     meta = get(meta.id)

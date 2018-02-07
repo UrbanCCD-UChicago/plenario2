@@ -176,7 +176,7 @@ defmodule Plenario.Testing.MetaActionsTest do
 
     meta = MetaActions.get(meta.id)
     assert meta.state == "ready"
-    refute meta.first_import == nil
+    assert meta.first_import != nil
   end
 
   test "mark_erred", %{meta: meta} do
