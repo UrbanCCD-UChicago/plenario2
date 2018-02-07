@@ -6,7 +6,7 @@ defmodule Plenario.Repo.Migrations.CreateDataSetFields do
       add :name, :text, null: false
       add :type, :text, null: false
 
-      add :meta_id, references(:metas), null: false
+      add :meta_id, references(:metas, on_delete: :delete_all), null: false
 
       timestamps(type: :timestamptz)
     end

@@ -7,8 +7,16 @@ defmodule PlenarioWeb.Web.MeController do
 
   def index(conn, _) do
     user = Guardian.Plug.current_resource(conn)
-    metas = MetaActions.list(for_user: user)
-    render(conn, "index.html", user: user, metas: metas)
+    all_metas = MetaActions.list(for_user: user)
+    erred_metas = Enum.filter(all_metas, fn m -> m.state == "erred" end)
+    ready_metas = Enum.filter(all_metas, fn m -> m.state == "ready" end)
+    awaiting_first_import_metas = Enum.filter(all_metas, fn m -> m.state == "awaiting_first_import" end)
+    needs_approval_metas = Enum.filter(all_metas, fn m -> m.state == "needs_approval" end)
+    new_metas = Enum.filter(all_metas, fn m -> m.state == "new" end)
+
+    render(conn, "index.html", user: user, erred_metas: erred_metas, ready_metas: ready_metas,
+      awaiting_first_import_metas: awaiting_first_import_metas,
+      needs_approval_metas: needs_approval_metas, new_metas: new_metas)
   end
 
   def edit(conn, _) do

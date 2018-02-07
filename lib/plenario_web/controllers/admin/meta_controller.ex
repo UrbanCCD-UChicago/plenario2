@@ -71,6 +71,4 @@ defmodule PlenarioWeb.Admin.MetaController do
         |> redirect(to: meta_path(conn, :index))
     end
   end
-
-  # def ingest_now(conn, %{"id" => id})
 end

@@ -3,13 +3,13 @@ defmodule Plenario.Repo.Migrations.CreateVirtualDateField do
 
   def change do
     create table(:virtual_date_fields) do
-      add :meta_id, references(:metas), null: false
-      add :year_field_id, references(:data_set_fields), null: false
-      add :month_field_id, references(:data_set_fields), default: nil
-      add :day_field_id, references(:data_set_fields), default: nil
-      add :hour_field_id, references(:data_set_fields), default: nil
-      add :minute_field_id, references(:data_set_fields), default: nil
-      add :second_field_id, references(:data_set_fields), default: nil
+      add :meta_id, references(:metas, on_delete: :delete_all), null: false
+      add :year_field_id, references(:data_set_fields, on_delete: :delete_all), null: false
+      add :month_field_id, references(:data_set_fields, on_delete: :delete_all), default: nil
+      add :day_field_id, references(:data_set_fields, on_delete: :delete_all), default: nil
+      add :hour_field_id, references(:data_set_fields, on_delete: :delete_all), default: nil
+      add :minute_field_id, references(:data_set_fields, on_delete: :delete_all), default: nil
+      add :second_field_id, references(:data_set_fields, on_delete: :delete_all), default: nil
       add :name, :text, null: false
 
       timestamps(type: :timestamptz)

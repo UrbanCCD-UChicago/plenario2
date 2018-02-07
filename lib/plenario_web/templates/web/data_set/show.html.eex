@@ -12,7 +12,12 @@
 
 <h2>
   <%= @meta.name %>
-  <%= if is_owner and @meta.state == "new" do %><%= button "Submit for Approval", to: data_set_path(@conn, :submit_for_approval, @meta.id), class: "btn btn-success pull-right" %><% end %>
+  <%= if is_owner and @meta.state == "new" do %>
+    <%= button "Submit for Approval", to: data_set_path(@conn, :submit_for_approval, @meta.id), class: "btn btn-success pull-right" %>
+  <% end %>
+  <%= if is_owner and not Enum.member?(["new", "needs_approval", "erred"], @meta.state) do %>
+    <%= button "Ingest Now", to: data_set_path(@conn, :ingest_now, @meta.id), class: "btn btn-primary pull-right" %>
+  <% end %>
 </h2>
 
 <hr>

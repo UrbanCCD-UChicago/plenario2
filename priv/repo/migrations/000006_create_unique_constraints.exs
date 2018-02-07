@@ -3,7 +3,7 @@ defmodule Plenario.Repo.Migrations.CreateUniqueConstraints do
 
   def change do
     create table(:unique_constraints) do
-      add :meta_id, references(:metas), null: false
+      add :meta_id, references(:metas, on_delete: :delete_all), null: false
       add :field_ids, {:array, :integer}, null: false
       add :name, :text, null: false
 
