@@ -15,7 +15,7 @@ use Mix.Config
 # which you typically run after static files are built.
 config :plenario, PlenarioWeb.Endpoint,
   http: [port: 8888],
-  url: [host: "dev.plenar.io", port: 80],
+  url: [host: "dev.plenar.io", port: 443, scheme: "https"],
   cache_static_manifest: "priv/static/manifest.json"
 
 
