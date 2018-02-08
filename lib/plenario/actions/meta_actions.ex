@@ -307,10 +307,14 @@ defmodule Plenario.Actions.MetaActions do
     path = "/tmp/#{meta.slug}.#{meta.source_type}"
     File.write!(path, body)
 
+    cnt = 1_001
     first_thousand =
-      File.stream!(path)
-      |> Enum.take(1_001)  # first row is headers
-      |> CSV.decode!(headers: true)
+      case meta.source_type do
+        "csv" -> parse_csv(path, cnt)
+        "tsv" -> parse_tsv(path, cnt)
+        "json" -> parse_json(path, cnt)
+        "shp" -> parse_shapefile(path, cnt)
+      end
 
     guesses =
       for row <- first_thousand do
@@ -348,6 +352,28 @@ defmodule Plenario.Actions.MetaActions do
       end)
 
     col_types
+  end
+
+  defp parse_csv(filename, count) do
+    File.stream!(filename)
+    |> Enum.take(count)
+    |> CSV.decode!(headers: true)
+  end
+
+  defp parse_tsv(filename, count) do
+    File.stream!(filename)
+    |> Enum.take(count)
+    |> CSV.decode!(headers: true, separator: ?\t)
+  end
+
+  defp parse_json(filename, count) do
+    File.read!(filename)
+    |> Poison.decode!()
+    |> Enum.take(count)
+  end
+
+  defp parse_shapefile(_, _) do
+    []
   end
 
   defp check_boolean(value), do: Regex.match?(~r/^t|true|f|false$/i, value)
