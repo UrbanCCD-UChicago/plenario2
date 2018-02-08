@@ -94,6 +94,7 @@ defmodule Plenario.Changesets.MetaChangesets do
   defp validate_state(changeset), do: changeset
 
   defp test_source_url(%Ecto.Changeset{valid?: true, changes: %{source_url: source_url}} = changeset) do
+    # try an OPTIONS request first
     case HTTPoison.options(source_url) do
       {:ok, response} ->
         if response.status_code == 200 do
@@ -103,7 +104,19 @@ defmodule Plenario.Changesets.MetaChangesets do
         end
 
       {:error, _} ->
-        add_error(changeset, :source_url, "Could not connect to URL")
+        # then try a HEAD request
+        case HTTPoison.head(source_url) do
+          {:ok, response} ->
+            if response.status_code == 200 do
+              changeset
+            else
+              add_error(changeset, :source_url, "Could not find document at URL")
+            end
+
+          # if neither work then call it dead
+          {:error, _} ->
+            add_error(changeset, :source_url, "Could not connect to URL")
+        end
     end
   end
   defp test_source_url(changeset), do: changeset
