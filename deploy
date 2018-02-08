@@ -48,7 +48,7 @@ ssh $TARGET "cd releases && tar xzf plenario2-$TAG.tar.gz"
 
 
 echo -e "\n${CYAN}stopping current version of app on $TARGET...${NORM}"
-ssh $TARGET "if [[ -d \"plenario2/bin/\" ]]; then ./plenario2/bin/plenario2 stop; fi"
+ ssh $TARGET "if [[ -d \"plenario2/bin/\" ]]; then ./plenario2/bin/plenario stop; fi"
 
 
 echo -e "\n${CYAN}unlinking current version on $TARGET...${NORM}"

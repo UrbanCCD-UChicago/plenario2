@@ -39,7 +39,7 @@ docker exec -it $CONTAINER_ID sh -c 'MIX_ENV=prod mix release --env=prod'
 
 echo -e "\n${CYAN}making a tarball of the release and copying to your machine...${NORM}"
 if [ ! -d "_build/prod" ]; then mkdir -p _build/prod; fi
-docker exec -it $CONTAINER_ID tar czf plenario2-$TAG.tar.gz /plenario2/_build/prod/rel/plenario2
+docker exec -it $CONTAINER_ID tar czf plenario2-$TAG.tar.gz /plenario2/_build/prod/rel/plenario
 docker cp $CONTAINER_ID:/plenario2/plenario2-$TAG.tar.gz _build/prod/
 
 
@@ -50,7 +50,7 @@ docker stop $CONTAINER_ID
 echo -e "\n${CYAN}extracting tarball and retagging...${NORM}"
 cd _build/prod
 tar xzf plenario2-$TAG.tar.gz
-mv ./plenario2/_build/prod/rel/plenario2 ./$TAG
+mv ./plenario2/_build/prod/rel/plenario ./$TAG
 rm -r ./plenario2
 rm plenario2-$TAG.tar.gz
 tar czf plenario2-$TAG.tar.gz $TAG
