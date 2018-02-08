@@ -32,7 +32,7 @@ defmodule Plenario.Actions.DataSetFieldActions do
   @spec create(meta :: Meta | integer, name :: String.t(), type :: String.t()) :: ok_instance
   def create(%Meta{} = meta, name, type), do: create(meta.id, name, type)
   def create(meta, name, type) do
-    params = %{meta: meta, name: name, type: type}
+    params = %{meta_id: meta, name: name, type: type}
     DataSetFieldChangesets.create(params)
     |> Repo.insert()
   end
