@@ -30,7 +30,6 @@ WORKDIR plenario2/
 
 # install dependencies
 
-ENV MIX_ENV=prod
 RUN mix local.hex --force
 RUN mix local.rebar --force
 RUN mix deps.get
