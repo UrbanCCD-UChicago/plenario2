@@ -27,7 +27,7 @@ defmodule Plenario.Actions.DataSetFieldActions do
   Create a new instance of DataSetField in the database.
 
   If the related Meta instance's state field is not "new" though, this
-  will wrror out -- you cannot add a new DataSetField to and active Meta.
+  will error out -- you cannot add a new DataSetField to and active Meta.
   """
   @spec create(meta :: Meta | integer, name :: String.t(), type :: String.t()) :: ok_instance
   def create(%Meta{} = meta, name, type), do: create(meta.id, name, type)
@@ -48,7 +48,7 @@ defmodule Plenario.Actions.DataSetFieldActions do
   Updates a given DataSetField's attributes.
 
   If the related Meta instance's state field is not "new" though, this
-  will wrror out -- you cannot add a new DataSetField to and active Meta.
+  will error out -- you cannot add a new DataSetField to and active Meta.
   """
   @spec update(instance :: DataSetField, opts :: Keyword.t()) :: ok_instance
   def update(instance, opts \\ []) do

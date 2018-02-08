@@ -30,7 +30,7 @@ defmodule Plenario.Actions.VirtualDateFieldActions do
   field's ID attributes.
 
   If the related Meta instance's state field is not "new" though, this
-  will wrror out -- you cannot add a new VirtualDateField to and active Meta.
+  will error out -- you cannot add a new VirtualDateField to and active Meta.
   """
   @spec create(meta :: Meta | integer, year_field_id :: integer, opts :: Keyword.t()) :: ok_instance
   def create(meta, year_field_id), do: create(meta, year_field_id, [])
@@ -55,7 +55,7 @@ defmodule Plenario.Actions.VirtualDateFieldActions do
   Updates a given VirtualDateField's attributes.
 
   If the related Meta instance's state field is not "new" though, this
-  will wrror out -- you cannot add a new VirtualDateField to and active Meta.
+  will error out -- you cannot add a new VirtualDateField to and active Meta.
   """
   @spec update(instance :: VirtualDateField, opts :: Keyword.t()) :: ok_instance
   def update(instance, opts \\ []) do

@@ -27,7 +27,7 @@ defmodule Plenario.Actions.UniqueConstraintActions do
   Create a new instance of UniqueConstraint in the database.
 
   If the related Meta instance's state field is not "new" though, this
-  will wrror out -- you cannot add a new UniqueConstraint to and active Meta.
+  will error out -- you cannot add a new UniqueConstraint to and active Meta.
   """
   @spec create(meta :: Meta | integer, field_ids :: list(DataSetField | integer)) :: ok_instance
   def create(%Meta{} = meta, field_ids), do: create(meta.id, field_ids)
@@ -51,7 +51,7 @@ defmodule Plenario.Actions.UniqueConstraintActions do
   Updates a given UniqueConstraint's attributes.
 
   If the related Meta instance's state field is not "new" though, this
-  will wrror out -- you cannot add a new UniqueConstraint to and active Meta.
+  will error out -- you cannot add a new UniqueConstraint to and active Meta.
   """
   @spec update(instance :: UniqueConstraint, opts :: Keyword.t()) :: ok_instance
   def update(instance, opts \\ []) do

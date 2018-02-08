@@ -25,7 +25,7 @@ defmodule Plenario.Actions.UserActions do
   Create a new instance of User in the database.
 
   If the related Meta instance's state field is not "new" though, this
-  will wrror out -- you cannot add a new User to and active Meta.
+  will error out -- you cannot add a new User to and active Meta.
   """
   @spec create(name :: String.t(), email :: String.t(), password :: String.t()) :: ok_instance
   def create(name, email, password) do
@@ -49,7 +49,7 @@ defmodule Plenario.Actions.UserActions do
   Updates a given User's attributes.
 
   If the related Meta instance's state field is not "new" though, this
-  will wrror out -- you cannot add a new User to and active Meta.
+  will error out -- you cannot add a new User to and active Meta.
   """
   @spec update(instance :: User, opts :: Keyword.t()) :: ok_instance
   def update(instance, opts \\ []) do

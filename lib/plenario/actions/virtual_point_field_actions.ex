@@ -27,7 +27,7 @@ defmodule Plenario.Actions.VirtualPointFieldActions do
   Create a new instance of VirtualPointField in the database.
 
   If the related Meta instance's state field is not "new" though, this
-  will wrror out -- you cannot add a new VirtualPointField to and active Meta.
+  will error out -- you cannot add a new VirtualPointField to and active Meta.
   """
   @spec create(meta :: Meta | integer, lat_field_id :: integer, lon_fiel_id :: integer) :: ok_instance
   def create(%Meta{} = meta, lat_field_id, lon_field_id), do: create(meta.id, lat_field_id, lon_field_id)
@@ -63,7 +63,7 @@ defmodule Plenario.Actions.VirtualPointFieldActions do
   Updates a given VirtualPointField's attributes.
 
   If the related Meta instance's state field is not "new" though, this
-  will wrror out -- you cannot add a new VirtualPointField to and active Meta.
+  will error out -- you cannot add a new VirtualPointField to and active Meta.
   """
   @spec update(instance :: VirtualPointField, opts :: Keyword.t()) :: ok_instance
   def update(instance, opts \\ []) do

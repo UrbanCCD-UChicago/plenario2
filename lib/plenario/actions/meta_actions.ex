@@ -30,9 +30,6 @@ defmodule Plenario.Actions.MetaActions do
 
   @doc """
   Create a new instance of Meta in the database.
-
-  If the related Meta instance's state field is not "new" though, this
-  will wrror out -- you cannot add a new Meta to and active Meta.
   """
   @spec create(name :: String.t(), user :: User | integer, source_url :: String.t(), source_type :: String.t()) :: ok_instance
   def create(name, %User{} = user, source_url, source_type),
@@ -58,8 +55,8 @@ defmodule Plenario.Actions.MetaActions do
   @doc """
   Updates a given Meta's attributes.
 
-  If the related Meta instance's state field is not "new" though, this
-  will wrror out -- you cannot add a new Meta to and active Meta.
+  If the Meta instance's state field is not "new" though, this
+  will error out -- you cannot update an active Meta.
   """
   @spec update(instance :: Meta, opts :: Keyword.t()) :: ok_instance
   def update(instance, opts \\ []) do
