@@ -1,0 +1,71 @@
+<h2>
+  Editing <%= @meta.name %>
+  <%= link "Back to #{@meta.name}", to: data_set_path(@conn, :show, @meta.id), class: "btn btn-primary pull-right" %>
+</h2>
+
+<div class="row col-lg-6">
+<%= form_for @changeset, @action, fn f -> %>
+  <div class="form-group">
+    <%= label f, "Name", class: "control-label" %>
+    <%= text_input f, :name, class: "form-control" %>
+    <%= error_tag f, :name %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, "Source URL", class: "control-label" %>
+    <%= text_input f, :source_url, class: "form-control" %>
+    <%= error_tag f, :source_url %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, "Source Types", class: "control-label" %>
+    <%= select f, :source_type, @source_type_choices, class: "form-control" %>
+    <%= error_tag f, :source_type %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, "Description", class: "control-label" %>
+    <%= text_input f, :description, class: "form-control" %>
+    <%= error_tag f, :description %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, "Attribution", class: "control-label" %>
+    <%= text_input f, :attribution, class: "form-control" %>
+    <%= error_tag f, :attribution %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, "Refresh Rate", class: "control-label" %>
+    <%= select f, :refresh_rate, @refresh_rate_choices, class: "form-control" %>
+    <%= error_tag f, :refresh_rate %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, "Refresh Interval", class: "control-label" %>
+    <%= number_input f, :refresh_interval, class: "form-control" %>
+    <%= error_tag f, :refresh_interval %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, "Ingest Starts On", class: "control-label" %>
+    <%= text_input f, :refresh_starts_on, class: "form-control", placeholder: "YYYY-MM-DD" %>
+    <%= error_tag f, :refresh_starts_on %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, "Ingest Ends On", class: "control-label" %>
+    <%= text_input f, :refresh_ends_on, class: "form-control", placeholder: "YYYY-MM-DD" %>
+    <%= error_tag f, :refresh_ends_on %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, "Force reprocessing of fields from source document?" %>
+    <%= checkbox f, :force_fields_reset %>
+  </div>
+
+  <div class="form-group">
+    <%= submit "Save", class: "btn btn-primary" %>
+  </div>
+<% end %>
+</div>

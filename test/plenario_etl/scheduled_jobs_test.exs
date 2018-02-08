@@ -1,8 +1,7 @@
-defmodule ScheduledJobsTest do
+defmodule PlentioEtl.Testing.ScheduledJobsTest do
   use ExUnit.Case, async: true
-  alias Plenario.Actions.MetaActions
+  alias Plenario.Actions.{MetaActions, UserActions}
   alias Plenario.Repo
-  alias PlenarioAuth.UserActions
   alias PlenarioEtl.ScheduledJobs
 
   setup do
@@ -10,19 +9,20 @@ defmodule ScheduledJobsTest do
   end
 
   test "find refreshable metas" do
-    {:ok, user} = UserActions.create("Test User", "password", "test@example.com")
+    {:ok, user} = UserActions.create("Test User", "test@example.com", "password")
 
-    MetaActions.create("NoOp Data", user.id, "https://www.example.com/no-op")
+    MetaActions.create("NoOp Data", user.id, "https://www.example.com/no-op", "csv")
 
     {:ok, meta} =
       MetaActions.create(
         "Chicago Tree Trimming",
         user.id,
-        "https://www.example.com/chicago-tree-trimming"
+        "https://www.example.com/chicago-tree-trimming",
+        "csv"
       )
 
     {:ok, meta} =
-      MetaActions.update_refresh_info(
+      MetaActions.update(
         meta,
         refresh_starts_on: Timex.shift(DateTime.utc_now(), years: -1),
         refresh_ends_on: nil,
@@ -30,13 +30,13 @@ defmodule ScheduledJobsTest do
         refresh_interval: 1
       )
 
-    MetaActions.update_next_refresh(meta)
+    MetaActions.update_next_import(meta)
     good_meta = meta
 
     {:ok, meta} =
-      MetaActions.create("Some Old Dataset", user.id, "https://www.example.com/some-old-data-set")
+      MetaActions.create("Some Old Dataset", user.id, "https://www.example.com/some-old-data-set", "csv")
 
-    MetaActions.update_refresh_info(
+    MetaActions.update(
       meta,
       refresh_starts_on: Timex.shift(DateTime.utc_now(), years: -2),
       refresh_ends_on: Timex.shift(DateTime.utc_now(), years: -1),

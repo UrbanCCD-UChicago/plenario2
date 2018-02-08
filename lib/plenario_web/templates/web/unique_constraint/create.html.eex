@@ -1,0 +1,17 @@
+<h2>Creating a New Constraint</h2>
+
+<div class="row col-lg-6">
+  <%= form_for @changeset, @action, fn f -> %>
+  <%= hidden_input f, :meta_id, value: @dsid %>
+
+  <div class="form-group">
+    <%= label f, "Unique Field Set", class: "control-label" %>
+    <%= multiple_select f, :field_ids, @field_choices, class: "form-control" %>
+    <%= error_tag f, :field_ids %>
+  </div>
+
+  <div class="form-group">
+    <%= submit "Create", class: "btn btn-primary" %>
+  </div>
+  <% end %>
+</div>

@@ -1,0 +1,219 @@
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css" async>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.css" async>
+
+<script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js" async></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js" async></script>
+
+<style>
+  #map { height: 500px }
+</style>
+
+<% is_owner = @current_user.id == @meta.user_id %>
+
+<h2>
+  <%= @meta.name %>
+  <%= if is_owner and @meta.state == "new" do %>
+    <%= button "Submit for Approval", to: data_set_path(@conn, :submit_for_approval, @meta.id), class: "btn btn-success pull-right" %>
+  <% end %>
+  <%= if is_owner and not Enum.member?(["new", "needs_approval", "erred"], @meta.state) do %>
+    <%= button "Ingest Now", to: data_set_path(@conn, :ingest_now, @meta.id), class: "btn btn-primary pull-right" %>
+  <% end %>
+</h2>
+
+<hr>
+
+<div class="row">
+  <div class="col-lg-6">
+    <h3>
+      General Info
+      <%= if is_owner do %>
+        <%= link "Edit", to: data_set_path(@conn, :edit, @meta.id), class: "btn btn-danger pull-right" %>
+      <% end %>
+    </h3>
+    <table class="table table-striped">
+      <tbody>
+        <tr>
+          <td>Name:</td>
+          <td><%= @meta.name %></td>
+        </tr>
+        <tr>
+          <td>Status:</td>
+          <td><%= @meta.state %></td>
+        </tr>
+        <tr>
+          <td>Contributor:</td>
+          <td><%= @meta.user.name %></td>
+        </tr>
+        <tr>
+          <td>Description:</td>
+          <td><%= @meta.description || "-" %></td>
+        </tr>
+        <tr>
+          <td>Attribution:</td>
+          <td><%= @meta.attribution || "-" %></td>
+        </tr>
+        <tr>
+          <td>Source URL:</td>
+          <td><%= link @meta.source_url, to: @meta.source_url, target: "_blank" %></td>
+        </tr>
+        </tr>
+        <tr>
+          <td>Refresh Cadence</td>
+          <td><%= Plenario.Schemas.Meta.get_refresh_cadence(@meta) %></td>
+        </tr>
+        <tr>
+          <td>First Import:</td>
+          <td><%= @meta.first_import || "-" %></td>
+        </tr>
+        </tr>
+        <tr>
+          <td>Latest Import:</td>
+          <td><%= @meta.latest_import || "-" %></td>
+        </tr>
+        </tr>
+        <tr>
+          <td>Next Import:</td>
+          <td><%= @meta.next_import || "-" %></td>
+        </tr>
+        <tr>
+          <td>Time Range:</td>
+          <td><%= @meta.time_range || "-" %></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="col-lg-6">
+    <h3>Map</h3>
+    <div id="map"></div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-6">
+    <h3>
+      Data Set Fields
+    </h3>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <%= if is_owner do %><th></th><% end %>
+        </tr>
+      </thead>
+      <tbody>
+        <%= for f <- @meta.fields do %>
+        <tr>
+          <td><%= f.name %></td>
+          <td><%= f.type %></td>
+          <%= if is_owner do %><td><%= link "Edit", to: data_set_field_path(@conn, :edit, @meta.id, f.id) %></td><% end %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <div class="col-lg-6">
+    <h3>
+      Constraints
+      <%= if is_owner do %>
+        <%= link "Add a New Constraint", to: unique_constraint_path(@conn, :new, @meta.id), class: "btn btn-success pull-right" %>
+      <% end %>
+    </h3>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Unique Field Set</th>
+          <%= if is_owner do %><th></th><% end %>
+        </tr>
+      </thead>
+      <tbody>
+        <%= for uc <- @meta.unique_constraints do %>
+        <tr>
+          <td><%= Enum.join(Plenario.Actions.UniqueConstraintActions.get_field_names(uc), ", ") %></td>
+          <%= if is_owner do %><td><%= link "Edit", to: unique_constraint_path(@conn, :edit, @meta.id, uc.id) %></td><% end %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-6">
+    <h3>
+      Computed Date Fields
+      <%= if is_owner do %>
+        <%= link "Add a New Date Field", to: virtual_date_path(@conn, :new, @meta.id), class: "btn btn-success pull-right" %>
+      <% end %>
+    </h3>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Year Ref</th>
+          <th>Month Ref</th>
+          <th>Day Ref</th>
+          <th>Hour Ref</th>
+          <th>Minute Ref</th>
+          <th>Second Ref</th>
+          <%= if is_owner do %><th></th><% end %>
+        </tr>
+      </thead>
+      <tbody>
+        <%= for f <- @virtual_dates do %>
+        <tr>
+          <td><%= f.year_field.name %></td>
+          <td><%= if f.month_field do %><%= f.month_field.name %><% else %>-<% end %></td>
+          <td><%= if f.day_field do %><%= f.day_field.name %><% else %>-<% end %></td>
+          <td><%= if f.hour_field do %><%= f.hour_field.name %><% else %>-<% end %></td>
+          <td><%= if f.minute_field do %><%= f.minute_field.name %><% else %>-<% end %></td>
+          <td><%= if f.second_field do %><%= f.second_field.name %><% else %>-<% end %></td>
+          <%= if is_owner do %><td><%= link "Edit", to: virtual_date_path(@conn, :edit, @meta.id, f.id) %></td><% end %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <div class="col-lg-6">
+    <h3>
+      Computed Point Fields
+      <%= if is_owner do %>
+        <%= link "Add a New Point Field", to: virtual_point_path(@conn, :new, @meta.id), class: "btn btn-success pull-right" %>
+      <% end %>
+    </h3>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Location Ref</th>
+          <th>Latitude Ref</th>
+          <th>Longitude Ref</th>
+          <%= if is_owner do %><th></th><% end %>
+        </tr>
+      </thead>
+      <tbody>
+        <%= for f <- @virtual_points do %>
+        <tr>
+          <td><%= if f.loc_field do %><%= f.loc_field.name %><% else %>-<% end %></td>
+          <td><%= if f.lat_field do %><%= f.lat_field.name %><% else %>-<% end %></td>
+          <td><%= if f.lon_field do %><%= f.lon_field.name %><% else %>-<% end %></td>
+          <%= if is_owner do %><td><%= link "Edit", to: virtual_point_path(@conn, :edit, @meta.id, f.id) %></td><% end %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  var map = L.map('map').setView([41.9, -87.7], 10);
+
+  L.tileLayer(
+    'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}',
+    {
+      attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+      maxZoom: 18,
+      id: 'mapbox.streets',
+      accessToken: 'pk.eyJ1IjoicGxlbmFyaW8iLCJhIjoiY2pkM2RicXV4M2d3ajJybnNvczE0NDBnbiJ9.QYYTdm03c_iSP1pHRS6QUw'
+    }
+  ).addTo(map);
+
+  var drawnItems = new L.FeatureGroup();
+  map.addLayer(drawnItems);
+
+</script>

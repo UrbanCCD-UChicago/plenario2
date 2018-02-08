@@ -1,0 +1,110 @@
+<div class="row jumbotron">
+  <div class="row">
+    <h1>
+      Plenario<br>
+      <small>The Premier Open Data Platform</small><br>
+    </h1>
+  </div>
+
+  <div class="row">
+    <h3>Plenario is a centralized hub for open data sets from around the world, ready to search and download.</h3>
+    <p>&nbsp;</p>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-4">
+      <%= link "Explore all Data Sets", to: page_path(@conn, :explorer), method: :get, class: "btn btn-danger", style: "font-size:1.5em" %>
+    </div>
+    <div class="col-lg-4">
+      <%= link "Explore the Array of Things", to: page_path(@conn, :aot_explorer), method: :get, class: "btn btn-primary", style: "font-size:1.5em" %>
+    </div>
+    <div class="col-lg-4">
+      <%= if @current_user do %>
+        <%= link "Add a New Data Set", to: "/", class: "btn btn-success", style: "font-size:1.5em" %>
+      <% else %>
+        <%= link "Sign Up to Add Data", to: "/", class: "btn btn-success", style: "font-size:1.5em" %>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <h3>One map. One timeline.</h3>
+  <h4>
+    All data in Plenario exists on a single map and a single timeline, making
+    it incredibly easy to access multiple datasets at once &mdash; especially those
+    originally housed at different data portals.
+  </h4>
+  <div class="jumbotron">
+    example image
+  </div>
+</div>
+
+<div class="row">
+  <h3>Explore the Array of Things project.</h3>
+  <h4>
+    Plenario is the official public access point for Array of Things data.
+  </h4>
+  <h4>
+    While also available in the general <%= link "explorer application", to: "/" %>,
+    Array of Things data enjoys its own <%= link "specialized application", to: "/" %>.
+  </h4>
+  <div class="jumbotron">
+    example image
+  </div>
+</div>
+
+<div class="row">
+  <h3>Anyone can add data.</h3>
+  <h4>
+    Anyone can <%= link "sign up", to: auth_path(@conn, :index) %> and register
+    new publicly available data sets. As long as it includes location and time
+    data we can index it and make it available to the world! Publicly available
+    ESRI Shapefiles enclosed in Zip files can also be added.
+  </h4>
+  <div class="jumbotron">
+    example image
+  </div>
+</div>
+
+<div class="row">
+  <h3>Extreme ease of access to rich data sets.</h3>
+  <h4>
+    No coding, no NDAs, no navigating government websites older than you are.
+    Accessing the data is as easy as selecting dates and drawing on a map.
+  </h4>
+  <h4>
+    City data portals, the federal government, individual datasets &dash; we
+    have it all, whether originally housed at Socrata or CKAN data portals or
+    in CSV format.
+  </h4>
+  <div class="jumbotron">
+    example image
+  </div>
+</div>
+
+<div class="row">
+  <h3>Tell the story of place.</h3>
+  <h4>
+    With all the data at your fingertips, you can watch places change over time.
+  </h4>
+  <div class="jumbotron">
+    example image
+  </div>
+</div>
+
+<div class="row">
+  <h3>Forever open.</h3>
+  <h4>
+    All data sets indexed by Plenario are open &mdash; they are publicly available
+    and their source is disclosed to users for their own perusal and verification.
+    Data contributors are encouraged to provide biographical information so that
+    users trust the information they're receiving.
+  </h4>
+  <h4>
+    Additionally, Plenario is built using open source tools and its source is
+    hosted on <a href="https://github.com/UrbanCCD-UChicago/plenario2">GitHub</a>.
+  </h4>
+</div>
+
+<hr>

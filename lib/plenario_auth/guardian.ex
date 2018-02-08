@@ -8,7 +8,7 @@ defmodule PlenarioAuth.Guardian do
 
   use Guardian, otp_app: :plenario
 
-  alias PlenarioAuth.UserActions
+  alias Plenario.Actions.UserActions
 
   @doc """
   For a given known user, store their ID as their identifying value
@@ -23,7 +23,7 @@ defmodule PlenarioAuth.Guardian do
   and pass the struct along for session usage.
   """
   def resource_from_claims(claims) do
-    user = UserActions.get_from_id(claims["sub"])
+    user = UserActions.get(claims["sub"])
 
     case user do
       nil -> {:error, "Unknown user"}

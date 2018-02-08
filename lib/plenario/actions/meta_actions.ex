@@ -1,282 +1,95 @@
 defmodule Plenario.Actions.MetaActions do
   @moduledoc """
-  This module provides a common API for the business logic
-  underlying the various public interfaces for VirtualDateField.
+  This module provides a high level API for interacting with the
+  Meta schema -- creating, updating, getting, ...
   """
 
-  import Plenario.Guards, only: [is_id: 1]
-
-  alias PlenarioAuth.User
-
-  alias Plenario.Changesets.MetaChangesets
-  alias Plenario.Queries.MetaQueries, as: Q
-  alias Plenario.Actions.{AdminUserNoteActions, DataSetActions, MetaActions}
-  alias Plenario.Schemas.{Meta, DataSetConstraint}
   alias Plenario.Repo
 
-  @typedoc """
-  Parameter is an ID attribute
-  """
-  @type id :: String.t() | integer
+  alias Plenario.Schemas.{Meta, User}
 
-  @typedoc """
-  Parameter is a keyword list
-  """
-  @type kwlist :: list({atom, any})
+  alias Plenario.Changesets.MetaChangesets
 
-  @typedoc """
-  Returns a tuple of :ok, Meta or :error, Ecto.Changeset
-  """
-  @type ok_meta :: {:ok, Meta} | {:error, Ecto.Changeset.t()}
+  alias Plenario.Queries.MetaQueries
 
-  @doc """
-  Gets an instance of a Meta by its ID or slug, optionally preloading
-  relations and applying other filters
-  """
-  @spec get(id_or_slug :: id, opts :: kwlist) :: Meta
-  def get(id_or_slug, opts \\ []) do
-    case is_integer(id_or_slug) or Regex.match?(~r/^\d+$/, id_or_slug) do
-      true -> get_by_id(id_or_slug, opts)
-      false -> get_by_slug(id_or_slug, opts)
-    end
-  end
+  alias Plenario.Actions.{
+    DataSetActions,
+    DataSetFieldActions,
+    VirtualDateFieldActions,
+    VirtualPointFieldActions
+  }
 
-  defp get_by_id(id, opts) do
-    Q.from_id(id)
-    |> Q.handle_opts(opts)
-    |> Repo.one()
-  end
-
-  defp get_by_slug(slug, opts) do
-    Q.from_slug(slug)
-    |> Q.handle_opts(opts)
-    |> Repo.one()
-  end
+  @type ok_instance :: {:ok, Meta} | {:error, Ecto.Changeset.t()}
 
   @doc """
-  Gets a list of Metas, optionally preloading relations
-  and applying filters. See MetaQueries.handle_opts for more info
+  This is a convenience function for generating empty changesets to more
+  easily construct forms in Phoenix templates.
   """
-  @spec list(opts :: kwlist) :: list(Meta)
-  def list(opts \\ []) do
-    Q.list()
-    |> Q.handle_opts(opts)
-    |> Repo.all()
-  end
+  @spec new() :: Ecto.Changeset.t()
+  def new(), do: MetaChangesets.new()
 
   @doc """
-  Lists all Metas that are owned by a given user, optionally preloading
-  relations and applying filters. See MetaQueries.handle_opts for more info
+  Create a new instance of Meta in the database.
   """
-  @spec list_for_user(user :: User, opts :: kwlist) :: list(Meta)
-  def list_for_user(user, opts \\ []) do
-    local_defaults = [with_user: true, for_user: user]
-    opts = Keyword.merge(local_defaults, opts)
-
-    Q.list()
-    |> Q.handle_opts(opts)
-    |> Repo.all()
-  end
-
-  @doc """
-  Creates a new instance of a Meta
-  """
-  @spec create(name :: String.t(), user :: User | id, source_url :: String.t(), details :: kwlist) ::
-          ok_meta
-  def create(name, user, source_url, details \\ []) do
-    user_id =
-      case is_id(user) do
-        true -> user
-        false -> user.id
-      end
-
-    defaults = [
-      source_type: "csv",
-      description: nil,
-      attribution: nil,
-      refresh_rate: nil,
-      refresh_interval: nil,
-      refresh_starts_on: nil,
-      refresh_ends_on: nil,
-      srid: 4326,
-      timezone: "UTC"
-    ]
-
-    named = [name: name, user_id: user_id, source_url: source_url]
-
-    params =
-      Keyword.merge(defaults, details)
-      |> Keyword.merge(named)
-      |> Enum.into(%{})
-
+  @spec create(name :: String.t(), user :: User | integer, source_url :: String.t(), source_type :: String.t()) :: ok_instance
+  def create(name, %User{} = user, source_url, source_type),
+    do: create(name, user.id, source_url, source_type)
+  def create(name, user, source_url, source_type) do
+    params = %{
+      name: name,
+      user_id: user,
+      source_url: source_url,
+      source_type: source_type
+    }
     MetaChangesets.create(params)
     |> Repo.insert()
   end
 
   @doc """
-  Get a list of column names for a `Meta` struct.
-
-  ## Examples
-
-    iex> get_column_names(meta)
-    ["id", "location", "datetime", "observation"]
-
+  This is a convenience function for generating prepopulated changesets
+  to more easily construct change forms in Phoenix templates.
   """
-  @spec get_column_names(meta :: Meta) :: list[charlist]
-  def get_column_names(meta) do
-    meta = Repo.preload(meta, :data_set_fields)
-
-    for field <- meta.data_set_fields() do
-      field.name
-    end
-  end
+  @spec edit(instance :: Meta) :: Ecto.Changeset.t()
+  def edit(instance), do: MetaChangesets.update(instance, %{})
 
   @doc """
-  Get a slugified version of `meta.name`.
+  Updates a given Meta's attributes.
 
-  ## Examples
-
-    iex> get_data_set_table_name(meta)
-    "chicago_tree_trimmings"
-
+  If the Meta instance's state field is not "new" though, this
+  will error out -- you cannot update an active Meta.
   """
-  @spec get_data_set_table_name(meta :: Meta) :: charlist
-  def get_data_set_table_name(meta) do
-    meta.name
-    |> String.split(~r/\s/, trim: true)
-    |> Enum.map(&String.downcase/1)
-    |> Enum.join("_")
-  end
-
-  @doc """
-  Get the first constraint association for the given `meta`.
-
-  ## Examples
-
-    iex> get_first_constraint(meta)
-    %DataSetConstraint{}
-
-  """
-  @spec get_first_constraint(meta :: Meta) :: DataSetConstraint
-  def get_first_constraint(meta) do
-    meta = Repo.preload(meta, :data_set_constraints)
-    [constraint | _] = meta.data_set_constraints
-    constraint
-  end
-
-  @doc """
-  Get the list of keys specified by the first `DataSetStraint` association
-  of a `Meta` struct.
-
-  ## Examples
-
-    iex> get_first_constraint_field_names(meta)
-    ["datetime", "location"]
-
-  """
-  @spec get_first_constraint_field_names(meta :: Meta) :: list[charlist]
-  def get_first_constraint_field_names(meta) do
-    get_first_constraint(meta).field_names
-  end
-
-  @doc """
-  Updates the name of the data set
-  """
-  @spec update_name(meta :: %Meta{}, new_name :: String.t()) ::
-          {:ok, %Meta{} | :error, Ecto.Changeset.t()}
-  def update_name(meta, new_name) do
-    MetaChangesets.update_name(meta, %{name: new_name})
+  @spec update(instance :: Meta, opts :: Keyword.t()) :: ok_instance
+  def update(instance, opts \\ []) do
+    params = Enum.into(opts, %{})
+    MetaChangesets.update(instance, params)
     |> Repo.update()
   end
 
   @doc """
-  updates the user/owner of the data set
+  Convenience function for updating a Meta's bbox attribute.
   """
-  @spec update_user(meta :: %Meta{}, user :: %User{}) ::
-          {:ok, %Meta{} | :error, Ecto.Changeset.t()}
-  def update_user(meta, user) do
-    MetaChangesets.update_user(meta, %{user_id: user.id})
-    |> Repo.update()
-  end
+  @spec update_bbox(meta :: Meta, bbox :: Geo.Polygon) :: ok_instance
+  def update_bbox(meta, bbox), do: update(meta, bbox: bbox)
 
   @doc """
-  Updates the source_* fields of the Meta
+  Convenience function for updating a Meta's time_range attribute.
   """
-  @spec update_source_info(meta :: %Meta{}, options :: %{}) ::
-          {:ok, %Meta{} | :error, Ecto.Changeset.t()}
-  def update_source_info(meta, options \\ []) do
-    defaults = [
-      source_url: :unchanged,
-      source_type: :unchanged
-    ]
-
-    options = Keyword.merge(defaults, options) |> Enum.into(%{})
-
-    params =
-      Enum.filter(options, fn {_, value} -> value != :unchanged end)
-      |> Enum.into(%{})
-
-    MetaChangesets.update_source_info(meta, params)
-    |> Repo.update()
-  end
+  @spec update_time_range(meta :: Meta, lower :: DateTime, upper :: DateTime) :: ok_instance
+  def update_time_range(meta, lower, upper), do: update(meta, time_range: [lower, upper])
 
   @doc """
-  Updates the descriptive fields of the meta
+  Convenience function for updating a Meta's latest_import attribute.
   """
-  @spec update_description_info(meta :: %Meta{}, options :: %{}) ::
-          {:ok, %Meta{} | :error, Ecto.Changeset.t()}
-  def update_description_info(meta, options \\ []) do
-    defaults = [
-      description: :unchanged,
-      attribution: :unchanged
-    ]
-
-    options = Keyword.merge(defaults, options) |> Enum.into(%{})
-
-    params =
-      Enum.filter(options, fn {_, value} -> value != :unchanged end)
-      |> Enum.into(%{})
-
-    MetaChangesets.update_description_info(meta, params)
-    |> Repo.update()
-  end
+  @spec update_latest_import(meta :: Meta, timestamp :: DateTime) :: ok_instance
+  def update_latest_import(meta, timestamp), do: update(meta, latest_import: timestamp)
 
   @doc """
-  Updates the refresh_* fields of the Meta
+  Convenience function for updating a Meta's next_import attribute.
   """
-  @spec update_refresh_info(meta :: %Meta{}, options :: %{}) ::
-          {:ok, %Meta{} | :error, Ecto.Changeset.t()}
-  def update_refresh_info(meta, options \\ []) do
-    defaults = [
-      refresh_rate: :unchanged,
-      refresh_interval: :unchanged,
-      refresh_starts_on: :unchanged,
-      refresh_ends_on: :unchanged
-    ]
-
-    options = Keyword.merge(defaults, options) |> Enum.into(%{})
-
-    params =
-      Enum.filter(options, fn {_, value} -> value != :unchanged end)
-      |> Enum.into(%{})
-
-    MetaChangesets.update_refresh_info(meta, params)
-    |> Repo.update()
-  end
-
-  # TODO: implement after setting up ds table and get rows
-  # def update_bbox(meta), do: meta
-
-  # TODO: implement after setting up ds table and get rows
-  # def update_timerange(meta), do: meta
-
-  @doc """
-  Updates the next refresh field of the Meta
-  """
-  @spec update_next_refresh(meta :: %Meta{}) :: {:ok, %Meta{} | :error, Ecto.Changeset.t()}
-  def update_next_refresh(meta) do
+  @spec update_next_import(meta :: Meta) :: ok_instance
+  def update_next_import(meta) do
     current =
-      case meta.next_refresh do
+      case meta.next_import do
         nil -> DateTime.utc_now()
         _ -> meta.next_refresh
       end
@@ -285,140 +98,288 @@ defmodule Plenario.Actions.MetaActions do
     interval = meta.refresh_interval
 
     shifted = Timex.shift(current, [{String.to_atom(rate), interval}])
-    params = %{next_refresh: shifted}
 
-    MetaChangesets.update_next_refresh(meta, params)
-    |> Repo.update()
+    update(meta, next_import: shifted)
   end
 
   @doc """
-  Handles the state transition of the Meta from new to needing approval
+  Marks the given Meta as needs approval in the database.
   """
-  @spec submit_for_approval(meta :: %Meta{}) :: {:ok, %Meta{} | :error, Ecto.Changeset.t()}
+  @spec submit_for_approval(meta :: Meta) :: ok_instance
   def submit_for_approval(meta) do
     Meta.submit_for_approval(meta)
     |> Repo.update()
   end
 
   @doc """
-  Handles the state transition of the Meta from needing approval to ready
+  Marks the given Meta as approved in the database. It then brings up the
+  needed table, functions and triggers for the data set.
+
+  If everything succeeds, this returns {:ok, Meta}; if something goes wrong
+  while bringing up the data set, it returns {:error, "message"} and calls
+  `mark_erred`.
   """
-  @spec approve(meta :: %Meta{}, admin :: %User{}) :: {:ok, %Meta{} | :error, Ecto.Changeset.t()}
-  def approve(meta, %User{is_admin: true} = admin) do
-    # advance the state
-    updated_meta =
+  @spec approve(meta :: Meta) :: {:ok, Meta} | {:error, String.t()}
+  def approve(meta) do
+    {:ok, meta} =
       Meta.approve(meta)
       |> Repo.update()
 
-    # create a note for the user letting them know it's been approved
-    AdminUserNoteActions.create_for_meta(
-      "Your data set has been approved",
-      admin,
-      meta.user,
-      meta,
-      true
-    )
-
-    # create the table for the data set
-    create_res =
-      try do
-        DataSetActions.create_data_set_table!(meta)
-        :ok
-      rescue
-        _ -> :error
-      end
-
-    # check that creation succeeded
-    case create_res do
-      :ok ->
-        :ok
-
-      :error ->
-        AdminUserNoteActions.create_for_meta(
-          "An error occurred setting up the database for your data. We are looking into it.",
-          admin,
-          meta.user,
-          meta
-        )
-
-        MetaActions.mark_erred(meta, admin, create_res)
+    try do
+      DataSetActions.up!(meta)
+      {:ok, meta}
+    rescue
+      e in Postgrex.Error ->
+        DataSetActions.down!(meta)
+        mark_erred(meta)
+        {:error, e.postgres.message}
     end
-
-    # return updated meta
-    updated_meta
   end
 
-  def approve(_, admin), do: {:error, "#{admin.name} is not an admin"}
-
   @doc """
-  Handles the state transition of the Meta from needing approval to new
+  Marks the given Meta as new in the database.
   """
-  @spec disapprove(meta :: %Meta{}, admin :: %User{}, message :: String.t()) ::
-          {:ok, %Meta{} | :error, Ecto.Changeset.t()}
-  def disapprove(meta, %User{is_admin: true} = admin, message) do
-    msg = "Approval has been denied:\n\n" <> message
-
-    AdminUserNoteActions.create_for_meta(
-      msg,
-      admin,
-      meta.user,
-      meta,
-      true
-    )
-
+  @spec disapprove(meta :: Meta) :: ok_instance
+  def disapprove(meta) do
     Meta.disapprove(meta)
     |> Repo.update()
   end
 
-  def disapprove(_, admin, _), do: {:error, "#{admin.name} is not an admin"}
+  @doc """
+  Marks the given Meta as ready in the database and sets the Meta's first_import
+  date to the current timestamp.
+  """
+  @spec mark_first_import(meta :: Meta) :: ok_instance
+  def mark_first_import(meta) do
+    {:ok, _} = MetaChangesets.update(meta, %{first_import: DateTime.utc_now()})
+    |> Repo.update()
+
+    meta = get(meta.id)
+    Meta.mark_first_import(meta)
+    |> Repo.update()
+  end
 
   @doc """
-  Handle the state transition of the Meta from whatever to erred
+  Marks the given Meta as erred in the database.
   """
-  @spec mark_erred(meta :: %Meta{}, admin :: %User{}, message :: String.t()) ::
-          {:ok, %Meta{} | :error, Ecto.Changeset.t()}
-  def mark_erred(meta, %User{is_admin: true} = admin, message) do
-    msg = "An error occurred regarding your data set:\n\n" <> message
-
-    AdminUserNoteActions.create_for_meta(
-      msg,
-      admin,
-      meta.user,
-      meta,
-      true
-    )
-
+  @spec mark_erred(meta :: Meta) :: ok_instance
+  def mark_erred(meta) do
     Meta.mark_erred(meta)
     |> Repo.update()
   end
 
-  def mark_erred(_, admin, _), do: {:error, "#{admin.name} is not an admin"}
-
   @doc """
-  Handle the state transition of the Meta from erred to ready
+  Marks the given Meta as ready after having erred in the database.
   """
-  @spec mark_fixed(meta :: %Meta{}, admin :: %User{}, message :: String.t()) ::
-          {:ok, %Meta{} | :error, Ecto.Changeset.t()}
-  def mark_fixed(meta, %User{is_admin: true} = admin, message) do
-    msg = "Data set error fixed:\n\n" <> message
-
-    AdminUserNoteActions.create_for_meta(
-      msg,
-      admin,
-      meta.user,
-      meta,
-      true
-    )
-
+  @spec mark_fixed(meta :: Meta) :: ok_instance
+  def mark_fixed(meta) do
     Meta.mark_fixed(meta)
     |> Repo.update()
   end
 
-  def mark_fixed(_, admin, _), do: {:error, "#{admin.name} is not an admin"}
+  @doc """
+  Gets a list of Meta from the database.
+
+  This can be optionally filtered using the opts. See
+  MetaQueries.handle_opts for more details.
+  """
+  @spec list(opts :: Keyword.t() | nil) :: list(Meta)
+  def list(opts \\ []) do
+    MetaQueries.list()
+    |> MetaQueries.handle_opts(opts)
+    |> Repo.all()
+  end
 
   @doc """
-  Deletes a given Meta
+  Gets a single Meta from the database.
+
+  This can be optionally filtered using the opts. See
+  MetaQueries.handle_opts for more details.
   """
-  @spec delete(meta :: %Meta{}) :: {:ok, %Meta{} | :error, Ecto.Changeset.t()}
-  def delete(meta), do: Repo.delete(meta)
+  @spec get(identifier :: String.t() | integer, opts :: Keyword.t() | nil) :: Meta | nil
+  def get(identifier, opts \\ []) do
+    MetaQueries.get(identifier)
+    |> MetaQueries.handle_opts(opts)
+    |> Repo.one()
+  end
+
+  @doc """
+  Gets a list of the field names for a given Meta.
+  """
+  def get_column_names(meta) do
+    fields = DataSetFieldActions.list(for_meta: meta)
+    field_names = for f <- fields, do: f.name
+
+    field_names
+  end
+
+  @doc """
+  Selects all dates in the data set's table and finds the minimum and maximum
+  values. From those values, it creates a TsTzRange.
+  """
+  @spec compute_time_range!(meta :: Meta) :: {DateTime, DateTime}
+  def compute_time_range!(meta) do
+    dsfs =
+      DataSetFieldActions.list(for_meta: meta)
+      |> Enum.filter(fn field -> field.type == "timestamptz" end)
+    vdfs = VirtualDateFieldActions.list(for_meta: meta)
+    all_timestamp_fields = dsfs ++ vdfs
+
+    field_names = for field <- all_timestamp_fields do
+      field.name
+    end
+
+    query = """
+    SELECT "#{Enum.join(field_names, "\", \"")}"
+    FROM "#{meta.table_name}";
+    """
+    {:ok, result} = Ecto.Adapters.SQL.query(Repo, query)
+
+    erl_dates = List.flatten(result.rows)
+    datetimes =
+      for {{y, m, d}, {h, mm, s, _}} <- erl_dates do
+        {:ok, ndt} = NaiveDateTime.from_erl({{y, m, d}, {h, mm, s}})
+        {:ok, dt} = DateTime.from_naive(ndt, "Etc/UTC")
+        dt
+      end
+    sorted = Enum.sort(datetimes, fn one, two -> DateTime.compare(one, two) == :gt end)
+
+    upper = List.first(sorted)
+    lower = List.last(sorted)
+
+    {lower, upper}
+  end
+
+  @doc """
+  Selects all points in the data set's table and finds the minimum and maximum
+  values. From those values, it creates a Polygon.
+  """
+  @spec compute_bbox!(meta :: Meta) :: Geo.Polygon
+  def compute_bbox!(meta) do
+    dsfs =
+      DataSetFieldActions.list(for_meta: meta)
+      |> Enum.filter(fn field -> field.type == "geometry" end)
+    vpfs = VirtualPointFieldActions.list(for_meta: meta)
+    all_point_fields = dsfs ++ vpfs
+
+    field_names =
+      for field <- all_point_fields do
+        field.name
+      end
+
+    query = """
+    SELECT "#{Enum.join(field_names, "\", \"")}"
+    FROM "#{meta.table_name}";
+    """
+    {:ok, result} = Ecto.Adapters.SQL.query(Repo, query)
+
+    points = List.flatten(result.rows)
+    xs =
+      for pt <- points do
+        %{coordinates: {x, _}} = pt
+        x
+      end
+    ys =
+      for pt <- points do
+        %{coordinates: {_, y}} = pt
+        y
+      end
+    sorted_xs = Enum.sort(xs)
+    sorted_ys = Enum.sort(ys)
+
+    max_x = List.first(sorted_xs)
+    min_x = List.last(sorted_xs)
+    max_y = List.first(sorted_ys)
+    min_y = List.last(sorted_ys)
+
+    %Geo.Polygon{coordinates: [[
+      {max_x, min_y}, {min_x, min_y},
+      {min_x, max_y}, {max_x, max_y},
+      {max_x, min_y}]],
+    srid: 4326}
+  end
+
+  def guess_field_types(meta) do
+    %HTTPoison.Response{body: body} = HTTPoison.get!(meta.source_url)
+    path = "/tmp/#{meta.slug}.#{meta.source_type}"
+    File.write!(path, body)
+
+    cnt = 1_001
+    first_thousand =
+      case meta.source_type do
+        "csv" -> parse_csv(path, cnt)
+        "tsv" -> parse_tsv(path, cnt)
+        "json" -> parse_json(path, cnt)
+        "shp" -> parse_shapefile(path, cnt)
+      end
+
+    guesses =
+      for row <- first_thousand do
+        for {key, value} <- row do
+          cond do
+            check_boolean(value) -> {key, "boolean"}
+            check_integer(value) -> {key, "integer"}
+            check_float(value) -> {key, "float"}
+            check_date(value) -> {key, "timestamptz"}
+            check_json(value) -> {key, "jsonb"}
+            true -> {key, "text"}
+          end
+        end
+      end
+      |> List.flatten()
+
+    counts =
+      Enum.reduce(guesses, %{}, fn x, acc -> Map.update(acc, x, 1, &(&1 + 1)) end)
+      |> Enum.into([])
+
+    maxes =
+      Enum.reduce(counts, %{}, fn {{k, _}, c}, acc ->
+        curr = Map.get(acc, k, 0)
+        if c > curr do
+          Map.update(acc, k, c, &(&1 - &1 + c))
+        else
+          acc
+        end
+      end)
+
+    col_types =
+      Enum.reduce(maxes, %{}, fn {col, max_c}, acc ->
+        {{_, type}, _} = Enum.find(counts, fn {{k, _}, c} -> "#{k}" == "#{col}" and c == max_c end)
+        Map.merge(acc, %{col => type})
+      end)
+
+    col_types
+  end
+
+  defp parse_csv(filename, count) do
+    File.stream!(filename)
+    |> Enum.take(count)
+    |> CSV.decode!(headers: true)
+  end
+
+  defp parse_tsv(filename, count) do
+    File.stream!(filename)
+    |> Enum.take(count)
+    |> CSV.decode!(headers: true, separator: ?\t)
+  end
+
+  defp parse_json(filename, count) do
+    File.read!(filename)
+    |> Poison.decode!()
+    |> Enum.take(count)
+  end
+
+  defp parse_shapefile(_, _) do
+    []
+  end
+
+  defp check_boolean(value), do: Regex.match?(~r/^t|true|f|false$/i, value)
+
+  defp check_integer(value), do: Regex.match?(~r/^-?\d+$/, value)
+
+  defp check_float(value), do: Regex.match?(~r/^-?\d+\.\d+$/, value)
+
+  defp check_date(value), do: Regex.match?(~r/\d{2,4}-|\/\d{2}-|\/\d{2,4}(.\d{1,2}:\d{1,2}:\d{1,2})?/, value)
+
+  defp check_json(value), do: Regex.match?(~r/^[[{].+[]}]$/, value)
 end

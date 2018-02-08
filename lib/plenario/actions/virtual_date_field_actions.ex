@@ -1,104 +1,100 @@
 defmodule Plenario.Actions.VirtualDateFieldActions do
   @moduledoc """
-  This module provides a common API for the business logic
-  underlying the various public interfaces for VirtualDateField.
+  This module provides a high level API for interacting with the
+  VirtualDateField schema -- creating, updating, getting, ...
   """
 
-  import Ecto.Query
-
-  import Plenario.Guards, only: [is_id: 1]
-
-  alias Plenario.Changesets.VirtualDateFieldChangesets
-  alias Plenario.Schemas.{VirtualDateField, Meta}
   alias Plenario.Repo
 
-  require Logger
+  alias Plenario.Actions.MetaActions
 
-  @typedoc """
-  Parameter is an ID attribute
-  """
-  @type id :: String.t() | integer
+  alias Plenario.Schemas.{Meta, VirtualDateField}
 
-  @typedoc """
-  Returns a tuple of :ok, VirtualDateField or :error, Ecto.Changeset
-  """
-  @type ok_field :: {:ok, VirtualDateField} | {:error, Ecto.Changeset.T}
+  alias Plenario.Changesets.VirtualDateFieldChangesets
+
+  alias Plenario.Queries.VirtualDateFieldQueries
+
+  @type ok_instance :: {:ok, VirtualDateField} | {:error, Ecto.Changeset.t()}
 
   @doc """
-  Creates a new instance of a VirtualDateField
+  This is a convenience function for generating empty changesets to more
+  easily construct forms in Phoenix templates.
   """
-  @spec create(
-          meta :: Meta | id,
-          year :: String.t(),
-          month :: String.t() | nil,
-          day :: String.t() | nil,
-          hour :: String.t() | nil,
-          minute :: String.t() | nil,
-          second :: String.t() | nil
-        ) :: ok_field
-  def create(meta, year, month \\ nil, day \\ nil, hour \\ nil, minute \\ nil, second \\ nil) do
-    meta_id =
-      case is_id(meta) do
-        true -> meta
-        false -> meta.id
-      end
+  @spec new() :: Ecto.Changeset.t()
+  def new(), do: VirtualDateFieldChangesets.new()
 
-    params = %{
-      meta_id: meta_id,
-      year_field: year,
-      month_field: month,
-      day_field: day,
-      hour_field: hour,
-      minute_field: minute,
-      second_field: second
-    }
+  @doc """
+  Create a new instance of VirtualDateField in the database.
 
-    Logger.info("Creating VirtualDateField: #{inspect(params)}")
+  The `opts` param is a keyword list of the other possible related data set
+  field's ID attributes.
 
+  If the related Meta instance's state field is not "new" though, this
+  will error out -- you cannot add a new VirtualDateField to and active Meta.
+  """
+  @spec create(meta :: Meta | integer, year_field_id :: integer, opts :: Keyword.t()) :: ok_instance
+  def create(meta, year_field_id), do: create(meta, year_field_id, [])
+  def create(%Meta{} = meta, year_field_id, opts), do: create(meta.id, year_field_id, opts)
+  def create(meta, year_field_id, opts) do
+    params =
+      [meta_id: meta, year_field_id: year_field_id]
+      |> Keyword.merge(opts)
+      |> Enum.into(%{})
     VirtualDateFieldChangesets.create(params)
     |> Repo.insert()
   end
 
   @doc """
-  Gets a list of all VirtualDateFields for given Meta
+  This is a convenience function for generating prepopulated changesets
+  to more easily construct change forms in Phoenix templates.
   """
-  @spec list_for_meta(meta :: Meta | id) :: list(VirtualDateField)
-  def list_for_meta(meta) do
-    meta_id =
-      case is_id(meta) do
-        true -> meta
-        false -> meta.id
-      end
-
-    Repo.all(from(f in VirtualDateField, where: f.meta_id == ^meta_id))
-  end
+  @spec edit(instance :: VirtualDateField) :: Ecto.Changeset.t()
+  def edit(instance), do: VirtualDateFieldChangesets.update(instance, %{})
 
   @doc """
-  Gets a VirtualDateField by id
-  """
-  @spec get(id :: id) :: VirtualDateField | nil
-  def get(id) do
-    Repo.one(from(f in VirtualDateField, where: f.id == ^id))
-  end
+  Updates a given VirtualDateField's attributes.
 
-  @doc """
-  Updates a VirtualDateField
+  If the related Meta instance's state field is not "new" though, this
+  will error out -- you cannot add a new VirtualDateField to and active Meta.
   """
-  @spec update(field :: VirtualDateField, params :: map) :: VirtualDateField
-  def update(field, params \\ %{}) do
-    Logger.info("Updating VirtualDateField: #{inspect(field)}, #{inspect(params)}")
-
-    VirtualDateFieldChangesets.update(field, params)
+  @spec update(instance :: VirtualDateField, opts :: Keyword.t()) :: ok_instance
+  def update(instance, opts \\ []) do
+    params = Enum.into(opts, %{})
+    VirtualDateFieldChangesets.update(instance, params)
     |> Repo.update()
   end
 
   @doc """
-  Deletes a given VirtualDateField
+  Gets a list of VirtualDateField from the database.
+
+  This can be optionally filtered using the opts. See
+  VirtualDateFieldQueries.handle_opts for more details.
   """
-  @spec delete(field :: %VirtualDateField{}) ::
-          {:ok, %VirtualDateField{} | :error, Ecto.Changeset.t()}
+  @spec list(opts :: Keyword.t() | nil) :: list(VirtualDateField)
+  def list(opts \\ []) do
+    VirtualDateFieldQueries.list()
+    |> VirtualDateFieldQueries.handle_opts(opts)
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets a single VirtualDateField from the database.
+
+  This can be optionally filtered using the opts. See
+  VirtualDateFieldQueries.handle_opts for more details.
+  """
+  @spec get(identifier :: integer) :: VirtualDateField | nil
+  def get(identifier), do: Repo.get_by(VirtualDateField, id: identifier)
+
+  @doc """
+  Deletes a given VirtualDateField from the database.
+  """
+  @spec delete(field :: VirtualDateField) :: {:ok, VirtualDateField} | {:error, String.t()}
   def delete(field) do
-    Logger.info("Deleting: #{inspect(field)}")
-    Repo.delete(field)
+    meta = MetaActions.get(field.meta_id)
+    case meta.state do
+      "new" -> Repo.delete(field)
+      _ -> {:error, "Meta is locked."}
+    end
   end
 end

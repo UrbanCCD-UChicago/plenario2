@@ -13,8 +13,8 @@ defmodule PlenarioEtl.ScheduledJobs do
         m in Meta,
         where: m.refresh_starts_on <= ^starts,
         where: is_nil(m.refresh_ends_on) or m.refresh_ends_on >= ^ends,
-        where: m.next_refresh >= ^starts,
-        where: m.next_refresh < ^ends
+        where: m.next_import >= ^starts,
+        where: m.next_import < ^ends
       )
     )
   end

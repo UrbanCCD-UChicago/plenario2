@@ -1,105 +1,66 @@
-defmodule VirtualDateFieldActionsTests do
-  use Plenario.DataCase, async: true
+defmodule Plenario.Testing.VirtualDateFieldActionsTest do
+  use Plenario.Testing.DataCase, async: true
 
-  alias Plenario.Actions.{DataSetFieldActions, VirtualDateFieldActions, MetaActions}
+  alias Plenario.Actions.{DataSetFieldActions, VirtualDateFieldActions}
 
-  alias PlenarioAuth.UserActions
+  setup %{meta: meta} do
+    {:ok, yr} = DataSetFieldActions.create(meta, "year", "integer")
+    {:ok, mo} = DataSetFieldActions.create(meta, "month", "integer")
+    {:ok, day} = DataSetFieldActions.create(meta, "day", "integer")
+    {:ok, hr} = DataSetFieldActions.create(meta, "hour", "integer")
+    {:ok, mi} = DataSetFieldActions.create(meta, "minute", "integer")
+    {:ok, sec} = DataSetFieldActions.create(meta, "second", "integer")
 
-  setup context do
-    DataSetFieldActions.create(context.meta.id, "year", "integer")
-    DataSetFieldActions.create(context.meta.id, "month", "integer")
-    DataSetFieldActions.create(context.meta.id, "day", "integer")
-    DataSetFieldActions.create(context.meta.id, "hour", "integer")
-    DataSetFieldActions.create(context.meta.id, "minute", "integer")
-    DataSetFieldActions.create(context.meta.id, "second", "integer")
-
-    context
+    {:ok, [yr: yr, mo: mo, day: day, hr: hr, mi: mi, sec: sec]}
   end
 
-  test "create virtual date field", context do
-    {:ok, field} = VirtualDateFieldActions.create(context.meta.id, "year")
-    assert field.name == "_meta_date_year"
+  test "new" do
+    changeset = VirtualDateFieldActions.new()
 
-    {:ok, field} = VirtualDateFieldActions.create(context.meta.id, "year", "month")
-    assert field.name == "_meta_date_year_month"
-
-    {:ok, field} = VirtualDateFieldActions.create(context.meta.id, "year", "month", "day")
-    assert field.name == "_meta_date_year_month_day"
-
-    {:ok, field} = VirtualDateFieldActions.create(context.meta.id, "year", "month", "day", "hour")
-    assert field.name == "_meta_date_year_month_day_hour"
-
-    {:ok, field} =
-      VirtualDateFieldActions.create(context.meta.id, "year", "month", "day", "hour", "minute")
-
-    assert field.name == "_meta_date_year_month_day_hour_minute"
-
-    {:ok, field} =
-      VirtualDateFieldActions.create(
-        context.meta.id,
-        "year",
-        "month",
-        "day",
-        "hour",
-        "minute",
-        "second"
-      )
-
-    assert field.name == "_meta_date_year_month_day_hour_minute_second"
+    assert changeset.action == nil
   end
 
-  test "creating a virtual field with a field that isn't registered to the meta fails", context do
-    {:error, _} = VirtualDateFieldActions.create(context.meta.id, "some_unknown_field")
-  end
+  describe "create" do
+    test "with meta id and yr id", %{meta: meta, yr: yr} do
+      {:ok, f} = VirtualDateFieldActions.create(meta.id, yr.id)
 
-  test "list virtual date fields for meta", context do
-    VirtualDateFieldActions.create(context.meta.id, "year")
-    assert length(VirtualDateFieldActions.list_for_meta(context.meta)) == 1
-  end
-
-  test "delete virtual date field", context do
-    {:ok, field} = VirtualDateFieldActions.create(context.meta.id, "year")
-    assert length(VirtualDateFieldActions.list_for_meta(context.meta)) == 1
-
-    VirtualDateFieldActions.delete(field)
-    assert length(VirtualDateFieldActions.list_for_meta(context.meta)) == 0
-  end
-
-  describe "update a virtual date field" do
-    test "when the meta hasn't been approved yet", context do
-      {:ok, field} = VirtualDateFieldActions.create(context.meta.id, "year")
-
-      {:ok, field} = VirtualDateFieldActions.update(field, %{year_field: "month"})
-      assert field.year_field == "month"
-      assert field.name == "_meta_date_month"
+      field = VirtualDateFieldActions.get(f.id)
+      assert field.year_field_id == yr.id
+      refute field.month_field_id
     end
 
-    test "with bad data", context do
-      {:ok, field} = VirtualDateFieldActions.create(context.meta.id, "year")
-      {:error, _} = VirtualDateFieldActions.update(field, %{month_field: "nope"})
+    test "with meta id, yr id, opts", %{meta: meta, yr: yr, mo: mo, day: day, hr: hr, mi: mi, sec: sec} do
+      {:ok, f} =
+        VirtualDateFieldActions.create(
+          meta.id, yr.id, month_field_id: mo.id, day_field_id: day.id,
+          hour_field_id: hr.id, minute_field_id: mi.id, second_field_id: sec.id
+        )
+
+      field = VirtualDateFieldActions.get(f.id)
+      assert field.year_field_id == yr.id
+      assert field.month_field_id == mo.id
+      assert field.day_field_id == day.id
+      assert field.hour_field_id == hr.id
+      assert field.minute_field_id == mi.id
+      assert field.second_field_id == sec.id
     end
+  end
 
-    test "when the meta has already been approved", context do
-      {:ok, field} = VirtualDateFieldActions.create(context.meta.id, "year")
+  test "update", %{meta: meta, yr: yr, mo: mo} do
+    {:ok, f} = VirtualDateFieldActions.create(meta.id, yr.id)
 
-      UserActions.promote_to_admin(context.user)
-      user = UserActions.get_from_id(context.user.id)
-      meta = MetaActions.get(context.meta.id, with_user: true)
+    field = VirtualDateFieldActions.get(f.id)
+    {:ok, f} = VirtualDateFieldActions.update(field, month_field_id: mo.id)
 
-      MetaActions.submit_for_approval(meta)
-      meta = MetaActions.get(meta.id, with_user: true)
-      MetaActions.approve(meta, user)
-      meta = MetaActions.get(meta.id, with_user: true)
-      assert meta.state == "ready"
+    field = VirtualDateFieldActions.get(f.id)
+    assert field.year_field_id == yr.id
+    assert field.month_field_id == mo.id
+  end
 
-      {:error, error} = VirtualDateFieldActions.update(field, %{year_field: "nope"})
+  test "get", %{meta: meta, yr: yr} do
+    {:ok, f} = VirtualDateFieldActions.create(meta.id, yr.id)
 
-      assert error.errors == [
-               name:
-                 {"Cannot alter any fields after the parent data set has been approved. If you need to update this field, please contact the administrators.",
-                  []},
-               fields: {"Field names must exist as registered fields of the data set", []}
-             ]
-    end
+    field = VirtualDateFieldActions.get(f.id)
+    assert field.id == f.id
   end
 end

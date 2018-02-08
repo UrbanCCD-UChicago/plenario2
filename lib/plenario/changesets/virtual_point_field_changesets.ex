@@ -1,102 +1,80 @@
 defmodule Plenario.Changesets.VirtualPointFieldChangesets do
   @moduledoc """
-  This module provides functions for creating changesets for
-  VirtualPointField structs.
+  This module defines functions used to create and update changesets for
+  the VirtualPointField schema.
   """
 
   import Ecto.Changeset
 
-  alias Plenario.Actions.{MetaActions, DataSetFieldActions}
+  import Plenario.Changesets.Utils, only: [
+    validate_meta_state: 1,
+    set_random_name: 2
+  ]
+
   alias Plenario.Schemas.VirtualPointField
 
-  def new_from_loc() do
-    %VirtualPointField{}
-    |> cast(%{}, [:location_field, :meta_id])
-  end
+  @type create_params :: %{
+    meta_id: integer,
+    lat_field_id: integer,
+    lon_field_id: integer | nil,
+    loc_field_id: integer | nil
+  }
 
-  @doc """
-  Creates a changeset for inserting a new VirtualPointField into the database
-  that is sourced from a single text field.
-  """
-  @spec create_from_loc(params :: %{meta_id: integer, location_field: String.t()}) ::
-          Ecto.Changeset.t()
-  def create_from_loc(params) do
+  @type update_params :: %{
+    lat_field_id: integer,
+    lon_field_id: integer | nil,
+    loc_field_id: integer | nil
+  }
+
+  @required_keys [:meta_id]
+
+  @create_keys [:meta_id, :lat_field_id, :lon_field_id, :loc_field_id]
+
+  @update_keys [:lat_field_id, :lon_field_id, :loc_field_id]
+
+  @spec new() :: Ecto.Changeset.t()
+  def new(), do: %VirtualPointField{} |> cast(%{}, @create_keys)
+
+  @spec create(params :: create_params) :: Ecto.Changeset
+  def create(params) do
     %VirtualPointField{}
-    |> cast(params, [:location_field, :meta_id])
-    |> validate_required([:location_field, :meta_id])
-    |> validate_loc()
+    |> cast(params, @create_keys)
+    |> validate_required(@required_keys)
+    |> validate_lat_long_loc_selections()
     |> cast_assoc(:meta)
-    |> set_name_loc()
+    |> validate_meta_state()
+    |> cast_assoc(:lat_field)
+    |> cast_assoc(:lon_field)
+    |> cast_assoc(:loc_field)
+    |> set_random_name("vpf")
   end
 
-  def new_from_long_lat() do
-    %VirtualPointField{}
-    |> cast(%{}, [:longitude_field, :latitude_field, :meta_id])
+  @spec update(instance :: VirtualPointField, params :: update_params) :: Ecto.Changeset
+  def update(instance, params) do
+    instance
+    |> cast(params, @update_keys)
+    |> validate_required(@required_keys)
+    |> validate_lat_long_loc_selections()
+    |> validate_meta_state()
+    |> cast_assoc(:lat_field)
+    |> cast_assoc(:lon_field)
+    |> cast_assoc(:loc_field)
   end
 
-  @doc """
-  Creates a changeset for inserting a new VirtualPointField into the database
-  that is sourced from a longitude field and latitude field.
-  """
-  @spec create_from_long_lat(
-          params :: %{meta_id: integer, longitude_field: String.t(), latitude_field: String.t()}
-        ) :: Ecto.Changeset.t()
-  def create_from_long_lat(params) do
-    %VirtualPointField{}
-    |> cast(params, [:longitude_field, :latitude_field, :meta_id])
-    |> validate_required([:longitude_field, :latitude_field, :meta_id])
-    |> validate_long_lat()
-    |> cast_assoc(:meta)
-    |> set_name_long_lat()
-  end
+  defp validate_lat_long_loc_selections(changeset) do
+    lat = get_field(changeset, :lat_field_id)
+    lon = get_field(changeset, :lon_field_id)
+    loc = get_field(changeset, :loc_field_id)
 
-  defp set_name_long_lat(changeset) do
-    long = get_field(changeset, :longitude_field)
-    lat = get_field(changeset, :latitude_field)
-
-    changeset |> put_change(:name, "_meta_point_#{long}_#{lat}")
-  end
-
-  defp set_name_loc(changeset) do
-    loc = get_field(changeset, :location_field)
-
-    changeset |> put_change(:name, "_meta_point_#{loc}")
-  end
-
-  defp validate_loc(changeset) do
-    meta_id = get_field(changeset, :meta_id)
-    loc = get_field(changeset, :location_field)
-
-    meta = MetaActions.get(meta_id)
-    fields = DataSetFieldActions.list_for_meta(meta)
-    known_field_names = for f <- fields, do: f.name
-
-    if Enum.member?(known_field_names, loc) do
-      changeset
-    else
-      changeset
-      |> add_error(:fields, "Field names must exist as registered fields of the data set")
+    case {lat, lon, loc} do
+      {_, _, nil} ->
+        if lat != lon do
+          changeset
+        else
+          add_error(changeset, :base, "Lat and lon must be different")
+        end
+      {nil, nil, _} -> changeset
+      {_, _, _} -> add_error(changeset, :base, "Cannot set all three fields")
     end
-  end
-
-  defp validate_long_lat(changeset) do
-    meta_id = get_field(changeset, :meta_id)
-    long = get_field(changeset, :longitude_field)
-    lat = get_field(changeset, :latitude_field)
-
-    field_names = [long, lat]
-
-    meta = MetaActions.get(meta_id)
-    fields = DataSetFieldActions.list_for_meta(meta)
-    known_field_names = for f <- fields, do: f.name
-
-    is_subset = field_names |> Enum.all?(fn name -> Enum.member?(known_field_names, name) end)
-
-    if is_subset do
-      changeset
-    else
-      changeset
-      |> add_error(:fields, "Field names must exist as registered fields of the data set")
-    end
-  end
+end
 end

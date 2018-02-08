@@ -1,85 +1,90 @@
 defmodule Plenario.Actions.DataSetFieldActions do
   @moduledoc """
-  This module provides a common API for the business logic
-  underlying the various public interfaces for DataSetField.
+  This module provides a high level API for interacting with the
+  DataSetField schema -- creating, updating, getting, ...
   """
 
-  import Ecto.Query
-
-  import Plenario.Guards, only: [is_id: 1]
-
-  alias Plenario.Changesets.DataSetFieldChangesets
-  alias Plenario.Schemas.{DataSetField, Meta}
   alias Plenario.Repo
 
-  require Logger
+  alias Plenario.Actions.MetaActions
 
-  @typedoc """
-  Parameter is an ID attribute
-  """
-  @type id :: String.t() | integer
+  alias Plenario.Schemas.{Meta, DataSetField}
 
-  @typedoc """
-  Returns a tuple of :ok, DataSetField or :error, Ecto.Changeset
-  """
-  @type ok_field :: {:ok, DataSetField} | {:error, Ecto.Changeset.T}
+  alias Plenario.Changesets.DataSetFieldChangesets
+
+  alias Plenario.Queries.DataSetFieldQueries
+
+  @type ok_instance :: {:ok, DataSetField} | {:error, Ecto.Changeset.t()}
 
   @doc """
-  Crates a new instance of DataSetField
+  This is a convenience function for generating empty changesets to more
+  easily construct forms in Phoenix templates.
   """
-  @spec create(meta :: Meta | id, name :: String.t(), type :: String.t(), opts :: String.t()) ::
-          ok_field
-  def create(meta, name, type, opts \\ "default null") do
-    meta_id =
-      case is_id(meta) do
-        true -> meta
-        false -> meta.id
-      end
+  @spec new() :: Ecto.Changeset.t()
+  def new(), do: DataSetFieldChangesets.new()
 
-    params = %{
-      meta_id: meta_id,
-      name: name,
-      type: type,
-      opts: opts
-    }
+  @doc """
+  Create a new instance of DataSetField in the database.
 
-    Logger.info("Creating DataSetField: #{inspect(params)}")
-
+  If the related Meta instance's state field is not "new" though, this
+  will error out -- you cannot add a new DataSetField to and active Meta.
+  """
+  @spec create(meta :: Meta | integer, name :: String.t(), type :: String.t()) :: ok_instance
+  def create(%Meta{} = meta, name, type), do: create(meta.id, name, type)
+  def create(meta, name, type) do
+    params = %{meta_id: meta, name: name, type: type}
     DataSetFieldChangesets.create(params)
     |> Repo.insert()
   end
 
   @doc """
-  Gets a list of fields related to a given Meta
+  This is a convenience function for generating prepopulated changesets
+  to more easily construct change forms in Phoenix templates.
   """
-  @spec list_for_meta(meta :: Meta | id) :: list(DataSetField)
-  def list_for_meta(meta) do
-    meta_id =
-      case is_id(meta) do
-        true -> meta
-        false -> meta.id
-      end
-
-    Repo.all(from(f in DataSetField, where: f.meta_id == ^meta_id))
-  end
+  @spec edit(instance :: DataSetField) :: Ecto.Changeset.t()
+  def edit(instance), do: DataSetFieldChangesets.update(instance, %{})
 
   @doc """
-  Updates a DataSetField
-  """
-  @spec update(field :: DataSetField, params :: map) :: DataSetField
-  def update(field, params) do
-    Logger.info("Updating DataSetField: #{inspect(field)}, #{inspect(params)}")
+  Updates a given DataSetField's attributes.
 
-    DataSetFieldChangesets.update(field, params)
+  If the related Meta instance's state field is not "new" though, this
+  will error out -- you cannot add a new DataSetField to and active Meta.
+  """
+  @spec update(instance :: DataSetField, opts :: Keyword.t()) :: ok_instance
+  def update(instance, opts \\ []) do
+    params = Enum.into(opts, %{})
+    DataSetFieldChangesets.update(instance, params)
     |> Repo.update()
   end
 
   @doc """
-  Deletes a given data set field
+  Gets a list of DataSetField from the database.
+
+  This can be optionally filtered using the opts. See
+  DataSetFieldQueries.handle_opts for more details.
   """
-  @spec delete(field :: %DataSetField{}) :: {:ok, %DataSetField{} | :error, Ecto.Changeset.t()}
+  @spec list(opts :: Keyword.t() | nil) :: list(DataSetField)
+  def list(opts \\ []) do
+    DataSetFieldQueries.list()
+    |> DataSetFieldQueries.handle_opts(opts)
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets a single DataSetField from the database.
+  """
+  @spec get(identifier :: integer) :: DataSetField | nil
+  def get(identifier), do: Repo.get_by(DataSetField, id: identifier)
+
+  @doc """
+  Deletes a given DataSetField from the database.
+  """
+  @spec delete(field :: DataSetField) :: {:ok, DataSetField} | {:error, String.t()}
   def delete(field) do
-    Logger.info("Deleting DataSetField: #{inspect(field)}")
-    Repo.delete(field)
+    meta = MetaActions.get(field.meta_id)
+    case meta.state do
+      "new" -> Repo.delete(field)
+      _ -> {:error, "Meta is locked."}
+    end
   end
 end

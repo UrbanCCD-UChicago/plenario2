@@ -1,284 +1,194 @@
 defmodule Plenario.Actions.DataSetActions do
-  @moduledoc """
-  This module handles the database operations for working with
-  tables that hold the data wrapped by the Metas.
-  """
 
   require Logger
 
+  alias Plenario.Repo
+
   alias Plenario.Actions.{
-    DataSetConstraintActions,
     DataSetFieldActions,
     MetaActions,
     VirtualDateFieldActions,
     VirtualPointFieldActions
   }
 
-  alias Plenario.Schemas.Meta
-  alias Plenario.Repo
+  @template_dir "lib/plenario/actions/sql-templates"
 
-  @template_dir "lib/plenario/actions/templates/"
+  def up!(meta) when not is_integer(meta), do: up!(meta.id)
+  def up!(meta_id) when is_integer(meta_id) do
+    meta = MetaActions.get(
+      meta_id,
+      with_fields: true,
+      with_virtual_dates: true,
+      with_virtual_points: true,
+      with_constraints: true)
 
-  @doc """
-  Creates a database table, constraints, functions and triggers for a
-  data set defined by its Meta and related schemas.
-  """
-  @spec create_data_set_table!(meta :: Meta) :: :ok
-  def create_data_set_table!(meta) do
-    # create table
-    table_name = MetaActions.get_data_set_table_name(meta)
+    # create the table with fields and constraints
+    constraints = for uc <- meta.unique_constraints do
+      field_names =
+        DataSetFieldActions.list(by_ids: uc.field_ids)
+        |> Enum.map(fn f -> f.name end)
+        |> Enum.join("\", \"")
+      {uc.name, field_names}
+    end
+    sql = create_table_sql(meta, constraints)
+    execute_sql!(sql)
 
-    ds_fields =
-      for f <- DataSetFieldActions.list_for_meta(meta),
-          do: %{name: f.name, type: f.type, opts: f.opts}
+    # create timestamp parsing function and trigger
+    sql = create_parse_timestamp_function_sql()
+    execute_sql!(sql)
 
-    dt_fields =
-      for f <- VirtualDateFieldActions.list_for_meta(meta),
-          do: %{name: f.name, type: "TIMESTAMPTZ", opts: "DEFAULT NULL"}
+    vdfs = VirtualDateFieldActions.list(with_fields: true, for_meta: meta)
+    fname = "parse_timetamps_#{meta.table_name}"
+    sql = create_parse_timestamp_trigger_sql(fname, vdfs)
+    execute_sql!(sql)
 
-    pt_fields =
-      for f <- VirtualPointFieldActions.list_for_meta(meta),
-          do: %{name: f.name, type: "GEOMETRY(POINT, #{meta.srid})", opts: "DEFAULT NULL"}
+    trigger_name = "#{meta.table_name}_parse_timestamps"
+    sql = create_trigger_sql(trigger_name, meta.table_name, fname)
+    execute_sql!(sql)
 
-    fields = ds_fields ++ dt_fields ++ pt_fields
+    # create location and lat/lon parsing functions and triggers
+    sql = create_parse_location_function_sql()
+    execute_sql!(sql)
+    sql = create_parse_lon_lat_function_sql()
+    execute_sql!(sql)
 
-    :ok = create_table!(table_name, fields)
+    vpfs = VirtualPointFieldActions.list(with_fields: true, for_meta: meta)
+    fname = "parse_points_#{meta.table_name}"
+    sql = create_parse_points_trigger_sql(fname, vpfs)
+    execute_sql!(sql)
 
-    # add constraints
-    Enum.map(DataSetConstraintActions.list_for_meta(meta), fn c ->
-      :ok = add_constraint!(table_name, c.constraint_name, c.field_names)
-    end)
+    trigger_name = "#{meta.table_name}_parse_points"
+    sql = create_trigger_sql(trigger_name, meta.table_name, fname)
+    execute_sql!(sql)
 
-    # date function and trigger sql
-    parse_date_func_name = "func_#{table_name}_parse_timestamp"
-    parse_date_trigger_name = "trigger_#{table_name}_parse_timestamp"
-    date_fields = VirtualDateFieldActions.list_for_meta(meta)
-
-    :ok = create_parse_timestamp_function!(meta.timezone)
-    :ok = create_timestamp_trigger_function!(parse_date_func_name, meta.timezone, date_fields)
-    :ok = create_trigger!(parse_date_trigger_name, table_name, parse_date_func_name)
-
-    # point functions and trigger sql
-    parse_point_func_name = "func_#{table_name}_parse_point"
-    parse_point_trigger_name = "trigger_#{table_name}_parse_point"
-    point_fields = VirtualPointFieldActions.list_for_meta(meta)
-
-    :ok = create_parse_long_lat_function!(meta.srid)
-    :ok = create_parse_location_function!(meta.srid)
-    :ok = create_point_trigger_function!(parse_point_func_name, meta.srid, point_fields)
-    :ok = create_trigger!(parse_point_trigger_name, table_name, parse_point_func_name)
-
+    # done!
     :ok
   end
 
-  @doc """
-  Drops the database table and all related database tooling for a data set
-  """
-  @spec drop_data_set_table!(meta :: Meta) :: :ok
-  def drop_data_set_table!(meta) do
-    table_name = MetaActions.get_data_set_table_name(meta)
-    :ok = drop_table!(table_name)
+  def down!(meta) when not is_integer(meta), do: down!(meta.id)
+  def down!(meta_id) when is_integer(meta_id) do
+    meta = MetaActions.get(
+      meta_id,
+      with_fields: true,
+      with_virtual_dates: true,
+      with_virtual_points: true,
+      with_constraints: true)
 
+    # drop point functions and triggers
+    trigger_name = "#{meta.table_name}_parse_points"
+    sql = drop_trigger_sql(trigger_name, meta.table_name)
+    execute_sql!(sql)
+
+    function_name = "parse_points_#{meta.table_name}"
+    sql = drop_function_sql(function_name)
+    execute_sql!(sql)
+
+    # drop timestamp functions and triggers
+    trigger_name = "#{meta.table_name}_parse_timestamps"
+    sql = drop_trigger_sql(trigger_name, meta.table_name)
+    execute_sql!(sql)
+
+    function_name = "parse_timetamps_#{meta.table_name}"
+    sql = drop_function_sql(function_name)
+    execute_sql!(sql)
+
+    # drop table
+    sql = drop_table_sql(meta.table_name)
+    execute_sql!(sql)
+
+    # done!
     :ok
   end
 
-  defp create_table!(table_name, fields) do
-    sql =
-      EEx.eval_file(
-        "#{@template_dir}/create_table.sql.eex",
-        [table_name: table_name, fields: fields],
-        trim: true
-      )
+  defp create_table_sql(meta, constraints) do
+    filename = "#{@template_dir}/create-table.sql.eex"
+    sql = EEx.eval_file(filename, [meta: meta, constraints: constraints], trim: true)
 
-    case Ecto.Adapters.SQL.query(Repo, sql) do
-      {:ok, _} ->
-        Logger.info("successfully created table", table_name: table_name)
-        :ok
-
-      {:error, error} ->
-        Logger.error("error creating table: #{error.postgres.message}", table_name: table_name)
-        Logger.error(sql)
-        raise error
-    end
+    sql
   end
 
-  defp drop_table!(table_name) do
-    sql =
-      EEx.eval_file(
-        "#{@template_dir}/drop_table.sql.eex",
-        [table_name: table_name],
-        trim: true
-      )
+  defp create_parse_timestamp_function_sql() do
+    filename = "#{@template_dir}/create-parse-timestamp-func.sql.eex"
+    sql = EEx.eval_file(filename, [], trim: true)
 
-    case Ecto.Adapters.SQL.query(Repo, sql) do
-      {:ok, _} ->
-        Logger.info("successfully dropped table", table_name: table_name)
-        :ok
-
-      {:error, error} ->
-        Logger.error("error dropping table: #{error.postgres.message}", table_name: table_name)
-        Logger.error(sql)
-        raise error
-    end
+    sql
   end
 
-  defp add_constraint!(table_name, constraint_name, field_names) do
-    sql =
-      EEx.eval_file(
-        "#{@template_dir}/add_constraint.sql.eex",
-        [table_name: table_name, constraint_name: constraint_name, field_names: field_names],
-        trim: true
-      )
+  defp create_parse_timestamp_trigger_sql(function_name, fields) do
+    filename = "#{@template_dir}/create-parse-timestamp-trigger.sql.eex"
+    sql = EEx.eval_file(
+      filename,
+      [function_name: function_name, fields: fields],
+      trim: true)
 
-    case Ecto.Adapters.SQL.query(Repo, sql) do
-      {:ok, _} ->
-        Logger.info("successfully added constraint `#{constraint_name}`", table_name: table_name)
-        :ok
-
-      {:error, error} ->
-        Logger.error(
-          "error adding constraint: #{error.postgres.message}",
-          table_name: table_name,
-          constraint_name: constraint_name
-        )
-
-        Logger.error(sql)
-        raise error
-    end
+    sql
   end
 
-  defp create_parse_timestamp_function!(timezone) do
-    sql =
-      EEx.eval_file(
-        "#{@template_dir}/create_parse_timestamp_function.sql.eex",
-        [timezone: timezone],
-        trim: true
-      )
+  defp create_parse_location_function_sql() do
+    filename = "#{@template_dir}/create-parse-location-func.sql.eex"
+    sql = EEx.eval_file(filename, [], trim: true)
 
-    case Ecto.Adapters.SQL.query(Repo, sql) do
-      {:ok, _} ->
-        Logger.info("successfully created parse timestamp function `#{timezone}`")
-        :ok
-
-      {:error, error} ->
-        Logger.error(
-          "error creating parse timestamp function `#{timezone}`: #{error.postgres.message}"
-        )
-
-        Logger.error(sql)
-        raise error
-    end
+    sql
   end
 
-  defp create_timestamp_trigger_function!(function_name, timezone, fields) do
-    sql =
-      EEx.eval_file(
-        "#{@template_dir}/create_timestamp_trigger_function.sql.eex",
-        [function_name: function_name, timezone: timezone, fields: fields],
-        trim: true
-      )
+  defp create_parse_lon_lat_function_sql() do
+    filename = "#{@template_dir}/create-parse-lat-lon-func.sql.eex"
+    sql = EEx.eval_file(filename, [], trim: true)
 
-    case Ecto.Adapters.SQL.query(Repo, sql) do
-      {:ok, _} ->
-        Logger.info("successfully created parse timestamp function trigger `#{timezone}`")
-        :ok
-
-      {:error, error} ->
-        Logger.error(
-          "error creating parse timestamp function trigger `#{timezone}`: #{
-            error.postgres.message
-          }"
-        )
-
-        Logger.error(sql)
-        raise error
-    end
+    sql
   end
 
-  defp create_parse_long_lat_function!(srid) do
-    sql =
-      EEx.eval_file(
-        "#{@template_dir}/create_parse_long_lat_function.sql.eex",
-        [srid: srid],
-        trim: true
-      )
+  defp create_parse_points_trigger_sql(function_name, fields) do
+    filename = "#{@template_dir}/create-parse-points-trigger.sql.eex"
+    sql = EEx.eval_file(
+      filename,
+      [function_name: function_name, fields: fields],
+      trim: true)
 
-    case Ecto.Adapters.SQL.query(Repo, sql) do
-      {:ok, _} ->
-        Logger.info("successfully created parse long/lat function `#{srid}`")
-        :ok
-
-      {:error, error} ->
-        Logger.error(
-          "error creating parse long/lat function `#{srid}`: #{error.postgres.message}"
-        )
-
-        Logger.error(sql)
-        raise error
-    end
+    sql
   end
 
-  defp create_parse_location_function!(srid) do
-    sql =
-      EEx.eval_file(
-        "#{@template_dir}/create_parse_location_function.sql.eex",
-        [srid: srid],
-        trim: true
-      )
+  defp create_trigger_sql(trigger_name, table_name, function_name) do
+    filename = "#{@template_dir}/create-trigger.sql.eex"
+    sql = EEx.eval_file(
+      filename,
+      [trigger_name: trigger_name, table_name: table_name, function_name: function_name],
+      trim: true)
 
-    case Ecto.Adapters.SQL.query(Repo, sql) do
-      {:ok, _} ->
-        Logger.info("successfully created parse location function `#{srid}`")
-        :ok
-
-      {:error, error} ->
-        Logger.error(
-          "error creating parse location function `#{srid}`: #{error.postgres.message}"
-        )
-
-        Logger.error(sql)
-        raise error
-    end
+    sql
   end
 
-  defp create_point_trigger_function!(function_name, srid, fields) do
-    sql =
-      EEx.eval_file(
-        "#{@template_dir}/create_point_trigger_function.sql.eex",
-        [function_name: function_name, srid: srid, fields: fields],
-        trim: true
-      )
+  defp drop_table_sql(table_name) do
+    filename = "#{@template_dir}/drop-table.sql.eex"
+    sql = EEx.eval_file(filename, [table_name: table_name], trim: true)
 
-    case Ecto.Adapters.SQL.query(Repo, sql) do
-      {:ok, _} ->
-        Logger.info("successfully created parse long/lat function trigger `#{srid}`")
-        :ok
-
-      {:error, error} ->
-        Logger.error(
-          "error creating parse long/lat function trigger `#{srid}`: #{error.postgres.message}"
-        )
-
-        Logger.error(sql)
-        raise error
-    end
+    sql
   end
 
-  defp create_trigger!(trigger_name, table_name, function_name) do
-    sql =
-      EEx.eval_file(
-        "#{@template_dir}/create_trigger.sql.eex",
-        [trigger_name: trigger_name, table_name: table_name, function_name: function_name],
-        trim: true
-      )
+  defp drop_function_sql(function_name) do
+    filename = "#{@template_dir}/drop-func.sql.eex"
+    sql = EEx.eval_file(filename, [function_name: function_name], trim: true)
 
+    sql
+  end
+
+  defp drop_trigger_sql(trigger_name, table_name) do
+    filename = "#{@template_dir}/drop-trigger.sql.eex"
+    sql = EEx.eval_file(
+      filename,
+      [trigger_name: trigger_name, table_name: table_name],
+      trim: true)
+
+    sql
+  end
+
+  defp execute_sql!(sql) do
     case Ecto.Adapters.SQL.query(Repo, sql) do
       {:ok, _} ->
-        Logger.info("successfully created trigger `#{trigger_name}`")
         :ok
 
       {:error, error} ->
-        Logger.error("error creating trigger `#{trigger_name}`: #{error.postgres.message}")
+        Logger.error(error.postgres.message)
         Logger.error(sql)
         raise error
     end

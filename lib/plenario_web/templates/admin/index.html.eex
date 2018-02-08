@@ -1,3 +1,0 @@
-<%= render PlenarioWeb.AdminView, "_admin_nav.html", assigns %>
-
-<h2>Admin</h2>

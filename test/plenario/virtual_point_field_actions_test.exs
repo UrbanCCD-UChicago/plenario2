@@ -1,44 +1,62 @@
-defmodule VirtualPointFieldActionsTests do
-  use Plenario.DataCase, async: true
+defmodule Plenario.Testing.VirtualPointFieldActionsTest do
+  use Plenario.Testing.DataCase, async: true
 
   alias Plenario.Actions.{DataSetFieldActions, VirtualPointFieldActions}
 
-  setup context do
-    DataSetFieldActions.create(context.meta.id, "location", "text")
-    DataSetFieldActions.create(context.meta.id, "longitude", "float")
-    DataSetFieldActions.create(context.meta.id, "latitude", "float")
+  setup %{meta: meta} do
+    {:ok, lat} = DataSetFieldActions.create(meta, "lat", "float")
+    {:ok, lon} = DataSetFieldActions.create(meta, "lon", "float")
+    {:ok, loc} = DataSetFieldActions.create(meta, "loc", "text")
 
-    context
+    {:ok, [lat: lat, lon: lon, loc: loc]}
   end
 
-  test "create virtual point field from long/lat", context do
-    {:ok, field} =
-      VirtualPointFieldActions.create_from_long_lat(context.meta.id, "longitude", "latitude")
+  test "new" do
+    changeset = VirtualPointFieldActions.new()
 
-    assert field.name == "_meta_point_longitude_latitude"
+    assert changeset.action == nil
   end
 
-  test "create virutal point field from location", context do
-    {:ok, field} = VirtualPointFieldActions.create_from_loc(context.meta.id, "location")
-    assert field.name == "_meta_point_location"
+  describe "create" do
+    test "with lat lon", %{meta: meta, lat: lat, lon: lon} do
+      {:ok, f} = VirtualPointFieldActions.create(meta.id, lat.id, lon.id)
+
+      field = VirtualPointFieldActions.get(f.id)
+      assert field.lat_field_id == lat.id
+      assert field.lon_field_id == lon.id
+      refute field.loc_field_id
+    end
+
+    test "with loc", %{meta: meta, loc: loc} do
+      {:ok, f} = VirtualPointFieldActions.create(meta.id, loc.id)
+
+      field = VirtualPointFieldActions.get(f.id)
+      refute field.lat_field_id
+      refute field.lon_field_id
+      assert field.loc_field_id == loc.id
+    end
   end
 
-  test "creating a virtual field with a field name not registered to the meta fails", context do
-    {:error, _} = VirtualPointFieldActions.create_from_loc(context.meta.id, "some_made_up_field")
+  describe "update" do
+    test "substitute a field", %{meta: meta, lat: lat, lon: lon, loc: loc} do
+      {:ok, f} = VirtualPointFieldActions.create(meta.id, lat.id, lon.id)
 
-    {:error, _} = VirtualPointFieldActions.create_from_long_lat(context.meta.id, "long", "lat")
-  end
+      field = VirtualPointFieldActions.get(f.id)
+      {:ok, _} = VirtualPointFieldActions.update(field, lon_field_id: loc.id)
+    end
 
-  test "list virtual point fields for meta", context do
-    VirtualPointFieldActions.create_from_loc(context.meta.id, "location")
-    assert length(VirtualPointFieldActions.list_for_meta(context.meta)) == 1
-  end
+    test "lat and lon are the same", %{meta: meta, lat: lat, lon: lon} do
+      {:ok, f} = VirtualPointFieldActions.create(meta.id, lat.id, lon.id)
 
-  test "delete virtual point field", context do
-    {:ok, field} = VirtualPointFieldActions.create_from_loc(context.meta.id, "location")
-    assert length(VirtualPointFieldActions.list_for_meta(context.meta)) == 1
+      field = VirtualPointFieldActions.get(f.id)
+      {:error, _} = VirtualPointFieldActions.update(field, lon_field_id: lat.id)
+    end
 
-    VirtualPointFieldActions.delete(field)
-    assert length(VirtualPointFieldActions.list_for_meta(context.meta)) == 0
+    test "set all three", %{meta: meta, lat: lat, lon: lon, loc: loc} do
+      {:ok, f} = VirtualPointFieldActions.create(meta.id, lat.id, lon.id)
+
+      field = VirtualPointFieldActions.get(f.id)
+      {:error, _} = VirtualPointFieldActions.update(field, loc_field_id: loc.id)
+    end
   end
 end

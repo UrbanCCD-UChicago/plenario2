@@ -19,7 +19,7 @@ defmodule PlenarioWeb.ConnCase do
 
   import PlenarioWeb.Router.Helpers
 
-  alias PlenarioAuth.UserActions
+  alias Plenario.Actions.UserActions
 
   @endpoint PlenarioWeb.Endpoint
 
@@ -39,11 +39,11 @@ defmodule PlenarioWeb.ConnCase do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
 
     # create an admin user
-    {:ok, admin_user} = UserActions.create("Admin User", "password", "admin@example.com")
+    {:ok, admin_user} = UserActions.create("Admin User", "admin@example.com", "password")
     {:ok, admin_user} = UserActions.promote_to_admin(admin_user)
 
     # create a regular user
-    {:ok, reg_user} = UserActions.create("Regular User", "password", "regular@example.com")
+    {:ok, reg_user} = UserActions.create("Regular User", "regular@example.com", "password")
 
     unless tags[:async] do
       Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})

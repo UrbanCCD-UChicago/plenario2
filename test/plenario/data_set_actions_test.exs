@@ -1,122 +1,81 @@
-defmodule DataSetActionsTest do
-  use Plenario.DataCase, async: true
+defmodule Plenario.Testing.DataSetActionsTest do
+  use Plenario.Testing.DataCase, async: true
+
+  alias Plenario.Repo
 
   alias Plenario.Actions.{
     DataSetActions,
     DataSetFieldActions,
-    DataSetConstraintActions,
-    MetaActions,
+    VirtualDateFieldActions,
     VirtualPointFieldActions,
-    VirtualDateFieldActions
+    UniqueConstraintActions
   }
 
-  alias Plenario.Repo
+  setup %{meta: meta} do
+    {:ok, pk} = DataSetFieldActions.create(meta, "id", "integer")
+    {:ok, _} = DataSetFieldActions.create(meta, "observation", "float")
+    {:ok, yr} = DataSetFieldActions.create(meta, "year", "integer")
+    {:ok, mo} = DataSetFieldActions.create(meta, "month", "integer")
+    {:ok, day} = DataSetFieldActions.create(meta, "day", "integer")
+    {:ok, lat} = DataSetFieldActions.create(meta, "lat", "float")
+    {:ok, lon} = DataSetFieldActions.create(meta, "lon", "float")
 
-  setup context do
-    meta = context[:meta]
+    {:ok, vdf} = VirtualDateFieldActions.create(meta.id, yr.id, month_field_id: mo.id, day_field_id: day.id)
 
-    DataSetFieldActions.create(meta.id, "event id", "text")
-    DataSetFieldActions.create(meta.id, "long", "float")
-    DataSetFieldActions.create(meta.id, "lat", "float")
-    DataSetFieldActions.create(meta.id, "year", "integer")
-    DataSetFieldActions.create(meta.id, "month", "integer")
-    DataSetFieldActions.create(meta.id, "day", "integer")
+    {:ok, vpf} = VirtualPointFieldActions.create(meta.id, lat.id, lon.id)
 
-    DataSetConstraintActions.create(meta.id, ["event_id"])
+    {:ok, uc} = UniqueConstraintActions.create(meta.id, [pk.id])
 
-    VirtualPointFieldActions.create_from_long_lat(meta.id, "long", "lat")
-    VirtualDateFieldActions.create(meta.id, "year", "month", "day")
-
-    [table_name: MetaActions.get_data_set_table_name(meta)]
+    {
+      :ok,
+      [
+        pk: pk,
+        yr: yr,
+        mo: mo,
+        day: day,
+        lat: lat,
+        lon: lon,
+        vdf: vdf,
+        vpf: vpf,
+        uc: uc
+      ]
+    }
   end
 
-  test "create a data set table", context do
-    DataSetActions.create_data_set_table!(context.meta)
+  test "up!", %{meta: meta} do
+    DataSetActions.up!(meta)
 
     insert = """
-    INSERT INTO #{context.table_name}
-    VALUES
-      ('abc123', 1.0, 1.0, 2017, 1, 1);
+    INSERT INTO "#{meta.table_name}" VALUES
+      (1, 12.3, 2018, 1, 1, 10.1, 20.9),
+      (2, 12.2, 2018, 1, 1, 10.1, 20.8),
+      (3, 12.1, 2018, 1, 1, 10.1, 20.7);
     """
-
-    Ecto.Adapters.SQL.query(Repo, insert)
+    {:ok, _} = Ecto.Adapters.SQL.query(Repo, insert)
 
     query = """
-    SELECT * FROM #{context.table_name}
+    SELECT * FROM "#{meta.table_name}"
     """
-
     {:ok, result} = Ecto.Adapters.SQL.query(Repo, query)
 
-    assert result.rows == [
-             [
-               "abc123",
-               1.0,
-               1.0,
-               2017,
-               1,
-               1,
-               {{2017, 1, 1}, {0, 0, 0, 0}},
-               %Geo.Point{coordinates: {1.0, 1.0}, srid: 4326}
-             ]
-           ]
-  end
+    assert length(result.rows) == 3
+    first = List.first(result.rows)
+    assert first == [
+      1, 12.3, 2018, 1, 1, 10.1, 20.9,
+      {{2018, 1, 1}, {0, 0, 0, 0}}, # virtual date
+      %Geo.Point{coordinates: {20.9, 10.1}, srid: 4326}  # virtual point
+    ]
 
-  test "drop a data set table", context do
-    DataSetActions.create_data_set_table!(context.meta)
-    DataSetActions.drop_data_set_table!(context.meta)
-  end
-
-  describe "with non-alnum characters" do
-    test "create with a dash in the name", context do
-      {:ok, meta} = MetaActions.update_name(context.meta, "chicago - data")
-      DataSetActions.create_data_set_table!(meta)
-    end
-
-    test "create with non latin chars", context do
-      {:ok, meta} = MetaActions.update_name(context.meta, "進撃の巨人")
-      DataSetActions.create_data_set_table!(meta)
-    end
-
-    test "drop", context do
-      {:ok, meta} = MetaActions.update_name(context.meta, "chicago - data")
-      DataSetActions.create_data_set_table!(meta)
-      DataSetActions.drop_data_set_table!(meta)
-    end
-  end
-
-  test "with a funky field name", context do
-    DataSetFieldActions.create(context.meta.id, "to-day", "integer")
-    VirtualDateFieldActions.create(context.meta.id, "year", "month", "to-day")
-
-    DataSetActions.create_data_set_table!(context.meta)
-
+    # check unique key
     insert = """
-    INSERT INTO #{context.table_name}
-    VALUES
-      ('abc123', 1.0, 1.0, 2017, 1, 1, 1);
+    INSERT INTO "#{meta.table_name}" VALUES
+      (1, 12.4, 2018, 1, 1, 10.1, 20.9);
     """
+    {:error, _} = Ecto.Adapters.SQL.query(Repo, insert)
+  end
 
-    Ecto.Adapters.SQL.query(Repo, insert)
-
-    query = """
-    SELECT * FROM #{context.table_name}
-    """
-
-    {:ok, result} = Ecto.Adapters.SQL.query(Repo, query)
-
-    assert result.rows == [
-             [
-               "abc123",
-               1.0,
-               1.0,
-               2017,
-               1,
-               1,
-               1,
-               {{2017, 1, 1}, {0, 0, 0, 0}},
-               {{2017, 1, 1}, {0, 0, 0, 0}},
-               %Geo.Point{coordinates: {1.0, 1.0}, srid: 4326}
-             ]
-           ]
+  test "down!", %{meta: meta} do
+    DataSetActions.up!(meta)
+    DataSetActions.down!(meta)
   end
 end

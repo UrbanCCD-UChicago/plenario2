@@ -1,0 +1,101 @@
+<div class="row">
+  <div class="col-lg-8"> <!-- meta column -->
+    <div class="row">
+      <h2>
+        My Data Sets
+        <%= link "Create a New Data Set", to: data_set_path(@conn, :new), class: "btn btn-success pull-right" %>
+      </h2>
+      <hr>
+    </div>
+
+    <%= if length(@erred_metas) > 0 do %>
+    <div class="row">
+      <h3>Erred Data Sets</h3>
+      <%= for m <- @erred_metas do %>
+      <p>
+        <strong><%= m.name %></strong><br>
+        <%= link "View Information", to: data_set_path(@conn, :show, m.id) %>
+      </p>
+      <% end %>
+    </div>
+    <% end %>
+
+    <%= if length(@new_metas) > 0 do %>
+    <div class="row">
+      <h3>Data Sets I'm Working On</h3>
+      <%= for m <- @new_metas do %>
+      <p>
+        <strong><%= m.name %></strong><br>
+        <%= link "View Information and Edit", to: data_set_path(@conn, :show, m.id) %>
+      </p>
+      <% end %>
+    </div>
+    <% end %>
+
+    <%= if length(@needs_approval_metas) > 0 do %>
+    <div class="row">
+      <h3>Data Sets Waiting on Admin Approval</h3>
+      <%= for m <- @needs_approval_metas do %>
+      <p>
+        <strong><%= m.name %></strong><br>
+        <%= link "View Information", to: data_set_path(@conn, :show, m.id) %>
+      </p>
+      <% end %>
+    </div>
+    <% end %>
+
+    <%= if length(@awaiting_first_import_metas) > 0 do %>
+    <div class="row">
+      <h3>Scheduled First Import Data Sets</h3>
+      <%= for m <- @awaiting_first_import_metas do %>
+      <p>
+        <strong><%= m.name %></strong><br>
+        <%= link "View Information", to: data_set_path(@conn, :show, m.id) %>
+      </p>
+      <% end %>
+    </div>
+    <% end %>
+
+    <%= if length(@ready_metas) > 0 do %>
+    <div class="row">
+      <h3>Live Data Sets</h3>
+      <%= for m <- @ready_metas do %>
+      <p>
+        <strong><%= m.name %></strong><br>
+        <%= link "View Information", to: data_set_path(@conn, :show, m.id) %>
+      </p>
+      <% end %>
+    </div>
+    <% end %>
+  </div> <!-- /meta column -->
+
+  <div class="col-lg-1"></div>
+
+  <div class="col-lg-3"> <!-- info column -->
+    <div class="row">
+      <h2>My Info</h2>
+      <hr>
+    </div>
+    <div class="row">
+      <p>
+        <strong>Name:</strong> <%= @user.name %><br>
+        <strong>Email:</strong> <%= @user.email %><br>
+        <strong>Bio:</strong> <%= @user.bio || "..." %><br>
+      </p>
+      <p>
+        <%= link "Update Info", to: me_path(@conn, :edit) %><br>
+        <%= link "Change Password", to: me_path(@conn, :edit_password) %>
+      </p>
+    </div>
+    <div class="row">
+      <h2>My Messages</h2>
+      <hr>
+    </div>
+    <div class="row">
+      <h4>Unread</h4>
+    </div>
+    <div class="row">
+      <h4>Archived</h4>
+    </div>
+  </div> <!-- /info column -->
+</div>

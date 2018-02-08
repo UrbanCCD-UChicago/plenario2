@@ -6,11 +6,12 @@ defmodule PlenarioEtl.Worker do
   with `:sys.get_state/1`.
   """
 
-  alias Plenario.Actions.{
+  alias Plenario.Actions.{MetaActions, UniqueConstraintActions}
+
+  alias PlenarioEtl.Actions.{
     DataSetDiffActions,
-    EtlJobActions,
-    MetaActions,
-  }
+    EtlJobActions
+}
 
   alias PlenarioEtl.Rows
 
@@ -87,7 +88,7 @@ defmodule PlenarioEtl.Worker do
 
     path =
       download!(
-        MetaActions.get_data_set_table_name(meta),
+        meta.table_name,
         meta.source_url,
         meta.source_type
       )
@@ -115,7 +116,8 @@ defmodule PlenarioEtl.Worker do
     Logger.info("[#{inspect(self())}] [load_chunk] Running upsert query")
     inserted_rows = upsert!(meta, rows)
 
-    constraints = MetaActions.get_first_constraint_field_names(meta)
+    cons = List.first(UniqueConstraintActions.list(for_meta: meta))
+    constraints = UniqueConstraintActions.get_field_names(cons)
     constraint_atoms = for c <- constraints, do: String.to_atom(c)
     pairs = PlenarioEtl.Rows.pair_rows(existing_rows, inserted_rows, constraint_atoms)
 
@@ -183,8 +185,8 @@ defmodule PlenarioEtl.Worker do
   defp load_data(meta, path, job, decode) do
     Logger.info("[#{inspect self()}] [load_data] Chunking rows and spawning children")
 
-    columns = 
-      MetaActions.get_column_names(meta) 
+    columns =
+      MetaActions.get_column_names(meta)
       |> Enum.map(&String.to_atom/1)
       |> Enum.sort()
 
@@ -222,15 +224,15 @@ defmodule PlenarioEtl.Worker do
     task = Task.async(fn ->
       :poolboy.transaction(
         :worker,
-        fn pid -> 
+        fn pid ->
           try do
             GenServer.call(pid, {:load, %{
               meta_id: meta_id,
               job_id: job.id
-            }}) 
+            }})
             EtlJobActions.mark_completed(job)
-          catch 
-            :exit, code -> 
+          catch
+            :exit, code ->
               EtlJobActions.mark_erred(job, %{error_message: inspect(code)})
           end
         end,
@@ -262,9 +264,10 @@ defmodule PlenarioEtl.Worker do
   end
 
   defp template_query!(template, meta, rows) do
-    table = MetaActions.get_data_set_table_name(meta)
+    table = meta.table_name
     columns = MetaActions.get_column_names(meta) |> Enum.sort()
-    constraints = MetaActions.get_first_constraint_field_names(meta)
+    cons = List.first(UniqueConstraintActions.list(for_meta: meta))
+    constraints = UniqueConstraintActions.get_field_names(cons)
 
     sql =
       EEx.eval_file(
@@ -290,8 +293,9 @@ defmodule PlenarioEtl.Worker do
   more readable.
   """
   def create_diffs(meta, job, original, updated) do
-    constraint_id = MetaActions.get_first_constraint(meta).id()
-    constraint_names = MetaActions.get_first_constraint_field_names(meta)
+    cons = List.first(UniqueConstraintActions.list(for_meta: meta))
+    constraint_id = cons.id
+    constraint_names = UniqueConstraintActions.get_field_names(cons)
 
     constraint_map =
       Enum.map(constraint_names, fn constraint_name ->

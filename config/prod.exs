@@ -18,6 +18,7 @@ config :plenario, PlenarioWeb.Endpoint,
   url: [host: "dev.plenar.io", port: 80],
   cache_static_manifest: "priv/static/manifest.json"
 
+
 # Do not print debug messages in production
 config :logger, level: :info, metadata: [:request_id]
 
@@ -46,6 +47,7 @@ config :logger, level: :info, metadata: [:request_id]
 #
 # Check `Plug.SSL` for all available options in `force_ssl`.
 
+
 # ## Using releases
 #
 # If you are doing OTP releases, you need to instruct Phoenix
@@ -59,12 +61,15 @@ config :phoenix, :serve_endpoints, true
 #     config :plenario, PlenarioWeb.Endpoint, server: true
 #
 
+
 # Finally import the config/prod.secret.exs
 # which should be versioned separately.
 import_config "prod.secret.exs"
 
+
 # Configure HTTP API
 config :plenario, :http, HTTP.Live
+
 
 # Configure worker settings
 config :plenario, PlenarioEtl,

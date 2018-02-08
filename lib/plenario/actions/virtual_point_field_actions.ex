@@ -1,93 +1,108 @@
 defmodule Plenario.Actions.VirtualPointFieldActions do
   @moduledoc """
-  This module provides a common API for the business logic
-  underlying the various public interfaces for VirtualDateField.
+  This module provides a high level API for interacting with the
+  VirtualPointField schema -- creating, updating, getting, ...
   """
 
-  import Ecto.Query
-
-  import Plenario.Guards, only: [is_id: 1]
-
-  alias Plenario.Changesets.VirtualPointFieldChangesets
-  alias Plenario.Schemas.{VirtualPointField, Meta}
   alias Plenario.Repo
 
-  require Logger
+  alias Plenario.Actions.MetaActions
 
-  @typedoc """
-  Parameter is an ID attribute
-  """
-  @type id :: String.t() | integer
+  alias Plenario.Schemas.{Meta, VirtualPointField}
 
-  @typedoc """
-  Returns a tuple of :ok, VirtualPointField or :error, Ecto.Changeset
-  """
-  @type ok_field :: {:ok, VirtualPointField} | {:error, Ecto.Changeset.T}
+  alias Plenario.Changesets.VirtualPointFieldChangesets
+
+  alias Plenario.Queries.VirtualPointFieldQueries
+
+  @type ok_instance :: {:ok, VirtualPointField} | {:error, Ecto.Changeset.t()}
 
   @doc """
-  Create a new VirtualPointField from a long/lat pair
+  This is a convenience function for generating empty changesets to more
+  easily construct forms in Phoenix templates.
   """
-  @spec create_from_long_lat(meta :: Meta | id, longitude :: String.t(), latitude :: String.t()) ::
-          ok_field
-  def create_from_long_lat(meta, longitude, latitude) do
-    meta_id =
-      case is_id(meta) do
-        true -> meta
-        false -> meta.id
-      end
+  @spec new() :: Ecto.Changeset.t()
+  def new(), do: VirtualPointFieldChangesets.new()
 
+  @doc """
+  Create a new instance of VirtualPointField in the database.
+
+  If the related Meta instance's state field is not "new" though, this
+  will error out -- you cannot add a new VirtualPointField to and active Meta.
+  """
+  @spec create(meta :: Meta | integer, lat_field_id :: integer, lon_fiel_id :: integer) :: ok_instance
+  def create(%Meta{} = meta, lat_field_id, lon_field_id), do: create(meta.id, lat_field_id, lon_field_id)
+  def create(meta, lat_field_id, lon_field_id) do
     params = %{
-      meta_id: meta_id,
-      longitude_field: longitude,
-      latitude_field: latitude
+      meta_id: meta,
+      lat_field_id: lat_field_id,
+      lon_field_id: lon_field_id
     }
+    create(params)
+  end
 
-    Logger.info("Creating VirtualPointField from long/lat: #{inspect(params)}")
+  @spec create(meta :: Meta | integer, loc_field_id :: integer) :: ok_instance
+  def create(%Meta{} = meta, loc_field_id), do: create(meta.id, loc_field_id)
+  def create(meta, loc_field_id) do
+    params = %{
+      meta_id: meta,
+      loc_field_id: loc_field_id
+    }
+    create(params)
+  end
 
-    VirtualPointFieldChangesets.create_from_long_lat(params)
-    |> Repo.insert()
+  defp create(params), do: VirtualPointFieldChangesets.create(params) |> Repo.insert()
+
+  @doc """
+  This is a convenience function for generating prepopulated changesets
+  to more easily construct change forms in Phoenix templates.
+  """
+  @spec edit(instance :: VirtualPointField) :: Ecto.Changeset.t()
+  def edit(instance), do: VirtualPointFieldChangesets.update(instance, %{})
+
+  @doc """
+  Updates a given VirtualPointField's attributes.
+
+  If the related Meta instance's state field is not "new" though, this
+  will error out -- you cannot add a new VirtualPointField to and active Meta.
+  """
+  @spec update(instance :: VirtualPointField, opts :: Keyword.t()) :: ok_instance
+  def update(instance, opts \\ []) do
+    params = Enum.into(opts, %{})
+    VirtualPointFieldChangesets.update(instance, params)
+    |> Repo.update()
   end
 
   @doc """
-  Create a new VirtualPointField from a single location text field
+  Gets a list of VirtualPointField from the database.
+
+  This can be optionally filtered using the opts. See
+  VirtualPointFieldQueries.handle_opts for more details.
   """
-  @spec create_from_loc(meta :: Meta | id, location :: String.t()) :: ok_field
-  def create_from_loc(meta, location) do
-    meta_id =
-      case is_id(meta) do
-        true -> meta
-        false -> meta.id
-      end
-
-    params = %{meta_id: meta_id, location_field: location}
-
-    Logger.info("Creating VirtualPointField from text field: #{inspect(params)}")
-
-    VirtualPointFieldChangesets.create_from_loc(params)
-    |> Repo.insert()
+  @spec list(opts :: Keyword.t() | nil) :: list(VirtualPointField)
+  def list(opts \\ []) do
+    VirtualPointFieldQueries.list()
+    |> VirtualPointFieldQueries.handle_opts(opts)
+    |> Repo.all()
   end
 
   @doc """
-  Lists all VirtualPointFields for a given Meta
-  """
-  @spec list_for_meta(meta :: Meta | id) :: list(VirtualPointField)
-  def list_for_meta(meta) do
-    meta_id =
-      case is_id(meta) do
-        true -> meta
-        false -> meta.id
-      end
+  Gets a single VirtualPointField from the database.
 
-    Repo.all(from(f in VirtualPointField, where: f.meta_id == ^meta_id))
-  end
+  This can be optionally filtered using the opts. See
+  VirtualPointFieldQueries.handle_opts for more details.
+  """
+  @spec get(identifier :: integer) :: VirtualPointField | nil
+  def get(identifier), do: Repo.get_by(VirtualPointField, id: identifier)
 
   @doc """
-  Deletes a given VirtualPointField
+  Deletes a given VirtualPointField from the database.
   """
-  @spec delete(field :: %VirtualPointField{}) ::
-          {:ok, %VirtualPointField{} | :error, Ecto.Changeset.t()}
+  @spec delete(field :: VirtualPointField) :: {:ok, VirtualPointField} | {:error, String.t()}
   def delete(field) do
-    Logger.info("Deleting VirtualPointField: #{inspect(field)}")
-    Repo.delete(field)
+    meta = MetaActions.get(field.meta_id)
+    case meta.state do
+      "new" -> Repo.delete(field)
+      _ -> {:error, "Meta is locked."}
+    end
   end
 end
