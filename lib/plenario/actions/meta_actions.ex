@@ -35,9 +35,9 @@ defmodule Plenario.Actions.MetaActions do
   will wrror out -- you cannot add a new Meta to and active Meta.
   """
   @spec create(name :: String.t(), user :: User | integer, source_url :: String.t(), source_type :: String.t()) :: ok_instance
-  def create(name, user, source_url, source_type) when not is_integer(user) and not is_bitstring(user),
+  def create(name, %User{} = user, source_url, source_type),
     do: create(name, user.id, source_url, source_type)
-  def create(name, user, source_url, source_type) when is_integer(user) or is_bitstring(user) do
+  def create(name, user, source_url, source_type) do
     params = %{
       name: name,
       user_id: user,
