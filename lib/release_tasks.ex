@@ -65,4 +65,3 @@ defmodule Plenario.ReleaseTasks do
     Path.join([priv_dir(app), repo_underscore, filename])
   end
 end
-end
