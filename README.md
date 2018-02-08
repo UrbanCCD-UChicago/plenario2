@@ -1,4 +1,4 @@
-# Plenario2
+# Plenario
 [![Build Status](https://travis-ci.org/UrbanCCD-UChicago/plenario2.svg?branch=master)](https://travis-ci.org/UrbanCCD-UChicago/plenario2)
 [![Coverage Status](https://coveralls.io/repos/github/UrbanCCD-UChicago/plenario2/badge.svg?branch=master)](https://coveralls.io/github/UrbanCCD-UChicago/plenario2?branch=master)
 
@@ -112,3 +112,10 @@ To deploy, run `./deploy {{ version number }} {{ hostname }}`
 
 **Note:** you will need the hostname configured in your local SSH config. You
 should also have configured your AWS credentials set up (`$ aws config`).
+
+### Deployments with Migrations
+
+If the latest changes have deployments, there's a convenience wrapper included
+to run the changes. all you have to do is append `--run-migrations` to the
+end of the deployment command:
+`./deploy {{ version_number }} {{ hostname }} --run-migrations`.
