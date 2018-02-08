@@ -16,6 +16,19 @@ if [ -z "$TAG" ]; then echo -e "${RED}you need to specify a release number\nexit
 TARGET=$2
 if [ -z "$TARGET" ]; then echo -e "${RED}you need to specify a target machine to deploy to\nexiting...${NORM}"; exit 1; fi
 
+MIGRATE=$3
+if [ "$MIGRATE" == "--run-migrations" ]; then
+  echo -e "${CYAN}we'll run migrations before restarting the app...${NORM}";
+  MIGRATE=true;
+else
+  if [ -z "$MIGRATE" ]; then
+    echo -e "${CYAN}no migrations to be run...${NORM}";
+    MIGRATE=false;
+  else
+    echo -e "${RED}could not understand flag. if you want to run migrations, use '--run-migrations'.${NORM}"; exit 1;
+  fi
+fi
+
 
 echo -e "${CYAN}we're going to deploy version $TAG to $TARGET...${NORM}"
 
@@ -46,8 +59,14 @@ echo -e "\n${CYAN}symlinking plenario2 to $TAG on $TARGET...${NORM}"
 ssh $TARGET "ln -s releases/$TAG/ plenario2"
 
 
+if $MIGRATE ; then
+  echo -e "\n${CYAN}running migrations on $TARGET...${NORM}"
+  ssh $TARGET "./plenario2/bin/plenario migrate"
+fi
+
+
 echo -e "\n${CYAN}starting application back up on $TARGET...${NORM}"
-ssh $TARGET "./plenario2/bin/plenario2 start"
+ssh $TARGET "./plenario2/bin/plenario start"
 
 
 echo -e "\n${GREEN}DONE!${NORM}"
