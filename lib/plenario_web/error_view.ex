@@ -1,5 +1,5 @@
-defmodule PlenarioWeb.Admin.ErrorView do
-  use PlenarioWeb, :admin_view
+defmodule PlenarioWeb.ErrorView do
+  use PlenarioWeb, :web_view
 
   def render("404.html", _assigns) do
     "Page not found"
