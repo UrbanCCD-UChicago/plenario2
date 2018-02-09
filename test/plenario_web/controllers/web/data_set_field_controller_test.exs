@@ -1,4 +1,4 @@
-defmodule PlenarioWeb.Web.Testing.DataSetControllerTest do
+defmodule PlenarioWeb.Web.Testing.DataSetFieldControllerTest do
   use PlenarioWeb.Testing.ConnCase, async: true
 
   alias Plenario.Actions.{MetaActions, DataSetFieldActions}

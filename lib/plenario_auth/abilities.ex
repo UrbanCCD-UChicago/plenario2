@@ -55,6 +55,7 @@ defmodule PlenarioAuth.Abilities do
     Authenticated users who own the VirtualDateField's parent Meta are the only
     users able to access it.
     """
+    def can?(%User{}, action, VirtualDateField) when action in [:new, :create], do: true
     def can?(%User{id: user_id}, _, %VirtualDateField{meta_id: meta_id}) do
       meta = MetaActions.get(meta_id)
       meta.user_id == user_id
@@ -64,6 +65,7 @@ defmodule PlenarioAuth.Abilities do
     Authenticated users who own the VirtualPointField's parent Meta are the only
     users able to access it.
     """
+    def can?(%User{}, action, VirtualPointField) when action in [:new, :create], do: true
     def can?(%User{id: user_id}, _, %VirtualPointField{meta_id: meta_id}) do
       meta = MetaActions.get(meta_id)
       meta.user_id == user_id
@@ -73,6 +75,7 @@ defmodule PlenarioAuth.Abilities do
     Authenticated users who own the UniqueConstraint's parent Meta are the only
     users able to access it.
     """
+    def can?(%User{}, action, UniqueConstraint) when action in [:new, :create], do: true
     def can?(%User{id: user_id}, _, %UniqueConstraint{meta_id: meta_id}) do
       meta = MetaActions.get(meta_id)
       meta.user_id == user_id
