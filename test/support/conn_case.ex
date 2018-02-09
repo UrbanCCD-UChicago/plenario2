@@ -1,4 +1,4 @@
-defmodule PlenarioWeb.ConnCase do
+defmodule PlenarioWeb.Testing.ConnCase do
   @moduledoc """
   This module defines the test case to be used by
   tests that require setting up a connection.
@@ -57,10 +57,10 @@ defmodule PlenarioWeb.ConnCase do
         tags[:auth] ->
           post(
             conn_,
-            auth_path(conn_, :do_login, %{
+            auth_path(conn_, :login, %{
               "user" => %{
-                "email_address" => "regular@example.com",
-                "plaintext_password" => "password"
+                "email" => "regular@example.com",
+                "password" => "password"
               }
             })
           )
@@ -68,10 +68,10 @@ defmodule PlenarioWeb.ConnCase do
         tags[:admin] ->
           post(
             conn_,
-            auth_path(conn_, :do_login, %{
+            auth_path(conn_, :login, %{
               "user" => %{
-                "email_address" => "admin@example.com",
-                "plaintext_password" => "password"
+                "email" => "admin@example.com",
+                "password" => "password"
               }
             })
           )

@@ -1,5 +1,5 @@
-defmodule PlenarioWeb.ErrorViewTest do
-  use PlenarioWeb.ConnCase, async: true
+defmodule PlenarioWeb.Testing.ErrorViewTest do
+  use PlenarioWeb.Testing.ConnCase, async: true
 
   # Bring render/3 and render_to_string/3 for testing custom views
   import Phoenix.View

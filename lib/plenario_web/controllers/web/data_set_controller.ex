@@ -12,13 +12,7 @@ defmodule PlenarioWeb.Web.DataSetController do
 
   alias PlenarioWeb.Web.ControllerUtils
 
-  # plug(
-  #   :load_and_authorize_resource,
-  #   model: Meta,
-  #   id_name: "id",
-  #   id_field: "id",
-  #   except: [:show, :list]
-  # )
+  plug :authorize_resource, model: Meta
 
   def show(conn, %{"id" => id}) do
     meta = MetaActions.get(id, with_user: true, with_fields: true, with_constraints: true)

@@ -1,3 +1,3 @@
-defmodule PlenarioWeb.PageViewTest do
-  use PlenarioWeb.ConnCase, async: true
+defmodule PlenarioWeb.Testing.PageViewTest do
+  use PlenarioWeb.Testing.ConnCase, async: true
 end

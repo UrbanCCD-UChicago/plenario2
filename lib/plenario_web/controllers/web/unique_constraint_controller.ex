@@ -7,6 +7,8 @@ defmodule PlenarioWeb.Web.UniqueConstraintController do
 
   alias PlenarioWeb.Web.ControllerUtils
 
+  plug :authorize_resource, model: UniqueConstraint
+
   def new(conn, %{"dsid" => dsid}) do
     changeset = UniqueConstraintActions.new()
     action = unique_constraint_path(conn, :create, dsid)

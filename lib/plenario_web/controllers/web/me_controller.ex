@@ -3,7 +3,9 @@ defmodule PlenarioWeb.Web.MeController do
 
   alias Plenario.Actions.{MetaActions, UserActions}
 
-  alias PlenarioAuth
+  alias Plenario.Schemas.User
+
+  plug :authorize_resource, model: User
 
   def index(conn, _) do
     user = Guardian.Plug.current_resource(conn)
