@@ -31,8 +31,12 @@ defmodule PlenarioWeb.Web.DataSetController do
   def create(conn, %{"meta" => %{"name" => name, "user_id" => user_id, "source_url" => source_url, "source_type" => source_type}}) do
     case MetaActions.create(name, user_id, source_url, source_type) do
       {:ok, meta} ->
-        field_types = MetaActions.guess_field_types(meta)
-        for {name, type} <- field_types, do: DataSetFieldActions.create(meta, "#{name}", type)
+        try do
+          field_types = MetaActions.guess_field_types!(meta)
+          for {name, type} <- field_types, do: DataSetFieldActions.create(meta, "#{name}", type)
+        rescue
+          _ -> put_flash(conn, :warning, "We couldn't parse the document to generate field definitions.")
+        end
 
         conn
         |> put_flash(:success, "Created data set #{meta.name}")
@@ -76,10 +80,14 @@ defmodule PlenarioWeb.Web.DataSetController do
     case MetaActions.update(meta, update_params) do
       {:ok, meta} ->
         if reset_fields or force_fields_reset do
-          field_types = MetaActions.guess_field_types(meta)
-          fields = DataSetFieldActions.list(for_meta: meta)
-          for f <- fields, do: DataSetFieldActions.delete(f)
-          for {name, type} <- field_types, do: DataSetFieldActions.create(meta, "#{name}", type)
+          try do
+            field_types = MetaActions.guess_field_types!(meta)
+            fields = DataSetFieldActions.list(for_meta: meta)
+            for f <- fields, do: DataSetFieldActions.delete(f)
+            for {name, type} <- field_types, do: DataSetFieldActions.create(meta, "#{name}", type)
+          rescue
+            _ -> put_flash(conn, :warning, "We couldn't parse the document to generate field definitions.")
+          end
         end
 
         conn

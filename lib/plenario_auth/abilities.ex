@@ -38,8 +38,9 @@ defmodule PlenarioAuth.Abilities do
     are the owner of the Meta.
     """
     def can?(%User{id: user_id}, _, %Meta{user_id: user_id}), do: true
-    def can?(%User{id: user_id}, action, %Meta{}) when action in [:index, :show], do: true
-    def can?(%User{id: user_id}, _, %Meta{}), do: false
+    def can?(%User{}, action, Meta) when action in [:new, :create], do: true
+    def can?(%User{}, action, %Meta{}) when action in [:show], do: true
+    def can?(%User{}, _, %Meta{}), do: false
 
     @doc """
     Authenticated users who own the DataSetField's parent Meta are the only

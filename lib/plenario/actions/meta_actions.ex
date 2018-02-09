@@ -299,7 +299,7 @@ defmodule Plenario.Actions.MetaActions do
     srid: 4326}
   end
 
-  def guess_field_types(meta) do
+  def guess_field_types!(meta) do
     %HTTPoison.Response{body: body} = HTTPoison.get!(meta.source_url)
     path = "/tmp/#{meta.slug}.#{meta.source_type}"
     File.write!(path, body)
@@ -307,10 +307,10 @@ defmodule Plenario.Actions.MetaActions do
     cnt = 1_001
     first_thousand =
       case meta.source_type do
-        "csv" -> parse_csv(path, cnt)
-        "tsv" -> parse_tsv(path, cnt)
-        "json" -> parse_json(path, cnt)
-        "shp" -> parse_shapefile(path, cnt)
+        "csv" -> parse_csv!(path, cnt)
+        "tsv" -> parse_tsv!(path, cnt)
+        "json" -> parse_json!(path, cnt)
+        "shp" -> parse_shapefile!(path, cnt)
       end
 
     guesses =
@@ -351,25 +351,25 @@ defmodule Plenario.Actions.MetaActions do
     col_types
   end
 
-  defp parse_csv(filename, count) do
+  defp parse_csv!(filename, count) do
     File.stream!(filename)
     |> Enum.take(count)
     |> CSV.decode!(headers: true)
   end
 
-  defp parse_tsv(filename, count) do
+  defp parse_tsv!(filename, count) do
     File.stream!(filename)
     |> Enum.take(count)
     |> CSV.decode!(headers: true, separator: ?\t)
   end
 
-  defp parse_json(filename, count) do
+  defp parse_json!(filename, count) do
     File.read!(filename)
     |> Poison.decode!()
     |> Enum.take(count)
   end
 
-  defp parse_shapefile(_, _) do
+  defp parse_shapefile!(_, _) do
     []
   end
 
