@@ -95,17 +95,17 @@ defmodule Plenario.ModelRegistry do
   end
 
   defp register(meta) do
-    module = "Model." <> Slug.slugify(meta.name())
-    table = Slug.slugify(meta.name())
+    module = "Model." <> Slug.slugify(meta.table_name)
+    table = meta.table_name
     fields = 
-      Enum.map(meta.data_set_fields(), fn field ->
-        {String.to_atom(field.name()), Map.fetch!(@type_map, field.type())}
+      Enum.map(meta.fields, fn field ->
+        {String.to_atom(field.name), Map.fetch!(@type_map, field.type)}
       end)
     create_module(module, table, fields)
 
     %{
-      meta.id() => String.to_atom(module),
-      meta.slug() => String.to_atom(module)
+      meta.id => String.to_atom(module),
+      meta.slug => String.to_atom(module)
     }
   end
 

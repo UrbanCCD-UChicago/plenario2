@@ -6,6 +6,7 @@ defmodule PlenarioEtl.Worker do
   with `:sys.get_state/1`.
   """
 
+  alias Plenario.{ModelRegistry, Repo}
   alias Plenario.Actions.{MetaActions, UniqueConstraintActions}
 
   alias PlenarioEtl.Actions.{
@@ -16,6 +17,8 @@ defmodule PlenarioEtl.Worker do
   alias PlenarioEtl.Rows
 
   import Ecto.Adapters.SQL, only: [query!: 3]
+  import Ecto.Query
+  import Ecto.Query.API
   require Logger
   use GenServer
 
@@ -191,10 +194,6 @@ defmodule PlenarioEtl.Worker do
       |> Enum.sort()
 
     decode.(path)
-    |> Stream.map(&Enum.to_list/1)
-    |> Stream.map(&Rows.to_kwlist_from_tuples/1)
-    |> Stream.map(&Rows.select_columns(&1, columns))
-    |> Stream.map(&Enum.sort/1)
     |> Stream.chunk_every(@chunk_size)
     |> Enum.map(fn chunk ->
       async_load_chunk!(meta, job, chunk)
@@ -260,7 +259,12 @@ defmodule PlenarioEtl.Worker do
   """
   @spec contains!(meta :: Meta, rows :: list) :: list
   def contains!(meta, rows) do
-    template_query!(@contains_template, meta, rows)
+    constraints = UniqueConstraintActions.list(for_meta: meta) |> List.first()
+    constraint_names = UniqueConstraintActions.get_field_names(constraints)
+    [pk | _] = constraint_names
+    model = ModelRegistry.lookup(meta.slug)
+    query = from(m in model, where: field(m, ^String.to_atom(pk)) in ^(for row <- rows, do: row[pk]))
+    Repo.all(query)
   end
 
   defp template_query!(template, meta, rows) do
