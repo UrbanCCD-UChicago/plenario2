@@ -8,7 +8,7 @@
   #map { height: 500px }
 </style>
 
-<% is_owner = @current_user.id == @meta.user_id %>
+<% is_owner = @current_user != nil and @current_user.id == @meta.user_id %>
 
 <h2>
   <%= @meta.name %>

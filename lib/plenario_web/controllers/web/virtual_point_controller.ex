@@ -7,6 +7,8 @@ defmodule PlenarioWeb.Web.VirtualPointController do
 
   alias PlenarioWeb.Web.ControllerUtils
 
+  plug :authorize_resource, model: VirtualPointField
+
   def new(conn, %{"dsid" => dsid}) do
     changeset = VirtualPointFieldActions.new()
     action = virtual_point_path(conn, :create, dsid)

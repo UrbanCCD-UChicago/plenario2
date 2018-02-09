@@ -32,7 +32,7 @@ defmodule PlenarioWeb.Router do
   end
 
   ##
-  # anaon accessible path
+  # public web paths
   scope "/", PlenarioWeb.Web do
     pipe_through [:browser, :maybe_authenticated]
 
@@ -46,13 +46,8 @@ defmodule PlenarioWeb.Router do
     post "/login", AuthController, :login
     post "/register", AuthController, :register
     post "/logout", AuthController, :logout
-  end
 
-  ##
-  # auth required paths
-  scope "/", PlenarioWeb.Web do
-    pipe_through [:browser, :ensure_authenticated]
-
+    # user pages
     get "/me", MeController, :index
     get "/me/edit", MeController, :edit
     put "/me/update", MeController, :update

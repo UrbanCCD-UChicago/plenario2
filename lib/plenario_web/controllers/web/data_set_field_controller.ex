@@ -7,6 +7,8 @@ defmodule PlenarioWeb.Web.DataSetFieldController do
 
   alias PlenarioWeb.Web.ControllerUtils
 
+  plug :authorize_resource, model: DataSetField
+
   def edit(conn, %{"dsid" => _, "id" => id}) do
     field = DataSetFieldActions.get(id)
     changeset = DataSetFieldActions.edit(field)

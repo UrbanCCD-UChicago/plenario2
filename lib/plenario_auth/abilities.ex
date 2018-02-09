@@ -15,6 +15,17 @@ defmodule PlenarioAuth.Abilities do
 
   alias Plenario.Actions.MetaActions
 
+  defimpl Canada.Can, for: Atom do
+
+    @doc """
+    Anonymous users can only access the :index and :show actions of
+    Metas and Users.
+    """
+    def can?(nil, action, %Meta{}) when action in [:index, :show], do: true
+    def can?(nil, action, %User{}) when action in [:index, :show], do: true
+    def can?(nil, _, _), do: false
+  end
+
   defimpl Canada.Can, for: User do
 
     @doc """
@@ -23,23 +34,12 @@ defmodule PlenarioAuth.Abilities do
     def can?(%User{is_admin: true}, _, _), do: true
 
     @doc """
-    Anonymous users can only access the Meta index and show.
-    """
-    def can?(nil, action, %Meta{}) when action in [:index, :show], do: true
-    def can?(nil, _, %Meta{}), do: false
-
-    @doc """
     Authenticated users can only access the Meta index and show, unless they
     are the owner of the Meta.
     """
     def can?(%User{id: user_id}, _, %Meta{user_id: user_id}), do: true
     def can?(%User{id: user_id}, action, %Meta{}) when action in [:index, :show], do: true
     def can?(%User{id: user_id}, _, %Meta{}), do: false
-
-    @doc """
-    Anonymous users have no access to DataSetField.
-    """
-    def can?(nil, _, %DataSetField{}), do: false
 
     @doc """
     Authenticated users who own the DataSetField's parent Meta are the only
@@ -51,11 +51,6 @@ defmodule PlenarioAuth.Abilities do
     end
 
     @doc """
-    Anonymous users have no access to VirtualDateField.
-    """
-    def can?(nil, _, %VirtualDateField{}), do: false
-
-    @doc """
     Authenticated users who own the VirtualDateField's parent Meta are the only
     users able to access it.
     """
@@ -63,11 +58,6 @@ defmodule PlenarioAuth.Abilities do
       meta = MetaActions.get(meta_id)
       meta.user_id == user_id
     end
-
-    @doc """
-    Anonymous users have no access to VirtualPointField.
-    """
-    def can?(nil, _, %VirtualPointField{}), do: false
 
     @doc """
     Authenticated users who own the VirtualPointField's parent Meta are the only
@@ -79,11 +69,6 @@ defmodule PlenarioAuth.Abilities do
     end
 
     @doc """
-    Anonymous users have no access to UniqueConstraint.
-    """
-    def can?(nil, _, %UniqueConstraint{}), do: false
-
-    @doc """
     Authenticated users who own the UniqueConstraint's parent Meta are the only
     users able to access it.
     """
@@ -91,12 +76,6 @@ defmodule PlenarioAuth.Abilities do
       meta = MetaActions.get(meta_id)
       meta.user_id == user_id
     end
-
-    @doc """
-    Anonymous users can only access the User index and show.
-    """
-    def can?(nil, action, %User{}) when action in [:index, :show], do: true
-    def can?(nil, _, %User{}), do: false
 
     @doc """
     Authenticated users can only access another User's index and show, unless
