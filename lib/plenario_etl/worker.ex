@@ -49,9 +49,9 @@ defmodule PlenarioEtl.Worker do
     {:reply, load(meta_id_map), state}
   end
 
-  def handle_call({:load_chunk!, meta, job, chunk}, _, state) do
+  def handle_call({:load_chunk!, meta, job, chunk, constraints}, _, state) do
     Logger.info("[#{inspect(self())}] [handle_call] Received :load_chunk! call")
-    {:reply, load_chunk!(meta, job, chunk), state}
+    {:reply, load_chunk!(meta, job, chunk, constraints), state}
   end
 
   @doc """
@@ -82,10 +82,12 @@ defmodule PlenarioEtl.Worker do
   def load(state) do
     meta = MetaActions.get(state[:meta_id])
     job = EtlJobActions.get(state[:job_id])
+    constraints = unique_constraints(meta)
 
     Logger.info("[#{inspect(self())}] [load] Downloading file for #{meta.name}")
     Logger.info("[#{inspect(self())}] [load] #{meta.name} source url is #{meta.source_url}")
     Logger.info("[#{inspect(self())}] [load] #{meta.name} source type is #{meta.source_type}")
+    Logger.info("[#{inspect(self())}] [load] Using constraints #{constraints}")
 
     path =
       download!(
@@ -97,9 +99,9 @@ defmodule PlenarioEtl.Worker do
     Logger.info("[#{inspect(self())}] [load] File stored at #{path}")
 
     case meta.source_type do
-      "json" -> load_json(meta, path, job)
-      "csv" -> load_csv(meta, path, job)
-      "tsv" -> load_tsv(meta, path, job)
+      "json" -> load_json(meta, path, job, constraints)
+      "csv" -> load_csv(meta, path, job, constraints)
+      "tsv" -> load_tsv(meta, path, job, constraints)
       "shp" -> load_shape(meta, path, job)
     end
   end
@@ -108,35 +110,27 @@ defmodule PlenarioEtl.Worker do
   This is the main subprocess kicked off by the `load` method that handles
   and ingests a smaller chunk of rows.
   """
-  def load_chunk!(meta, job, chunk) do
-    rows = Enum.map(chunk, &Keyword.values/1)
-
+  def load_chunk!(meta, job, rows, constraints) do
     Logger.info("[#{inspect(self())}] [load_chunk] Running contains query")
-    existing_rows = contains!(meta, rows)
+    existing_rows = contains!(meta, rows, constraints)
 
     Logger.info("[#{inspect(self())}] [load_chunk] Running upsert query")
-    inserted_rows = upsert!(meta, rows)
+    inserted_rows = upsert!(meta, rows, constraints)
 
-    cons = List.first(UniqueConstraintActions.list(for_meta: meta))
-    constraints = UniqueConstraintActions.get_field_names(cons)
-    constraint_atoms = for c <- constraints, do: String.to_atom(c)
-    pairs = PlenarioEtl.Rows.pair_rows(existing_rows, inserted_rows, constraint_atoms)
-
-    Logger.info(
-      "[#{inspect(self())}] [load_chunk] Will possibly update #{Enum.count(pairs)} rows"
-    )
+    pairs = Rows.pair_rows(existing_rows, inserted_rows, constraints)
+    Logger.info("[#{inspect(self())}] [load_chunk] Will possibly update #{Enum.count(pairs)} rows")
 
     Enum.map(pairs, fn {existing_row, inserted_row} ->
-      create_diffs(meta, job, existing_row, inserted_row)
+      create_diffs(meta, job, existing_row, inserted_row, constraints)
     end)
   end
 
   @doc """
   """
-  def load_json(meta, path, job) do
+  def load_json(meta, path, job, constraint) do
     Logger.info("[#{inspect(self())}] [load_json] Prep loader for json at #{path}")
 
-    load_data(meta, path, job, fn path ->
+    load_data(meta, path, job, constraint, fn path ->
       File.read!(path)
       |> Poison.decode!()
     end)
@@ -144,10 +138,10 @@ defmodule PlenarioEtl.Worker do
 
   @doc """
   """
-  def load_csv(meta, path, job) do
+  def load_csv(meta, path, job, constraint) do
     Logger.info("[#{inspect(self())}] [load_csv] Prep loader for csv at #{path}")
 
-    load_data(meta, path, job, fn path ->
+    load_data(meta, path, job, constraint, fn path ->
       File.stream!(path)
       |> CSV.decode!(headers: true)
     end)
@@ -155,10 +149,10 @@ defmodule PlenarioEtl.Worker do
 
   @doc """
   """
-  def load_tsv(meta, path, job) do
+  def load_tsv(meta, path, job, constraints) do
     Logger.info("[#{inspect(self())}] [load_tsv] Prep loader for tsv at #{path}")
 
-    load_data(meta, path, job, fn path ->
+    load_data(meta, path, job, constraints, fn path ->
       File.stream!(path)
       |> CSV.decode!(headers: true, separator: ?\t)
     end)
@@ -183,7 +177,7 @@ defmodule PlenarioEtl.Worker do
     PlenarioEtl.Shapefile.load(shp, meta.name)
   end
 
-  defp load_data(meta, path, job, decode) do
+  defp load_data(meta, path, job, constraints, decode) do
     Logger.info("[#{inspect self()}] [load_data] Chunking rows and spawning children")
 
     columns =
@@ -194,18 +188,18 @@ defmodule PlenarioEtl.Worker do
     decode.(path)
     |> Stream.chunk_every(@chunk_size)
     |> Enum.map(fn chunk ->
-      async_load_chunk!(meta, job, chunk)
+      async_load_chunk!(meta, job, chunk, constraints)
     end)
     |> Enum.map(fn task ->
       Task.await(task)
     end)
   end
 
-  def async_load_chunk!(meta, job, chunk) do
+  def async_load_chunk!(meta, job, chunk, constraints) do
     Task.async(fn ->
       :poolboy.transaction(
         :worker,
-        fn pid -> GenServer.call(pid, {:load_chunk!, meta, job, chunk}) end,
+        fn pid -> GenServer.call(pid, {:load_chunk!, meta, job, chunk, constraints}) end,
         @timeout
       )
 
@@ -247,40 +241,29 @@ defmodule PlenarioEtl.Worker do
   @doc """
   Upsert a dataset with a chunk of `rows`.
   """
-  @spec upsert!(meta :: Meta, rows :: list) :: list
-  def upsert!(meta, rows) do
+  def upsert!(meta, rows, constraints) do
     model = ModelRegistry.lookup(meta.slug)
     {struct, _} = Code.eval_quoted(quote do %unquote(model){} end)
 
-    pk = 
-      UniqueConstraintActions.list(for_meta: meta)
-      |> List.first()
-      |> UniqueConstraintActions.get_field_names()
-      |> List.first()
-      |> String.to_atom()
-
     Enum.map(rows, fn row ->
       cast(struct, row, Map.keys(row))
-      |> Repo.insert!(on_conflict: :replace_all, conflict_target: pk)
+      |> Repo.insert!(on_conflict: :replace_all, conflict_target: constraints)
     end)
   end
 
   @doc """
   Query existing rows that might conflict with an insert query using `rows`.
   """
-  @spec contains!(meta :: Meta, rows :: list) :: list
-  def contains!(meta, rows) do
-    pk = 
-      UniqueConstraintActions.list(for_meta: meta)
-      |> List.first()
-      |> UniqueConstraintActions.get_field_names()
-      |> List.first()
-
-    atom_pk = String.to_atom(pk)
-    row_pks = for row <- rows, do: row[pk]
+  def contains!(meta, rows, constraints) do
+    row_pks = 
+      for row <- rows do 
+        for constraint <- constraints do
+          row[constraint]
+        end
+      end
 
     ModelRegistry.lookup(meta.slug)
-    |> where([m], field(m, ^atom_pk) in ^row_pks)
+    |> where([m], ^(for constraint <- constraints do field(m, constraint) end) in ^row_pks)
     |> Repo.all()
   end
 
@@ -289,7 +272,7 @@ defmodule PlenarioEtl.Worker do
   for a pair of rows. Needs to be refactored into something smaller and
   more readable.
   """
-  def create_diffs(meta, job, original, updated) do
+  def create_diffs(meta, job, constraint, original, updated) do
     cons = List.first(UniqueConstraintActions.list(for_meta: meta))
     constraint_id = cons.id
     constraint_names = UniqueConstraintActions.get_field_names(cons)
@@ -332,5 +315,11 @@ defmodule PlenarioEtl.Worker do
         diff
       end
     end)
+  end
+
+  defp unique_constraints(meta) do
+    cons = List.first(UniqueConstraintActions.list(for_meta: meta))
+    constraints = UniqueConstraintActions.get_field_names(cons)
+    for constraint <- constraints, do: String.to_atom(constraint)
   end
 end

@@ -4,42 +4,6 @@ defmodule PlenarioEtl.Rows do
   """
 
   @doc """
-  Convert a list of lists to a list of keyword lists.
-
-  ## Examples
-
-      iex> import PlenarioEtl.Rows
-      iex> rows = [[1, 2, 3], [4, 5, 6]]
-      iex> to_kwlists(rows, [:colA, :colB, :colC])
-      [[colA: 1, colB: 2, colC: 3], [colA: 4, colB: 5, colC: 6]]
-
-  """
-  @spec to_kwlists(rows :: list, columns :: list) :: list
-  def to_kwlists(rows, columns) do
-    Enum.map(rows, fn row ->
-      Enum.zip(columns, row)
-    end)
-  end
-
-  @doc """
-  Convert a list of tuples where the first element is a string to
-  a keyword list.
-
-  ## Examples
-
-      iex> import PlenarioEtl.Rows
-      iex> row = [{"date ", "foo"}, {" address", "bar"}]
-      iex> to_kwlist_from_tuples(row)
-      [date: "foo", address: "bar"]
-
-  """
-  def to_kwlist_from_tuples(row) do
-    for {k, v} <- row do
-      {String.to_atom(Slug.slugify(k, separator: ?_)), v}
-    end
-  end
-
-  @doc """
   Given two lists of rows, pair each of their elements by the keys provided 
   with `constraints`. This method is used to prep rows for diffing.
 
@@ -104,22 +68,4 @@ defmodule PlenarioEtl.Rows do
   def select_columns(row, columns) do
     for column <- columns, do: {column, row[column]}
   end
-
-  @doc """
-  Prepare a row value for insertion into the database. Handles escaping.
-
-  ## Examples
-
-      iex> row = [nil, "'", "\\"", "--", 10]
-      iex> Enum.map(row, &PlenarioEtl.Rows.escape/1)
-      ["null", "'&#39;'", "'&quot;'", "'--'", 10]
-
-  """
-  def escape(v) when is_binary(v) do
-    {:safe, safe} = Phoenix.HTML.html_escape(v)
-    "'#{safe}'"
-  end
-
-  def escape(v) when is_nil(v), do: "null"
-  def escape(v), do: v
 end

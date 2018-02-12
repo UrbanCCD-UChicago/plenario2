@@ -18,7 +18,6 @@ defmodule PlenarioEtl.Testing.WorkerTest do
 
   import Ecto.Adapters.SQL, only: [query!: 3]
   import Mock
-  import UUID
 
   require HTTPoison
 
@@ -243,30 +242,19 @@ defmodule PlenarioEtl.Testing.WorkerTest do
     end
   end
 
-  test :upsert!, %{meta: meta} do
+  @tag :upsert!
+  test "upsert!/2 inserts rows", %{meta: meta} do
     Worker.upsert!(meta, @insert_rows)
-    %Postgrex.Result{rows: rows} =
-      query!(
-        Plenario.Repo,
-        """
-        SELECT "#{Enum.join(@fixture_columns, "\", \"")}" from "#{meta.table_name}";
-        """,
-        []
-      )
+    model = Plenario.ModelRegistry.lookup(meta.slug)
+    rows = Repo.all(model)
 
-    assert [
-             [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "crackers"],
-             [2, {{2017, 1, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
-             [3, {{2017, 1, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"]
-           ] = Enum.sort(rows)
+    assert length(rows) == 3
   end
 
   @tag :upsert!
-  @tag :passing
-  test "upsert!/2", %{meta: meta} do
+  test "upsert!/2 updates and inserts rows", %{meta: meta} do
     Worker.upsert!(meta, @insert_rows)
     Worker.upsert!(meta, @upsert_rows)
-
     model = Plenario.ModelRegistry.lookup(meta.slug)
     rows = Repo.all(model)
     changed_row = Enum.find(rows, fn row -> Map.get(row, :pk) == 1 end)
@@ -276,49 +264,25 @@ defmodule PlenarioEtl.Testing.WorkerTest do
   end
 
   @tag :contains!
-  @tag :passing
   test "contains!/2", %{meta: meta} do
     Worker.upsert!(meta, @insert_rows)
     [row | _] = Worker.contains!(meta, @upsert_rows)
+
     assert Map.get(row, :pk) == 1
   end
 
+  @tag :create_diffs
   test :create_diffs, %{meta: meta, job: job} do
-    row1 = [colA: "original", colB: "original", colC: "original"]
-    row2 = [colA: "original", colB: "changed", colC: "changed"]
+    row1 = %{colA: "original", colB: "original", colC: "original"}
+    row2 = %{colA: "original", colB: "changed", colC: "changed"}
     Worker.create_diffs(meta, job, row1, row2)
     diffs = Repo.all(DataSetDiff)
     assert Enum.count(diffs) === 2
   end
 
+  @tag :load_chunk
   test :load_chunk, %{meta: meta, job: job} do
-    Worker.load_chunk!(
-      meta,
-      job,
-      Enum.map(
-        [
-          %{
-            "data" => "crackers",
-            "datetime" => "2017-01-01T00:00:00",
-            "location" => "(0, 1)",
-            "pk" => 1
-          },
-          %{
-            "data" => "and",
-            "datetime" => "2017-01-02T00:00:00",
-            "location" => "(0, 2)",
-            "pk" => 2
-          },
-          %{
-            "data" => "cheese",
-            "datetime" => "2017-01-03T00:00:00",
-            "location" => "(0, 3)",
-            "pk" => 3
-          }
-        ],
-        &Enum.to_list/1
-      )
-    )
+    Worker.load_chunk!(meta, job, @insert_rows)
 
     %Postgrex.Result{rows: rows} =
       query!(
