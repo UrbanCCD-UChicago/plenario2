@@ -48,9 +48,9 @@ exports.config = {
     globals: {
       $: 'jquery',
       jQuery: 'jquery',
-      L: 'leaflet'
+      L: 'leaflet',
+      Chart: 'chart.js'
     },
-
     styles: {
       leaflet: ['dist/leaflet.css']
     }
