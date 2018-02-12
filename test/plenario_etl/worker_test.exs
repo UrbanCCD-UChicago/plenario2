@@ -18,14 +18,31 @@ defmodule PlenarioEtl.Testing.WorkerTest do
 
   import Ecto.Adapters.SQL, only: [query!: 3]
   import Mock
+  import UUID
 
   require HTTPoison
 
   @fixture_columns ["pk", "datetime", "location", "data"]
+
   @insert_rows [
-    ["crackers", "2017-01-01T00:00:00+00:00", "(0, 1)", 1],
-    ["and", "2017-01-02T00:00:00+00:00", "(0, 2)", 2],
-    ["cheese", "2017-01-03T00:00:00+00:00", "(0, 3)", 3]
+    %{
+      data: "crackers",
+      datetime: "2017-01-01T00:00:00+00:00",
+      location: "(0, 1)",
+      pk: 1
+    },
+    %{
+      data: "and",
+      datetime: "2017-01-02T00:00:00+00:00",
+      location: "(0, 2)",
+      pk: 2
+    },
+    %{
+      data: "cheese",
+      datetime: "2017-01-03T00:00:00+00:00",
+      location: "(0, 3)",
+      pk: 3
+    }
   ]
 
   @upsert_rows [
@@ -51,8 +68,9 @@ defmodule PlenarioEtl.Testing.WorkerTest do
   @tsv_fixture_path "test/fixtures/clinics.tsv"
 
   setup context do
-    meta = context.meta
+    Plenario.ModelRegistry.clear()
 
+    meta = context.meta
     {:ok, user} = UserActions.create("Trusted User", "trusted@example.com", "password")
     {:ok, f} = DataSetFieldActions.create(meta.id, "pk", "integer")
     DataSetFieldActions.create(meta.id, "datetime", "timestamptz")
@@ -243,38 +261,26 @@ defmodule PlenarioEtl.Testing.WorkerTest do
            ] = Enum.sort(rows)
   end
 
-  # test :"upsert!/2 updates", %{meta: meta} do
-  #   Worker.upsert!(meta, @insert_rows)
-  #   Worker.upsert!(meta, @upsert_rows)
-  #   %Postgrex.Result{rows: rows} =
-  #     query!(
-  #       Plenario.Repo,
-  #       """
-  #       SELECT "#{Enum.join(@fixture_columns, "\", \"")}" from "#{meta.table_name}";
-  #       """,
-  #       []
-  #     )
-
-  #   assert [
-  #            [1, {{2017, 1, 1}, {_, 0, 0, 0}}, "(0, 1)", "biscuits"],
-  #            [2, {{2017, 1, 2}, {_, 0, 0, 0}}, "(0, 2)", "and"],
-  #            [3, {{2017, 1, 3}, {_, 0, 0, 0}}, "(0, 3)", "cheese"],
-  #            [4, {{2017, 1, 4}, {_, 0, 0, 0}}, "(0, 4)", "gromit"]
-  #          ] = Enum.sort(rows)
-  # end
-
-  test :contains!, %{meta: meta} do
+  @tag :upsert!
+  @tag :passing
+  test "upsert!/2", %{meta: meta} do
     Worker.upsert!(meta, @insert_rows)
-    rows = Worker.contains!(meta, @upsert_rows)
+    Worker.upsert!(meta, @upsert_rows)
 
-    assert [
-             [
-               data: "crackers",
-               datetime: {{2017, 1, 1}, {_, 0, 0, 0}},
-               location: "(0, 1)",
-               pk: 1
-             ]
-           ] = rows
+    model = Plenario.ModelRegistry.lookup(meta.slug)
+    rows = Repo.all(model)
+    changed_row = Enum.find(rows, fn row -> Map.get(row, :pk) == 1 end)
+
+    assert length(rows) == 4
+    assert Map.get(changed_row, :data) == "biscuits"
+  end
+
+  @tag :contains!
+  @tag :passing
+  test "contains!/2", %{meta: meta} do
+    Worker.upsert!(meta, @insert_rows)
+    [row | _] = Worker.contains!(meta, @upsert_rows)
+    assert Map.get(row, :pk) == 1
   end
 
   test :create_diffs, %{meta: meta, job: job} do

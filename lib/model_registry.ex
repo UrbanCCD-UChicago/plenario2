@@ -77,6 +77,10 @@ defmodule Plenario.ModelRegistry do
     GenServer.call(pid, {:lookup, slug})
   end
 
+  def clear(pid \\ __MODULE__) do
+    GenServer.cast(pid, :clear)
+  end
+
   def handle_call({:lookup, slug}, _sender, state) do
     state = 
       case Map.has_key?(state, slug) do
@@ -88,6 +92,10 @@ defmodule Plenario.ModelRegistry do
       end
 
     {:reply, Map.fetch!(state, slug), state}
+  end
+
+  def handle_cast(:clear, _) do
+    {:noreply, %{}}
   end
 
   def handle_call(request, sender, state) do

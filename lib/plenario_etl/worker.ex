@@ -6,21 +6,19 @@ defmodule PlenarioEtl.Worker do
   with `:sys.get_state/1`.
   """
 
+  use GenServer
+
   alias Plenario.{ModelRegistry, Repo}
   alias Plenario.Actions.{MetaActions, UniqueConstraintActions}
-
-  alias PlenarioEtl.Actions.{
-    DataSetDiffActions,
-    EtlJobActions
-}
-
+  alias PlenarioEtl.Actions.{DataSetDiffActions, EtlJobActions}
   alias PlenarioEtl.Rows
 
   import Ecto.Adapters.SQL, only: [query!: 3]
+  import Ecto.Changeset
   import Ecto.Query
   import Ecto.Query.API
+
   require Logger
-  use GenServer
 
   @chunk_size Application.get_env(:plenario, PlenarioEtl)[:chunk_size]
   @contains_template "lib/plenario_etl/templates/contains.sql.eex"
@@ -251,7 +249,20 @@ defmodule PlenarioEtl.Worker do
   """
   @spec upsert!(meta :: Meta, rows :: list) :: list
   def upsert!(meta, rows) do
-    template_query!(@upsert_template, meta, rows)
+    model = ModelRegistry.lookup(meta.slug)
+    {struct, _} = Code.eval_quoted(quote do %unquote(model){} end)
+
+    pk = 
+      UniqueConstraintActions.list(for_meta: meta)
+      |> List.first()
+      |> UniqueConstraintActions.get_field_names()
+      |> List.first()
+      |> String.to_atom()
+
+    Enum.map(rows, fn row ->
+      cast(struct, row, Map.keys(row))
+      |> Repo.insert!(on_conflict: :replace_all, conflict_target: pk)
+    end)
   end
 
   @doc """
@@ -259,36 +270,18 @@ defmodule PlenarioEtl.Worker do
   """
   @spec contains!(meta :: Meta, rows :: list) :: list
   def contains!(meta, rows) do
-    constraints = UniqueConstraintActions.list(for_meta: meta) |> List.first()
-    constraint_names = UniqueConstraintActions.get_field_names(constraints)
-    [pk | _] = constraint_names
-    model = ModelRegistry.lookup(meta.slug)
-    query = from(m in model, where: field(m, ^String.to_atom(pk)) in ^(for row <- rows, do: row[pk]))
-    Repo.all(query)
-  end
+    pk = 
+      UniqueConstraintActions.list(for_meta: meta)
+      |> List.first()
+      |> UniqueConstraintActions.get_field_names()
+      |> List.first()
 
-  defp template_query!(template, meta, rows) do
-    table = meta.table_name
-    columns = MetaActions.get_column_names(meta) |> Enum.sort()
-    cons = List.first(UniqueConstraintActions.list(for_meta: meta))
-    constraints = UniqueConstraintActions.get_field_names(cons)
+    atom_pk = String.to_atom(pk)
+    row_pks = for row <- rows, do: row[pk]
 
-    sql =
-      EEx.eval_file(
-        template,
-        table: table,
-        columns: columns,
-        rows: rows,
-        constraints: constraints
-      )
-
-    %Postgrex.Result{
-      columns: columns,
-      rows: rows
-    } = query!(Plenario.Repo, sql, [])
-
-    atom_columns = Enum.map(columns, &String.to_atom/1)
-    PlenarioEtl.Rows.to_kwlists(rows, atom_columns)
+    ModelRegistry.lookup(meta.slug)
+    |> where([m], field(m, ^atom_pk) in ^row_pks)
+    |> Repo.all()
   end
 
   @doc """
