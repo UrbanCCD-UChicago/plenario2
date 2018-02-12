@@ -38,8 +38,9 @@ defmodule PlenarioAuth.Abilities do
     are the owner of the Meta.
     """
     def can?(%User{id: user_id}, _, %Meta{user_id: user_id}), do: true
-    def can?(%User{id: user_id}, action, %Meta{}) when action in [:index, :show], do: true
-    def can?(%User{id: user_id}, _, %Meta{}), do: false
+    def can?(%User{}, action, Meta) when action in [:new, :create], do: true
+    def can?(%User{}, action, %Meta{}) when action in [:show], do: true
+    def can?(%User{}, _, %Meta{}), do: false
 
     @doc """
     Authenticated users who own the DataSetField's parent Meta are the only
@@ -54,6 +55,7 @@ defmodule PlenarioAuth.Abilities do
     Authenticated users who own the VirtualDateField's parent Meta are the only
     users able to access it.
     """
+    def can?(%User{}, action, VirtualDateField) when action in [:new, :create], do: true
     def can?(%User{id: user_id}, _, %VirtualDateField{meta_id: meta_id}) do
       meta = MetaActions.get(meta_id)
       meta.user_id == user_id
@@ -63,6 +65,7 @@ defmodule PlenarioAuth.Abilities do
     Authenticated users who own the VirtualPointField's parent Meta are the only
     users able to access it.
     """
+    def can?(%User{}, action, VirtualPointField) when action in [:new, :create], do: true
     def can?(%User{id: user_id}, _, %VirtualPointField{meta_id: meta_id}) do
       meta = MetaActions.get(meta_id)
       meta.user_id == user_id
@@ -72,18 +75,10 @@ defmodule PlenarioAuth.Abilities do
     Authenticated users who own the UniqueConstraint's parent Meta are the only
     users able to access it.
     """
+    def can?(%User{}, action, UniqueConstraint) when action in [:new, :create], do: true
     def can?(%User{id: user_id}, _, %UniqueConstraint{meta_id: meta_id}) do
       meta = MetaActions.get(meta_id)
       meta.user_id == user_id
     end
-
-    @doc """
-    Authenticated users can only access another User's index and show, unless
-    they are the requested User -- then obviously they can do whatever with
-    themselves... I mean it's a free country and all.
-    """
-    def can?(%User{id: user_id}, _, %User{id: user_id}), do: true
-    def can?(%User{}, action, %User{}) when action in [:index, :show], do: true
-    def can?(%User{}, _, %User{}), do: false
   end
 end

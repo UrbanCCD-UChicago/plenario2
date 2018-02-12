@@ -32,7 +32,7 @@ defmodule PlenarioWeb.Admin.UserController do
     end
   end
 
-  def strip_admin(conn, %{"id" => id}) do
+  def strip_admin_privs(conn, %{"id" => id}) do
     user = UserActions.get(id)
     case UserActions.strip_admin_privs(user) do
       {:ok, user} ->
@@ -48,7 +48,7 @@ defmodule PlenarioWeb.Admin.UserController do
     end
   end
 
-  def promote_admin(conn, %{"id" => id}) do
+  def promote_to_admin(conn, %{"id" => id}) do
     user = UserActions.get(id)
     case UserActions.promote_to_admin(user) do
       {:ok, user} ->

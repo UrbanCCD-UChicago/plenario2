@@ -5,8 +5,6 @@ defmodule PlenarioWeb.Web.MeController do
 
   alias Plenario.Schemas.User
 
-  plug :authorize_resource, model: User
-
   def index(conn, _) do
     user = Guardian.Plug.current_resource(conn)
     all_metas = MetaActions.list(for_user: user)
@@ -53,6 +51,7 @@ defmodule PlenarioWeb.Web.MeController do
   def update_password(conn, %{"passwd" => %{"old" => old, "new" => new, "confirm" => confirm}}) do
     user = Guardian.Plug.current_resource(conn)
     action = me_path(conn, :update_password)
+
     case PlenarioAuth.authenticate(user.email, old) do
       {:ok, _} ->
         case new == confirm do
@@ -64,9 +63,9 @@ defmodule PlenarioWeb.Web.MeController do
                 |> redirect(to: me_path(conn, :index))
 
               {:error, changeset} ->
-                Enum.each(changeset.errors, fn e -> put_flash(conn, :error, e.message) end)
                 conn
                 |> put_status(:bad_request)
+                |> put_flash(:error, "Invalid new password")
                 |> render("change-password.html", action: action)
             end
 
