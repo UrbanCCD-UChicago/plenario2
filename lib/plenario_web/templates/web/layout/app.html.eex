@@ -13,25 +13,6 @@
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
     <link rel="shortcut icon" type="image/png" href="<%= static_path(@conn, "/images/favicon.png") %>">
-
-    <style>
-    @media (min-width: 900px) {
-      .container {
-        max-width: 870px;
-      }
-    }
-    @media (min-width: 1150px) {
-      .container {
-        max-width: 1120px;
-      }
-    }
-    @media (min-width: 1400px) {
-      .container {
-        max-width: 1370px;
-      }
-    }
-    </style>
-
   </head>
 
   <body>
