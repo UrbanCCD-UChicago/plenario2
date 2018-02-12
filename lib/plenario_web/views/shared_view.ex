@@ -47,7 +47,6 @@ defmodule PlenarioWeb.SharedView do
       backgrounds: backgrounds,
       borders: borders
     ])
-    IO.inspect(assigns)
     render(PlenarioWeb.SharedView, "doughnut.html", assigns)
   end
 
