@@ -1,8 +1,17 @@
 exports.config = {
   files: {
-    javascripts: {joinTo: "js/app.js"},
-    stylesheets: {joinTo: "css/app.css"},
-    templates: {joinTo: "js/app.js"}
+    javascripts: {
+      joinTo: "js/app.js"
+    },
+    stylesheets: {
+      joinTo: "css/app.css",
+      order: {
+        after: ["css/app.css"]
+      }
+    },
+    templates: {
+      joinTo: "js/app.js"
+    }
   },
 
   conventions: {
@@ -36,12 +45,12 @@ exports.config = {
 
   npm: {
     enabled: true,
-    globals: { 
+    globals: {
       $: 'jquery',
       jQuery: 'jquery',
-      L: 'leaflet'
+      L: 'leaflet',
+      Chart: 'chart.js'
     },
-
     styles: {
       leaflet: ['dist/leaflet.css']
     }

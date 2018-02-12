@@ -351,6 +351,13 @@ defmodule Plenario.Actions.MetaActions do
     col_types
   end
 
+  def dump_bbox(%Meta{bbox: nil}), do: nil
+  def dump_bbox(%Meta{bbox: %Geo.Polygon{} = bbox}) do
+    coords = List.first(bbox.coordinates)
+    coord_strings = for {lat, lon} <- coords, do: "[#{lat},#{lon}]"
+    "[#{Enum.join(coord_strings, ", ")}]"
+  end
+
   defp parse_csv!(filename, count) do
     File.stream!(filename)
     |> Enum.take(count)

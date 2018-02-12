@@ -81,6 +81,24 @@ defmodule PlenarioWeb do
     end
   end
 
+  def shared_view do
+    quote do
+      use Phoenix.View,
+        root: "lib/plenario_web/templates",
+        namespace: PlenarioWeb
+
+      # Import convenience functions from controllers
+      import Phoenix.Controller, only: [get_flash: 2, view_module: 1]
+
+      # Use all HTML functionality (forms, tags, etc)
+      use Phoenix.HTML
+
+      import PlenarioWeb.Router.Helpers
+      import PlenarioWeb.ErrorHelpers
+      import PlenarioWeb.Gettext
+    end
+  end
+
   def api_view do
     quote do
       use Phoenix.View,
