@@ -8,16 +8,13 @@ defmodule PlenarioEtl.Worker do
 
   use GenServer
 
-  alias Ecto.Query.BooleanExpr
   alias Plenario.{ModelRegistry, Repo}
   alias Plenario.Actions.{MetaActions, UniqueConstraintActions}
   alias PlenarioEtl.Actions.{DataSetDiffActions, EtlJobActions}
   alias PlenarioEtl.Rows
 
-  import Ecto.Adapters.SQL, only: [query!: 3]
   import Ecto.Changeset
   import Ecto.Query
-  import Ecto.Query.API
 
   require Logger
 
@@ -79,21 +76,16 @@ defmodule PlenarioEtl.Worker do
   """
   @spec load(state :: map) :: map
   def load(state) do
-    meta = MetaActions.get(state[:meta_id])
-    job = EtlJobActions.get(state[:job_id])
-    constraints = unique_constraints(meta)
+    meta = MetaActions.get(state[:meta_id], with_fields: true)  # %Meta{}
+    job = EtlJobActions.get(state[:job_id])                     # %EtlJob{}
+    constraints = unique_constraints(meta)                      # list[atom]
 
     Logger.info("[#{inspect(self())}] [load] Downloading file for #{meta.name}")
     Logger.info("[#{inspect(self())}] [load] #{meta.name} source url is #{meta.source_url}")
     Logger.info("[#{inspect(self())}] [load] #{meta.name} source type is #{meta.source_type}")
-    Logger.info("[#{inspect(self())}] [load] Using constraints #{constraints}")
+    Logger.info("[#{inspect(self())}] [load] Using constraints #{inspect constraints}")
 
-    path =
-      download!(
-        meta.table_name,
-        meta.source_url,
-        meta.source_type
-      )
+    path = download!(meta.table_name, meta.source_url, meta.source_type)  # string
 
     Logger.info("[#{inspect(self())}] [load] File stored at #{path}")
 
@@ -120,7 +112,7 @@ defmodule PlenarioEtl.Worker do
     Logger.info("[#{inspect(self())}] [load_chunk] Will possibly update #{Enum.count(pairs)} rows")
 
     Enum.map(pairs, fn {existing_row, inserted_row} ->
-      create_diffs(meta, job, existing_row, inserted_row, constraints)
+      create_diffs(meta, job, existing_row, inserted_row)
     end)
   end
 
@@ -179,10 +171,10 @@ defmodule PlenarioEtl.Worker do
   defp load_data(meta, path, job, constraints, decode) do
     Logger.info("[#{inspect self()}] [load_data] Chunking rows and spawning children")
 
-    columns =
-      MetaActions.get_column_names(meta)
-      |> Enum.map(&String.to_atom/1)
-      |> Enum.sort()
+    # columns =
+    #   MetaActions.get_column_names(meta)
+    #   |> Enum.map(&String.to_atom/1)
+    #   |> Enum.sort()
 
     decode.(path)
     |> Stream.chunk_every(@chunk_size)
@@ -243,7 +235,6 @@ defmodule PlenarioEtl.Worker do
   def upsert!(meta, rows, constraints) do
     model = ModelRegistry.lookup(meta.slug)
     {struct, _} = Code.eval_quoted(quote do %unquote(model){} end)
-    IO.inspect(constraints)
 
     Enum.map(rows, fn row ->
       cast(struct, row, Map.keys(row))
@@ -254,23 +245,23 @@ defmodule PlenarioEtl.Worker do
   @doc """
   Query existing rows that might conflict with an insert query using `rows`.
   """
-  def contains!(meta, rows, constraints) do
+  @spec contains!(meta :: Meta, rows :: list[map], constraints :: list[atom]) :: Postgrex.Result
+  def contains!(meta, rows, [constraint | _] = constraints) when is_atom(constraint) do
     rows = 
       for row <- rows do 
         for constraint <- constraints do
-          row[constraint]
+          row[to_string(constraint)]
         end
       end
 
     model = ModelRegistry.lookup(meta.slug)
-    constraints = Enum.map(constraints, &String.to_atom/1)
 
     from(m in model)
     |> composite_where(constraints, rows)
     |> Repo.all()
   end
 
-  defp composite_where(query, keys, []), do: query
+  defp composite_where(query, _keys, []), do: query
   defp composite_where(query, keys, [row | rows]) do
     or_where(query, ^Enum.zip(keys, row)) |> composite_where(keys, rows)
   end
@@ -280,34 +271,21 @@ defmodule PlenarioEtl.Worker do
   for a pair of rows. Needs to be refactored into something smaller and
   more readable.
   """
-  def create_diffs(meta, job, constraint, original, updated) do
-    cons = List.first(UniqueConstraintActions.list(for_meta: meta))
-    constraint_id = cons.id
-    constraint_names = UniqueConstraintActions.get_field_names(cons)
+  def create_diffs(meta, job, original, updated) do
+    constraint_id = List.first(UniqueConstraintActions.list(for_meta: meta)).id
+    constraints = unique_constraints(meta)
 
     constraint_map =
-      Enum.map(constraint_names, fn constraint_name ->
-        constraint_name_atom = String.to_atom(constraint_name)
-        {constraint_name, original[constraint_name_atom]}
+      Enum.map(constraints, fn constraint ->
+        {constraint, Map.get(original, constraint)}
       end)
       |> Map.new()
 
-    List.zip([original, updated])
-    |> Enum.map(fn {original_value, updated_value} ->
+    Enum.map(Map.keys(original), fn column ->
+      original_value = Map.get(original, column)
+      updated_value = Map.get(updated, column)
+
       if original_value !== updated_value do
-        {column, original_value} = original_value
-        {_column, updated_value} = updated_value
-
-        Logger.info(
-          "[#{inspect(self())}] [create_diffs] #{column}: #{inspect(original_value)} changed to #{
-            inspect(updated_value)
-          }"
-        )
-
-        # TODO(heyzoos) inspect will render values in a way that is
-        # is probably unusable to end users. Need a way to guess the
-        # correct string format for a value.
-
         {:ok, diff} =
           DataSetDiffActions.create(
             meta.id(),

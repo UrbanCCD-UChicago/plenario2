@@ -10,23 +10,23 @@ defmodule PlenarioEtl.Rows do
   ## Examples
 
       iex> rowset1 = [
-      ...>   [colA: 1, colB: 2, colC: "bar"], 
-      ...>   [colA: 4, colB: 5, colC: "foo"]
+      ...>   %{colA: 1, colB: 2, colC: "bar"}, 
+      ...>   %{colA: 4, colB: 5, colC: "foo"}
       ...> ]
       iex> rowset2 = [
-      ...>   [colA: 4, colB: 5, colC: "bar"], 
-      ...>   [colA: 1, colB: 2, colC: "foo"],
-      ...>   [colA: 7, colB: 7, colC: "foo"]
+      ...>   %{colA: 4, colB: 5, colC: "bar"},
+      ...>   %{colA: 1, colB: 2, colC: "foo"},
+      ...>   %{colA: 7, colB: 7, colC: "foo"}
       ...> ]
       iex> PlenarioEtl.Rows.pair_rows(rowset1, rowset2, [:colA, :colB])
       [
         {
-          [colA: 1, colB: 2, colC: "bar"],
-          [colA: 1, colB: 2, colC: "foo"]
+          %{colA: 1, colB: 2, colC: "bar"},
+          %{colA: 1, colB: 2, colC: "foo"}
         },
         {
-          [colA: 4, colB: 5, colC: "foo"],
-          [colA: 4, colB: 5, colC: "bar"]
+          %{colA: 4, colB: 5, colC: "foo"},
+          %{colA: 4, colB: 5, colC: "bar"}
         }
       ]
       
@@ -44,14 +44,14 @@ defmodule PlenarioEtl.Rows do
 
   ## Examples
 
-      iex> row = [colA: 1, colB: 2, colC: "bar"]
+      iex> row = %{colA: 1, colB: 2, colC: "bar"}
       iex> PlenarioEtl.Rows.to_key(row, [:colA, :colB])
       {1, 2}
       
   """
   @spec to_key(row :: list, constraints :: list) :: tuple
   def to_key(row, constraints) do
-    List.to_tuple(for constraint <- constraints, do: row[constraint])
+    List.to_tuple(for constraint <- constraints, do: Map.get(row, constraint))
   end
 
   @doc """
