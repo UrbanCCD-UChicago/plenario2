@@ -132,9 +132,19 @@ defmodule PlenarioEtl.Worker do
   def load_csv(meta, path, job, constraint) do
     Logger.info("[#{inspect(self())}] [load_csv] Prep loader for csv at #{path}")
 
+    columns = 
+      File.stream!(path) 
+      |> Enum.take(1)
+      |> List.first()
+      |> String.split(",")
+      |> Enum.map(&Slug.slugify(&1, separator: ?_))
+
     load_data(meta, path, job, constraint, fn path ->
       File.stream!(path)
-      |> CSV.decode!(headers: true)
+      |> CSV.decode!()
+      |> Stream.drop(1)
+      |> Stream.map(&Enum.zip(columns, &1))
+      |> Stream.map(&Map.new/1)
     end)
   end
 
@@ -170,11 +180,6 @@ defmodule PlenarioEtl.Worker do
 
   defp load_data(meta, path, job, constraints, decode) do
     Logger.info("[#{inspect self()}] [load_data] Chunking rows and spawning children")
-
-    # columns =
-    #   MetaActions.get_column_names(meta)
-    #   |> Enum.map(&String.to_atom/1)
-    #   |> Enum.sort()
 
     decode.(path)
     |> Stream.chunk_every(@chunk_size)
@@ -247,7 +252,10 @@ defmodule PlenarioEtl.Worker do
   """
   @spec contains!(meta :: Meta, rows :: list[map], constraints :: list[atom]) :: Postgrex.Result
   def contains!(meta, rows, [constraint | _] = constraints) when is_atom(constraint) do
-    rows = 
+    IO.inspect(rows)
+    IO.inspect(constraints)
+
+    row_pks = 
       for row <- rows do 
         for constraint <- constraints do
           row[to_string(constraint)]
@@ -257,7 +265,7 @@ defmodule PlenarioEtl.Worker do
     model = ModelRegistry.lookup(meta.slug)
 
     from(m in model)
-    |> composite_where(constraints, rows)
+    |> composite_where(constraints, row_pks)
     |> Repo.all()
   end
 

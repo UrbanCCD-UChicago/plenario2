@@ -7,6 +7,7 @@ defmodule Plenario.ModelRegistry do
     "float" => :float,
     "integer" => :integer,
     "text" => :string,
+    "date" => :date,
     "timestamptz" => :naive_datetime
   }
 
