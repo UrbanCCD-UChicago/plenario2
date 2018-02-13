@@ -30,6 +30,12 @@ var drawControl = new L.Control.Draw({
 });
 map.addControl(drawControl);
 
+var coordInput = document.getElementById('<%= @form_input_coords %>');
+var ciVal = coordInput.value;
+if (!ciVal.match(/^\[\[.*\]\]/)) {
+  coordInput.value = JSON.stringify(map.getBounds());
+}
+
 map.on('draw:created', function(e) {
   var latLongs = e.layer.getLatLngs();
   latLongs = latLongs[0];
@@ -52,6 +58,14 @@ map.on('draw:deleted', function(e) {
   coordInput.value = '';
 
   drawnItems.clearLayers(e.layer);
+});
+
+map.on('moveend', function(e) {
+  var coordInput = document.getElementById('<%= @form_input_coords %>');
+  var ciVal = coordInput.value;
+  if (!ciVal.match(/^\[\[.*\]\]/)) {
+    coordInput.value = JSON.stringify(map.getBounds());
+  }
 });
 <% end %>
 
