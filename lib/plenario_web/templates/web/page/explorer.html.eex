@@ -48,7 +48,7 @@
 <% end %>
 <% else %>
 <div class="row">
-  <strong>Sorry, we didn't find and data sets that matched your criteria.</strong><br>
+  <strong>Sorry, we didn't find any data sets that matched your criteria.</strong><br>
   Try expanding the time range or the map aread.
 </div>
 <% end %>
