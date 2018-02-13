@@ -69,6 +69,8 @@ defmodule Plenario.Testing.PlenarioTest do
       {_, lower, _} = DateTime.from_iso8601("2014-11-01T00:00:00.0Z")
       {_, upper, _} = DateTime.from_iso8601("2015-11-01T00:00:00.0Z")
       {:ok, range} = Plenario.TsTzRange.dump([lower, upper])
+      IO.inspect(bbox)
+      IO.inspect(range)
       results = Plenario.search_data_sets(bbox, range)
       assert length(results) == 1
 

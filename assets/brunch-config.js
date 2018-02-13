@@ -52,7 +52,7 @@ exports.config = {
       Chart: 'chart.js'
     },
     styles: {
-      leaflet: ['dist/leaflet.css']
+      leaflet: ['dist/leaflet.css', 'dist/leaflet.draw.css']
     }
   }
 };
