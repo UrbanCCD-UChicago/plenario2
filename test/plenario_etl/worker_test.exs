@@ -272,16 +272,6 @@ defmodule PlenarioEtl.Testing.WorkerTest do
     assert Map.get(row, :pk) == 1
   end
 
-  # @tag :contains!
-  # test "contains!/3 with composite key", %{meta: meta, dt_field: dt, pk_field: pk} do
-  #   {:ok, constraint} = UniqueConstraintActions.create(meta.id, [dt.id, pk.id])
-  #   constraints = UniqueConstraintActions.get_field_names(constraint)
-  #   Worker.upsert!(meta, @insert_rows, constraints)
-  #   [row | _] = Worker.contains!(meta, @upsert_rows, constraints)
-
-  #   assert Map.get(row, :pk) == 1
-  # end
-
   @tag :create_diffs
   test :create_diffs, %{meta: meta, job: job} do
     row1 = %{colA: "original", colB: "original", colC: "original"}

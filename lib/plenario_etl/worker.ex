@@ -255,33 +255,24 @@ defmodule PlenarioEtl.Worker do
   Query existing rows that might conflict with an insert query using `rows`.
   """
   def contains!(meta, rows, constraints) do
-    row_pks = 
+    rows = 
       for row <- rows do 
         for constraint <- constraints do
           row[constraint]
         end
       end
 
-    ModelRegistry.lookup(meta.slug)
-    |> composite_where(constraints, row_pks)
-    |> IO.inspect()
+    model = ModelRegistry.lookup(meta.slug)
+    constraints = Enum.map(constraints, &String.to_atom/1)
+
+    from(m in model)
+    |> composite_where(constraints, rows)
     |> Repo.all()
   end
 
-  defp composite_where(source, keys, values) do
-    query = where(source, [m], [m.foo, m.bar] in [[0, 1], [2, 3]])
-    boolean_expr = List.first(query.wheres)
-
-    expr = 
-      {:in, [], [
-        for key <- keys do
-          {{:., [], [{:&, [], [0]}, String.to_atom(key)]}, [], []}
-        end,
-        values
-      ]}
-    
-    boolean_expr = Map.put(boolean_expr, :expr, expr)
-    Map.put(query, :wheres, [boolean_expr])
+  defp composite_where(query, keys, []), do: query
+  defp composite_where(query, keys, [row | rows]) do
+    or_where(query, ^Enum.zip(keys, row)) |> composite_where(keys, rows)
   end
 
   @doc """
