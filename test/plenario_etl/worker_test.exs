@@ -71,13 +71,13 @@ defmodule PlenarioEtl.Testing.WorkerTest do
 
     meta = context.meta
     {:ok, user} = UserActions.create("Trusted User", "trusted@example.com", "password")
-    {:ok, f} = DataSetFieldActions.create(meta.id, "pk", "integer")
-    DataSetFieldActions.create(meta.id, "datetime", "timestamptz")
-    {:ok, l} = DataSetFieldActions.create(meta.id, "location", "text")
-    DataSetFieldActions.create(meta.id, "data", "text")
-    {:ok, constraint} = UniqueConstraintActions.create(meta.id, [f.id])
+    {:ok, pk_field} = DataSetFieldActions.create(meta.id, "pk", "integer")
+    {:ok, dt_field} = DataSetFieldActions.create(meta.id, "datetime", "timestamptz")
+    {:ok, loc_field} = DataSetFieldActions.create(meta.id, "location", "text")
+    {:ok, data_field} = DataSetFieldActions.create(meta.id, "data", "text")
+    {:ok, constraint} = UniqueConstraintActions.create(meta.id, [pk_field.id, loc_field.id])
     {:ok, job} = EtlJobActions.create(meta.id)
-    VirtualPointFieldActions.create(meta.id, loc_field: l)
+    VirtualPointFieldActions.create(meta.id, loc_field: loc_field)
     DataSetActions.up!(meta)
 
     %{
@@ -264,12 +264,23 @@ defmodule PlenarioEtl.Testing.WorkerTest do
   end
 
   @tag :contains!
-  test "contains!/2", %{meta: meta} do
-    Worker.upsert!(meta, @insert_rows)
-    [row | _] = Worker.contains!(meta, @upsert_rows)
+  test "contains!/3", %{meta: meta, constraint: constraint} do
+    constraints = UniqueConstraintActions.get_field_names(constraint)
+    Worker.upsert!(meta, @insert_rows, constraints)
+    [row | _] = Worker.contains!(meta, @upsert_rows, constraints)
 
     assert Map.get(row, :pk) == 1
   end
+
+  # @tag :contains!
+  # test "contains!/3 with composite key", %{meta: meta, dt_field: dt, pk_field: pk} do
+  #   {:ok, constraint} = UniqueConstraintActions.create(meta.id, [dt.id, pk.id])
+  #   constraints = UniqueConstraintActions.get_field_names(constraint)
+  #   Worker.upsert!(meta, @insert_rows, constraints)
+  #   [row | _] = Worker.contains!(meta, @upsert_rows, constraints)
+
+  #   assert Map.get(row, :pk) == 1
+  # end
 
   @tag :create_diffs
   test :create_diffs, %{meta: meta, job: job} do

@@ -8,6 +8,7 @@ defmodule PlenarioEtl.Worker do
 
   use GenServer
 
+  alias Ecto.Query.BooleanExpr
   alias Plenario.{ModelRegistry, Repo}
   alias Plenario.Actions.{MetaActions, UniqueConstraintActions}
   alias PlenarioEtl.Actions.{DataSetDiffActions, EtlJobActions}
@@ -21,8 +22,6 @@ defmodule PlenarioEtl.Worker do
   require Logger
 
   @chunk_size Application.get_env(:plenario, PlenarioEtl)[:chunk_size]
-  @contains_template "lib/plenario_etl/templates/contains.sql.eex"
-  @upsert_template "lib/plenario_etl/templates/upsert.sql.eex"
   @timeout 10000
 
   @doc """
@@ -244,6 +243,7 @@ defmodule PlenarioEtl.Worker do
   def upsert!(meta, rows, constraints) do
     model = ModelRegistry.lookup(meta.slug)
     {struct, _} = Code.eval_quoted(quote do %unquote(model){} end)
+    IO.inspect(constraints)
 
     Enum.map(rows, fn row ->
       cast(struct, row, Map.keys(row))
@@ -263,8 +263,25 @@ defmodule PlenarioEtl.Worker do
       end
 
     ModelRegistry.lookup(meta.slug)
-    |> where([m], ^(for constraint <- constraints do field(m, constraint) end) in ^row_pks)
+    |> composite_where(constraints, row_pks)
+    |> IO.inspect()
     |> Repo.all()
+  end
+
+  defp composite_where(source, keys, values) do
+    query = where(source, [m], [m.foo, m.bar] in [[0, 1], [2, 3]])
+    boolean_expr = List.first(query.wheres)
+
+    expr = 
+      {:in, [], [
+        for key <- keys do
+          {{:., [], [{:&, [], [0]}, String.to_atom(key)]}, [], []}
+        end,
+        values
+      ]}
+    
+    boolean_expr = Map.put(boolean_expr, :expr, expr)
+    Map.put(query, :wheres, [boolean_expr])
   end
 
   @doc """
