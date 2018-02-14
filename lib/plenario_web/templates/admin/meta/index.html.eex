@@ -40,46 +40,6 @@
   </div>
 
   <div class="col-lg-6">
-    <canvas id="countsChart" height="200px"></canvas>
+    <%= PlenarioWeb.SharedView.render_doughnut(@chart_kvs) %>
   </div>
 </div>
-
-
-
-
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.bundle.min.js"></script>
-<script>
-var ctx = document.getElementById("countsChart");
-var countsChart = new Chart(ctx, {
-  type: 'doughnut',
-  data: {
-    labels: ["Erred", "Ready", "Awaiting First Import", "Needs Approval", "New"],
-    datasets: [{
-      label: 'Count in State',
-      data: [
-        <%= @num_erred %>,
-        <%= @num_ready %>,
-        <%= @num_afi %>,
-        <%= @num_na %>,
-        <%= @num_new %>
-      ],
-      backgroundColor: [
-        'rgba(255, 99, 132, 0.2)',
-        'rgba(54, 162, 235, 0.2)',
-        'rgba(255, 206, 86, 0.2)',
-        'rgba(75, 192, 192, 0.2)',
-        'rgba(153, 102, 255, 0.2)'
-      ],
-      borderColor: [
-        'rgba(255,99,132,1)',
-        'rgba(54, 162, 235, 1)',
-        'rgba(255, 206, 86, 1)',
-        'rgba(75, 192, 192, 1)',
-        'rgba(153, 102, 255, 1)'
-      ],
-      borderWidth: 1
-    }]
-  }
-});
-</script>

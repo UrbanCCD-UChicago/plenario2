@@ -54,6 +54,18 @@ defmodule Plenario.Actions.UserActions do
   @spec update(instance :: User, opts :: Keyword.t()) :: ok_instance
   def update(instance, opts \\ []) do
     params = Enum.into(opts, %{})
+
+    passwd = Map.get(params, :password)
+    params =
+      case is_nil(passwd) do
+        true -> params
+        false ->
+          case is_bitstring(passwd) and String.length(passwd) > 0 do
+            true -> params
+            false -> Map.merge(params, %{password: :empty})
+          end
+      end
+
     UserChangesets.update(instance, params)
     |> Repo.update()
   end

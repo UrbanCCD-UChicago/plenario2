@@ -11,7 +11,9 @@ defmodule Plenario.Changesets.UniqueConstraintChangesets do
     set_random_name: 2
   ]
 
-  alias Plenario.Schemas.UniqueConstraint
+  alias Plenario.Schemas.{UniqueConstraint, DataSetField}
+
+  alias Plenario.Actions.DataSetFieldActions
 
   @type create_params :: %{
     name: String.t(),
@@ -41,6 +43,7 @@ defmodule Plenario.Changesets.UniqueConstraintChangesets do
     |> cast_assoc(:meta)
     |> validate_meta_state()
     |> validate_fields_length()
+    |> validate_field_ids()
     |> set_random_name("uc")
   end
 
@@ -51,6 +54,7 @@ defmodule Plenario.Changesets.UniqueConstraintChangesets do
     |> validate_required(@required_keys)
     |> validate_meta_state()
     |> validate_fields_length()
+    |> validate_field_ids()
   end
 
   defp validate_fields_length(%Ecto.Changeset{valid?: true, changes: %{field_ids: field_ids}} = changeset) do
@@ -60,4 +64,26 @@ defmodule Plenario.Changesets.UniqueConstraintChangesets do
     end
   end
   defp validate_fields_length(changeset), do: changeset
+
+  defp validate_field_ids(%Ecto.Changeset{valid?: true, changes: %{field_ids: field_ids}} = changeset) do
+    meta_id = get_field(changeset, :meta_id)
+    meta_fields = DataSetFieldActions.list(for_meta: meta_id)
+    meta_field_ids =
+      Enum.reduce(meta_fields, HashSet.new(), fn f, acc ->
+        HashSet.put(acc, f.id)
+      end)
+
+    param_field_ids =
+      Enum.reduce(field_ids, HashSet.new(), fn id, acc ->
+        HashSet.put(acc, id)
+      end)
+
+    diff = HashSet.difference(param_field_ids, meta_field_ids)
+    changeset =
+      case HashSet.size(diff) > 0 do
+        true -> add_error(changeset, :field_ids, "Invalid field(s) selected")
+        false -> changeset
+      end
+  end
+  defp validate_field_ids(changeset), do: changeset
 end

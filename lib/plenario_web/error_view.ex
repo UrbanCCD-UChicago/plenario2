@@ -1,4 +1,4 @@
-defmodule PlenarioWeb.Admin.ErrorView do
+defmodule PlenarioWeb.ErrorView do
   use PlenarioWeb, :web_view
 
   def render("404.html", _assigns) do

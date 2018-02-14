@@ -23,11 +23,19 @@ defmodule PlenarioWeb.Admin.MetaController do
     num_na = length(needs_approval_metas)
     num_new = length(new_metas)
 
+    chart_kvs = [
+      {"Erred", num_erred},
+      {"Ready", num_ready},
+      {"Awaiting First Import", num_afi},
+      {"Needs Approval", num_na},
+      {"New", num_new}
+    ]
+
     render(conn, "index.html", all_metas: all_metas, erred_metas: erred_metas,
       ready_metas: ready_metas, awaiting_first_import_metas: awaiting_first_import_metas,
       needs_approval_metas: needs_approval_metas, new_metas: new_metas,
       num_erred: num_erred, num_ready: num_ready, num_afi: num_afi,
-      num_na: num_na, num_new: num_new)
+      num_na: num_na, num_new: num_new, chart_kvs: chart_kvs)
   end
 
   def review(conn, %{"id" => id}) do

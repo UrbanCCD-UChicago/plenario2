@@ -58,7 +58,7 @@ defmodule Plenario.Changesets.UserChangesets do
   end
 
   defp validate_password(%Ecto.Changeset{valid?: true, changes: %{password: plaintext}} = changeset) do
-    case is_bitstring(plaintext) and String.length(plaintext) > 0 do
+    case plaintext != :empty do
       true -> changeset
       false -> add_error(changeset, :password, "bad length")
     end

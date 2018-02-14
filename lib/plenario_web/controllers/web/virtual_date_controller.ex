@@ -7,6 +7,8 @@ defmodule PlenarioWeb.Web.VirtualDateController do
 
   alias PlenarioWeb.Web.ControllerUtils
 
+  plug :authorize_resource, model: VirtualDateField
+
   def new(conn, %{"dsid" => dsid}) do
     changeset = VirtualDateFieldActions.new()
     action = virtual_date_path(conn, :create, dsid)

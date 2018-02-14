@@ -1,66 +1,55 @@
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.css"/>
+<div class="row">
+  <h1>Explore All Data Sets</h1>
+</div>
 
-<script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js"></script>
+<div class="row">
+  <div class="col-lg-3">
+    <h3>Select a Time</h3>
+    <hr>
 
-<style>
-  #map { height: 750px }
-</style>
+    <%= form_for @conn, page_path(@conn, :search_all_data_sets), fn f -> %>
 
-<div id="map"></div>
-<form>
-  <input type="text" id="coords">
-</form>
+    <div class="form-group">
+      <label class="control-label">Starting On:</label>
+      <input type="date" class="form-control" id="starting_on" name="starting_on" value="<%= @starts %>" required>
+    </div>
 
-<script>
-  var map = L.map('map').setView([41.9, -87.7], 13);
+    <div class="form-group">
+      <label class="control-label">Ending On:</label>
+      <input type="date" class="form-control" id="ending_on" name="ending_on" value="<%= @ends %>" required>
+    </div>
 
-  L.tileLayer(
-    'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}',
-    {
-      attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
-      maxZoom: 18,
-      id: 'mapbox.streets',
-      accessToken: 'pk.eyJ1IjoicGxlbmFyaW8iLCJhIjoiY2pkM2RicXV4M2d3ajJybnNvczE0NDBnbiJ9.QYYTdm03c_iSP1pHRS6QUw'
-    }
-  ).addTo(map);
+    <input id="coords" name="coords" hidden>
 
-  var drawnItems = new L.FeatureGroup();
-  map.addLayer(drawnItems);
-  var drawControl = new L.Control.Draw({
-    edit: {
-      featureGroup: drawnItems
-    },
-    draw: {
-      circle: false,
-      marker: false,
-      circlemarker: false
-    }
-  });
-  map.addControl(drawControl);
+    <div class="form-group">
+      <input type="submit" value="Search!" class="btn btn-primary">
+    </div>
 
-  map.on('draw:created', function(e) {
-    var latLongs = e.layer.getLatLngs();
-    latLongs = latLongs[0];
-    var coords = [];
-    for (var i = 0; i < latLongs.length; i++) {
-      var el = latLongs[i];
-      coords.push([
-        el.lat,
-        el.lng
-      ]);
-    }
-    var coordInput = document.getElementById('coords');
-    coordInput.value = JSON.stringify(coords);
+    <% end %>
+  </div>
 
-    drawnItems.addLayer(e.layer);
-  });
+  <div class="col-lg-9">
+    <h3>Select an Area</h3>
+    <hr>
+    <%= PlenarioWeb.SharedView.render_map(draw_controls: true, map_center: @map_center, bbox: @bbox)%>
+  </div>
+</div>
 
-  map.on('draw:deleted', function(e) {
-    var coordInput = document.getElementById('coords');
-    coordInput.value = '';
-
-    drawnItems.clearLayers(e.layer);
-  });
-</script>
+<%= if assigns[:results] do %>
+<div class="row">
+  <h2>Search Results</h2>
+  <hr>
+</div>
+<%= if length(@results) > 0 do %>
+<%= for res <- @results do %>
+<div class="row">
+  <h4><%= res.name %></h4>
+</div>
+<% end %>
+<% else %>
+<div class="row">
+  <strong>Sorry, we didn't find any data sets that matched your criteria.</strong><br>
+  Try expanding the time range or the map aread.
+</div>
+<% end %>
+<% end %>
