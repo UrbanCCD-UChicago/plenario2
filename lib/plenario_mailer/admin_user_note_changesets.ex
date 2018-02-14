@@ -1,69 +1,85 @@
 defmodule PlenarioMailer.Changesets.AdminUserNoteChangesets do
   @moduledoc """
-  This module provides functions for creating changesets for
-  AdminUserNote structs.
+  This module defines functions used to create and update changesets for
+  the DataSetField schema.
   """
 
   import Ecto.Changeset
 
   alias PlenarioMailer.Schemas.AdminUserNote
 
-  @typedoc """
-  Verbose map of params for create_for_meta
-  """
   @type create_meta_params :: %{
-          note: String.t(),
-          should_email: boolean,
-          admin_id: integer,
-          user_id: integer,
-          meta_id: integer
-        }
+    meta_id: integer,
+    admin_id: integer,
+    user_id: integer,
+    message: String.t(),
+    should_email: boolean
+  }
 
-  @new_create_meta_param_keys [:note, :should_email, :admin_id, :user_id, :meta_id]
+  # @type create_etl_params :: %{
+  #   etl_job_id: integer,
+  #   admin_id: integer,
+  #   user_id: integer,
+  #   message: String.t(),
+  #   should_email: boolean
+  # }
 
-  def new_for_meta() do
-    %AdminUserNote{}
-    |> cast(%{}, @new_create_meta_param_keys)
-  end
+  # @type create_export_params :: %{
+  #   export_job_id: integer,
+  #   admin_id: integer,
+  #   user_id: integer,
+  #   message: String.t(),
+  #   should_email: boolean
+  # }
 
-  @doc """
-  Creates a new AdminUserNote that is related to a Meta entity
-  """
+  @create_meta_keys [:meta_id, :admin_id, :user_id, :message, :should_email]
+
+  # @create_etl_keys [:etl_job_id, :admin_id, :user_id, :message, :should_email]
+
+  # @create_export_keys [:export_job_id, :admin_id, :user_id, :message, :should_email]
+
+  @spec new_for_meta() :: Ecto.Changeset.t()
+  def new_for_meta(), do: %AdminUserNote{} |> cast(%{}, @create_meta_keys)
+
+  # @spec new_for_etl() :: Ecto.Changeset.t()
+  # def new_for_etl(), do: %AdminUserNote{} |> cast(%{}, @create_etl_keys)
+
+  # @spec new_for_export() :: Ecto.Changeset.t()
+  # def new_for_export(), do: %AdminUserNote{} |> cast(%{}, @create_export_keys)
+
   @spec create_for_meta(params :: create_meta_params) :: Ecto.Changeset.t()
   def create_for_meta(params) do
     %AdminUserNote{}
-    |> cast(params, @new_create_meta_param_keys)
-    |> validate_required([:note, :admin_id, :user_id, :meta_id])
+    |> cast(params, @create_meta_keys)
+    |> validate_required(@create_meta_keys)
+    |> cast_assoc(:meta)
     |> cast_assoc(:admin)
     |> cast_assoc(:user)
-    |> cast_assoc(:meta)
   end
 
-  # def create_for_etl_job(struct, params) do
-  #   struct
-  #   |> cast(params, [:note, :should_email, :admin_id, :user_id, :etl_job_id])
-  #   |> validate_required([:note, :admin_id, :user_id, :etl_job_id])
-  #   |> cast_assoc(:admin)
-  #   |> cast_assoc(:user)
+  # @spec create_for_etl(params :: create_etl_params) :: Ecto.Changeset.t()
+  # def create_for_etl(params) do
+  #   %AdminUserNote{}
+  #   |> cast(params, @create_etl_keys)
+  #   |> validate_required(@create_etl_keys)
   #   |> cast_assoc(:etl_job)
-  # end
-
-  # def create_for_export_job(struct, params) do
-  #   struct
-  #   |> cast(params, [:note, :should_email, :admin_id, :user_id, :export_job_id])
-  #   |> validate_required([:note, :admin_id, :user_id, :export_job_id])
   #   |> cast_assoc(:admin)
   #   |> cast_assoc(:user)
-  #   |> cast_assoc(:export_job)
   # end
 
-  @doc """
-  Creates a changeset to update a given note's acknowledged bit in the database
-  """
-  @spec update_acknowledged(note :: AdminUserNote, params :: %{acknowledged: boolean}) ::
-          Ecto.Changeset.t()
-  def update_acknowledged(note, params) do
-    note
+  # @spec create_for_export(params :: create_export_params) :: Ecto.Changeset.t()
+  # def create_for_export(params) do
+  #   %AdminUserNote{}
+  #   |> cast(params, @create_export_keys)
+  #   |> validate_required(@create_export_keys)
+  #   |> cast_assoc(:export_job)
+  #   |> cast_assoc(:admin)
+  #   |> cast_assoc(:user)
+  # end
+
+  @spec update_acknowledged(instance :: AdminUserNote, params :: %{acknowleged: boolean}) :: Ecto.Changeset.t()
+  def update_acknowledged(instance, params) do
+    instance
     |> cast(params, [:acknowledged])
     |> validate_required([:acknowledged])
   end

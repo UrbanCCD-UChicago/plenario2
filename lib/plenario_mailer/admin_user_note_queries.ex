@@ -1,104 +1,108 @@
 defmodule PlenarioMailer.Queries.AdminUserNoteQueries do
   @moduledoc """
-  This module provides functions for building and composing Ecto
-  queries. This is beneficial for streamlining the way we interact
-  with the database from other business logic and web controller
-  modules.
+  This module provides a stable API for composing Ecto Queries using the
+  DataSetField schema. Functions included in this module can be used as-is or
+  in pipes to compose/filter basic queries.
+
+  This module also provides a :handle_opts function to streamline the
+  application of composable queries. This is useful in higher level APIs where
+  basic queries, such as :list, can also be filtered based on other parameters.
   """
 
   import Ecto.Query
 
-  import Plenario.Queries.Utils
+  alias Plenario.Schemas.{Meta, User}
+
+  alias Plenario.Queries.Utils
 
   alias PlenarioMailer.Schemas.AdminUserNote
+
   alias PlenarioMailer.Queries.AdminUserNoteQueries
 
-  alias Plenario.Schemas.User
+  @doc """
+  Creates and Ecto Query to list all the AdminUserNotes in the database.
 
-  @typedoc """
-  Parameter is an ID attribute
+  ## Example
+
+    all_nots =
+      AdminUserNoteQueries.list()
+      |> Repo.all()
   """
-  @type id :: String.t() | integer
+  @spec list() :: Ecto.Query.t()
+  def list(), do: (from n in AdminUserNote)
 
   @doc """
-  Creates a query for a single AdminUserNote entity in the database filtered by its ID
+  A composable query that filters a given query to only include results
+  whose acknowledged field is false.
+
+  ## Example
+
+    unread_notes =
+      AdminUserNoteQueries.list()
+      |> AdminUserNoteQueries.unread_only()
+      |> Repo.all()
   """
-  @spec from_id(id :: integer) :: Ecto.Queryset.t()
-  def from_id(id), do: from(n in AdminUserNote, where: n.id == ^id)
+  @spec unread_only(query :: Ecto.Query.t()) :: Ecto.Query.t()
+  def unread_only(query), do: from n in query, where: n.acknowledged == false
 
   @doc """
-  Creates a query that gets all AdminUserNote entities in the database. This can be combined
-  with other filters and preloads.
+  A composable query that filters a given query to only include results
+  whose acknowledged field is true.
 
-  ## Examples
+  ## Example
 
-    iex> my_unread_notes = AdminUserNoteQueries.list()
-           |> AdminUserNoteQueries.for_user(me)
-           |> unread()
-           |> Repo.all()
+    read_notes =
+      AdminUserNoteQueries.list()
+      |> AdminUserNoteQueries.acknowledged_only()
+      |> Repo.all()
   """
-  def list(), do: from(n in AdminUserNote)
+  @spec acknowledged_only(query :: Ecto.Query.t()) :: Ecto.Query.t()
+  def acknowledged_only(query), do: from n in query, where: n.acknowledged == true
 
   @doc """
-  Adds a filter to query selecting notes that have not been acknowledged
+  A composable query that filters returned notes whose relation to User
+  is the user passed as the filter value.
   """
-  @spec unread(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
-  def unread(query), do: from(n in query, where: n.acknowledged == false)
+  @spec for_user(query :: Ecto.Query.t(), user :: User | integer) :: Ecto.Query.t()
+  def for_user(query, %User{} = user), do: for_user(query, user.id)
+  def for_user(query, user), do: from n in query, where: n.user_id == ^user
 
   @doc """
-  Adds a filter to query selecting notes that have been acknowledged
+  A composable query that filters returned notes whose relation to Meta
+  is the meta passed as the filter value.
   """
-  @spec acknowledged(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
-  def acknowledged(query), do: from(n in query, where: n.acknowledged == true)
+  @spec for_meta(query :: Ecto.Query.t(), meta :: Meta | integer) :: Ecto.Query.t()
+  def for_meta(query, %Meta{} = meta), do: for_meta(query, meta.id)
+  def for_meta(query, meta), do: from n in query, where: n.meta_id == ^meta
 
   @doc """
-  Adds a filter to query selecting notes whose user_id matches the ID of the user in the params
+  Conditionally applies boolean and filter composable queries to the given
+  query.
+
+  ## Params
+
+  | key / function     | default value | default action     |
+  | ------------------ | ------------- | ------------------ |
+  | :unread_only       | false         | doesn't apply func |
+  | :acknowledged_only | false         | doesn't apply func |
+  | :for_user          | :dont_use_me  | doesn't apply func |
+  | :for_meta          | :dont_use_me  | doesn't apply func |
   """
-  @spec for_user(query :: Ecto.Queryset.t(), user :: %User{}) :: Ecto.Queryset.t()
-  def for_user(query, user), do: from(n in query, where: n.user_id == ^user.id)
-
-  @doc """
-  Orders the records returned by the query in descending order of their `inserted_at` value
-  """
-  @spec oldest_first(query :: Ecto.Queryset.t()) :: Ecto.Queryset.t()
-  def oldest_first(query), do: from(n in query, order_by: [desc: n.inserted_at])
-
-  @doc """
-  Applies a series of query modifiers to a given query. This is used mostly in
-  we controller list functions to allow for easy filtering.
-
-  Available filter keys with their associated functions and argument types:
-
-  | key name     | function     | arg types | default |
-  | ------------ | ------------ | --------- | ------- |
-  | unread       | unread       | boolean   | false   |
-  | acknowledged | acknowledged | boolean   | false   |
-  | for_user     | for_user     | %User{}   | nil     |
-  | oldest       | oldest_first | boolean   | false   |
-
-  ## Examples
-
-    iex> my_unread_notes = AdminUserNoteQueries.list()
-           |> AdminUserNoteQueries.handle_opts([
-                for_user: me,
-                unread: true
-              ])
-           |> Repo.all()
-  """
+  @spec handle_opts(query :: Ecto.Query.t(), opts :: Keyword.t()) :: Ecto.Query.t()
   def handle_opts(query, opts \\ []) do
     defaults = [
-      unread: false,
-      acknowledged: false,
-      for_user: nil,
-      oldest: false
+      unread_only: false,
+      acknowledged_only: false,
+      for_user: :dont_use_me,
+      for_meta: :dont_use_me
     ]
 
     opts = Keyword.merge(defaults, opts)
 
     query
-    |> bool_compose(opts[:unread], AdminUserNoteQueries, :unread)
-    |> bool_compose(opts[:acknowledged], AdminUserNoteQueries, :acknowledged)
-    |> bool_compose(opts[:oldest_first], AdminUserNoteQueries, :oldest_first)
-    |> filter_compose(opts[:for_user], AdminUserNoteQueries, :for_user)
+    |> Utils.bool_compose(opts[:unread_only], AdminUserNoteQueries, :unread_only)
+    |> Utils.bool_compose(opts[:acknowledged_only], AdminUserNoteQueries, :acknowledged_only)
+    |> Utils.filter_compose(opts[:for_user], AdminUserNoteQueries, :for_user)
+    |> Utils.filter_compose(opts[:for_meta], AdminUserNoteQueries, :for_meta)
   end
 end

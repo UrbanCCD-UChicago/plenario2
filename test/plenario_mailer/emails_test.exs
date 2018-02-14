@@ -1,11 +1,11 @@
-defmodule Plenario.EmailsTest do
-  use Plenario.DataCase, async: true
+defmodule PlenarioMailer.Testing.EmailsTest do
+  use Plenario.Testing.DataCase, async: true
 
-  alias Plenario.Emails
+  alias PlenarioMailer.Emails
 
-  alias Plenario.Actions.AdminUserNoteActions
+  alias PlenarioMailer.Actions.AdminUserNoteActions
 
-  alias PlenarioAuth.UserActions
+  alias Plenario.Actions.UserActions
 
   setup context do
     user = context[:user]
@@ -16,16 +16,16 @@ defmodule Plenario.EmailsTest do
   test :compose_admin_user_note, context do
     {:ok, note} =
       AdminUserNoteActions.create_for_meta(
-        "This is a test",
-        context[:user],
-        context[:user],
         context[:meta],
-        true
+        context[:user],
+        context[:user],
+        "This is a test",
+        false
       )
 
     email = Emails.compose_admin_user_note(note)
     assert email.from == "plenario@uchicago.edu"
-    assert email.to == context.user.email_address
+    assert email.to == context.user.email
     assert email.subject == "Plenario Notification"
     assert email.text_body == "This is a test"
     assert email.html_body == nil
