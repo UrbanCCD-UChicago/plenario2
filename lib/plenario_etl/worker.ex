@@ -78,7 +78,7 @@ defmodule PlenarioEtl.Worker do
   def load(state) do
     meta = MetaActions.get(state[:meta_id], with_fields: true)  # %Meta{}
     job = EtlJobActions.get(state[:job_id])                     # %EtlJob{}
-    constraints = unique_constraints(meta)                      # list[atom]
+    constraints = unique_constraints(meta, meta.source_type)    # list[atom]
 
     Logger.info("[#{inspect(self())}] [load] Downloading file for #{meta.name}")
     Logger.info("[#{inspect(self())}] [load] #{meta.name} source url is #{meta.source_url}")
@@ -124,6 +124,12 @@ defmodule PlenarioEtl.Worker do
     load_data(meta, path, job, constraint, fn path ->
       File.read!(path)
       |> Poison.decode!()
+      |> Stream.map(fn json ->
+        Enum.map(json, fn {key, value} ->
+          {Slug.slugify(key), value}
+        end)
+      end)
+      |> Stream.map(&Map.new/1)
     end)
   end
 
@@ -153,9 +159,19 @@ defmodule PlenarioEtl.Worker do
   def load_tsv(meta, path, job, constraints) do
     Logger.info("[#{inspect(self())}] [load_tsv] Prep loader for tsv at #{path}")
 
+    columns = 
+      File.stream!(path) 
+      |> Enum.take(1)
+      |> List.first()
+      |> String.split("\t")
+      |> Enum.map(&Slug.slugify(&1, separator: ?_))
+
     load_data(meta, path, job, constraints, fn path ->
       File.stream!(path)
-      |> CSV.decode!(headers: true, separator: ?\t)
+      |> CSV.decode!(separator: ?\t)
+      |> Stream.drop(1)
+      |> Stream.map(&Enum.zip(columns, &1))
+      |> Stream.map(&Map.new/1)
     end)
   end
 
@@ -239,10 +255,11 @@ defmodule PlenarioEtl.Worker do
   """
   def upsert!(meta, rows, constraints) do
     model = ModelRegistry.lookup(meta.slug)
+    columns = MetaActions.get_column_names(meta)
     {struct, _} = Code.eval_quoted(quote do %unquote(model){} end)
 
     Enum.map(rows, fn row ->
-      cast(struct, row, Map.keys(row))
+      cast(struct, row, columns)
       |> Repo.insert!(on_conflict: :replace_all, conflict_target: constraints)
     end)
   end
@@ -252,9 +269,6 @@ defmodule PlenarioEtl.Worker do
   """
   @spec contains!(meta :: Meta, rows :: list[map], constraints :: list[atom]) :: Postgrex.Result
   def contains!(meta, rows, [constraint | _] = constraints) when is_atom(constraint) do
-    IO.inspect(rows)
-    IO.inspect(constraints)
-
     row_pks = 
       for row <- rows do 
         for constraint <- constraints do
@@ -271,7 +285,8 @@ defmodule PlenarioEtl.Worker do
 
   defp composite_where(query, _keys, []), do: query
   defp composite_where(query, keys, [row | rows]) do
-    or_where(query, ^Enum.zip(keys, row)) |> composite_where(keys, rows)
+    filters = Enum.zip(keys, row) |> Enum.filter(fn {_, row} -> !is_nil(row) end)
+    or_where(query, ^filters) |> composite_where(keys, rows)
   end
 
   @doc """
@@ -281,7 +296,7 @@ defmodule PlenarioEtl.Worker do
   """
   def create_diffs(meta, job, original, updated) do
     constraint_id = List.first(UniqueConstraintActions.list(for_meta: meta)).id
-    constraints = unique_constraints(meta)
+    constraints = unique_constraints(meta, meta.source_type)
 
     constraint_map =
       Enum.map(constraints, fn constraint ->
@@ -311,7 +326,8 @@ defmodule PlenarioEtl.Worker do
     end)
   end
 
-  defp unique_constraints(meta) do
+  defp unique_constraints(meta, source_type) when source_type == "shp", do: []
+  defp unique_constraints(meta, source_type) when source_type != "shp" do
     cons = List.first(UniqueConstraintActions.list(for_meta: meta))
     constraints = UniqueConstraintActions.get_field_names(cons)
     for constraint <- constraints, do: String.to_atom(constraint)

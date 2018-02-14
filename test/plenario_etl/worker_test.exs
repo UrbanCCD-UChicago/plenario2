@@ -11,7 +11,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
     UserActions
   }
 
-  alias Plenario.Repo
+  alias Plenario.{ModelRegistry, Repo}
   alias PlenarioEtl.Actions.EtlJobActions
   alias PlenarioEtl.Schemas.DataSetDiff
   alias PlenarioEtl.Worker
@@ -430,22 +430,22 @@ defmodule PlenarioEtl.Testing.WorkerTest do
       {:ok, user} = UserActions.create("Trusted User", "user@example.com", "password")
       {:ok, meta} = MetaActions.create("clinics", user.id, "https://www.example.com/chicago-tree-trimmings", "csv")
   
-      DataSetFieldActions.create(meta.id, "date", "date")
-      DataSetFieldActions.create(meta.id, "start_time", "text")
-      DataSetFieldActions.create(meta.id, "end_time", "text")
-      DataSetFieldActions.create(meta.id, "day", "text")
-      DataSetFieldActions.create(meta.id, "event", "text")
-      DataSetFieldActions.create(meta.id, "event_type", "text")
-      DataSetFieldActions.create(meta.id, "address", "text")
-      DataSetFieldActions.create(meta.id, "city", "text")
-      DataSetFieldActions.create(meta.id, "state", "text")
-      DataSetFieldActions.create(meta.id, "zip", "integer")
-      DataSetFieldActions.create(meta.id, "phone", "text")
-      DataSetFieldActions.create(meta.id, "community_area_number", "text")
-      DataSetFieldActions.create(meta.id, "community_area_name", "text")
-      DataSetFieldActions.create(meta.id, "ward", "integer")
-      DataSetFieldActions.create(meta.id, "latitude", "float")
-      DataSetFieldActions.create(meta.id, "longitude", "float")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "date", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "start_time", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "end_time", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "day", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "event", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "event_type", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "address", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "city", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "state", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "zip", "integer")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "phone", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "community_area_number", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "community_area_name", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "ward", "integer")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "latitude", "float")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "longitude", "float")
       {:ok, f} = DataSetFieldActions.create(meta.id, "location", "text")
   
       UniqueConstraintActions.create(meta.id, [f.id])
@@ -462,14 +462,14 @@ defmodule PlenarioEtl.Testing.WorkerTest do
   
       with_mock HTTPoison, get!: fn url -> get!.(url) end do
         Worker.load(%{meta_id: meta.id, job_id: job.id})
-        %Postgrex.Result{rows: rows} = query!(Plenario.Repo, "select * from clinics", [])
-        assert 65 == Enum.count(rows)
+        clinics = ModelRegistry.lookup(meta.slug) |> Repo.all()
+        assert 65 == Enum.count(clinics)
       end
     end
   
     test "load/1 loads csv fixture with subset of columns" do
-      {:ok, user} = UserActions.create("subset_user", "subset_user_password", "subset@email.com")
-      {:ok, meta} = MetaActions.create("clinics_subset", user.id, "subset_test_source")
+      {:ok, user} = UserActions.create("subset_user", "subset@email.com", "password")
+      {:ok, meta} = MetaActions.create("clinics_subset", user.id, "https://example.com/subset", "csv")
       {:ok, job} = EtlJobActions.create(meta.id)
   
       DataSetFieldActions.create(meta.id, "community_area_name", "text")
@@ -486,14 +486,16 @@ defmodule PlenarioEtl.Testing.WorkerTest do
       get! = load_mock(@csv_fixture_path)
       with_mock HTTPoison, get!: fn url -> get!.(url) end do
         Worker.load(%{meta_id: meta.id, job_id: job.id})
-  
-        %Postgrex.Result{
-          columns: columns,
-          rows: rows
-        } = query!(Plenario.Repo, "select * from clinics_subset", [])
+        clinics = ModelRegistry.lookup(meta.slug)
+        rows = Repo.all(clinics)
+        columns = 
+          List.first(rows) 
+          |> Map.keys() 
+          |> Enum.map(&to_string/1)
+          |> Enum.filter(fn row -> !String.starts_with?(row, "__") end)
   
         assert 65 == Enum.count(rows)
-        assert ["community_area_name", "ward", "latitude", "longitude", "location"] == columns
+        assert ["community_area_name", "latitude", "location", "longitude", "ward"] == columns
       end
     end
   
@@ -504,7 +506,8 @@ defmodule PlenarioEtl.Testing.WorkerTest do
   
       with_mock HTTPoison, get!: fn url -> get!.(url) end do
         Worker.load(%{meta_id: meta.id, job_id: job.id})
-        %Postgrex.Result{rows: rows} = query!(Plenario.Repo, "select * from clinics", [])
+        clinics = ModelRegistry.lookup(meta.slug)
+        rows = Repo.all(clinics)
         assert 65 == Enum.count(rows)
       end
   
@@ -512,7 +515,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
   
       with_mock HTTPoison, get!: fn url -> get!.(url) end do
         Worker.load(%{meta_id: meta.id, job_id: job.id})
-        %Postgrex.Result{rows: rows} = query!(Plenario.Repo, "select * from data_set_diffs", [])
+        rows = Repo.all(DataSetDiff)
         assert 1 == Enum.count(rows)
       end
     end
@@ -523,7 +526,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
   
       with_mock HTTPoison, get!: fn url -> get!.(url) end do
         Worker.load(%{meta_id: meta.id, job_id: job.id})
-        %Postgrex.Result{rows: rows} = query!(Plenario.Repo, "select * from clinics", [])
+        rows = ModelRegistry.lookup(meta.slug) |> Repo.all()
         assert 65 == Enum.count(rows)
       end
     end
@@ -534,14 +537,14 @@ defmodule PlenarioEtl.Testing.WorkerTest do
   
       with_mock HTTPoison, get!: fn url -> get!.(url) end do
         Worker.load(%{meta_id: meta.id, job_id: job.id})
-        %Postgrex.Result{rows: rows} = query!(Plenario.Repo, "select * from clinics", [])
+        rows = ModelRegistry.lookup(meta.slug) |> Repo.all()
         assert 65 == Enum.count(rows)
       end
     end
   
     test "load/1 loads shp fixture" do
-      {:ok, user} = UserActions.create("Trusted User", "password", "shapeuser@example.com")
-      {:ok, meta} = MetaActions.create("watersheds", user.id, "watersheds_source_url")
+      {:ok, user} = UserActions.create("Trusted User", "shapeuser@example.com", "password")
+      {:ok, meta} = MetaActions.create("watersheds", user.id, "example.com/watersheds", "shp")
       {:ok, job} = EtlJobActions.create(meta)
   
       MetaActions.update(meta, source_type: "shp")
@@ -568,7 +571,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
   
         job_id = job.id()
         meta_id = meta.id()
-        assert [^job_id, "completed", _, _, ^meta_id, nil] = row
+        assert [^job_id, "completed", _, _, nil, ^meta_id, _, _] = row
       end
     end
   
@@ -586,7 +589,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
   
         job_id = job.id()
         meta_id = meta.id()
-        assert [^job_id, "erred", _, _, ^meta_id, _] = row
+        assert [^job_id, "erred", _, _, _, ^meta_id, _, _] = row
       end
     end
   end

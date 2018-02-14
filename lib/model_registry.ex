@@ -74,7 +74,7 @@ defmodule Plenario.ModelRegistry do
       :"Model.otherdata"
 
   """
-  def lookup(slug, pid \\ __MODULE__) do
+  def lookup(slug, pid \\ __MODULE__) when is_bitstring(slug) do
     GenServer.call(pid, {:lookup, slug})
   end
 
@@ -82,7 +82,7 @@ defmodule Plenario.ModelRegistry do
     GenServer.cast(pid, :clear)
   end
 
-  def handle_call({:lookup, slug}, _sender, state) do
+  def handle_call({:lookup, slug}, _sender, state) when is_bitstring(slug) do
     state = 
       case Map.has_key?(state, slug) do
         true ->
