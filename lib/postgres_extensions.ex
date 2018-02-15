@@ -62,3 +62,66 @@ defmodule Plenario.TsTzRange do
     end
   end
 end
+
+defmodule Plenario.ForgivingDatetime do
+  @behaviour Ecto.Type
+
+  def type(), do: :timestamptz
+
+  @us_dt_string ~r/(?P<mo>\d{1,2})\/(?P<d>\d{1,2})\/(?P<y>\d{4}).?(?P<h>\d{2})?\:?(?P<mi>\d{2})?\:?(?P<s>\d{2})?/
+
+  @iso_dt_string ~r/(?P<y>\d{4})-(?P<mo>\d{2})-(?P<d>\d{2}).?(?P<h>\d{2})?\:?(?P<mi>\d{2})?\:?(?P<s>\d{2})?/
+
+  def cast(nil), do: {:ok, nil}
+  def cast(value) when is_bitstring(value) do
+    case Regex.match?(@iso_dt_string, value) do
+      true -> {:ok, value}
+      false ->
+        case Regex.match?(@us_dt_string, value) do
+          true -> {:ok, value}
+          false -> :error
+        end
+    end
+  end
+  def cast(_), do: :error
+
+  def load(value), do: {:ok, value}
+
+  def dump(nil), do: {:ok, nil}
+  def dump(value) do
+    case Regex.scan(@iso_dt_string, value, capture: :all_names) do
+      [[day, hr, min, mon, sec, yr] | _] ->
+        parse_bits(day, hr, min, mon, sec, yr)
+
+      _ ->
+        case Regex.scan(@us_dt_string, value, capture: :all_names) do
+          [[day, hr, min, mon, sec, yr] | _] ->
+            parse_bits(day, hr, min, mon, sec, yr)
+
+          _ ->
+            {:ok, nil}
+        end
+    end
+  end
+
+  defp parse_bits(day, hr, min, mon, sec, yr) do
+    day = parse_int_str(day)
+    hr = parse_int_str(hr)
+    min = parse_int_str(min)
+    mon = parse_int_str(mon)
+    sec = parse_int_str(sec)
+    yr = parse_int_str(yr)
+
+    case yr != 0 and mon != 0 and day != 0 do
+      true -> {:ok, {{yr, mon, day}, {hr, min, sec, 0}}}
+      false -> {:ok, nil}
+    end
+  end
+
+  defp parse_int_str(value) do
+    case Integer.parse(value) do
+      :error -> 0
+      {num, _} -> num
+    end
+  end
+end
