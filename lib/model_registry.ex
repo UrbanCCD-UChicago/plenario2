@@ -7,6 +7,7 @@ defmodule Plenario.ModelRegistry do
     "float" => :float,
     "integer" => :integer,
     "text" => :string,
+    "date" => :date,
     "timestamptz" => :naive_datetime
   }
 
@@ -73,11 +74,15 @@ defmodule Plenario.ModelRegistry do
       :"Model.otherdata"
 
   """
-  def lookup(slug, pid \\ __MODULE__) do
+  def lookup(slug, pid \\ __MODULE__) when is_bitstring(slug) do
     GenServer.call(pid, {:lookup, slug})
   end
 
-  def handle_call({:lookup, slug}, _sender, state) do
+  def clear(pid \\ __MODULE__) do
+    GenServer.cast(pid, :clear)
+  end
+
+  def handle_call({:lookup, slug}, _sender, state) when is_bitstring(slug) do
     state = 
       case Map.has_key?(state, slug) do
         true ->
@@ -90,22 +95,26 @@ defmodule Plenario.ModelRegistry do
     {:reply, Map.fetch!(state, slug), state}
   end
 
+  def handle_cast(:clear, _) do
+    {:noreply, %{}}
+  end
+
   def handle_call(request, sender, state) do
     super(request, sender, state)
   end
 
   defp register(meta) do
-    module = "Model." <> Slug.slugify(meta.name())
-    table = Slug.slugify(meta.name())
+    module = "Model." <> Slug.slugify(meta.table_name)
+    table = meta.table_name
     fields = 
-      Enum.map(meta.data_set_fields(), fn field ->
-        {String.to_atom(field.name()), Map.fetch!(@type_map, field.type())}
+      Enum.map(meta.fields, fn field ->
+        {String.to_atom(field.name), Map.fetch!(@type_map, field.type)}
       end)
     create_module(module, table, fields)
 
     %{
-      meta.id() => String.to_atom(module),
-      meta.slug() => String.to_atom(module)
+      meta.id => String.to_atom(module),
+      meta.slug => String.to_atom(module)
     }
   end
 

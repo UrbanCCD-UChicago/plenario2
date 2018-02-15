@@ -6,22 +6,19 @@ defmodule PlenarioEtl.Worker do
   with `:sys.get_state/1`.
   """
 
-  alias Plenario.Actions.{MetaActions, UniqueConstraintActions}
-
-  alias PlenarioEtl.Actions.{
-    DataSetDiffActions,
-    EtlJobActions
-}
-
-  alias PlenarioEtl.Rows
-
-  import Ecto.Adapters.SQL, only: [query!: 3]
-  require Logger
   use GenServer
 
+  alias Plenario.{ModelRegistry, Repo}
+  alias Plenario.Actions.{MetaActions, UniqueConstraintActions}
+  alias PlenarioEtl.Actions.{DataSetDiffActions, EtlJobActions}
+  alias PlenarioEtl.Rows
+
+  import Ecto.Changeset
+  import Ecto.Query
+
+  require Logger
+
   @chunk_size Application.get_env(:plenario, PlenarioEtl)[:chunk_size]
-  @contains_template "lib/plenario_etl/templates/contains.sql.eex"
-  @upsert_template "lib/plenario_etl/templates/upsert.sql.eex"
   @timeout 10000
 
   @doc """
@@ -48,9 +45,9 @@ defmodule PlenarioEtl.Worker do
     {:reply, load(meta_id_map), state}
   end
 
-  def handle_call({:load_chunk!, meta, job, chunk}, _, state) do
+  def handle_call({:load_chunk!, meta, job, chunk, constraints}, _, state) do
     Logger.info("[#{inspect(self())}] [handle_call] Received :load_chunk! call")
-    {:reply, load_chunk!(meta, job, chunk), state}
+    {:reply, load_chunk!(meta, job, chunk, constraints), state}
   end
 
   @doc """
@@ -79,26 +76,23 @@ defmodule PlenarioEtl.Worker do
   """
   @spec load(state :: map) :: map
   def load(state) do
-    meta = MetaActions.get(state[:meta_id])
-    job = EtlJobActions.get(state[:job_id])
+    meta = MetaActions.get(state[:meta_id], with_fields: true)  # %Meta{}
+    job = EtlJobActions.get(state[:job_id])                     # %EtlJob{}
+    constraints = unique_constraints(meta, meta.source_type)    # list[atom]
 
     Logger.info("[#{inspect(self())}] [load] Downloading file for #{meta.name}")
     Logger.info("[#{inspect(self())}] [load] #{meta.name} source url is #{meta.source_url}")
     Logger.info("[#{inspect(self())}] [load] #{meta.name} source type is #{meta.source_type}")
+    Logger.info("[#{inspect(self())}] [load] Using constraints #{inspect constraints}")
 
-    path =
-      download!(
-        meta.table_name,
-        meta.source_url,
-        meta.source_type
-      )
+    path = download!(meta.table_name, meta.source_url, meta.source_type)  # string
 
     Logger.info("[#{inspect(self())}] [load] File stored at #{path}")
 
     case meta.source_type do
-      "json" -> load_json(meta, path, job)
-      "csv" -> load_csv(meta, path, job)
-      "tsv" -> load_tsv(meta, path, job)
+      "json" -> load_json(meta, path, job, constraints)
+      "csv" -> load_csv(meta, path, job, constraints)
+      "tsv" -> load_tsv(meta, path, job, constraints)
       "shp" -> load_shape(meta, path, job)
     end
   end
@@ -107,23 +101,15 @@ defmodule PlenarioEtl.Worker do
   This is the main subprocess kicked off by the `load` method that handles
   and ingests a smaller chunk of rows.
   """
-  def load_chunk!(meta, job, chunk) do
-    rows = Enum.map(chunk, &Keyword.values/1)
-
+  def load_chunk!(meta, job, rows, constraints) do
     Logger.info("[#{inspect(self())}] [load_chunk] Running contains query")
-    existing_rows = contains!(meta, rows)
+    existing_rows = contains!(meta, rows, constraints)
 
     Logger.info("[#{inspect(self())}] [load_chunk] Running upsert query")
-    inserted_rows = upsert!(meta, rows)
+    inserted_rows = upsert!(meta, rows, constraints)
 
-    cons = List.first(UniqueConstraintActions.list(for_meta: meta))
-    constraints = UniqueConstraintActions.get_field_names(cons)
-    constraint_atoms = for c <- constraints, do: String.to_atom(c)
-    pairs = PlenarioEtl.Rows.pair_rows(existing_rows, inserted_rows, constraint_atoms)
-
-    Logger.info(
-      "[#{inspect(self())}] [load_chunk] Will possibly update #{Enum.count(pairs)} rows"
-    )
+    pairs = Rows.pair_rows(existing_rows, inserted_rows, constraints)
+    Logger.info("[#{inspect(self())}] [load_chunk] Will possibly update #{Enum.count(pairs)} rows")
 
     Enum.map(pairs, fn {existing_row, inserted_row} ->
       create_diffs(meta, job, existing_row, inserted_row)
@@ -132,10 +118,10 @@ defmodule PlenarioEtl.Worker do
 
   @doc """
   """
-  def load_json(meta, path, job) do
+  def load_json(meta, path, job, constraint) do
     Logger.info("[#{inspect(self())}] [load_json] Prep loader for json at #{path}")
 
-    load_data(meta, path, job, fn path ->
+    load_data(meta, path, job, constraint, fn path ->
       File.read!(path)
       |> Poison.decode!()
     end)
@@ -143,10 +129,10 @@ defmodule PlenarioEtl.Worker do
 
   @doc """
   """
-  def load_csv(meta, path, job) do
+  def load_csv(meta, path, job, constraint) do
     Logger.info("[#{inspect(self())}] [load_csv] Prep loader for csv at #{path}")
 
-    load_data(meta, path, job, fn path ->
+    load_data(meta, path, job, constraint, fn path ->
       File.stream!(path)
       |> CSV.decode!(headers: true)
     end)
@@ -154,10 +140,10 @@ defmodule PlenarioEtl.Worker do
 
   @doc """
   """
-  def load_tsv(meta, path, job) do
+  def load_tsv(meta, path, job, constraints) do
     Logger.info("[#{inspect(self())}] [load_tsv] Prep loader for tsv at #{path}")
 
-    load_data(meta, path, job, fn path ->
+    load_data(meta, path, job, constraints, fn path ->
       File.stream!(path)
       |> CSV.decode!(headers: true, separator: ?\t)
     end)
@@ -182,33 +168,24 @@ defmodule PlenarioEtl.Worker do
     PlenarioEtl.Shapefile.load(shp, meta.name)
   end
 
-  defp load_data(meta, path, job, decode) do
+  defp load_data(meta, path, job, constraints, decode) do
     Logger.info("[#{inspect self()}] [load_data] Chunking rows and spawning children")
 
-    columns =
-      MetaActions.get_column_names(meta)
-      |> Enum.map(&String.to_atom/1)
-      |> Enum.sort()
-
     decode.(path)
-    |> Stream.map(&Enum.to_list/1)
-    |> Stream.map(&Rows.to_kwlist_from_tuples/1)
-    |> Stream.map(&Rows.select_columns(&1, columns))
-    |> Stream.map(&Enum.sort/1)
     |> Stream.chunk_every(@chunk_size)
     |> Enum.map(fn chunk ->
-      async_load_chunk!(meta, job, chunk)
+      async_load_chunk!(meta, job, chunk, constraints)
     end)
     |> Enum.map(fn task ->
       Task.await(task)
     end)
   end
 
-  def async_load_chunk!(meta, job, chunk) do
+  def async_load_chunk!(meta, job, chunk, constraints) do
     Task.async(fn ->
       :poolboy.transaction(
         :worker,
-        fn pid -> GenServer.call(pid, {:load_chunk!, meta, job, chunk}) end,
+        fn pid -> GenServer.call(pid, {:load_chunk!, meta, job, chunk, constraints}) end,
         @timeout
       )
 
@@ -250,41 +227,44 @@ defmodule PlenarioEtl.Worker do
   @doc """
   Upsert a dataset with a chunk of `rows`.
   """
-  @spec upsert!(meta :: Meta, rows :: list) :: list
-  def upsert!(meta, rows) do
-    template_query!(@upsert_template, meta, rows)
+  def upsert!(meta, rows, constraints) do
+    model = ModelRegistry.lookup(meta.slug)
+    columns = MetaActions.get_column_names(meta)
+    {struct, _} = Code.eval_quoted(quote do %unquote(model){} end)
+
+    # IO.inspect(rows)
+    # IO.inspect(columns)
+    # IO.inspect(struct)
+
+    Enum.map(rows, fn row ->
+      cast(struct, row, columns)
+      |> Repo.insert!(on_conflict: :replace_all, conflict_target: constraints)
+    end)
   end
 
   @doc """
   Query existing rows that might conflict with an insert query using `rows`.
   """
-  @spec contains!(meta :: Meta, rows :: list) :: list
-  def contains!(meta, rows) do
-    template_query!(@contains_template, meta, rows)
+  @spec contains!(meta :: Meta, rows :: list[map], constraints :: list[atom]) :: Postgrex.Result
+  def contains!(meta, rows, [constraint | _] = constraints) when is_atom(constraint) do
+    row_pks = 
+      for row <- rows do 
+        for constraint <- constraints do
+          row[constraint]
+        end
+      end
+
+    model = ModelRegistry.lookup(meta.slug)
+
+    from(m in model)
+    |> composite_where(constraints, row_pks)
+    |> Repo.all()
   end
 
-  defp template_query!(template, meta, rows) do
-    table = meta.table_name
-    columns = MetaActions.get_column_names(meta) |> Enum.sort()
-    cons = List.first(UniqueConstraintActions.list(for_meta: meta))
-    constraints = UniqueConstraintActions.get_field_names(cons)
-
-    sql =
-      EEx.eval_file(
-        template,
-        table: table,
-        columns: columns,
-        rows: rows,
-        constraints: constraints
-      )
-
-    %Postgrex.Result{
-      columns: columns,
-      rows: rows
-    } = query!(Plenario.Repo, sql, [])
-
-    atom_columns = Enum.map(columns, &String.to_atom/1)
-    PlenarioEtl.Rows.to_kwlists(rows, atom_columns)
+  defp composite_where(query, _keys, []), do: query
+  defp composite_where(query, keys, [row | rows]) do
+    filters = Enum.zip(keys, row) |> Enum.filter(fn {_, row} -> !is_nil(row) end)
+    or_where(query, ^filters) |> composite_where(keys, rows)
   end
 
   @doc """
@@ -293,33 +273,20 @@ defmodule PlenarioEtl.Worker do
   more readable.
   """
   def create_diffs(meta, job, original, updated) do
-    cons = List.first(UniqueConstraintActions.list(for_meta: meta))
-    constraint_id = cons.id
-    constraint_names = UniqueConstraintActions.get_field_names(cons)
+    constraint_id = List.first(UniqueConstraintActions.list(for_meta: meta)).id
+    constraints = unique_constraints(meta, meta.source_type)
 
     constraint_map =
-      Enum.map(constraint_names, fn constraint_name ->
-        constraint_name_atom = String.to_atom(constraint_name)
-        {constraint_name, original[constraint_name_atom]}
+      Enum.map(constraints, fn constraint ->
+        {constraint, Map.get(original, constraint)}
       end)
       |> Map.new()
 
-    List.zip([original, updated])
-    |> Enum.map(fn {original_value, updated_value} ->
+    Enum.map(Map.keys(original), fn column ->
+      original_value = Map.get(original, column)
+      updated_value = Map.get(updated, column)
+
       if original_value !== updated_value do
-        {column, original_value} = original_value
-        {_column, updated_value} = updated_value
-
-        Logger.info(
-          "[#{inspect(self())}] [create_diffs] #{column}: #{inspect(original_value)} changed to #{
-            inspect(updated_value)
-          }"
-        )
-
-        # TODO(heyzoos) inspect will render values in a way that is
-        # is probably unusable to end users. Need a way to guess the
-        # correct string format for a value.
-
         {:ok, diff} =
           DataSetDiffActions.create(
             meta.id(),
@@ -335,5 +302,12 @@ defmodule PlenarioEtl.Worker do
         diff
       end
     end)
+  end
+
+  defp unique_constraints(meta, source_type) when source_type == "shp", do: []
+  defp unique_constraints(meta, source_type) when source_type != "shp" do
+    cons = List.first(UniqueConstraintActions.list(for_meta: meta))
+    constraints = UniqueConstraintActions.get_field_names(cons)
+    for constraint <- constraints, do: String.to_atom(constraint)
   end
 end
