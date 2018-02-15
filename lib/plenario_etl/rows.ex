@@ -59,19 +59,4 @@ defmodule PlenarioEtl.Rows do
   def to_key(row, constraints) do
     List.to_tuple(for constraint <- constraints, do: Map.get(row, constraint))
   end
-
-  @doc """
-  Select a subset of a `row`'s values using the keys provided by `columns`.
-
-  ## Examples
-
-      iex> row = [colA: 1, colB: 2, colC: "bar"]
-      iex> PlenarioEtl.Rows.select_columns(row, [:colA, :colC])
-      [colA: 1, colC: "bar"]
-
-  """
-  @spec select_columns(row :: list, columns :: list) :: list
-  def select_columns(row, columns) do
-    for column <- columns, do: {column, row[column]}
-  end
 end
