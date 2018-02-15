@@ -45,7 +45,7 @@ config :canary,
 
 
 # configure bamboo (email)
-config :plenario, Plenario.Mailer, adapter: Bamboo.LocalAdapter
+config :plenario, PlenarioMailer, adapter: Bamboo.LocalAdapter
 config :plenario, :email_sender, "plenario@uchicago.edu"
 config :plenario, :email_subject, "Plenario Notification"
 

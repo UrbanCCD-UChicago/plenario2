@@ -5,8 +5,11 @@ defmodule PlenarioWeb.Web.MeController do
 
   alias Plenario.Schemas.User
 
+  alias PlenarioMailer.Actions.AdminUserNoteActions
+
   def index(conn, _) do
     user = Guardian.Plug.current_resource(conn)
+
     all_metas = MetaActions.list(for_user: user)
     erred_metas = Enum.filter(all_metas, fn m -> m.state == "erred" end)
     ready_metas = Enum.filter(all_metas, fn m -> m.state == "ready" end)
@@ -14,9 +17,16 @@ defmodule PlenarioWeb.Web.MeController do
     needs_approval_metas = Enum.filter(all_metas, fn m -> m.state == "needs_approval" end)
     new_metas = Enum.filter(all_metas, fn m -> m.state == "new" end)
 
-    render(conn, "index.html", user: user, erred_metas: erred_metas, ready_metas: ready_metas,
-      awaiting_first_import_metas: awaiting_first_import_metas,
-      needs_approval_metas: needs_approval_metas, new_metas: new_metas)
+    all_messages = AdminUserNoteActions.list(for_user: user)
+    unread_message = Enum.filter(all_messages, fn m -> m.acknowledged == false end)
+    read_message =
+      Enum.filter(all_messages, fn m -> m.acknowledged == true end)
+      |> Enum.take(5)
+
+    render(conn, "index.html", user: user, erred_metas: erred_metas,
+      ready_metas: ready_metas, awaiting_first_import_metas: awaiting_first_import_metas,
+      needs_approval_metas: needs_approval_metas, new_metas: new_metas,
+      unread_messages: unread_message, read_messages: read_message)
   end
 
   def edit(conn, _) do

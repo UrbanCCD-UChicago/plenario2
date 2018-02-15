@@ -38,4 +38,4 @@ config :plenario, PlenarioEtl,
 
 
 # configure bamboo (email)
-config :plenario, Plenario.Mailer, adapter: Bamboo.TestAdapter
+config :plenario, PlenarioMailer, adapter: Bamboo.TestAdapter

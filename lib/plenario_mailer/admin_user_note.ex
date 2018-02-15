@@ -13,16 +13,16 @@ defmodule PlenarioMailer.Schemas.AdminUserNote do
   use Ecto.Schema
 
   schema "admin_user_notes" do
-    field(:message, :string)
-    field(:should_email, :boolean, default: false)
-    field(:acknowledged, :boolean, default: false)
+    field :message, :string
+    field :should_email, :boolean, default: false
+    field :acknowledged, :boolean, default: false
 
-    timestamps(type: :utc_datetime)
+    timestamps type: :utc_datetime
 
-    belongs_to(:admin, Plenario.Schemas.User, foreign_key: :admin_id)
-    belongs_to(:user, Plenario.Schemas.User, foreign_key: :user_id)
-    belongs_to(:meta, Plenario.Schemas.Meta)
-    belongs_to(:etl_job, PlenarioEtl.Schemas.EtlJob)
-    belongs_to(:export_job, PlenarioExport.Schemas.ExportJob)
+    belongs_to :admin, Plenario.Schemas.User, foreign_key: :admin_id
+    belongs_to :user, Plenario.Schemas.User, foreign_key: :user_id
+    belongs_to :meta, Plenario.Schemas.Meta
+    belongs_to :etl_job, PlenarioEtl.Schemas.EtlJob
+    belongs_to :export_job, PlenarioExport.Schemas.ExportJob
   end
 end

@@ -9,6 +9,8 @@ defmodule PlenarioWeb.Admin.MetaController do
     VirtualPointFieldActions
   }
 
+  alias PlenarioMailer.Actions.AdminUserNoteActions
+
   def index(conn, _) do
     all_metas = MetaActions.list(with_user: true)
     erred_metas = Enum.filter(all_metas, fn m -> m.state == "erred" end)
@@ -52,8 +54,15 @@ defmodule PlenarioWeb.Admin.MetaController do
 
   def approve(conn, %{"id" => id}) do
     meta = MetaActions.get(id)
+    admin = Guardian.Plug.current_resource(conn)
+
     case MetaActions.approve(meta) do
       {:ok, meta} ->
+        AdminUserNoteActions.create_for_meta(
+          meta.id, admin.id, meta.user_id,
+          "#{meta.name} has been approved and has been added to the ingest queue.",
+          true)
+
         conn
         |> put_flash(:success, "Meta #{meta.name} approved.")
         |> redirect(to: meta_path(conn, :index))
@@ -67,8 +76,15 @@ defmodule PlenarioWeb.Admin.MetaController do
 
   def disapprove(conn, %{"id" => id}) do
     meta = MetaActions.get(id)
+    admin = Guardian.Plug.current_resource(conn)
+
     case MetaActions.disapprove(meta) do
       {:ok, meta} ->
+        AdminUserNoteActions.create_for_meta(
+          meta.id, admin.id, meta.user_id,
+          "#{meta.name} has been disapproved. Please review the documentation regarding submitting new data sets.",
+          true)
+
         conn
         |> put_flash(:success, "Meta #{meta.name} disapproved.")
         |> redirect(to: meta_path(conn, :index))

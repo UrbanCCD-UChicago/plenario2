@@ -5,12 +5,15 @@ defmodule PlenarioMailer.Actions.AdminUserNoteActions do
   """
 
   alias Plenario.Repo
+
   alias Plenario.Schemas.{Meta, User}
 
-  alias PlenarioMailer
   alias PlenarioMailer.Emails
+
   alias PlenarioMailer.Schemas.AdminUserNote
+
   alias PlenarioMailer.Changesets.AdminUserNoteChangesets
+
   alias PlenarioMailer.Queries.AdminUserNoteQueries, as: Q
 
   require Logger
@@ -21,15 +24,10 @@ defmodule PlenarioMailer.Actions.AdminUserNoteActions do
   @type ok_note :: {:ok, AdminUserNote} | {:error, Ecto.Changeset.T}
 
   @doc """
-  Gets a single AdminUserNote by ID, optionally preloading relations.
-  See the notes for AdminUserNoteQueries.handle_opts
+  Gets a single AdminUserNote given its ID.
   """
-  @spec get(id :: integer, opts :: Keyword.t()) :: AdminUserNote | nil
-  def get(id, opts \\ []) do
-    Q.from_id(id)
-    |> Q.handle_opts(opts)
-    |> Repo.one()
-  end
+  @spec get(identifier :: integer) :: AdminUserNote | nil
+  def get(identifier), do: Repo.get_by(AdminUserNote, id: identifier)
 
   @doc """
   Gets a list of AdminUserNotes, optionally filtering and preloading relations.
@@ -45,23 +43,21 @@ defmodule PlenarioMailer.Actions.AdminUserNoteActions do
   @doc """
   Creates a new AdminUserNote related to a Meta.
   """
-  @spec create_for_meta(
-          message :: String.t(),
-          admin :: %User{is_admin: true},
-          user :: User,
-          meta :: Meta,
-          should_email :: boolean
-        ) :: ok_note
-  def create_for_meta(message, admin, user, meta, should_email \\ false) do
+  @spec create_for_meta(meta :: Meta | integer, admin :: User | integer, user :: User | integer, message :: String.t(), should_email :: boolean) :: ok_note
+  def create_for_meta(%Meta{} = meta, admin, user, message, should_email),
+    do: create_for_meta(meta.id, admin, user, message, should_email)
+  def create_for_meta(meta, %User{} = admin, user, message, should_email),
+    do: create_for_meta(meta, admin.id, user, message, should_email)
+  def create_for_meta(meta, admin, %User{} = user, message, should_email),
+    do: create_for_meta(meta, admin, user.id, message, should_email)
+  def create_for_meta(meta, admin, user, message, should_email) do
     params = %{
+      meta_id: meta,
+      admin_id: admin,
+      user_id: user,
       message: message,
-      should_email: should_email,
-      admin_id: admin.id,
-      user_id: user.id,
-      meta_id: meta.id
+      should_email: should_email
     }
-
-    Logger.info("Creating AdminUserNote: #{inspect(params)}")
 
     {status, note} =
       AdminUserNoteChangesets.create_for_meta(params)
@@ -74,30 +70,6 @@ defmodule PlenarioMailer.Actions.AdminUserNoteActions do
 
     {status, note}
   end
-
-  # def create_for_etl_job(note, admin, user, etl_job, should_email \\ false) do
-  #   params = %{
-  #     note: note,
-  #     should_email: should_email,
-  #     admin_id: admin.id,
-  #     user_id: user.id,
-  #     etl_job_id: etl_job.id
-  #   }
-  #   AdminUserNoteChangesets.create_for_etl_job(%AdminUserNote{}, params)
-  #   |> Repo.insert()
-  # end
-
-  # def create_for_export_job(note, admin, user, export_job, should_email \\ false) do
-  #   params = %{
-  #     note: note,
-  #     should_email: should_email,
-  #     admin_id: admin.id,
-  #     user_id: user.id,
-  #     export_job_id: export_job.id
-  #   }
-  #   AdminUserNoteChangesets.create_for_export_job(%AdminUserNote{}, params)
-  #   |> Repo.insert()
-  # end
 
   @doc """
   Updates a given note in the database as having been acknowledged by the user.
