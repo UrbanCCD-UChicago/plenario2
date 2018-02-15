@@ -10,7 +10,7 @@
 
     <%= if length(@erred_metas) > 0 do %>
     <div class="row">
-      <h3>Erred Data Sets</h3>
+      <h3 class="dotborder">Erred Data Sets</h3>
       <%= for m <- @erred_metas do %>
       <p>
         <strong><%= m.name %></strong><br>
@@ -22,7 +22,7 @@
 
     <%= if length(@new_metas) > 0 do %>
     <div class="row">
-      <h3>Data Sets I'm Working On</h3>
+      <h3 class="dotborder">Data Sets I'm Working On</h3>
       <%= for m <- @new_metas do %>
       <p>
         <strong><%= m.name %></strong><br>
@@ -34,7 +34,7 @@
 
     <%= if length(@needs_approval_metas) > 0 do %>
     <div class="row">
-      <h3>Data Sets Waiting on Admin Approval</h3>
+      <h3 class="dotborder">Data Sets Waiting on Admin Approval</h3>
       <%= for m <- @needs_approval_metas do %>
       <p>
         <strong><%= m.name %></strong><br>
@@ -46,7 +46,7 @@
 
     <%= if length(@awaiting_first_import_metas) > 0 do %>
     <div class="row">
-      <h3>Scheduled First Import Data Sets</h3>
+      <h3 class="dotborder">Scheduled First Import Data Sets</h3>
       <%= for m <- @awaiting_first_import_metas do %>
       <p>
         <strong><%= m.name %></strong><br>
@@ -58,7 +58,7 @@
 
     <%= if length(@ready_metas) > 0 do %>
     <div class="row">
-      <h3>Live Data Sets</h3>
+      <h3 class="dotborder">Live Data Sets</h3>
       <%= for m <- @ready_metas do %>
       <p>
         <strong><%= m.name %></strong><br>
@@ -92,10 +92,21 @@
       <hr>
     </div>
     <div class="row">
-      <h4>Unread</h4>
+      <h4 class="dotborder">Unread</h4>
+      <%= for msg <- @unread_messages do %>
+      <div>
+        <p>
+          <%= msg.message %><br>
+          <%= link "Mark Read", to: admin_user_note_path(@conn, :mark_acknowledged, msg.id, redir: @conn.request_path), method: :post, class: "info pull-right" %>
+        </p>
+      </div>
+      <% end %>
     </div>
     <div class="row">
-      <h4>Archived</h4>
+      <h4 class="dotborder">Archived</h4>
+      <%= for msg <- @read_messages do %>
+      <p><%= msg.message %></p>
+      <% end %>
     </div>
   </div> <!-- /info column -->
 </div>

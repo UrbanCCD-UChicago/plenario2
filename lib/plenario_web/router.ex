@@ -63,6 +63,8 @@ defmodule PlenarioWeb.Router do
     resources "/data-sets/:dsid/constraints", UniqueConstraintController
     resources "/data-sets/:dsid/virtual-dates", VirtualDateController
     resources "/data-sets/:dsid/virtual-points", VirtualPointController
+
+    post "/notes/:id/acknowledge", AdminUserNoteController, :mark_acknowledged
   end
 
   ##
