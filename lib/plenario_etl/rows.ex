@@ -33,10 +33,16 @@ defmodule PlenarioEtl.Rows do
   """
   @spec pair_rows(rowset1 :: list, rowset2 :: list, constraints :: list) :: list
   def pair_rows(rowset1, rowset2, constraints) do
-    valid_keys = Enum.map(rowset1, &to_key(&1, constraints))
-    valid_rows = Enum.filter(rowset2, &(to_key(&1, constraints) in valid_keys))
+    Enum.map(rowset1, fn row1 ->
+      match = Enum.find(rowset2, fn row2 ->
+        to_key(row1, constraints) == to_key(row2, constraints)
+      end)
 
-    Enum.zip([Enum.sort(rowset1), Enum.sort(valid_rows)])
+      {row1, match}
+    end)
+    |> Enum.filter(fn {row1, row2} ->
+      !is_nil(row1) && !is_nil(row2)
+    end)
   end
 
   @doc """

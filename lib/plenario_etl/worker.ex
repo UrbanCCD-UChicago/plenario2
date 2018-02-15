@@ -124,12 +124,6 @@ defmodule PlenarioEtl.Worker do
     load_data(meta, path, job, constraint, fn path ->
       File.read!(path)
       |> Poison.decode!()
-      |> Stream.map(fn json ->
-        Enum.map(json, fn {key, value} ->
-          {Slug.slugify(key), value}
-        end)
-      end)
-      |> Stream.map(&Map.new/1)
     end)
   end
 
@@ -138,19 +132,9 @@ defmodule PlenarioEtl.Worker do
   def load_csv(meta, path, job, constraint) do
     Logger.info("[#{inspect(self())}] [load_csv] Prep loader for csv at #{path}")
 
-    columns = 
-      File.stream!(path) 
-      |> Enum.take(1)
-      |> List.first()
-      |> String.split(",")
-      |> Enum.map(&Slug.slugify(&1, separator: ?_))
-
     load_data(meta, path, job, constraint, fn path ->
       File.stream!(path)
-      |> CSV.decode!()
-      |> Stream.drop(1)
-      |> Stream.map(&Enum.zip(columns, &1))
-      |> Stream.map(&Map.new/1)
+      |> CSV.decode!(headers: true)
     end)
   end
 
@@ -159,19 +143,9 @@ defmodule PlenarioEtl.Worker do
   def load_tsv(meta, path, job, constraints) do
     Logger.info("[#{inspect(self())}] [load_tsv] Prep loader for tsv at #{path}")
 
-    columns = 
-      File.stream!(path) 
-      |> Enum.take(1)
-      |> List.first()
-      |> String.split("\t")
-      |> Enum.map(&Slug.slugify(&1, separator: ?_))
-
     load_data(meta, path, job, constraints, fn path ->
       File.stream!(path)
-      |> CSV.decode!(separator: ?\t)
-      |> Stream.drop(1)
-      |> Stream.map(&Enum.zip(columns, &1))
-      |> Stream.map(&Map.new/1)
+      |> CSV.decode!(headers: true, separator: ?\t)
     end)
   end
 
@@ -258,6 +232,10 @@ defmodule PlenarioEtl.Worker do
     columns = MetaActions.get_column_names(meta)
     {struct, _} = Code.eval_quoted(quote do %unquote(model){} end)
 
+    # IO.inspect(rows)
+    # IO.inspect(columns)
+    # IO.inspect(struct)
+
     Enum.map(rows, fn row ->
       cast(struct, row, columns)
       |> Repo.insert!(on_conflict: :replace_all, conflict_target: constraints)
@@ -272,7 +250,7 @@ defmodule PlenarioEtl.Worker do
     row_pks = 
       for row <- rows do 
         for constraint <- constraints do
-          row[to_string(constraint)]
+          row[constraint]
         end
       end
 

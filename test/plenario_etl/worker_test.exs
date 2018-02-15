@@ -430,23 +430,23 @@ defmodule PlenarioEtl.Testing.WorkerTest do
       {:ok, user} = UserActions.create("Trusted User", "user@example.com", "password")
       {:ok, meta} = MetaActions.create("clinics", user.id, "https://www.example.com/chicago-tree-trimmings", "csv")
   
-      {:ok, _} = DataSetFieldActions.create(meta.id, "date", "text")
-      {:ok, _} = DataSetFieldActions.create(meta.id, "start_time", "text")
-      {:ok, _} = DataSetFieldActions.create(meta.id, "end_time", "text")
-      {:ok, _} = DataSetFieldActions.create(meta.id, "day", "text")
-      {:ok, _} = DataSetFieldActions.create(meta.id, "event", "text")
-      {:ok, _} = DataSetFieldActions.create(meta.id, "event_type", "text")
-      {:ok, _} = DataSetFieldActions.create(meta.id, "address", "text")
-      {:ok, _} = DataSetFieldActions.create(meta.id, "city", "text")
-      {:ok, _} = DataSetFieldActions.create(meta.id, "state", "text")
-      {:ok, _} = DataSetFieldActions.create(meta.id, "zip", "integer")
-      {:ok, _} = DataSetFieldActions.create(meta.id, "phone", "text")
-      {:ok, _} = DataSetFieldActions.create(meta.id, "community_area_number", "text")
-      {:ok, _} = DataSetFieldActions.create(meta.id, "community_area_name", "text")
-      {:ok, _} = DataSetFieldActions.create(meta.id, "ward", "integer")
-      {:ok, _} = DataSetFieldActions.create(meta.id, "latitude", "float")
-      {:ok, _} = DataSetFieldActions.create(meta.id, "longitude", "float")
-      {:ok, f} = DataSetFieldActions.create(meta.id, "location", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "Date", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "Start Time", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "End Time", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "Day", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "Event", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "Event Type", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "Address", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "City", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "State", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "Zip", "integer")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "Phone", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "Community Area Number", "integer")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "Community Area Name", "text")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "Ward", "integer")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "Latitude", "float")
+      {:ok, _} = DataSetFieldActions.create(meta.id, "Longitude", "float")
+      {:ok, f} = DataSetFieldActions.create(meta.id, "Location", "text")
   
       UniqueConstraintActions.create(meta.id, [f.id])
       job = EtlJobActions.create!(meta.id)
@@ -472,11 +472,11 @@ defmodule PlenarioEtl.Testing.WorkerTest do
       {:ok, meta} = MetaActions.create("clinics_subset", user.id, "https://example.com/subset", "csv")
       {:ok, job} = EtlJobActions.create(meta.id)
   
-      DataSetFieldActions.create(meta.id, "community_area_name", "text")
-      DataSetFieldActions.create(meta.id, "ward", "integer")
-      DataSetFieldActions.create(meta.id, "latitude", "float")
-      DataSetFieldActions.create(meta.id, "longitude", "float")
-      {:ok, f} = DataSetFieldActions.create(meta.id, "location", "text")
+      DataSetFieldActions.create(meta.id, "Community Area Name", "text")
+      DataSetFieldActions.create(meta.id, "Ward", "integer")
+      DataSetFieldActions.create(meta.id, "Latitude", "float")
+      DataSetFieldActions.create(meta.id, "Longitude", "float")
+      {:ok, f} = DataSetFieldActions.create(meta.id, "Location", "text")
   
       UniqueConstraintActions.create(meta.id, [f.id])
       MetaActions.update(meta, source_type: "csv")
@@ -495,7 +495,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
           |> Enum.filter(fn row -> !String.starts_with?(row, "__") end)
   
         assert 65 == Enum.count(rows)
-        assert ["community_area_name", "latitude", "location", "longitude", "ward"] == columns
+        assert ["Community Area Name", "Latitude", "Location", "Longitude", "Ward"] == columns
       end
     end
   
