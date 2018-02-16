@@ -125,3 +125,15 @@ defmodule Plenario.ForgivingDatetime do
     end
   end
 end
+
+defmodule Plenario.Jsonb do
+  @behaviour Ecto.Type
+
+  def type(), do: :jsonb
+
+  def cast(value), do: {:ok, value}
+
+  def load(value), do: {:ok, value}
+
+  def dump(value), do: {:ok, value}
+end

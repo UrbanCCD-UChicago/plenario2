@@ -267,7 +267,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
 
   @tag :contains!
   test "contains!/3", %{meta: meta, constraint: constraint} do
-    constraints = 
+    constraints =
       UniqueConstraintActions.get_field_names(constraint)
       |> Enum.map(&String.to_atom/1)
 
@@ -288,7 +288,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
 
   @tag :load_chunk
   test :load_chunk, %{meta: meta, job: job, constraint: constraint} do
-    constraints = 
+    constraints =
       UniqueConstraintActions.get_field_names(constraint)
       |> Enum.map(&String.to_atom/1)
 
@@ -429,7 +429,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
     setup do
       {:ok, user} = UserActions.create("Trusted User", "user@example.com", "password")
       {:ok, meta} = MetaActions.create("clinics", user.id, "https://www.example.com/chicago-tree-trimmings", "csv")
-  
+
       {:ok, _} = DataSetFieldActions.create(meta.id, "Date", "text")
       {:ok, _} = DataSetFieldActions.create(meta.id, "Start Time", "text")
       {:ok, _} = DataSetFieldActions.create(meta.id, "End Time", "text")
@@ -447,146 +447,172 @@ defmodule PlenarioEtl.Testing.WorkerTest do
       {:ok, _} = DataSetFieldActions.create(meta.id, "Latitude", "float")
       {:ok, _} = DataSetFieldActions.create(meta.id, "Longitude", "float")
       {:ok, f} = DataSetFieldActions.create(meta.id, "Location", "text")
-  
+
       UniqueConstraintActions.create(meta.id, [f.id])
       job = EtlJobActions.create!(meta.id)
       DataSetActions.up!(meta)
       VirtualPointFieldActions.create(meta.id, loc_field: f)
-  
+
       %{fixture_meta: meta, job: job}
     end
-  
+
     test "load/1 loads csv fixture", %{fixture_meta: meta, job: job} do
       MetaActions.update(meta, source_type: "csv")
       get! = load_mock(@csv_fixture_path)
-  
+
       with_mock HTTPoison, get!: fn url -> get!.(url) end do
         Worker.load(%{meta_id: meta.id, job_id: job.id})
         clinics = ModelRegistry.lookup(meta.slug) |> Repo.all()
         assert 65 == Enum.count(clinics)
       end
     end
-  
+
     test "load/1 loads csv fixture with subset of columns" do
       {:ok, user} = UserActions.create("subset_user", "subset@email.com", "password")
       {:ok, meta} = MetaActions.create("clinics_subset", user.id, "https://example.com/subset", "csv")
       {:ok, job} = EtlJobActions.create(meta.id)
-  
+
       DataSetFieldActions.create(meta.id, "Community Area Name", "text")
       DataSetFieldActions.create(meta.id, "Ward", "integer")
       DataSetFieldActions.create(meta.id, "Latitude", "float")
       DataSetFieldActions.create(meta.id, "Longitude", "float")
       {:ok, f} = DataSetFieldActions.create(meta.id, "Location", "text")
-  
+
       UniqueConstraintActions.create(meta.id, [f.id])
       MetaActions.update(meta, source_type: "csv")
       DataSetActions.up!(meta)
       VirtualPointFieldActions.create(meta.id, loc_field: f)
-  
+
       get! = load_mock(@csv_fixture_path)
       with_mock HTTPoison, get!: fn url -> get!.(url) end do
         Worker.load(%{meta_id: meta.id, job_id: job.id})
         clinics = ModelRegistry.lookup(meta.slug)
         rows = Repo.all(clinics)
-        columns = 
-          List.first(rows) 
-          |> Map.keys() 
+        columns =
+          List.first(rows)
+          |> Map.keys()
           |> Enum.map(&to_string/1)
           |> Enum.filter(fn row -> !String.starts_with?(row, "__") end)
-  
+
         assert 65 == Enum.count(rows)
         assert ["Community Area Name", "Latitude", "Location", "Longitude", "Ward"] == columns
       end
     end
-  
+
     test "load/1 loads updated csv fixture", %{fixture_meta: meta, job: job} do
       MetaActions.update(meta, source_type: "csv")
-  
+
       get! = load_mock(@csv_fixture_path)
-  
+
       with_mock HTTPoison, get!: fn url -> get!.(url) end do
         Worker.load(%{meta_id: meta.id, job_id: job.id})
         clinics = ModelRegistry.lookup(meta.slug)
         rows = Repo.all(clinics)
         assert 65 == Enum.count(rows)
       end
-  
+
       get! = load_mock(@csv_updated_fixture_path)
-  
+
       with_mock HTTPoison, get!: fn url -> get!.(url) end do
         Worker.load(%{meta_id: meta.id, job_id: job.id})
         rows = Repo.all(DataSetDiff)
         assert 1 == Enum.count(rows)
       end
     end
-  
+
     test "load/1 loads tsv fixture", %{fixture_meta: meta, job: job} do
       MetaActions.update(meta, source_type: "tsv")
       get! = load_mock(@tsv_fixture_path)
-  
+
       with_mock HTTPoison, get!: fn url -> get!.(url) end do
         Worker.load(%{meta_id: meta.id, job_id: job.id})
         rows = ModelRegistry.lookup(meta.slug) |> Repo.all()
         assert 65 == Enum.count(rows)
       end
     end
-  
+
     test "load/1 loads json fixture", %{fixture_meta: meta, job: job} do
       MetaActions.update(meta, source_type: "json")
       get! = load_mock(@json_fixture_path)
-  
+
       with_mock HTTPoison, get!: fn url -> get!.(url) end do
         Worker.load(%{meta_id: meta.id, job_id: job.id})
         rows = ModelRegistry.lookup(meta.slug) |> Repo.all()
         assert 65 == Enum.count(rows)
       end
     end
-  
+
+    test "load/1 loads embedded json fixture", %{job: job} do
+      {:ok, user} = UserActions.create("name", "email@example.com", "password")
+      {:ok, meta} = MetaActions.create("AoT", user, "https://example.com/1", "json")
+      {:ok, node_id} = DataSetFieldActions.create(meta, "node_id", "text")
+      {:ok, lat} = DataSetFieldActions.create(meta, "latitude", "float")
+      {:ok, lon} = DataSetFieldActions.create(meta, "longitude", "float")
+      {:ok, _} = DataSetFieldActions.create(meta, "timestamp", "timestamptz")
+      {:ok, _} = DataSetFieldActions.create(meta, "tags", "jsonb")
+      {:ok, _} = DataSetFieldActions.create(meta, "observations", "jsonb")
+      {:ok, _} = UniqueConstraintActions.create(meta, [node_id.id])
+      {:ok, _} = VirtualPointFieldActions.create(meta, lat.id, lon.id)
+
+      m = MetaActions.get(meta.id)
+      {:ok, _} = MetaActions.submit_for_approval(m)
+      m = MetaActions.get(meta.id)
+      {:ok, _} = MetaActions.approve(m)
+
+      get! = load_mock("test/fixtures/embedded.json")
+
+      with_mock HTTPoison, get!: fn url -> get!.(url) end do
+        Worker.load(%{meta_id: meta.id, job_id: job.id})
+        rows = ModelRegistry.lookup(meta.slug) |> Repo.all()
+        assert 3 == Enum.count(rows)
+      end
+    end
+
     test "load/1 loads shp fixture" do
       {:ok, user} = UserActions.create("Trusted User", "shapeuser@example.com", "password")
       {:ok, meta} = MetaActions.create("watersheds", user.id, "example.com/watersheds", "shp")
       {:ok, job} = EtlJobActions.create(meta)
-  
+
       MetaActions.update(meta, source_type: "shp")
       get! = load_mock(@shp_fixture_path)
-  
+
       with_mock HTTPoison, get!: fn url -> get!.(url) end do
         Worker.load(%{meta_id: meta.id, job_id: job.id})
         %Postgrex.Result{rows: rows} = query!(Plenario.Repo, "select * from watersheds", [])
         assert 7 == Enum.count(rows)
       end
     end
-  
+
     test "async_load/1 loads csv fixture and completes job state", %{fixture_meta: meta} do
       MetaActions.update(meta, source_type: "csv")
-  
+
       get! = load_mock(@csv_fixture_path)
       with_mock HTTPoison, get!: fn url -> get!.(url) end do
         %{task: task, job: job, meta: meta} = Worker.async_load!(meta.id)
         Task.await(task)
-  
+
         query = "select * from etl_jobs where id = #{job.id}"
         %Postgrex.Result{rows: rows} = query!(Plenario.Repo, query, [])
         [row | _] = rows
-  
+
         job_id = job.id()
         meta_id = meta.id()
         assert [^job_id, "completed", _, _, nil, ^meta_id, _, _] = row
       end
     end
-  
+
     test "async_load/1 loads csv fixture and errs job state", %{fixture_meta: meta} do
       MetaActions.update(meta, source_type: "csv")
-  
+
       get! = load_mock(@csv_error_fixture_path)
       with_mock HTTPoison, get!: fn url -> get!.(url) end do
         %{task: task, job: job, meta: meta} = Worker.async_load!(meta.id)
         Task.await(task)
-  
+
         query = "select * from etl_jobs where id = #{job.id}"
         %Postgrex.Result{rows: rows} = query!(Plenario.Repo, query, [])
         [row | _] = rows
-  
+
         job_id = job.id()
         meta_id = meta.id()
         assert [^job_id, "erred", _, _, _, ^meta_id, _, _] = row
