@@ -4,6 +4,8 @@ defmodule PlenarioEtl.Actions.EtlJobActions do
   underlying the various public interfaces for EtlJob.
   """
 
+  require Logger
+
   import Ecto.Query
 
 
@@ -11,6 +13,8 @@ defmodule PlenarioEtl.Actions.EtlJobActions do
   alias PlenarioEtl.Schemas.EtlJob
 
   alias Plenario.Schemas.Meta
+
+  alias Plenario.Actions.MetaActions
 
   alias Plenario.Repo
 
@@ -79,5 +83,27 @@ defmodule PlenarioEtl.Actions.EtlJobActions do
   def mark_completed(job) do
     EtlJobChangesets.mark_completed(job)
     |> Repo.update()
+
+    meta = MetaActions.get(job.meta_id)
+
+    if meta.first_import == nil do
+      MetaActions.mark_first_import(meta)
+    end
+    MetaActions.update_latest_import(meta, DateTime.utc_now())
+    MetaActions.update_next_import(meta)
+
+    try do
+      {lower, upper} = MetaActions.compute_time_range!(meta)
+      MetaActions.update_time_range(meta, lower, upper)
+    rescue
+      e -> Logger.error("Tried to compute time range: #{inspect(e)}")
+    end
+
+    try do
+      bbox = MetaActions.compute_bbox!(meta)
+      MetaActions.update_bbox(meta, bbox)
+    rescue
+      e -> Logger.error("Tried to compute bbox: #{inspect(e)}")
+    end
   end
 end
