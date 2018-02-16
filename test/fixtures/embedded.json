@@ -1,0 +1,65 @@
+[
+  {
+    "node_id": "123abc",
+    "latitude": 41.55,
+    "longitude": -87.71,
+    "timestamp": "2018-01-01T10:00:05Z",
+    "tags": [
+      "Array of Things",
+      "Chicago"
+    ],
+    "observations": [
+      {
+        "sensor_id": "brd1",
+        "temperature": 2.13,
+        "relative_humidity": 77.3
+      },
+      {
+        "sensor_id": "brf2",
+        "vibration": 33.3
+      }
+    ]
+  },
+  {
+    "node_id": "124abc",
+    "latitude": 41.54,
+    "longitude": -87.72,
+    "timestamp": "2018-01-01T10:00:05Z",
+    "tags": [
+      "Array of Things",
+      "Chicago"
+    ],
+    "observations": [
+      {
+        "sensor_id": "brd1",
+        "temperature": 2.12,
+        "relative_humidity": 77.3
+      },
+      {
+        "sensor_id": "brf2",
+        "vibration": 32.9
+      }
+    ]
+  },
+  {
+    "node_id": "125abc",
+    "latitude": 41.53,
+    "longitude": -87.73,
+    "timestamp": "2018-01-01T10:00:05Z",
+    "tags": [
+      "Array of Things",
+      "Chicago"
+    ],
+    "observations": [
+      {
+        "sensor_id": "brd1",
+        "temperature": 2.2,
+        "relative_humidity": 76.8
+      },
+      {
+        "sensor_id": "brf2",
+        "vibration": 34.1
+      }
+    ]
+  }
+]

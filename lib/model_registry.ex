@@ -8,7 +8,8 @@ defmodule Plenario.ModelRegistry do
     "integer" => :integer,
     "text" => :string,
     "date" => Plenario.ForgivingDatetime,
-    "timestamptz" => Plenario.ForgivingDatetime
+    "timestamptz" => Plenario.ForgivingDatetime,
+    "jsonb" => Plenario.Jsonb
   }
 
   @doc """
