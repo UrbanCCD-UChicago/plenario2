@@ -4,7 +4,7 @@ defmodule Plenario.Mixfile do
   def project do
     [
       app: :plenario,
-      version: "0.1.0",
+      version: "0.1.1",
       elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
@@ -27,7 +27,7 @@ defmodule Plenario.Mixfile do
   def application do
     [
       mod: {Plenario.Application, []},
-      extra_applications: [:logger, :runtime_tools, :bamboo, :bamboo_smtp]
+      extra_applications: [:logger, :runtime_tools, :bamboo, :bamboo_smtp, :sentry]
     ]
   end
 
@@ -65,7 +65,8 @@ defmodule Plenario.Mixfile do
       {:distillery, "~> 1.5"},
       {:slugify, "~> 1.1"},
       {:bamboo, "~> 0.8"},
-      {:bamboo_smtp, "~> 1.4.0"}
+      {:bamboo_smtp, "~> 1.4.0"},
+      {:sentry, "~> 6.1.0"}
     ]
   end
 
