@@ -5,6 +5,8 @@ defmodule Plenario.Schemas.Meta do
 
   use Ecto.Schema
 
+  alias Plenario.Schemas.Meta
+
   use EctoStateMachine,
     states: [:new, :needs_approval, :awaiting_first_import, :ready, :erred],
     events: [
@@ -136,5 +138,10 @@ defmodule Plenario.Schemas.Meta do
     else
       "-"
     end
+  end
+
+  def get_time_range_string(%Meta{time_range: nil}), do: "-"
+  def get_time_range_string(%Meta{time_range: [lower, upper]}) do
+    "#{lower} to #{upper}"
   end
 end

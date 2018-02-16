@@ -67,7 +67,7 @@
         </tr>
         <tr>
           <td>Time Range:</td>
-          <td><%= @meta.time_range || "-" %></td>
+          <td><%= Plenario.Schemas.Meta.get_time_range_string(@meta) %></td>
         </tr>
       </tbody>
     </table>
