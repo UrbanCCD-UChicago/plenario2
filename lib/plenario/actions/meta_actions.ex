@@ -270,15 +270,17 @@ defmodule Plenario.Actions.MetaActions do
     """
     {:ok, result} = Ecto.Adapters.SQL.query(Repo, query)
 
-    points = List.flatten(result.rows)
+    points =
+      List.flatten(result.rows)
+      |> Enum.filter(fn pt -> pt != nil end)
     xs =
       for pt <- points do
-        %{coordinates: {x, _}} = pt
+        %{coordinates: {_, x}} = pt
         x
       end
     ys =
       for pt <- points do
-        %{coordinates: {_, y}} = pt
+        %{coordinates: {y, _}} = pt
         y
       end
     sorted_xs = Enum.sort(xs)
