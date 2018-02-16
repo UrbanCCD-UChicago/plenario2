@@ -8,8 +8,8 @@ RETURNS GEOMETRY(POINT, 4326) AS $$
   )
   FROM (
     SELECT
-      FLOAT8((REGEXP_MATCHES($1, '([+-]?\\d+\\.\\d+)[^\\d]*([+-]?\\d+\\.\\d+)'))[1]) AS lat,
-      FLOAT8((REGEXP_MATCHES($1, '([+-]?\\d+\\.\\d+)[^\\d]*([+-]?\\d+\\.\\d+)'))[2]) AS lon
+      FLOAT8((regexp_matches($1, '\((.*),.*\)'))[1]) AS lat,
+      FLOAT8((regexp_matches($1, '\(.*,(.*)\)'))[1]) AS lon
   ) AS subq
 
 $$
