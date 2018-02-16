@@ -87,18 +87,15 @@ defmodule Plenario.Actions.MetaActions do
   Convenience function for updating a Meta's next_import attribute.
   """
   @spec update_next_import(meta :: Meta) :: ok_instance
-  def update_next_import(meta) do
+  def update_next_import(%Meta{refresh_rate: nil, refresh_interval: nil} = meta), do: {:ok, meta}
+  def update_next_import(%Meta{refresh_rate: rate, refresh_interval: interval} = meta) do
     current =
       case meta.next_import do
         nil -> DateTime.utc_now()
-        _ -> meta.next_refresh
+        _ -> meta.next_import
       end
 
-    rate = meta.refresh_rate
-    interval = meta.refresh_interval
-
     shifted = Timex.shift(current, [{String.to_atom(rate), interval}])
-
     update(meta, next_import: shifted)
   end
 

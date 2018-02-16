@@ -12,6 +12,8 @@ defmodule PlenarioEtl.Actions.EtlJobActions do
 
   alias Plenario.Schemas.Meta
 
+  alias Plenario.Actions.MetaActions
+
   alias Plenario.Repo
 
   @typedoc """
@@ -79,5 +81,19 @@ defmodule PlenarioEtl.Actions.EtlJobActions do
   def mark_completed(job) do
     EtlJobChangesets.mark_completed(job)
     |> Repo.update()
+
+    meta = MetaActions.get(job.meta_id)
+
+    if meta.first_import == nil do
+      MetaActions.mark_first_import(meta)
+    end
+    MetaActions.update_latest_import(meta, DateTime.utc_now())
+    MetaActions.update_next_import(meta)
+
+    {lower, upper} = MetaActions.compute_time_range!(meta)
+    MetaActions.update_time_range(meta, lower, upper)
+
+    bbox = MetaActions.compute_bbox!(meta)
+    MetaActions.update_bbox(meta, bbox)
   end
 end
