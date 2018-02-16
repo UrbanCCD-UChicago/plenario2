@@ -36,7 +36,7 @@ defmodule PlenarioWeb.Web.PageController do
     coords = for [lat, lon] <- coords, do: {lat, lon}
     first = List.first(coords)
     coords = coords ++ [first]
-    %Geo.Polygon{coordinates: [coords]}
+    %Geo.Polygon{coordinates: [coords], srid: 4326}
   end
 
   defp build_polygon(coords) when is_map(coords) do
@@ -50,7 +50,7 @@ defmodule PlenarioWeb.Web.PageController do
       {min_lat, min_lon},
       {max_lat, min_lon},
       {max_lat, max_lon}
-    ]]}
+    ]], srid: 4326}
   end
 
   defp get_poly_center(%Geo.Polygon{} = poly) do

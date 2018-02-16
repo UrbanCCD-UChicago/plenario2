@@ -25,7 +25,13 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     {:ok, meta3} = MetaActions.create("name 3", user, "https://example.com/3", "csv")
     {:ok, meta4} = MetaActions.create("name 4", user, "https://example.com/4", "csv")
 
-    bbox = Geo.WKT.decode("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+    bbox =
+      %Geo.Polygon{
+        coordinates: [
+          [{30, 10}, {40, 40}, {20, 40}, {10, 20}, {30, 10}]
+        ],
+        srid: 4326
+      }
     {_, lower, _} = DateTime.from_iso8601("2017-01-01T00:00:00.0Z")
     {_, upper, _} = DateTime.from_iso8601("2018-12-31T00:00:00.0Z")
 
@@ -35,7 +41,13 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     {:ok, _} = MetaActions.update_bbox(meta2, bbox)
     {:ok, _} = MetaActions.update_time_range(meta2, lower, upper)
 
-    bbox = Geo.WKT.decode("POLYGON ((-30 -10, -40 -40, -20 -40, -10 -20, -30 -10))")
+    bbox =
+      %Geo.Polygon{
+        coordinates: [
+          [{-30, -10}, {-40, -40}, {-20, -40}, {-10, -20}, {-30, -10}]
+        ],
+        srid: 4326
+      }
     {_, lower, _} = DateTime.from_iso8601("2015-01-01T00:00:00.0Z")
     {_, upper, _} = DateTime.from_iso8601("2016-12-31T00:00:00.0Z")
 
