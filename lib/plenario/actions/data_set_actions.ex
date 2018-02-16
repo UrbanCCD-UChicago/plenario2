@@ -11,7 +11,7 @@ defmodule Plenario.Actions.DataSetActions do
     VirtualPointFieldActions
   }
 
-  @template_dir "priv/data-set-action-sql-templates"
+  @template_dir "data-set-action-sql-templates"
 
   def up!(meta) when not is_integer(meta), do: up!(meta.id)
   def up!(meta_id) when is_integer(meta_id) do
@@ -101,21 +101,21 @@ defmodule Plenario.Actions.DataSetActions do
   end
 
   defp create_table_sql(meta, constraints) do
-    filename = "#{@template_dir}/create-table.sql.eex"
+    filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/create-table.sql.eex")
     sql = EEx.eval_file(filename, [meta: meta, constraints: constraints], trim: true)
 
     sql
   end
 
   defp create_parse_timestamp_function_sql() do
-    filename = "#{@template_dir}/create-parse-timestamp-func.sql.eex"
+    filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/create-parse-timestamp-func.sql.eex")
     sql = EEx.eval_file(filename, [], trim: true)
 
     sql
   end
 
   defp create_parse_timestamp_trigger_sql(function_name, fields) do
-    filename = "#{@template_dir}/create-parse-timestamp-trigger.sql.eex"
+    filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/create-parse-timestamp-trigger.sql.eex")
     sql = EEx.eval_file(
       filename,
       [function_name: function_name, fields: fields],
@@ -125,21 +125,21 @@ defmodule Plenario.Actions.DataSetActions do
   end
 
   defp create_parse_location_function_sql() do
-    filename = "#{@template_dir}/create-parse-location-func.sql.eex"
+    filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/create-parse-location-func.sql.eex")
     sql = EEx.eval_file(filename, [], trim: true)
 
     sql
   end
 
   defp create_parse_lon_lat_function_sql() do
-    filename = "#{@template_dir}/create-parse-lat-lon-func.sql.eex"
+    filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/create-parse-lat-lon-func.sql.eex")
     sql = EEx.eval_file(filename, [], trim: true)
 
     sql
   end
 
   defp create_parse_points_trigger_sql(function_name, fields) do
-    filename = "#{@template_dir}/create-parse-points-trigger.sql.eex"
+    filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/create-parse-points-trigger.sql.eex")
     sql = EEx.eval_file(
       filename,
       [function_name: function_name, fields: fields],
@@ -149,7 +149,7 @@ defmodule Plenario.Actions.DataSetActions do
   end
 
   defp create_trigger_sql(trigger_name, table_name, function_name) do
-    filename = "#{@template_dir}/create-trigger.sql.eex"
+    filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/create-trigger.sql.eex")
     sql = EEx.eval_file(
       filename,
       [trigger_name: trigger_name, table_name: table_name, function_name: function_name],
@@ -159,21 +159,21 @@ defmodule Plenario.Actions.DataSetActions do
   end
 
   defp drop_table_sql(table_name) do
-    filename = "#{@template_dir}/drop-table.sql.eex"
+    filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/drop-table.sql.eex")
     sql = EEx.eval_file(filename, [table_name: table_name], trim: true)
 
     sql
   end
 
   defp drop_function_sql(function_name) do
-    filename = "#{@template_dir}/drop-func.sql.eex"
+    filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/drop-func.sql.eex")
     sql = EEx.eval_file(filename, [function_name: function_name], trim: true)
 
     sql
   end
 
   defp drop_trigger_sql(trigger_name, table_name) do
-    filename = "#{@template_dir}/drop-trigger.sql.eex"
+    filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/drop-trigger.sql.eex")
     sql = EEx.eval_file(
       filename,
       [trigger_name: trigger_name, table_name: table_name],
