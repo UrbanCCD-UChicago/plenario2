@@ -7,8 +7,8 @@ defmodule Plenario.ModelRegistry do
     "float" => :float,
     "integer" => :integer,
     "text" => :string,
-    "date" => :date,
-    "timestamptz" => :naive_datetime
+    "date" => Plenario.ForgivingDatetime,
+    "timestamptz" => Plenario.ForgivingDatetime
   }
 
   @doc """
@@ -50,7 +50,7 @@ defmodule Plenario.ModelRegistry do
 
   @doc """
   Asks the registry to return an atom that identifies an ecto schema that
-  corresponds to an instance of `Meta`. A module is created on the fly for 
+  corresponds to an instance of `Meta`. A module is created on the fly for
   the first time a schema is requested.
 
   The returned value can be used to compose queries with Ecto's query api.
@@ -83,7 +83,7 @@ defmodule Plenario.ModelRegistry do
   end
 
   def handle_call({:lookup, slug}, _sender, state) when is_bitstring(slug) do
-    state = 
+    state =
       case Map.has_key?(state, slug) do
         true ->
           state
@@ -106,7 +106,7 @@ defmodule Plenario.ModelRegistry do
   defp register(meta) do
     module = "Model." <> Slug.slugify(meta.table_name)
     table = meta.table_name
-    fields = 
+    fields =
       Enum.map(meta.fields, fn field ->
         {String.to_atom(field.name), Map.fetch!(@type_map, field.type)}
       end)
