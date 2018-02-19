@@ -1,4 +1,4 @@
-defmodule PlenarioExport.Actions.ExportJobActions do
+defmodule PlenarioEtl.Actions.ExportJobActions do
   @moduledoc """
   This module provides a common API for the business logic
   underlying the various public interfaces for ExportJob.
@@ -7,8 +7,8 @@ defmodule PlenarioExport.Actions.ExportJobActions do
   import Ecto.Query
 
 
-  alias PlenarioExport.Changesets.ExportJobChangesets
-  alias PlenarioExport.Schemas.ExportJob
+  alias PlenarioEtl.Changesets.ExportJobChangesets
+  alias PlenarioEtl.Schemas.ExportJob
 
   alias Plenario.Repo
 

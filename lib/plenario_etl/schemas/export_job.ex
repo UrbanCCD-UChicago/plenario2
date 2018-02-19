@@ -1,4 +1,4 @@
-defmodule PlenarioExport.Schemas.ExportJob do
+defmodule PlenarioEtl.Schemas.ExportJob do
   @moduledoc """
   Defines the schema for ExportJob.
 
