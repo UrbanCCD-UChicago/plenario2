@@ -40,8 +40,6 @@ defmodule Plenario.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:ex_aws, "~> 2.0"},
-      {:ex_aws_s3, "~> 2.0"},
       {:phoenix, "~> 1.3.0"},
       {:phoenix_pubsub, "~> 1.0"},
       {:phoenix_ecto, "~> 3.2"},
@@ -51,13 +49,11 @@ defmodule Plenario.Mixfile do
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
       {:geo_postgis, "~> 1.0"},
-      {:poison, "~> 3.1"},
       {:comeonin, "~> 4.0"},
       {:bcrypt_elixir, "~> 1.0"},
       {:excoveralls, "~> 0.7", only: :test},
       {:timex, "~> 3.1"},
       {:httpoison, "~> 0.13.0"},
-      {:csv, "~> 2.0"},
       {:mock, "~> 0.2.0", only: :test},
       {:quantum, ">= 2.2.0"},
       {:guardian, "~> 1.0"},
@@ -68,7 +64,16 @@ defmodule Plenario.Mixfile do
       {:slugify, "~> 1.1"},
       {:bamboo, "~> 0.8"},
       {:bamboo_smtp, "~> 1.4.0"},
-      {:sentry, "~> 6.1.0"}
+      {:sentry, "~> 6.1.0"},
+
+      # Parsing libraries
+      {:csv, "~> 2.0"},          # csv
+      {:poison, "~> 3.1"},       # json
+      {:sweet_xml, "~> 0.6.5"},  # xml
+
+      # Aws client libraries
+      {:ex_aws, "~> 2.0"},
+      {:ex_aws_s3, "~> 2.0"},
     ]
   end
 

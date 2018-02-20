@@ -10,6 +10,7 @@ defmodule PlenarioEtl.Exporter do
       generate_stream(job)
       |> stream_to_local_storage()
       |> upload_to_s3()
+      |> set_attachment()
       |> complete()
     catch :exit, code ->
       error(job, inspect(code))
@@ -22,29 +23,34 @@ defmodule PlenarioEtl.Exporter do
   end
 
   def stream_to_local_storage({job, stream}) do
-    file = File.open!("test.csv", [:write, :utf8])
-    columns = MetaActions.get_column_names(job.meta) |> Enum.map(&String.to_atom/1)
+    path = "/tmp/#{inspect UUID.uuid4}"
+    file = File.open!(path, [:write, :utf8])
+    columns = 
+      MetaActions.get_column_names(job.meta) 
+      |> Enum.map(&String.to_atom/1)
 
-    IO.inspect Repo.transaction(fn ->
-      stream |> Enum.to_list()
-
+    Repo.transaction(fn ->
       stream
       |> CSV.encode(headers: columns)
       |> Enum.each(&IO.write(file, &1))
     end)
     
-    {job, file}
+    {job, path}
   end
 
-  def upload_to_s3({job, file}) do
-    attachment =
-      ExAws.S3.put_object(@bucket, job.export_path, file) 
+  def upload_to_s3({job, path}) do
+    result =
+      path
+      |> ExAws.S3.Upload.stream_file()
+      |> ExAws.S3.upload(@bucket, job.export_path) 
       |> ExAws.request!()
-    
-    job
-    |> Changeset.cast(%{export_path: attachment}, [:export_path])
-    |> Repo.update!()
+    {job, result[:body]}
+  end
 
+  def set_attachment({job, xml}) do
+    job
+    |> Changeset.cast(%{export_path: xml}, [:export_path])
+    |> Repo.update!()
     job
   end
 
@@ -55,9 +61,4 @@ defmodule PlenarioEtl.Exporter do
   def error(job, _message) do
     job
   end
-
-  defp erl_dt_to_naive_dt({{y, m, d}, {h, min, s}}) do
-    NaiveDateTime.from_erl!({{y, m, d}, {h, min, s}})
-  end
-  defp erl_dt_to_naive_dt(pair), do: pair
 end
