@@ -2,7 +2,7 @@ defmodule PlenarioEtl.Exporter do
   alias Plenario.Actions.MetaActions
   alias PlenarioEtl.Actions.ExportJobActions
 
-  import Plenario.Repo, only: [stream: 1, transaction: 1]
+  import Plenario.Repo, only: [stream: 1, transaction: 1, update!: 1]
   import UUID, only: [uuid4: 0]
 
   require Logger
@@ -10,16 +10,20 @@ defmodule PlenarioEtl.Exporter do
   @bucket Application.fetch_env!(:ex_aws, :bucket)
 
   def export(job) do
-    ExportJobActions.mark_started(job)
+    job = 
+      ExportJobActions.mark_started(job) 
+      |> update!()
+
     try do
       generate_stream(job)
       |> stream_to_local_storage()
       |> upload_to_s3()
       |> ExportJobActions.mark_completed()
-    catch :exit, reason ->
+      |> update!()
+    catch reason ->
       Logger.error(inspect(reason, pretty: true))
-      ExportJobActions.mark_erred(job, 
-        %{error_message: inspect(reason, pretty: true)})
+      ExportJobActions.mark_erred(job, %{error_message: inspect(reason, pretty: true)})
+      |> update!()
     end
   end
 

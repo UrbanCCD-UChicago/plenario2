@@ -53,7 +53,16 @@ defmodule PlenarioEtl.ExporterTest do
     %{job: job}
   end
 
-  test "export/1", %{job: job} do
+  test "export/1 completes", %{job: job} do
     Exporter.export(job)
+    job = Repo.one!(from e in ExportJob, where: e.id == ^job.id)
+    assert job.state == "completed"
   end
+
+  # test "export/1 errs", %{job: job} do
+  #   job = %{job | meta: nil} 
+  #   Exporter.export(job)
+  #   job = Repo.one!(from e in ExportJob, where: e.id == ^job.id)
+  #   assert job.state == "error"
+  # end
 end
