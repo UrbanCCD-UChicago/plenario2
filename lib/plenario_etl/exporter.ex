@@ -26,20 +26,14 @@ defmodule PlenarioEtl.Exporter do
     columns = MetaActions.get_column_names(job.meta) |> Enum.map(&String.to_atom/1)
 
     IO.inspect Repo.transaction(fn ->
-      IO.inspect(stream |> Enum.to_list())
+      stream |> Enum.to_list()
 
       stream
-      |> Stream.map(fn row ->
-        Enum.map(row, fn kvpair ->
-          IO.inspect(erl_dt_to_naive_dt(kvpair))
-        end) |> Map.new()
-      end)
-      |> Stream.map(&IO.inspect/1)
       |> CSV.encode(headers: columns)
       |> Enum.each(&IO.write(file, &1))
     end)
-    # {job, file}
-    {job, "FOO"}
+    
+    {job, file}
   end
 
   def upload_to_s3({job, file}) do
