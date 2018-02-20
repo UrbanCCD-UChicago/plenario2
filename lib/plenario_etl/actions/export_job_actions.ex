@@ -6,13 +6,11 @@ defmodule PlenarioEtl.Actions.ExportJobActions do
 
   import Ecto.Query
 
-
+  alias Ecto.Changeset
+  alias Plenario.Repo
+  alias Plenario.Schemas.User
   alias PlenarioEtl.Changesets.ExportJobChangesets
   alias PlenarioEtl.Schemas.ExportJob
-
-  alias Plenario.Repo
-
-  alias Plenario.Schemas.User
 
   require Logger
 
@@ -61,5 +59,32 @@ defmodule PlenarioEtl.Actions.ExportJobActions do
       end
 
     Repo.all(query)
+  end
+
+  def mark_started(job) do
+    job
+    |> ExportJob.mark_started()
+    |> set_started_on()
+  end
+
+  def mark_completed(job) do
+    job
+    |> ExportJob.mark_completed()
+    |> set_completed_on()
+  end
+
+  def mark_erred(job, params) do
+    job
+    |> ExportJob.mark_erred()
+    |> Changeset.cast(params, [:error_message])
+    |> set_completed_on()
+  end
+
+  defp set_started_on(changeset) do
+    Changeset.put_change(changeset, :insert_at, DateTime.utc_now())
+  end
+
+  defp set_completed_on(changeset) do
+    Changeset.put_change(changeset, :updated_at, DateTime.utc_now())
   end
 end
