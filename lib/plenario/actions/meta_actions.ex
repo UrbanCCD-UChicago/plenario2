@@ -373,12 +373,11 @@ defmodule Plenario.Actions.MetaActions do
 
     number_fields =
       fields
-      |> Enum.filter(fn f ->
-        f.type in ["float", "integer"]
-        and not String.ends_with?(String.downcase(f.name), ["id"])
-        and not String.starts_with?(String.downcase(f.name), ["lat", "lon", "loc"])
-      end)
+      |> Enum.filter(fn f -> f.type in ["float", "integer"] end)
+      |> Enum.filter(fn f -> not String.ends_with?(String.downcase(f.name), ["id"]) end)
+      |> Enum.filter(fn f -> not String.starts_with?(String.downcase(f.name), ["lat", "lon", "loc"]) end)
       |> Enum.take(5)
+    len_fields = length(number_fields)
 
     ts_field =
       fields
@@ -395,30 +394,62 @@ defmodule Plenario.Actions.MetaActions do
     query =
       """
       SELECT
-        date_trunc('month', "<%= ts_field.name %>") as "<%= ts_field.name %>",
+        date_trunc('month', "<%= ts_field.name %>") as Timestamp,
         <%= for {f, idx} <- Enum.with_index(number_fields) do %>
         avg("<%= f.name %>") as "<%= f.name %>"<%= if idx < len_fields do %>,<% end %>
         <% end %>
       FROM
         "<%= table_name %>"
       GROUP BY
-        "<%= ts_field.name %>"
+        Timestamp
       ORDER BY
-        "<%= ts_field.name %>" DESC
+        Timestamp DESC
       ;
       """
     sql = EEx.eval_string(
       query,
       [ts_field: ts_field, number_fields: number_fields,
-      len_fields: length(number_fields) - 1, table_name: meta.table_name],
+      len_fields: len_fields - 1, table_name: meta.table_name],
       trim: true
     )
-    IO.puts(sql)
+    case Ecto.Adapters.SQL.query(Repo, sql) do
+      {:ok, results} ->
+        labels =
+          for [{{y, mo, d}, {h, mi, s, _}} | _] <- results.rows do
+            case NaiveDateTime.from_erl({{y, mo, d}, {h, mi, s}}) do
+              {:ok, ndt} -> ndt
+              _ -> ""
+            end
+          end
+        [_ | cols] = results.columns
 
-    %{
-      labels: ["Uno", "Dos", "Tres", "Quattro", "Cinco", "Sies"],
-      data: [{"Foo", [1,5,4,2,5,6]}, {"Bar", [2,3,1,5,6,5]}, {"Baz", [4,3,4,7,8,2]}]
-    }
+        rows =
+          for [_ | row] <- results.rows do
+            row
+          end
+
+        data =
+          for idx <- 0..len_fields do
+            col = Enum.at(cols, idx)
+            values =
+              for row <- rows do
+                Enum.at(row, idx)
+              end
+            {col, values}
+          end
+          |> Enum.filter(fn {c, _} -> c != nil end)
+
+        %{
+          labels: labels,
+          data: data
+        }
+
+      {:error, whatever} ->
+        %{
+          labels: ["Uno", "Dos", "Tres", "Quattro", "Cinco", "Sies"],
+          data: [{"Foo", [1,5,4,2,5,6]}, {"Bar", [2,3,1,5,6,5]}, {"Baz", [4,3,4,7,8,2]}]
+        }
+    end
   end
 
   defp parse_csv!(filename, count) do

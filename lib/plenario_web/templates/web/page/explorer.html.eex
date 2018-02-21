@@ -44,7 +44,7 @@
 <%= if length(@results) > 0 do %>
 <%= for {res, idx} <- Enum.with_index(@results) do %>
 <div class="row">
-  <h4><%= res.name %></h4>
+  <h3><%= res.name %></h3>
 </div>
 <div class="row">
   <div class="col-lg-3">
@@ -57,26 +57,23 @@
     <p>
       <strong>Contributor:</strong> <%= res.user.name %>
     </p>
-  </div>
-  <div class="col-lg-3">
     <p>
       <strong>Records:</strong> <%= Plenario.Actions.MetaActions.get_record_count(res) %>
     </p>
     <p>
       <strong>Time Range:</strong> <%= Plenario.Schemas.Meta.get_time_range_string(res) %>
     </p>
-  </div>
-  <div class="col-lg-5">
-    <% aggs = Plenario.Actions.MetaActions.get_agg_data(res, @starts, @ends) %>
-    <%= PlenarioWeb.SharedView.render_line(aggs.labels, aggs.data, [height: 100, chart_id: "line_#{idx}"]) %>
-  </div>
-  <div class="col-lg-1">
+    <hr>
     <p>
       <%= button "View Details", to: data_set_path(@conn, :show, res.id), method: :get, class: "btn btn-success" %>
     </p>
     <p>
       <%= button "Download!", to: "/", class: "btn btn-danger" %>
     </p>
+  </div>
+  <div class="col-lg-9">
+    <% aggs = Plenario.Actions.MetaActions.get_agg_data(res, @starts, @ends) %>
+    <%= PlenarioWeb.SharedView.render_line(aggs.labels, aggs.data, [height: 200, chart_id: "line_#{idx}"]) %>
   </div>
 </div>
 <hr class="dotborder">
