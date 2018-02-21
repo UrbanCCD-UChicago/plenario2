@@ -1,0 +1,15 @@
+<canvas id="<%= @chart_id %>" height="<%= @height %>px"></canvas>
+
+<script defer>
+var ctx = document.getElementById('<%= @chart_id %>');
+
+var chart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: [<%= for l <- @labels do %>'<%= l %>',<% end %>],
+    datasets: [
+      <%= for ds <- @datasets do %><%= raw ds %>,<% end %>
+    ]
+  }
+});
+</script>

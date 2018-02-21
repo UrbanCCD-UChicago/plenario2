@@ -21,12 +21,14 @@ defmodule Plenario do
         true ->
           MetaQueries.list()
           |> MetaQueries.handle_opts(
+              with_user: true,
               ready_only: true,
               bbox_intersects: bbox)
 
         false ->
           MetaQueries.list()
           |> MetaQueries.handle_opts(
+              with_user: true,
               ready_only: true,
               bbox_intersects: bbox,
               time_range_intersects: time_range)
