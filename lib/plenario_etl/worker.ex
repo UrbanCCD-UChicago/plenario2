@@ -232,10 +232,6 @@ defmodule PlenarioEtl.Worker do
     columns = MetaActions.get_column_names(meta)
     {struct, _} = Code.eval_quoted(quote do %unquote(model){} end)
 
-    # IO.inspect(rows)
-    # IO.inspect(columns)
-    # IO.inspect(struct)
-
     Enum.map(rows, fn row ->
       cast(struct, row, columns)
       |> Repo.insert!(on_conflict: :replace_all, conflict_target: constraints)

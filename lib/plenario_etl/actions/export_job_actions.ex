@@ -1,4 +1,4 @@
-defmodule PlenarioExport.Actions.ExportJobActions do
+defmodule PlenarioEtl.Actions.ExportJobActions do
   @moduledoc """
   This module provides a common API for the business logic
   underlying the various public interfaces for ExportJob.
@@ -6,13 +6,11 @@ defmodule PlenarioExport.Actions.ExportJobActions do
 
   import Ecto.Query
 
-
-  alias PlenarioExport.Changesets.ExportJobChangesets
-  alias PlenarioExport.Schemas.ExportJob
-
+  alias Ecto.Changeset
   alias Plenario.Repo
-
   alias Plenario.Schemas.User
+  alias PlenarioEtl.Changesets.ExportJobChangesets
+  alias PlenarioEtl.Schemas.ExportJob
 
   require Logger
 
@@ -61,5 +59,32 @@ defmodule PlenarioExport.Actions.ExportJobActions do
       end
 
     Repo.all(query)
+  end
+
+  def mark_started(job) do
+    job
+    |> ExportJob.mark_started()
+    |> set_started_on()
+  end
+
+  def mark_completed(job) do
+    job
+    |> ExportJob.mark_completed()
+    |> set_completed_on()
+  end
+
+  def mark_erred(job, params) do
+    job
+    |> ExportJob.mark_erred()
+    |> Changeset.cast(params, [:error_message])
+    |> set_completed_on()
+  end
+
+  defp set_started_on(changeset) do
+    Changeset.put_change(changeset, :insert_at, DateTime.utc_now())
+  end
+
+  defp set_completed_on(changeset) do
+    Changeset.put_change(changeset, :updated_at, DateTime.utc_now())
   end
 end
