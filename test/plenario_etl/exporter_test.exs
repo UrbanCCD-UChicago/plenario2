@@ -40,6 +40,9 @@ defmodule PlenarioEtl.ExporterTest do
   ]
 
   setup do
+    # Prevent cross contamination between tests
+    ModelRegistry.clear()
+
     # Set up user, metadata, and dataset
     {:ok, user} = UserActions.create("Trusted User", "trusted@example.com", "password")
     {:ok, meta} = MetaActions.create("test", user.id(), "http://example.com", "csv")
@@ -62,19 +65,34 @@ defmodule PlenarioEtl.ExporterTest do
     %{job: job}
   end
 
-  test "export/1 completes", %{job: job} do
+  test "export/1 async api", %{job: job} do
     with_mock ExAws, request!: fn _a, _b -> :ok end do
-      Exporter.export(job)
+      {:ok, task} = Exporter.export_task(job)
+      Task.await(task)
     end
 
     job = Repo.one!(from(e in ExportJob, where: e.id == ^job.id))
     assert job.state == "completed"
   end
 
-  # test "export/1 errs", %{job: job} do
-  #   job = %{job | meta: nil} 
-  #   Exporter.export(job)
-  #   job = Repo.one!(from e in ExportJob, where: e.id == ^job.id)
-  #   assert job.state == "error"
-  # end
+  test "export/1 completes", %{job: job} do
+    with_mock ExAws, request!: fn _a, _b -> :ok end do
+      Exporter.export(job)
+    end
+
+    job = Repo.one!(from(e in ExportJob, where: e.id == ^job.id))
+
+    assert job.state == "completed"
+  end
+
+  test "export/1 errs", %{job: job} do
+    with_mock ExAws, request!: fn _a, _b -> throw("Intentional Error") end do
+      Exporter.export(job)
+    end
+
+    job = Repo.one!(from(e in ExportJob, where: e.id == ^job.id))
+
+    assert job.state == "erred"
+    assert job.error_message =~ "Intentional Error"
+  end
 end
