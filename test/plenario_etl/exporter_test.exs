@@ -16,6 +16,7 @@ defmodule PlenarioEtl.ExporterTest do
   alias PlenarioEtl.Schemas.ExportJob
 
   import Ecto.Query
+  import Mock
 
   @insert_rows [
     %{
@@ -62,7 +63,10 @@ defmodule PlenarioEtl.ExporterTest do
   end
 
   test "export/1 completes", %{job: job} do
-    Exporter.export(job)
+    with_mock ExAws, request!: fn _a, _b -> :ok end do
+      Exporter.export(job)
+    end
+
     job = Repo.one!(from(e in ExportJob, where: e.id == ^job.id))
     assert job.state == "completed"
   end
