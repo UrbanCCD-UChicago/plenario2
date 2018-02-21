@@ -50,6 +50,46 @@ defmodule PlenarioWeb.SharedView do
     render(PlenarioWeb.SharedView, "doughnut.html", assigns)
   end
 
+  def render_line(x_labels, key_values, opts \\ []) do
+    defaults = [
+      chart_id: "line",
+      height: 50
+    ]
+    opts = Keyword.merge(defaults, opts)
+
+    labels = for {key, _} <- key_values, do: key
+    data = for {_, value} <- key_values, do: value
+    len_data = length(data)
+    backgrounds =
+      Stream.cycle([@red, @blue, @yellow, @green, @purple])
+      |> Enum.take(len_data)
+      |> Enum.map(fn c -> bgrnd_color(c) end)
+    borders =
+      Stream.cycle([@red, @blue, @yellow, @green, @purple])
+      |> Enum.take(len_data)
+      |> Enum.map(fn c -> border_color(c) end)
+
+    datasets =
+      0..(len_data-1)
+      |> Stream.with_index()
+      |> Enum.reduce([], fn {idx, _}, acc ->
+        acc ++ [Poison.encode!(%{
+          data: Enum.fetch!(data, idx),
+          label: Enum.fetch!(labels, idx),
+          backgroundColor: Enum.fetch!(backgrounds, idx),
+          borderColor: Enum.fetch!(borders, idx),
+          border: 1,
+          fill: true
+        })]
+      end)
+
+    assigns = Keyword.merge(opts, [
+      labels: x_labels,
+      datasets: datasets
+    ])
+    render(PlenarioWeb.SharedView, "line.html", assigns)
+  end
+
   defp bgrnd_color(base), do: "rgba(#{base}, 0.2)"
 
   defp border_color(base), do: "rgba(#{base}, 1)"

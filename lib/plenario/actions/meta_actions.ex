@@ -4,7 +4,11 @@ defmodule Plenario.Actions.MetaActions do
   Meta schema -- creating, updating, getting, ...
   """
 
-  alias Plenario.Repo
+  import Ecto.Query
+
+  import Plenario.Queries.Utils
+
+  alias Plenario.{Repo, ModelRegistry}
 
   alias Plenario.Schemas.{Meta, User}
 
@@ -16,7 +20,8 @@ defmodule Plenario.Actions.MetaActions do
     DataSetActions,
     DataSetFieldActions,
     VirtualDateFieldActions,
-    VirtualPointFieldActions
+    VirtualPointFieldActions,
+    MetaActions
   }
 
   @type ok_instance :: {:ok, Meta} | {:error, Ecto.Changeset.t()}
@@ -69,19 +74,19 @@ defmodule Plenario.Actions.MetaActions do
   Convenience function for updating a Meta's bbox attribute.
   """
   @spec update_bbox(meta :: Meta, bbox :: Geo.Polygon) :: ok_instance
-  def update_bbox(meta, bbox), do: update(meta, bbox: bbox)
+  def update_bbox(meta, bbox), do: MetaActions.update(meta, bbox: bbox)
 
   @doc """
   Convenience function for updating a Meta's time_range attribute.
   """
   @spec update_time_range(meta :: Meta, lower :: DateTime, upper :: DateTime) :: ok_instance
-  def update_time_range(meta, lower, upper), do: update(meta, time_range: [lower, upper])
+  def update_time_range(meta, lower, upper), do: MetaActions.update(meta, time_range: [lower, upper])
 
   @doc """
   Convenience function for updating a Meta's latest_import attribute.
   """
   @spec update_latest_import(meta :: Meta, timestamp :: DateTime) :: ok_instance
-  def update_latest_import(meta, timestamp), do: update(meta, latest_import: timestamp)
+  def update_latest_import(meta, timestamp), do: MetaActions.update(meta, latest_import: timestamp)
 
   @doc """
   Convenience function for updating a Meta's next_import attribute.
@@ -96,7 +101,7 @@ defmodule Plenario.Actions.MetaActions do
       end
 
     shifted = Timex.shift(current, [{String.to_atom(rate), interval}])
-    update(meta, next_import: shifted)
+    MetaActions.update(meta, next_import: shifted)
   end
 
   @doc """
@@ -355,6 +360,96 @@ defmodule Plenario.Actions.MetaActions do
     coords = List.first(bbox.coordinates)
     coord_strings = for {lat, lon} <- coords, do: "[#{lat},#{lon}]"
     "[#{Enum.join(coord_strings, ", ")}]"
+  end
+
+  def get_record_count(meta) do
+    model = ModelRegistry.lookup(meta.slug)
+    Repo.one(from m in model, select: fragment("count(*)"))
+  end
+
+  def get_agg_data(meta, starts, ends) do
+    model = ModelRegistry.lookup(meta.slug)
+    fields = DataSetFieldActions.list(for_meta: meta)
+
+    number_fields =
+      fields
+      |> Enum.filter(fn f -> f.type in ["float", "integer"] end)
+      |> Enum.filter(fn f -> not String.ends_with?(String.downcase(f.name), ["id"]) end)
+      |> Enum.filter(fn f -> not String.starts_with?(String.downcase(f.name), ["lat", "lon", "loc"]) end)
+      |> Enum.take(5)
+    len_fields = length(number_fields)
+
+    ts_field =
+      fields
+      |> Enum.filter(fn f -> f.type == "timestamptz" end)
+      |> List.first()
+    ts_field =
+      case ts_field == nil do
+        false -> ts_field
+        true ->
+          VirtualDateFieldActions.list(for_meta: meta)
+          |> List.first()
+      end
+
+    query =
+      """
+      SELECT
+        date_trunc('month', "<%= ts_field.name %>") as Timestamp,
+        <%= for {f, idx} <- Enum.with_index(number_fields) do %>
+        avg("<%= f.name %>") as "<%= f.name %>"<%= if idx < len_fields do %>,<% end %>
+        <% end %>
+      FROM
+        "<%= table_name %>"
+      GROUP BY
+        Timestamp
+      ORDER BY
+        Timestamp DESC
+      ;
+      """
+    sql = EEx.eval_string(
+      query,
+      [ts_field: ts_field, number_fields: number_fields,
+      len_fields: len_fields - 1, table_name: meta.table_name],
+      trim: true
+    )
+    case Ecto.Adapters.SQL.query(Repo, sql) do
+      {:ok, results} ->
+        labels =
+          for [{{y, mo, d}, {h, mi, s, _}} | _] <- results.rows do
+            case NaiveDateTime.from_erl({{y, mo, d}, {h, mi, s}}) do
+              {:ok, ndt} -> ndt
+              _ -> ""
+            end
+          end
+        [_ | cols] = results.columns
+
+        rows =
+          for [_ | row] <- results.rows do
+            row
+          end
+
+        data =
+          for idx <- 0..len_fields do
+            col = Enum.at(cols, idx)
+            values =
+              for row <- rows do
+                Enum.at(row, idx)
+              end
+            {col, values}
+          end
+          |> Enum.filter(fn {c, _} -> c != nil end)
+
+        %{
+          labels: labels,
+          data: data
+        }
+
+      {:error, whatever} ->
+        %{
+          labels: ["Uno", "Dos", "Tres", "Quattro", "Cinco", "Sies"],
+          data: [{"Foo", [1,5,4,2,5,6]}, {"Bar", [2,3,1,5,6,5]}, {"Baz", [4,3,4,7,8,2]}]
+        }
+    end
   end
 
   defp parse_csv!(filename, count) do

@@ -1,7 +1,17 @@
 defmodule PlenarioWeb.Web.Testing.PageControllerTest do
-  use PlenarioWeb.Testing.ConnCase, async: true
+  use PlenarioWeb.Testing.ConnCase
 
-  alias Plenario.Actions.{UserActions, MetaActions}
+  alias Plenario.Actions.{
+    UserActions,
+    MetaActions,
+    DataSetFieldActions,
+    VirtualPointFieldActions,
+    UniqueConstraintActions
+  }
+
+  setup do
+    Plenario.ModelRegistry.clear()
+  end
 
   @tag :anon
   test "index", %{conn: conn} do
@@ -24,6 +34,15 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     {:ok, meta2} = MetaActions.create("name 2", user, "https://example.com/2", "csv")
     {:ok, meta3} = MetaActions.create("name 3", user, "https://example.com/3", "csv")
     {:ok, meta4} = MetaActions.create("name 4", user, "https://example.com/4", "csv")
+
+    for meta <- [meta1, meta2, meta3, meta4] do
+      {:ok, id} = DataSetFieldActions.create(meta, "id", "integer")
+      {:ok, _} = DataSetFieldActions.create(meta, "timestamp", "timestamptz")
+      {:ok, _} = DataSetFieldActions.create(meta, "observation", "float")
+      {:ok, f} = DataSetFieldActions.create(meta, "location", "text")
+      {:ok, _} = VirtualPointFieldActions.create(meta, f.id)
+      {:ok, _} = UniqueConstraintActions.create(meta, [id.id])
+    end
 
     bbox =
       %Geo.Polygon{
