@@ -33,10 +33,12 @@ defmodule PlenarioEtl.Actions.ExportJobActions do
       include_diffs: include_diffs
     }
 
-    Logger.info("Creating Export Job: #{inspect(params)}")
-
-    ExportJobChangesets.create(params)
+    {:ok, job} = ExportJobChangesets.create(params)
     |> Repo.insert()
+
+    Logger.info("[#{inspect(self())}] [create] Created export job ##{job.id}")
+
+    {:ok, job}
   end
 
   @doc """
