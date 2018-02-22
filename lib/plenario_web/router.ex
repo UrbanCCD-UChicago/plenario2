@@ -46,6 +46,9 @@ defmodule PlenarioWeb.Router do
     post "/explore", PageController, :search_all_data_sets
     get "/explore/array-of-things", PageController, :aot_explorer
 
+    # exports
+    post "/export", ExportController, :export_query
+
     # auth pages
     get "/login", AuthController, :index
     post "/login", AuthController, :login

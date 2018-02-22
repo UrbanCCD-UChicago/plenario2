@@ -1,6 +1,13 @@
 defmodule Plenario.ModelRegistry do
   use GenServer
+
   alias Plenario.Actions.MetaActions
+
+  alias Plenario.Schemas.Meta
+
+  alias Plenario.Repo
+
+  import Ecto.Query
 
   @type_map %{
     "boolean" => :boolean,
@@ -102,6 +109,15 @@ defmodule Plenario.ModelRegistry do
 
   def handle_call(request, sender, state) do
     super(request, sender, state)
+  end
+
+  def get_export_query(%Meta{slug: slug}), do: get_export_query(slug)
+  def get_export_query(slug) do
+    meta = lookup(slug)
+    query = (from m in meta)
+    {q, _} = Ecto.Adapters.SQL.to_sql(:all, Repo, query)
+
+    q
   end
 
   defp register(meta) do
