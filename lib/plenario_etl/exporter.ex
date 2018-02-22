@@ -73,6 +73,7 @@ defmodule PlenarioEtl.Exporter do
 
   defp generate_stream(job) do
     {query, _} = Code.eval_string(job.query)
+    Logger.info("[#{inspect(self())}] [generate_stream] Evaluating query: #{inspect query}")
     {job, stream(query)}
   end
 
@@ -80,6 +81,7 @@ defmodule PlenarioEtl.Exporter do
     path = "/tmp/#{inspect(uuid4())}"
     file = File.open!(path, [:write, :utf8])
 
+    Logger.info("[#{inspect(self())}] [stream_to_local_storage] Writing to #{path}")
     transaction(fn ->
       stream
       |> CSV.encode(headers: header(job.meta))
@@ -90,6 +92,9 @@ defmodule PlenarioEtl.Exporter do
   end
 
   defp upload_to_s3({job, path}) do
+    Logger.info("[#{inspect(self())}] [upload_to_s3] Uploading to bucket #{@bucket}")
+    Logger.info("[#{inspect(self())}] [upload_to_s3] At #{job.export_path}")
+
     result =
       path
       |> ExAws.S3.Upload.stream_file()
