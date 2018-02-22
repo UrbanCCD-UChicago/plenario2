@@ -1,5 +1,6 @@
 defmodule Plenario.ModelRegistry do
   use GenServer
+
   alias Plenario.Actions.MetaActions
 
   @type_map %{

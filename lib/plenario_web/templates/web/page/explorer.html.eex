@@ -68,7 +68,7 @@
       <%= button "View Details", to: data_set_path(@conn, :show, res.id), method: :get, class: "btn btn-success" %>
     </p>
     <p>
-      <%= button "Download!", to: "/", class: "btn btn-danger" %>
+      <%= button "Export to CSV", to: export_path(@conn, :export_meta, res.id), class: "btn btn-danger" %>
     </p>
   </div>
   <div class="col-lg-9">
