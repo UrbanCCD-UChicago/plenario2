@@ -11,6 +11,11 @@ defmodule PlenarioWeb.Web.DataSetFieldController do
 
   def edit(conn, %{"dsid" => _, "id" => id}) do
     field = DataSetFieldActions.get(id)
+    do_edit(field, id, conn)
+  end
+
+  defp do_edit(nil, _, conn), do: do_404(conn)
+  defp do_edit(%DataSetField{} = field, id, conn) do
     changeset = DataSetFieldActions.edit(field)
     action = data_set_field_path(conn, :update, field.meta_id, id)
     type_choices = DataSetField.get_type_choices()
@@ -19,6 +24,11 @@ defmodule PlenarioWeb.Web.DataSetFieldController do
 
   def update(conn, %{"dsid" => _,"id" => id, "data_set_field" => %{"type" => type}}) do
     field = DataSetFieldActions.get(id)
+    do_update(field, id, type, conn)
+  end
+
+  defp do_update(nil, _, _, conn), do: do_404(conn)
+  defp do_update(%DataSetField{} = field, id, type, conn) do
     case DataSetFieldActions.update(field, type: type) do
       {:ok, field} ->
         conn
@@ -38,6 +48,11 @@ defmodule PlenarioWeb.Web.DataSetFieldController do
 
   def delete(conn, %{"dsid" => _,"id" => id}) do
     field = DataSetFieldActions.get(id)
+    do_delete(field, conn)
+  end
+
+  defp do_delete(nil, conn), do: do_404(conn)
+  defp do_delete(%DataSetField{} = field, conn) do
     case DataSetFieldActions.delete(field) do
       {:ok, _} ->
         conn
