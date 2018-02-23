@@ -41,6 +41,11 @@ defmodule PlenarioWeb.Web.VirtualPointController do
 
   def edit(conn, %{"dsid" => dsid, "id" => id}) do
     field = VirtualPointFieldActions.get(id)
+    do_edit(field, dsid, id, conn)
+  end
+
+  defp do_edit(nil, _, _, conn), do: do_404(conn)
+  defp do_edit(%VirtualPointField{} = field, dsid, id, conn) do
     changeset = VirtualPointFieldActions.edit(field)
     action = virtual_point_path(conn, :update, dsid, id)
     field_choices = VirtualPointField.get_field_choices(dsid)
@@ -49,6 +54,11 @@ defmodule PlenarioWeb.Web.VirtualPointController do
 
   def update(conn, %{"dsid" => dsid, "id" => id, "virtual_point_field" => %{} = params}) do
     field = VirtualPointFieldActions.get(id)
+    do_update(field, dsid, id, params, conn)
+  end
+
+  defp do_update(nil, _, _, _, conn), do: do_404(conn)
+  defp do_update(%VirtualPointField{} = field, dsid, id, params, conn) do
     opts = Enum.into(params, [])
     case VirtualPointFieldActions.update(field, opts) do
       {:ok, _} ->
@@ -69,6 +79,11 @@ defmodule PlenarioWeb.Web.VirtualPointController do
 
   def delete(conn, %{"dsid" => _,"id" => id}) do
     field = VirtualPointFieldActions.get(id)
+    do_delete(field, conn)
+  end
+
+  defp do_delete(nil, conn), do: do_404(conn)
+  defp do_delete(%VirtualPointField{} = field, conn) do
     case VirtualPointFieldActions.delete(field) do
       {:ok, _} ->
         conn

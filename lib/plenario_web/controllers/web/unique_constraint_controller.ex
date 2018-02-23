@@ -36,6 +36,11 @@ defmodule PlenarioWeb.Web.UniqueConstraintController do
 
   def edit(conn, %{"dsid" => dsid, "id" => id}) do
     constraint = UniqueConstraintActions.get(id)
+    do_edit(constraint, dsid, id, conn)
+  end
+
+  defp do_edit(nil, _, _, conn), do: do_404(conn)
+  defp do_edit(%UniqueConstraint{} = constraint, dsid, id, conn) do
     changeset = UniqueConstraintActions.edit(constraint)
     action = unique_constraint_path(conn, :update, constraint.meta_id, id)
     field_choices = UniqueConstraint.get_field_choices(dsid)
@@ -44,6 +49,11 @@ defmodule PlenarioWeb.Web.UniqueConstraintController do
 
   def update(conn, %{"dsid" => dsid, "id" => id, "unique_constraint" => %{"field_ids" => field_ids}}) do
     constraint = UniqueConstraintActions.get(id)
+    do_update(constraint, dsid, id, field_ids, conn)
+  end
+
+  defp do_update(nil, _, _, _, conn), do: do_404(conn)
+  defp do_update(%UniqueConstraint{} = constraint, dsid, id, field_ids, conn) do
     case UniqueConstraintActions.update(constraint, field_ids: field_ids) do
       {:ok, constraint} ->
         conn
@@ -63,6 +73,11 @@ defmodule PlenarioWeb.Web.UniqueConstraintController do
 
   def delete(conn, %{"dsid" => _,"id" => id}) do
     constraint = UniqueConstraintActions.get(id)
+    do_delete(constraint, conn)
+  end
+
+  defp do_delete(nil, conn), do: do_404(conn)
+  defp do_delete(%UniqueConstraint{} = constraint, conn) do
     case UniqueConstraintActions.delete(constraint) do
       {:ok, _} ->
         conn

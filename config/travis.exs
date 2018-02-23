@@ -25,3 +25,17 @@ config :plenario, Plenario.Repo,
 config :plenario, PlenarioAuth.Guardian,
   issuer: "Plenario",
   secret_key: "qwertyuiopASDFGHJKLzxcvbnm1234567890QWERTYUIOPasdfghjklZXCVBNM!@"
+
+
+# Configure HTTP API
+config :plenario, :http, HTTP.Mock
+
+
+# Configure worker settings
+config :plenario, PlenarioEtl,
+  chunk_size: 100,
+  pool_size: 10
+
+
+# configure bamboo (email)
+config :plenario, PlenarioMailer, adapter: Bamboo.TestAdapter

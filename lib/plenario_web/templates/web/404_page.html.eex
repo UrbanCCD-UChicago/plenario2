@@ -1,0 +1,24 @@
+<div class="row text-center">
+  <h3>
+    It's kind of our job to locate things in space and time, but we're not
+    sure where you just went.
+  </h3>
+</div>
+
+<div class="row" style="margin:50px">
+  <a onclick="goback()">
+    <img src="/images/404.gif" class="img-responsive center-block" style="cursor:pointer">
+  </a>
+</div>
+
+<div class="row text-center">
+  <h3>
+    <a onclick="goback()"  style="cursor:pointer">Try going back.</a>
+  </h3>
+</div>
+
+<script>
+function goback () {
+  window.history.back();
+}
+</script>

@@ -1,8 +1,8 @@
 defmodule PlenarioWeb.ErrorView do
   use PlenarioWeb, :web_view
 
-  def render("404.html", _assigns) do
-    "Page not found"
+  def render("404.html", _) do
+    render("404_page.html", %{})
   end
 
   def render("500.html", _assigns) do
