@@ -15,13 +15,15 @@ defmodule PlenarioWeb.Web.DataSetController do
   plug :authorize_resource, model: Meta
 
   def show(conn, %{"id" => id}) do
-    user = Guardian.Plug.current_resource(conn)
-
     meta = MetaActions.get(id, with_user: true, with_fields: true, with_constraints: true)
+    do_show(meta, conn)
+  end
 
+  defp do_show(nil, conn), do: do_404(conn)
+  defp do_show(%Meta{} = meta, conn) do
+    user = Guardian.Plug.current_resource(conn)
     virtual_dates = VirtualDateFieldActions.list(for_meta: meta, with_fields: true)
     virtual_points = VirtualPointFieldActions.list(for_meta: meta, with_fields: true)
-
     disabled? = meta.state != "new"
     user_is_owner? =
       case user do
@@ -74,6 +76,11 @@ defmodule PlenarioWeb.Web.DataSetController do
       with_user: true, with_fields: true, with_constraints: true,
       with_virtual_dates: true, with_virtual_points: true
     )
+    do_edit(meta, id, conn)
+  end
+
+  defp do_edit(nil, _, conn), do: do_404(conn)
+  defp do_edit(%Meta{} = meta, id, conn) do
     changeset = MetaActions.edit(meta)
     action = data_set_path(conn, :update, id)
 
@@ -87,6 +94,11 @@ defmodule PlenarioWeb.Web.DataSetController do
 
   def update(conn, %{"id" => id, "meta" => %{"force_fields_reset" => force_fields_reset}} = params) do
     meta = MetaActions.get(id)
+    do_update(meta, id, force_fields_reset, params, conn)
+  end
+
+  defp do_update(nil, _, _, _, conn), do: do_404(conn)
+  defp do_update(%Meta{} = meta, id, force_fields_reset, params, conn) do
     update_params = Map.get(params, "meta")
     original_source = meta.source_url
     updated_source = Map.get(update_params, "source_url")
@@ -130,6 +142,11 @@ defmodule PlenarioWeb.Web.DataSetController do
 
   def submit_for_approval(conn, %{"id" => id}) do
     meta = MetaActions.get(id)
+    do_submit_for_approval(meta, id, conn)
+  end
+
+  defp do_submit_for_approval(nil, _, conn), do: do_404(conn)
+  defp do_submit_for_approval(%Meta{} = meta, id, conn) do
     case MetaActions.submit_for_approval(meta) do
       {:ok, _} ->
         conn
@@ -145,6 +162,11 @@ defmodule PlenarioWeb.Web.DataSetController do
 
   def ingest_now(conn, %{"id" => id}) do
     meta = MetaActions.get(id)
+    do_ingest_now(meta, id, conn)
+  end
+
+  defp do_ingest_now(nil, _, conn), do: do_404(conn)
+  defp do_ingest_now(%Meta{} = meta, id, conn) do
     case Enum.member?(["awaiting_first_import", "ready", "erred"], meta.state) do
       true ->
         PlenarioEtl.Worker.async_load!(id)
