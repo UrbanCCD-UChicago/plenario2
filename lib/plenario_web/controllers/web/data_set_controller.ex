@@ -15,10 +15,27 @@ defmodule PlenarioWeb.Web.DataSetController do
   plug :authorize_resource, model: Meta
 
   def show(conn, %{"id" => id}) do
+    user = Guardian.Plug.current_resource(conn)
+
     meta = MetaActions.get(id, with_user: true, with_fields: true, with_constraints: true)
+
     virtual_dates = VirtualDateFieldActions.list(for_meta: meta, with_fields: true)
     virtual_points = VirtualPointFieldActions.list(for_meta: meta, with_fields: true)
-    render(conn, "show.html", meta: meta, virtual_dates: virtual_dates, virtual_points: virtual_points)
+
+    disabled? = meta.state != "new"
+    user_is_owner? =
+      case user do
+        nil -> false
+        _ -> user.id == meta.user_id
+      end
+
+    render(conn, "show.html",
+      meta: meta,
+      virtual_dates: virtual_dates,
+      virtual_points: virtual_points,
+      disabled?: disabled?,
+      user_is_owner?: user_is_owner?
+    )
   end
 
   def new(conn, _) do
