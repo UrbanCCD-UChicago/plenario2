@@ -43,7 +43,6 @@ defmodule PlenarioWeb.Router do
     # landing pages
     get "/", PageController, :index
     get "/explore", PageController, :explorer
-    post "/explore", PageController, :search_all_data_sets
     get "/explore/array-of-things", PageController, :aot_explorer
 
     # auth pages

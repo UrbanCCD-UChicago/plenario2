@@ -9,6 +9,7 @@ defmodule PlenarioWeb.SharedView do
       map_zoom: 10,
       draw_controls: false,
       form_input_coords: "coords",
+      form_input_zoom: "zoom",
       bbox: nil,
       points: nil
     ]
