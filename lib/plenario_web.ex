@@ -24,6 +24,13 @@ defmodule PlenarioWeb do
       import PlenarioWeb.Router.Helpers
       import PlenarioWeb.Gettext
       import Canary.Plugs
+
+      def do_404(conn) do
+        conn
+        |> put_status(:not_found)
+        |> put_view(PlenarioWeb.ErrorView)
+        |> render("404.html")
+      end
     end
   end
 
