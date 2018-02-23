@@ -1,9 +1,8 @@
 <div id="<%= @map_id %>" style="height:<%= @map_height %>px"></div>
 
-
 <script defer>
-var map = L.map('<%= @map_id %>').setView(<%= @map_center %>, <%= @map_zoom %>);
-
+// instantiate the map
+let map = L.map('<%= @map_id %>').setView(<%= @map_center %>, <%= @map_zoom %>);
 L.tileLayer(
   'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}',
   {
@@ -14,15 +13,18 @@ L.tileLayer(
   }
 ).addTo(map);
 
-<%= if @draw_controls do %>
-var drawnItems = new L.FeatureGroup();
+// add layer for items drawn to map
+let drawnItems = new L.FeatureGroup();
 map.addLayer(drawnItems);
 
-var drawControl = new L.Control.Draw({
+<%= if @draw_controls do %>
+// add the shape drawing controls to the map
+let drawControl = new L.Control.Draw({
   edit: {
     featureGroup: drawnItems
   },
   draw: {
+    polyline: false,
     circle: false,
     marker: false,
     circlemarker: false
@@ -30,16 +32,12 @@ var drawControl = new L.Control.Draw({
 });
 map.addControl(drawControl);
 
-var coordInput = document.getElementById('<%= @form_input_coords %>');
-var ciVal = coordInput.value;
-if (!ciVal.match(/^\[\[.*\]\]/)) {
-  coordInput.value = JSON.stringify(map.getBounds());
-}
-
-map.on('draw:created', function(e) {
-  var latLongs = e.layer.getLatLngs();
+// handle drawing events
+map.on('draw:created', function (e) {
+  let latLongs = e.layer.getLatLngs();
   latLongs = latLongs[0];
-  var coords = [];
+
+  let coords = [];
   for (var i = 0; i < latLongs.length; i++) {
     var el = latLongs[i];
     coords.push([
@@ -47,39 +45,50 @@ map.on('draw:created', function(e) {
       el.lng
     ]);
   }
-  var coordInput = document.getElementById('<%= @form_input_coords %>');
-  coordInput.value = JSON.stringify(coords);
 
+  let coordInput = document.getElementById('<%= @form_input_coords %>');
+  coordInput.value = JSON.stringify(coords);
   drawnItems.addLayer(e.layer);
 });
 
-map.on('draw:deleted', function(e) {
-  var coordInput = document.getElementById('<%= @form_input_coords %>');
+map.on('draw:deleted', function (e) {
+  let coordInput = document.getElementById('<%= @form_input_coords %>');
   coordInput.value = '';
-
   drawnItems.clearLayers(e.layer);
 });
 
-map.on('moveend', function(e) {
-  var coordInput = document.getElementById('<%= @form_input_coords %>');
-  var ciVal = coordInput.value;
-  if (!ciVal.match(/^\[\[.*\]\]/)) {
-    coordInput.value = JSON.stringify(map.getBounds());
+// setup form submit listener
+$('form:first').submit(function (e) {
+  let coordInput = document.getElementById('<%= @form_input_coords %>');
+  let zoomInput = document.getElementById('<%= @form_input_zoom %>');
+
+  if (!coordInput.value.match(/^\[\[.*\]\]/)) {
+    // set coords to entire map view and set zoom to 1 out
+    let bounds = map.getBounds();
+    coordInput.value = JSON.stringify(bounds);
+    zoomInput.value = map.getBoundsZoom(bounds, true) - 1;
+  } else {
+    // set zoom to current zoom
+    zoomInput.value = map.getZoom();
   }
+
+  return true;
 });
 <% end %>
 
 <%= if @bbox do %>
-L.polygon(<%= @bbox %>).addTo(map);
+let bbox = L.polygon(<%= @bbox %>).addTo(map);
+bbox.enable();
 <% end %>
 
 <%= if @points do %>
-var icon = L.icon({
+let icon = L.icon({
   iconUrl: '/images/marker-icon.png',
   shadowUrl: '/images/marker-shadow.png'
 });
-<%= for pt <- @points do %>
-L.marker(<%= pt %>, {icon: icon}).addTo(map);
+<%= for {pt, idx} <- Enum.with_index(@points) do %>
+let pt_<%= idx %> = L.marker(<%= pt %>, {icon: icon}).addTo(map);
+pt_<%= idx %>.enable();
 <% end %>
 <% end %>
 </script>

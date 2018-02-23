@@ -7,7 +7,7 @@
     <h3>Select a Time</h3>
     <hr>
 
-    <%= form_for @conn, page_path(@conn, :search_all_data_sets), fn f -> %>
+    <%= form_for @conn, page_path(@conn, :explorer), [method: :get], fn f -> %>
 
     <div class="form-group">
       <label class="control-label">Starting On:</label>
@@ -21,6 +21,8 @@
 
     <input id="coords" name="coords" hidden>
 
+    <input id="zoom" name="zoom" hidden>
+
     <div class="form-group">
       <input type="submit" value="Search!" class="btn btn-primary">
     </div>
@@ -31,7 +33,7 @@
   <div class="col-lg-9">
     <h3>Select an Area</h3>
     <hr>
-    <%= PlenarioWeb.SharedView.render_map(draw_controls: true, map_center: @map_center, bbox: @bbox)%>
+    <%= PlenarioWeb.SharedView.render_map(draw_controls: true, map_center: @map_center, bbox: @bbox, map_zoom: @map_zoom)%>
   </div>
 </div>
 

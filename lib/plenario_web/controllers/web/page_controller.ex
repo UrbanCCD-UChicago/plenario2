@@ -3,11 +3,25 @@ defmodule PlenarioWeb.Web.PageController do
 
   def index(conn, _), do: render(conn, "index.html")
 
-  def explorer(conn, _) do
-    render(conn, "explorer.html", map_center: "[41.9, -87.7]", bbox: nil, starts: "", ends: "")
+  def explorer(conn, params) do
+    zoom = Map.get(params, "zoom", nil)
+    coords = Map.get(params, "coords", nil)
+    starts = Map.get(params, "starting_on", nil)
+    ends = Map.get(params, "ending_on", nil)
+
+    do_explorer(zoom, coords, starts, ends, conn)
   end
 
-  def search_all_data_sets(conn, %{"coords" => coords, "starting_on" => starts, "ending_on" => ends} = params) do
+  defp do_explorer(nil, nil, nil, nil, conn) do
+    render(conn, "explorer.html",
+      map_center: "[41.9, -87.7]",
+      map_zoom: 10,
+      bbox: nil,
+      starts: "",
+      ends: ""
+    )
+  end
+  defp do_explorer(zoom, coords, starts, ends, conn) do
     coords = Poison.decode!(coords)
     bbox = build_polygon(coords)
 
@@ -25,6 +39,7 @@ defmodule PlenarioWeb.Web.PageController do
     render(conn, "explorer.html",
       results: results,
       map_center: get_poly_center(bbox),
+      map_zoom: zoom,
       bbox: "#{inspect(map_bbox)}",
       starts: starts,
       ends: ends)

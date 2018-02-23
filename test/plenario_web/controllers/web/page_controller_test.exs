@@ -28,7 +28,7 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
   end
 
   @tag :anon
-  test "search all data sets", %{conn: conn} do
+  test "search explorer", %{conn: conn} do
     {:ok, user} = UserActions.create("name", "email@example.com", "password")
     {:ok, meta1} = MetaActions.create("name 1", user, "https://example.com/1", "csv")
     {:ok, meta2} = MetaActions.create("name 2", user, "https://example.com/2", "csv")
@@ -107,11 +107,12 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     params = %{
       "starting_on" => "2014-11-01",
       "ending_on" => "2015-11-01",
-      "coords" => "[[-30, -20], [-40, -50], [-10, -30], [-30, -20]]"
+      "coords" => "[[-30, -20], [-40, -50], [-10, -30], [-30, -20]]",
+      "zoom" => 10
     }
     response =
       conn
-      |> post(page_path(conn, :search_all_data_sets, params))
+      |> get(page_path(conn, :explorer, params))
       |> html_response(:ok)
 
     refute response =~ meta1.name
@@ -122,11 +123,12 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     params = %{
       "starting_on" => "2016-11-01",
       "ending_on" => "2017-11-01",
-      "coords" => "[[30, 20], [40, 50], [10, 30], [30, 20]]"
+      "coords" => "[[30, 20], [40, 50], [10, 30], [30, 20]]",
+      "zoom" => 10
     }
     response =
       conn
-      |> post(page_path(conn, :search_all_data_sets, params))
+      |> get(page_path(conn, :explorer, params))
       |> html_response(:ok)
 
     assert response =~ meta1.name
@@ -137,11 +139,12 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     params = %{
       "starting_on" => "2014-11-01",
       "ending_on" => "2015-11-01",
-      "coords" => "[[30, 20], [40, 50], [10, 30], [30, 20]]"
+      "coords" => "[[30, 20], [40, 50], [10, 30], [30, 20]]",
+      "zoom" => 10
     }
     response =
       conn
-      |> post(page_path(conn, :search_all_data_sets, params))
+      |> get(page_path(conn, :explorer, params))
       |> html_response(:ok)
 
     refute response =~ meta1.name
