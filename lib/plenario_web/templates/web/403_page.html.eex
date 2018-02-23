@@ -1,0 +1,23 @@
+<div class="row text-center">
+  <h3>
+    So, uh, yeah. Don't do that.
+  </h3>
+</div>
+
+<div class="row" style="margin:50px">
+  <a onclick="goback()">
+    <img src="/images/403.gif" class="img-responsive center-block" style="cursor:pointer">
+  </a>
+</div>
+
+<div class="row text-center">
+  <h3>
+    <a onclick="goback()"  style="cursor:pointer">You should go back.</a>
+  </h3>
+</div>
+
+<script>
+function goback () {
+  window.history.back();
+}
+</script>
