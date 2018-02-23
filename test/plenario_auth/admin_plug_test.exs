@@ -5,14 +5,14 @@ defmodule PlenarioAuth.Testing.AdminPlugTest do
   test "anonymous users cannot access admin routes", %{conn: conn} do
     conn
     |> get(user_path(conn, :index))
-    |> response(:unauthorized)
+    |> html_response(:found)
   end
 
   @tag :auth
   test "authenticated regular users cannot access admin routes", %{conn: conn} do
     conn
     |> get(user_path(conn, :index))
-    |> response(:forbidden)
+    |> html_response(:forbidden)
   end
 
   @tag :admin

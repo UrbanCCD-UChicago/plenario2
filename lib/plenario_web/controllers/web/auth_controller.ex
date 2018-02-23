@@ -6,27 +6,30 @@ defmodule PlenarioWeb.Web.AuthController do
   alias PlenarioAuth
   alias PlenarioAuth.Guardian
 
-  def index(conn, _) do
+  def index(conn, params) do
     changeset = UserActions.new()
-    login_action = auth_path(conn, :login)
-    register_action = auth_path(conn, :register)
+    redir = Map.get(params, "redir", page_path(conn, :index))
+    login_action = auth_path(conn, :login, redir: redir)
+    register_action = auth_path(conn, :register, redir: redir)
 
     if Guardian.Plug.current_resource(conn) do
       redirect(conn, to: page_path(conn, :index))
     else
       render(
         conn, "index.html", changeset: changeset,
-        login_action: login_action, register_action: register_action)
+        login_action: login_action, register_action: register_action, redir: redir)
     end
   end
 
-  def login(conn, %{"user" => %{"email" => email, "password" => password}}) do
+  def login(conn, %{"user" => %{"email" => email, "password" => password}} = params) do
+    redir = Map.get(params, "redir", page_path(conn, :index))
+
     case PlenarioAuth.authenticate(email, password) do
       {:ok, user} ->
         conn
         |> Guardian.Plug.sign_in(user)
         |> put_flash(:success, "Welcome back, #{user.name}!")
-        |> redirect(to: page_path(conn, :index))
+        |> redirect(to: redir)
 
       {:error, _} ->
         changeset = UserActions.new()
@@ -43,13 +46,15 @@ defmodule PlenarioWeb.Web.AuthController do
     end
   end
 
-  def register(conn, %{"user" => %{"name" => name, "email" => email, "password" => password}}) do
+  def register(conn, %{"user" => %{"name" => name, "email" => email, "password" => password}} = params) do
+    redir = Map.get(params, "redir", page_path(conn, :index))
+
     case UserActions.create(name, email, password) do
       {:ok, user} ->
         conn
         |> Guardian.Plug.sign_in(user)
         |> put_flash(:success, "Welcome, #{user.name}!")
-        |> redirect(to: page_path(conn, :index))
+        |> redirect(to: redir)
 
       {:error, changeset} ->
         login_action = auth_path(conn, :login)

@@ -5,6 +5,8 @@ defmodule PlenarioAuth.ErrorHandler do
   process is halted (i.e. no other plugs will be called).
   """
 
+  use PlenarioWeb, :web_controller
+
   import Plug.Conn
 
   @doc """
@@ -12,9 +14,8 @@ defmodule PlenarioAuth.ErrorHandler do
   """
   def auth_error(conn, _, _) do
     conn
-    |> put_resp_content_type("text/plain")
-    |> send_resp(:unauthorized, "unauthorized")
-    |> halt()
+    |> put_flash(:error, "You must sign in.")
+    |> redirect(to: auth_path(conn, :index, redir: conn.request_path))
   end
 
   @doc """
@@ -22,8 +23,9 @@ defmodule PlenarioAuth.ErrorHandler do
   """
   def handle_unauthorized(conn) do
     conn
-    |> put_resp_content_type("text/plain")
-    |> send_resp(:forbidden, "forbidden")
+    |> put_status(:forbidden)
+    |> put_view(PlenarioWeb.ErrorView)
+    |> render("403.html")
     |> halt()
   end
 
@@ -32,8 +34,8 @@ defmodule PlenarioAuth.ErrorHandler do
   """
   def handle_not_found(conn) do
     conn
-    |> put_resp_content_type("text/plain")
-    |> send_resp(:not_found, "not found")
-    |> halt()
+    |> put_status(:not_found)
+    |> put_view(PlenarioWeb.ErrorView)
+    |> render("404.html")
   end
 end
