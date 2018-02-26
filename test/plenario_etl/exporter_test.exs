@@ -95,4 +95,24 @@ defmodule PlenarioEtl.ExporterTest do
     assert job.state == "erred"
     assert job.error_message =~ "Intentional Error"
   end
+
+  test "export/1 sends email upon success", context do
+    {job, email} = Exporter.export(context.job)
+
+    assert email.from == "plenario@uchicago.edu"
+    assert email.to == context.user.email
+    assert email.subject == "Plenario Notification"
+    assert email.text_body == "This is a test"
+    assert email.html_body == nil
+  end
+
+  test "export/1 sends email upon failure", context do
+    {job, email} = Exporter.export(context.job)
+
+    assert email.from == "plenario@uchicago.edu"
+    assert email.to == context.user.email
+    assert email.subject == "Plenario Notification"
+    assert email.text_body == "Error!"
+    assert email.html_body == nil
+  end
 end
