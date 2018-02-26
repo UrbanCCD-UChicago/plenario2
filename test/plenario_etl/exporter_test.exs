@@ -96,13 +96,15 @@ defmodule PlenarioEtl.ExporterTest do
   end
 
   test "export/1 sends email upon success", context do
-    {job, email} = Exporter.export(context.job)
+    with_mock ExAws, request!: fn _a, _b -> :ok end do
+      {job, email} = Exporter.export(context.job)
 
-    assert email.from == "plenario@uchicago.edu"
-    assert email.to == context.user.email
-    assert email.subject == "Plenario Notification"
-    assert email.text_body =~ "Success!"
-    assert email.html_body == nil
+      assert email.from == "plenario@uchicago.edu"
+      assert email.to == context.user.email
+      assert email.subject == "Plenario Notification"
+      assert email.text_body =~ "Success!"
+      assert email.html_body == nil
+    end
   end
 
   test "export/1 sends email upon failure", context do
