@@ -90,6 +90,8 @@ defmodule PlenarioWeb.Router do
     post "/metas/:id/disapprove", MetaController, :disapprove
 
     resources "/etl-jobs", EtlJobController
+
+    resources "/export-jobs", ExportJobController
   end
 
   ##
