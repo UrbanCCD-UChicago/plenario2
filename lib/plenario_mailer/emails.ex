@@ -23,4 +23,10 @@ defmodule PlenarioMailer.Emails do
     |> to(user.email)
     |> text_body(note.message)
   end
+
+  def send_email(email, message) do
+    base()
+    |> to(email)
+    |> text_body(message)
+  end
 end

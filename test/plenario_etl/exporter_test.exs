@@ -39,13 +39,12 @@ defmodule PlenarioEtl.ExporterTest do
     }
   ]
 
-  setup do
+  setup context do
     # Prevent cross contamination between tests
     ModelRegistry.clear()
 
     # Set up user, metadata, and dataset
-    {:ok, user} = UserActions.create("Trusted User", "trusted@example.com", "password")
-    {:ok, meta} = MetaActions.create("test", user.id(), "http://example.com", "csv")
+    {:ok, meta} = MetaActions.create("test", context.user.id(), "http://example.com", "csv")
     {:ok, pk_field} = DataSetFieldActions.create(meta.id, "pk", "integer")
     {:ok, _} = DataSetFieldActions.create(meta.id, "datetime", "timestamptz")
     {:ok, _} = DataSetFieldActions.create(meta.id, "location", "text")
@@ -59,8 +58,8 @@ defmodule PlenarioEtl.ExporterTest do
     # Set up the export job
     query = from(m in ModelRegistry.lookup(meta.slug))
     querystr = inspect(query, structs: false)
-    {:ok, job} = ExportJobActions.create(meta, user, querystr, false)
-    job = Repo.preload(job, :meta)
+    {:ok, job} = ExportJobActions.create(meta, context.user, querystr, false)
+    job = Repo.preload(job, [:meta, :user])
 
     %{job: job}
   end
@@ -94,5 +93,28 @@ defmodule PlenarioEtl.ExporterTest do
 
     assert job.state == "erred"
     assert job.error_message =~ "Intentional Error"
+  end
+
+  test "export/1 sends email upon success", context do
+    with_mock ExAws, request!: fn _a, _b -> :ok end do
+      {job, email} = Exporter.export(context.job)
+
+      assert email.from == "plenario@uchicago.edu"
+      assert email.to == context.user.email
+      assert email.subject == "Plenario Notification"
+      assert email.text_body =~ "Success!"
+      assert email.html_body == nil
+    end
+  end
+
+  test "export/1 sends email upon failure", context do
+    with_mock ExAws, request!: fn _a, _b -> throw("Intentional Error") end do
+      {job, email} = Exporter.export(context.job)
+      assert email.from == "plenario@uchicago.edu"
+      assert email.to == context.user.email
+      assert email.subject == "Plenario Notification"
+      assert email.text_body =~ "errored"
+      assert email.html_body == nil
+    end
   end
 end
