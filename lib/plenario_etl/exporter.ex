@@ -63,13 +63,15 @@ defmodule PlenarioEtl.Exporter do
       |> upload_to_s3()
       |> ExportJobActions.mark_completed()
       |> update!()
-      |> send_email()
+      |> send_success_email()
     catch
       reason ->
         Logger.error(inspect(reason, pretty: true))
 
         ExportJobActions.mark_erred(job, %{error_message: inspect(reason, pretty: true)})
         |> update!()
+
+        send_failure_email(job)
     end
   end
 
@@ -106,11 +108,20 @@ defmodule PlenarioEtl.Exporter do
     job
   end
 
-  defp send_email(job) do
+  defp send_success_email(job) do
     Logger.info("[#{inspect(self())}] [send_email] Sending s3 link to user")
-    export_link = job.export_link
+    export_link = "https://s3.amazonaws.com/#{@bucket}/#{job.export_path}"
     target_email = job.user.email
-    message = "Your export results can be downloaded at: #{export_link}"
+    message = "Success! Your export results can be downloaded at: #{export_link}"
+    email = Emails.send_email(target_email, message)
+
+    {job, email}
+  end
+
+  defp send_failure_email(job) do
+    Logger.info("[#{inspect(self())}] [send_email] Sending error to user")
+    target_email = job.user.email
+    message = "Your export errored! Please contact the plenario folks."
     email = Emails.send_email(target_email, message)
 
     {job, email}
