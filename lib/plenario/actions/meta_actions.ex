@@ -422,11 +422,14 @@ defmodule Plenario.Actions.MetaActions do
             end
           end
         [_ | cols] = results.columns
+        IO.inspect(labels)
+        IO.inspect(cols)
 
         rows =
           for [_ | row] <- results.rows do
             row
           end
+        IO.inspect(rows)
 
         data =
           for idx <- 0..len_fields do
