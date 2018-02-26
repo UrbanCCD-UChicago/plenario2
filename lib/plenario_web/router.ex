@@ -88,6 +88,10 @@ defmodule PlenarioWeb.Router do
     get "/metas/:id/review", MetaController, :review
     post "/metas/:id/approve", MetaController, :approve
     post "/metas/:id/disapprove", MetaController, :disapprove
+
+    resources "/etl-jobs", EtlJobController
+
+    resources "/export-jobs", ExportJobController
   end
 
   ##

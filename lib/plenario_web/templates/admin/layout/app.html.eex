@@ -42,8 +42,8 @@
             <li><%= link "Admin Home", to: admin_page_path(@conn, :index) %></li>
             <li><%= link "Users", to: user_path(@conn, :index) %></li>
             <li><%= link "Metas", to: meta_path(@conn, :index) %></li>
-            <li><%= link "ETL Jobs", to: user_path(@conn, :index) %></li>
-            <li><%= link "Export Jobs", to: user_path(@conn, :index) %></li>
+            <li><%= link "ETL Jobs", to: etl_job_path(@conn, :index) %></li>
+            <li><%= link "Export Jobs", to: export_job_path(@conn, :index) %></li>
           </ul>
         </nav>
         <a href="/">
