@@ -303,8 +303,52 @@ defmodule Plenario.Actions.MetaActions do
     srid: 4326}
   end
 
+  defp receive_messages(id, limit \\ 10) do
+    receive_messages(id, limit, [])
+  end
+
+  defp receive_messages(id, limit, acc) when length(acc) >= limit do
+    {:ok, acc}
+  end
+
+  defp receive_messages(id, limit, acc) do
+    receive do
+      %HTTPoison.AsyncStatus{id: ^id, code: 200} ->
+        receive_messages(id, limit, acc)
+      %HTTPoison.AsyncStatus{id: ^id, code: code} ->
+        {:error, code}
+      %HTTPoison.AsyncChunk{chunk: chunk} ->
+        receive_messages(id, limit, [chunk | acc])
+      %HTTPoison.AsyncEnd{id: ^id} ->
+        {:ok, acc}
+    end 
+  end
+
   def guess_field_types!(meta) do
-    %HTTPoison.Response{body: body} = HTTPoison.get!(meta.source_url)
+    {:ok, body} = 
+      case meta.source_type do
+        "csv" ->
+          {:ok, response} = HTTPoison.get(meta.source_url, %{}, stream_to: self)
+          {:ok, messages} = receive_messages(response.id)
+
+          # The reason for this formatting work is that chunks do not come in
+          # cleanly divided along `\n` characters. The last row will more likely
+          # than not be truncated somewhere in the middle.
+          body = 
+            messages
+            |> Enum.reverse()
+            |> Enum.join("")
+            |> String.split("\n")
+            |> Enum.drop(-1)
+            |> Enum.join("\n")
+          {:ok, body}
+
+        _ ->
+          %HTTPoison.Response{body: body} = HTTPoison.get!(meta.source_url)
+          {:ok, body}
+
+      end
+
     path = "/tmp/#{meta.slug}.#{meta.source_type}"
     File.write!(path, body)
 
