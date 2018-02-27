@@ -29,11 +29,11 @@ config :plenario, :s3_export_ttl, days: 5
 # configure quantum scheduler
 config :plenario, :refresh_offest, minutes: 1
 
-config :plenario, Plenario.Scheduler,
+config :plenario, PlenarioEtl.Scheduler,
   global: true,
   jobs: [
     # run the find refreshable metas every minute (offset is 1 minute above)
-    {"* * * * *", {Plenario.Etl.ScheduledJobs, :find_refreshable_metas, []}}
+    {"* * * * *", {PlenarioEtl.ScheduledJobs, :refresh_datasets, []}}
   ]
 
 
