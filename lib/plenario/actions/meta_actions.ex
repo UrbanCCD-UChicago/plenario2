@@ -349,7 +349,7 @@ defmodule Plenario.Actions.MetaActions do
 
       end
 
-    path = "/tmp/#{meta.slug}.#{eta.source_type}"
+    path = "/tmp/#{meta.slug}.#{meta.source_type}"
     File.write!(path, body)
 
     cnt = 1_001
