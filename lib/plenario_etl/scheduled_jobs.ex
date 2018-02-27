@@ -16,5 +16,7 @@ defmodule PlenarioEtl.ScheduledJobs do
     Enum.map(metas, fn meta ->
       async_load!(meta.id)
     end)
+
+    metas
   end
 end

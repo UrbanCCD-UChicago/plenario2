@@ -44,7 +44,7 @@ defmodule PlentioEtl.Testing.ScheduledJobsTest do
       refresh_interval: 1
     )
 
-    metas = for m <- ScheduledJobs.find_refreshable_metas(), do: %{id: m.id, name: m.name}
+    metas = for m <- ScheduledJobs.refresh_datasets(), do: %{id: m.id, name: m.name}
     assert metas == [%{id: good_meta.id, name: good_meta.name}]
   end
 end
