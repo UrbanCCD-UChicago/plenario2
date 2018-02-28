@@ -17,6 +17,18 @@ defmodule PlenarioWeb.SharedView do
     render(PlenarioWeb.SharedView, "map.html", assigns)
   end
 
+  def render_leaflet_heatmap(observations, opts \\ []) do
+    defaults = [
+      map_id: "leaflet-heatmap",
+      map_height: 500,
+      map_center: "[41.9, -87.7]",
+      map_zoom: 10
+    ]
+    assigns = Keyword.merge(defaults, opts)
+    assigns = Keyword.merge(assigns, [observations: observations])
+    render(PlenarioWeb.SharedView, "leaftlet-heatmap.html", assigns)
+  end
+
   @red "255, 99, 132"
   @blue "54, 162, 235"
   @yellow "255, 206, 86"

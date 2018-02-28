@@ -1,0 +1,23 @@
+<div id="<%= @map_id %>" style="height:<%= @map_height %>px"></div>
+
+<script src="http://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js"></script>
+<script defer>
+// instantiate the map
+var heatMap = L.map('<%= @map_id %>').setView(<%= @map_center %>, <%= @map_zoom %>);
+L.tileLayer(
+  'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}',
+  {
+    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+    maxZoom: 18,
+    id: 'mapbox.streets',
+    accessToken: 'pk.eyJ1IjoicGxlbmFyaW8iLCJhIjoiY2pkM2RicXV4M2d3ajJybnNvczE0NDBnbiJ9.QYYTdm03c_iSP1pHRS6QUw'
+  }
+).addTo(heatMap);
+
+// add heat layer
+var heat = L.heatLayer([
+<%= for {lat, lon, reading} <- @observations do %>
+  [<%= lat %>, <%= lon %>, <%= reading %>],
+<% end %>
+], {radius: 15, gradient: {1: 'red', 0.75: 'yellow', 0.5: 'green', 0.25: 'blue', 0: 'white'}}).addTo(heatMap);
+</script>

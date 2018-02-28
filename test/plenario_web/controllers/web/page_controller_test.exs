@@ -6,7 +6,8 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     MetaActions,
     DataSetFieldActions,
     VirtualPointFieldActions,
-    UniqueConstraintActions
+    UniqueConstraintActions,
+    DataSetActions
   }
 
   setup do
@@ -156,6 +157,18 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
 
   @tag :anon
   test "aot_explorer", %{conn: conn} do
+    {:ok, user} = UserActions.create("name", "email@example.com", "password")
+    {:ok, meta} = MetaActions.create("Array of Things Chicago", user, "http://www.mcs.anl.gov/research/projects/waggle/downloads/beehive1/plenario.json", "json")
+    {:ok, nid} = DataSetFieldActions.create(meta, "node_id", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "human_address", "text")
+    {:ok, lat} = DataSetFieldActions.create(meta, "latitude", "float")
+    {:ok, lon} = DataSetFieldActions.create(meta, "longitude", "float")
+    {:ok, ts} = DataSetFieldActions.create(meta, "timestamp", "timestamptz")
+    {:ok, _} = DataSetFieldActions.create(meta, "observations", "jsonb")
+    {:ok, _} = VirtualPointFieldActions.create(meta, lat.id, lon.id)
+    {:ok, _} = UniqueConstraintActions.create(meta, [nid.id, lat.id, lon.id, ts.id])
+    DataSetActions.up!(meta)
+
     conn
     |> get(page_path(conn, :aot_explorer))
     |> html_response(:ok)
