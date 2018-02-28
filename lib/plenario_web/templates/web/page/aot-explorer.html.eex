@@ -1,60 +1,35 @@
-<style>
-  #map { height: 750px }
-</style>
+<div class="row">
+  <h1>Explore the Array of Things</h1>
+</div>
 
-<div id="map"></div>
-<form>
-  <input type="text" id="coords">
-</form>
+<%= PlenarioWeb.SharedView.render_map(draw_controls: false, map_height: 560, map_zoom: 11, map_center: "[41.855, -87.7]", points: @points)%>
 
-<script>
-  var map = L.map('map').setView([41.9, -87.7], 13);
+<hr>
 
-  L.tileLayer(
-    'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}',
-    {
-      attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
-      maxZoom: 18,
-      id: 'mapbox.streets',
-      accessToken: 'pk.eyJ1IjoicGxlbmFyaW8iLCJhIjoiY2pkM2RicXV4M2d3ajJybnNvczE0NDBnbiJ9.QYYTdm03c_iSP1pHRS6QUw'
-    }
-  ).addTo(map);
+<div class="row">
+  <h3>Temperature</h3>
+</div>
 
-  var drawnItems = new L.FeatureGroup();
-  map.addLayer(drawnItems);
-  var drawControl = new L.Control.Draw({
-    edit: {
-      featureGroup: drawnItems
-    },
-    draw: {
-      circle: false,
-      marker: false,
-      circlemarker: false
-    }
-  });
-  map.addControl(drawControl);
+<div class="row">
+  <div class="col-lg-6">
+    <%= PlenarioWeb.SharedView.render_line(@labels, @temps_data, [height: 150, chart_id: "temps"]) %>
+  </div>
+  <div class="col-lg-6">
+    <%= PlenarioWeb.SharedView.render_leaflet_heatmap(@temp_hm_data, map_height: 285, map_id: "heat-temp") %>
+  </div>
+</div>
 
-  map.on('draw:created', function(e) {
-    var latLongs = e.layer.getLatLngs();
-    latLongs = latLongs[0];
-    var coords = [];
-    for (var i = 0; i < latLongs.length; i++) {
-      var el = latLongs[i];
-      coords.push([
-        el.lat,
-        el.lng
-      ]);
-    }
-    var coordInput = document.getElementById('coords');
-    coordInput.value = JSON.stringify(coords);
+<hr>
 
-    drawnItems.addLayer(e.layer);
-  });
+<div class="row">
+  <h3>Humidity</h3>
+</div>
 
-  map.on('draw:deleted', function(e) {
-    var coordInput = document.getElementById('coords');
-    coordInput.value = '';
-
-    drawnItems.clearLayers(e.layer);
-  });
-</script>
+<div class="row">
+  <div class="col-lg-6">
+    <%= PlenarioWeb.SharedView.render_line(@labels, @humid_data, [height: 150, chart_id: "humid"]) %>
+  </div>
+  <div class="col-lg-6">
+    <%= PlenarioWeb.SharedView.render_leaflet_heatmap(@humid_hm_data, map_height: 285, map_id: "heat-humid") %>
+  </div>
+</div>

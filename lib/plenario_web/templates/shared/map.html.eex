@@ -78,7 +78,6 @@ $('form:first').submit(function (e) {
 
 <%= if @bbox do %>
 let bbox = L.polygon(<%= @bbox %>).addTo(map);
-bbox.enable();
 <% end %>
 
 <%= if @points do %>
@@ -86,9 +85,10 @@ let icon = L.icon({
   iconUrl: '/images/marker-icon.png',
   shadowUrl: '/images/marker-shadow.png'
 });
-<%= for {pt, idx} <- Enum.with_index(@points) do %>
-let pt_<%= idx %> = L.marker(<%= pt %>, {icon: icon}).addTo(map);
-pt_<%= idx %>.enable();
+<%= for {{pt, name, node_id}, idx} <- Enum.with_index(@points) do %>
+let pt_<%= idx %> = L.marker(<%= pt %>, {icon: icon});
+pt_<%= idx %>.bindPopup("<strong>Node <%= node_id %><br>Located at <%= name %></strong><br><%= pt %>");
+pt_<%= idx %>.addTo(map);
 <% end %>
 <% end %>
 </script>
