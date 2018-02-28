@@ -27,7 +27,8 @@ defmodule PlentioEtl.Testing.ScheduledJobsTest do
         refresh_starts_on: Timex.shift(DateTime.utc_now(), years: -1),
         refresh_ends_on: nil,
         refresh_rate: "minutes",
-        refresh_interval: 1
+        refresh_interval: 1,
+        next_import: Timex.shift(DateTime.utc_now(), years: -1)
       )
 
     MetaActions.update_next_import(meta)

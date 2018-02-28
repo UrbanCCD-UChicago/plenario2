@@ -13,11 +13,7 @@ defmodule PlenarioEtl.ScheduledJobs do
     ends = Timex.shift(starts, offset)
 
     metas = Repo.all(
-      from m in Meta,
-        where: m.refresh_starts_on <= ^starts,
-        where: is_nil(m.refresh_ends_on) or m.refresh_ends_on >= ^ends,
-        where: m.next_import >= ^starts,
-        where: m.next_import < ^ends
+      from m in Meta, where: m.next_import < ^starts
     )
 
     Logger.info("[#{inspect self()}] [refresh_datasets] Refreshing #{length(metas)} datasets")
