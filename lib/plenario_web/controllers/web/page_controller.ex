@@ -97,9 +97,11 @@ defmodule PlenarioWeb.Web.PageController do
             end
           end
 
-        temps = for row <- result.rows, do: Enum.at(row, 1)
+        rows = Enum.reverse(result.rows)
+
+        temps = for row <- rows, do: Enum.at(row, 1)
         temps_data = [{"Average Temperature", temps}]
-        humid = for row <- result.rows, do: Enum.at(row, 2)
+        humid = for row <- rows, do: Enum.at(row, 2)
         humid_data = [{"Average Humidity", humid}]
 
 
