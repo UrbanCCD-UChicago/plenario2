@@ -7,6 +7,8 @@ defmodule PlenarioWeb.Web.PageController do
 
   alias Plenario.{Repo, ModelRegistry}
 
+  alias PlenarioWeb.Controllers.Utils
+
   def index(conn, _), do: render(conn, "index.html")
 
   def explorer(conn, params) do
@@ -36,8 +38,11 @@ defmodule PlenarioWeb.Web.PageController do
       List.first(bbox.coordinates)
       |> Enum.map(fn {lat, lon} -> [lat, lon] end)
 
-    {_, lower, _} = DateTime.from_iso8601("#{starts}T00:00:00.0Z")
-    {_, upper, _} = DateTime.from_iso8601("#{ends}T00:00:00.0Z")
+    clean_starts = Utils.parse_date_string(starts)
+    clean_ends = Utils.parse_date_string(ends)
+
+    {_, lower, _} = DateTime.from_iso8601("#{clean_starts}T00:00:00.0Z")
+    {_, upper, _} = DateTime.from_iso8601("#{clean_ends}T00:00:00.0Z")
     {:ok, range} = Plenario.TsTzRange.dump([lower, upper])
 
     results = Plenario.search_data_sets(bbox, range)
@@ -92,9 +97,11 @@ defmodule PlenarioWeb.Web.PageController do
             end
           end
 
-        temps = for row <- result.rows, do: Enum.at(row, 1)
+        rows = Enum.reverse(result.rows)
+
+        temps = for row <- rows, do: Enum.at(row, 1)
         temps_data = [{"Average Temperature", temps}]
-        humid = for row <- result.rows, do: Enum.at(row, 2)
+        humid = for row <- rows, do: Enum.at(row, 2)
         humid_data = [{"Average Humidity", humid}]
 
 

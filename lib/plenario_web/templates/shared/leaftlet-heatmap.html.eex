@@ -1,6 +1,6 @@
 <div id="<%= @map_id %>" style="height:<%= @map_height %>px"></div>
 
-<script src="http://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js"></script>
+<script src="https://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js"></script>
 <script defer>
 // instantiate the map
 var heatMap = L.map('<%= @map_id %>').setView(<%= @map_center %>, <%= @map_zoom %>);

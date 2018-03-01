@@ -11,12 +11,12 @@
 
     <div class="form-group">
       <label class="control-label">Starting On:</label>
-      <input type="date" class="form-control" id="starting_on" name="starting_on" value="<%= @starts %>" required>
+      <input type="date" class="form-control" id="starting_on" name="starting_on" value="<%= @starts %>" placeholder="YYYY-MM-DD" required>
     </div>
 
     <div class="form-group">
       <label class="control-label">Ending On:</label>
-      <input type="date" class="form-control" id="ending_on" name="ending_on" value="<%= @ends %>" required>
+      <input type="date" class="form-control" id="ending_on" name="ending_on" value="<%= @ends %>" placeholder="YYYY-MM-DD" required>
     </div>
 
     <input id="coords" name="coords" hidden>
