@@ -74,4 +74,4 @@ config :plenario, :http, HTTP.Live
 # Configure worker settings
 config :plenario, PlenarioEtl,
   chunk_size: 100,
-  pool_size: 1000
+  pool_size: 10
