@@ -222,8 +222,8 @@ defmodule PlenarioEtl.Worker do
   """
   @spec contains!(meta :: Meta, rows :: list[map], constraints :: list[atom]) :: Postgrex.Result
   def contains!(meta, rows, [constraint | _] = constraints) when is_atom(constraint) do
-    row_pks = 
-      for row <- rows do 
+    row_pks =
+      for row <- rows do
         for constraint <- constraints do
           row[constraint]
         end

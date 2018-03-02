@@ -27,7 +27,7 @@ config :plenario, :s3_export_ttl, days: 5
 
 
 # configure quantum scheduler
-config :plenario, :refresh_offest, minutes: 1
+config :plenario, :refresh_offest, minutes: -1
 
 config :plenario, PlenarioEtl.Scheduler,
   global: true,
