@@ -50,7 +50,7 @@ defmodule Plenario.FieldGuesserTest do
       pk\tdatetime\tlocation\tdata
       1\t2017-01-01T00:00:00\t"(0, 1)"\tcrackers
       2\t2017-02-02T00:00:00\t"(0, 2)"\tand
-      3\t2017-03-03T00:00:00\t"(0, 3)"\tcheese\t
+      3\t2017-03-03T00:00:00\t"(0, 3)"\tcheese
       """
     })
 

@@ -57,35 +57,23 @@ defmodule Plenario.FieldGuesser do
     col_types
   end
 
-  defp download!(%Meta{source_type: "csv"} = meta), do: download_async!(meta, :csv)
-  defp download!(%Meta{source_type: "tsv"} = meta), do: download_async!(meta, :tsv)
+  defp download!(%Meta{source_type: "csv"} = meta), do: download_async!(meta)
+  defp download!(%Meta{source_type: "tsv"} = meta), do: download_async!(meta)
   defp download!(meta) do
     %HTTPoison.Response{body: body} = HTTPoison.get!(meta.source_url)
     body
   end
 
-  defp download_async!(meta, type) do
+  defp download_async!(meta) do
     {:ok, response} = HTTPoison.get(meta.source_url, %{}, stream_to: self())
     {:ok, messages} = receive_messages(response.id)
 
-    binary = 
-      messages
-      |> Enum.reverse()
-      |> Enum.join("")
-
-    case type do
-      :csv ->
-        binary
-        |> String.split("\n")
-        |> Enum.drop(-1)
-        |> Enum.join("\n")
-
-      :tsv ->
-        binary
-        |> String.split("\t")
-        |> Enum.drop(-1)
-        |> Enum.join("\t")
-    end
+    messages
+    |> Enum.reverse()
+    |> Enum.join("")
+    |> String.split("\n")
+    |> Enum.drop(-1)
+    |> Enum.join("\n")
   end
 
   defp receive_messages(id, limit \\ 10), do: receive_messages(id, limit, [])
