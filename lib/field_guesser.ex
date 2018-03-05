@@ -19,17 +19,11 @@ defmodule Plenario.FieldGuesser do
     guesses =
       for row <- rows do
         for {key, value} <- row do
-          cond do
-            boolean?(value) -> {key, "boolean"}
-            integer?(value) -> {key, "integer"}
-            float?(value) -> {key, "float"}
-            date?(value) -> {key, "timestamptz"}
-            json?(value) -> {key, "jsonb"}
-            true -> {key, "text"}
-          end
+          {key, guess(value)} 
         end
       end
       |> List.flatten()
+
     Logger.info("registered #{length(guesses)} guesses")
     Logger.debug("guesses = #{inspect(guesses)}")
 
@@ -85,7 +79,7 @@ defmodule Plenario.FieldGuesser do
   end
 
   defp receive_messages(id, limit \\ 10), do: receive_messages(id, limit, [])
-  defp receive_messages(id, limit, acc) when length(acc) >= limit, do: {:ok, acc}
+  defp receive_messages(_id, limit, acc) when length(acc) >= limit, do: {:ok, acc}
   defp receive_messages(id, limit, acc) do
     receive do
       %HTTPoison.AsyncStatus{id: ^id, code: 200} ->
@@ -117,26 +111,68 @@ defmodule Plenario.FieldGuesser do
     |> Enum.take(count)
   end
 
-  defp parse!(filename, _, %Meta{source_type: "shp"}) do
+  defp parse!(_filename, _, %Meta{source_type: "shp"}) do
     []
   end
 
-  defp boolean?(value) when is_boolean(value), do: true
-  defp boolean?(value) when is_bitstring(value), do: Regex.match?(~r/^t|true|f|false$/i, value)
-  defp boolean?(value), do: false
+  def guess(value) do
+    cond do
+      boolean?(value) -> "boolean"
+      integer?(value) -> "integer"
+      float?(value) -> "float"
+      date?(value) -> "timestamptz"
+      json?(value) -> "jsonb"
+      true -> "text"
+    end
+  end
 
-  defp integer?(value) when is_integer(value), do: true
-  defp integer?(value) when is_bitstring(value), do: Regex.match?(~r/^-?\d+$/, value)
-  defp integer?(value), do: false
+  def boolean?(value) when is_boolean(value), do: true
 
-  defp float?(value) when is_float(value), do: true
-  defp float?(value) when is_bitstring(value), do: Regex.match?(~r/^-?\d+\.\d+$/, value)
-  defp float?(value), do: false
+  def boolean?(value) when is_bitstring(value) do 
+    case value do
+      "true" -> true
+      "false" -> true
+      "t" -> true
+      "f" -> true
+      _ -> false
+    end
+  end
 
-  defp date?(value) when is_bitstring(value), do: Regex.match?(~r/\d{2,4}-|\/\d{2}-|\/\d{2,4}(.\d{1,2}:\d{1,2}:\d{1,2})?/, value)
-  defp date?(value), do: false
+  def boolean?(_value), do: false
 
-  defp json?(value) when is_map(value) or is_list(value), do: true
-  defp json?(value) when is_bitstring(value), do: Regex.match?(~r/^[[{].+[]}]$/, value)
-  defp json?(value), do: false
+  def integer?(value) when is_integer(value), do: true
+  def integer?(value) when is_bitstring(value), do: Regex.match?(~r/^-?\d+$/, value)
+  def integer?(_value), do: false
+
+  def float?(value) when is_float(value), do: true
+  def float?(value) when is_bitstring(value), do: Regex.match?(~r/^-?\d+\.\d+$/, value)
+  def float?(_value), do: false
+
+  # MM/DD/YYYY
+  # MM/DD/YYYY HH:MM:SS [AM|PM]
+  # MM-DD-YYYY
+  # MM-DD-YYYY HH:MM:SS [AM|PM]
+  # YYYY-MM-DD HH:MM:SS
+  # YYYY-MM-DD HH:MM:SS.USEC
+  def date?(value) when is_bitstring(value) do 
+    # http://www.regexlib.com/REDetails.aspx?regexp_id=376
+    pattern = ~r/^((((((0?[13578])|(1[02]))[\-\/\s]?((0?[1-9])|([1-2][0-9])|(3[01])))|(((0?[469])|(11))[\-\/\s]?((0?[1-9])|([1-2][0-9])|(30)))|(0?2[\-\/\s]?((0?[1-9])|([1-2][0-9]))))[\-\/\s]?\d{2}(([02468][048])|([13579][26])))|(((((0?[13578])|(1[02]))[\-\/\s]?((0?[1-9])|([1-2][0-9])|(3[01])))|(((0?[469])|(11))[\-\/\s]?((0?[1-9])|([1-2][0-9])|(30)))|(0?2[\-\/\s]?((0?[1-9])|(1[0-9])|(2[0-8]))))[\-\/\s]?\d{2}(([02468][1235679])|([13579][01345789]))))(\s(((0?[1-9])|(1[0-2]))\:([0-5][0-9])((\s)|(\:([0-5][0-9])\s))([AM|PM|am|pm]{2,2})))?$/
+    case Ecto.DateTime.cast(value) do
+      {:ok, _} -> true
+      :error -> Regex.match?(pattern, value)
+    end
+  end
+
+  def date?(_value), do: false
+
+  def json?(value) when is_map(value) or is_list(value), do: true
+
+  def json?(value) when is_bitstring(value) do 
+    case Poison.decode(value) do
+      {:ok, _} -> true
+      {:error, _} -> false
+    end
+  end
+
+  def json?(_value), do: false
 end
