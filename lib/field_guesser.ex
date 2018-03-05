@@ -38,14 +38,12 @@ defmodule Plenario.FieldGuesser do
 
     Logger.info("finding most frequently paired type to column")
     maxes =
-      Enum.reduce(counts, %{}, fn {{k, _}, c}, acc ->
-        curr = Map.get(acc, k, 0)
-        if c > curr do
-          Map.update(acc, k, c, &(&1 - &1 + c))
-        else
-          acc
-        end
+      Enum.reduce(counts, %{}, fn {{column, _type}, count}, accumulator ->
+        Map.update(accumulator, column, count, fn current_max -> count 
+          if count > current_max, do: count, else: current_max
+        end)
       end)
+
     Logger.info("max type counts per column = #{inspect(maxes)}")
 
     Logger.info("matching keys and max counts to types from counts")
@@ -59,23 +57,35 @@ defmodule Plenario.FieldGuesser do
     col_types
   end
 
-  defp download!(%Meta{source_type: "csv"} = meta), do: download_async!(meta)
-  defp download!(%Meta{source_type: "tsv"} = meta), do: download_async!(meta)
+  defp download!(%Meta{source_type: "csv"} = meta), do: download_async!(meta, :csv)
+  defp download!(%Meta{source_type: "tsv"} = meta), do: download_async!(meta, :tsv)
   defp download!(meta) do
     %HTTPoison.Response{body: body} = HTTPoison.get!(meta.source_url)
     body
   end
 
-  defp download_async!(meta) do
-    {:ok, response} = HTTPoison.get(meta.source_url, %{}, stream_to: self)
+  defp download_async!(meta, type) do
+    {:ok, response} = HTTPoison.get(meta.source_url, %{}, stream_to: self())
     {:ok, messages} = receive_messages(response.id)
 
-    messages
-    |> Enum.reverse()
-    |> Enum.join("")
-    |> String.split("\n")
-    |> Enum.drop(-1)
-    |> Enum.join("\n")
+    binary = 
+      messages
+      |> Enum.reverse()
+      |> Enum.join("")
+
+    case type do
+      :csv ->
+        binary
+        |> String.split("\n")
+        |> Enum.drop(-1)
+        |> Enum.join("\n")
+
+      :tsv ->
+        binary
+        |> String.split("\t")
+        |> Enum.drop(-1)
+        |> Enum.join("\t")
+    end
   end
 
   defp receive_messages(id, limit \\ 10), do: receive_messages(id, limit, [])
