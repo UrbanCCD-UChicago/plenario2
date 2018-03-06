@@ -2,8 +2,6 @@ defmodule PlenarioEtl.ScheduledJobs do
 
   require Logger
 
-  import PlenarioEtl.Worker, only: [async_load!: 1]
-
   import Ecto.Query
 
   alias Plenario.Schemas.Meta
@@ -37,9 +35,9 @@ defmodule PlenarioEtl.ScheduledJobs do
     names = for m <- metas, do: m.name
     Logger.info("refreshing #{length(metas)} datasets: #{inspect(names)}")
 
-    # Enum.map(metas, fn meta ->
-    #   async_load!(meta.id)
-    # end)
+    Enum.map(metas, fn meta ->
+      PlenarioEtl.ingest(meta)
+    end)
 
     metas
   end
