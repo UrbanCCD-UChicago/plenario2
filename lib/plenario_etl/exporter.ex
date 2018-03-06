@@ -10,7 +10,7 @@ defmodule PlenarioEtl.Exporter do
 
   require Logger
 
-  @bucket Application.fetch_env!(:ex_aws, :bucket)
+  @bucket Application.get_env(:plenario, :s3_export_bucket)
   @timeout 100_000
 
   @doc """
