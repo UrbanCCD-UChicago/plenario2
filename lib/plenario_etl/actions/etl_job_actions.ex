@@ -10,6 +10,7 @@ defmodule PlenarioEtl.Actions.EtlJobActions do
 
 
   alias PlenarioEtl.Changesets.EtlJobChangesets
+
   alias PlenarioEtl.Schemas.EtlJob
 
   alias Plenario.Schemas.Meta
@@ -26,19 +27,13 @@ defmodule PlenarioEtl.Actions.EtlJobActions do
   @doc """
   Creates a new instance of EtlJob
   """
-  @spec create(meta :: Meta | integer) :: ok_job
-  def create(meta) when not is_integer(meta), do: create(meta.id)
-  def create(meta) when is_integer(meta) do
-    EtlJobChangesets.create(%{meta_id: meta})
-    |> Repo.insert()
-  end
-
-  @doc """
-  Creates a new instance of EtlJob
-  """
   @spec create!(meta :: Meta | integer) :: EtlJob
+  def create!(%Meta{} = meta), do: create!(meta.id)
   def create!(meta) do
-    {:ok, job} = create(meta)
+    {:ok, job} =
+      EtlJobChangesets.create(%{meta_id: meta})
+      |> Repo.insert()
+
     job
   end
 
@@ -70,40 +65,77 @@ defmodule PlenarioEtl.Actions.EtlJobActions do
     Repo.all(query)
   end
 
-  def mark_started(job) do
-    EtlJobChangesets.mark_started(job)
-    |> Repo.update()
-  end
-
-  def mark_erred(job, params = %{error_message: _}) do
-    EtlJobChangesets.mark_erred(job, params)
-    |> Repo.update()
-  end
-
-  def mark_completed(job) do
-    EtlJobChangesets.mark_completed(job)
-    |> Repo.update()
+  def start(job) do
+    {:ok, started} =
+      EtlJobChangesets.mark_started(job)
+      |> Repo.update()
 
     meta = MetaActions.get(job.meta_id)
+    {:ok, _} = MetaActions.update_next_import(meta)
 
-    if meta.first_import == nil do
-      MetaActions.mark_first_import(meta)
-    end
+    {:ok, started}
+  end
+
+  def mark_succeeded(job) do
+    {:ok, job} =
+      EtlJobChangesets.mark_succeeded(job)
+      |> Repo.update()
+
+    update_meta_attrs(job.meta_id)
+
+    {:ok, job}
+  end
+
+  def mark_partial_success(job, errors) do
+    errors =
+      case is_bitstring(errors) do
+        true -> errors
+        false -> "#{inspect(errors)}"
+      end
+
+    {:ok, job} =
+      EtlJobChangesets.mark_partial_success(job, %{error_message: errors})
+      |> Repo.update()
+
+    update_meta_attrs(job.meta_id)
+
+    {:ok, job}
+  end
+
+  def mark_erred(job, errors) do
+    errors =
+      case is_bitstring(errors) do
+        true -> errors
+        false -> "#{inspect(errors)}"
+      end
+
+    EtlJobChangesets.mark_erred(job, %{error_message: errors})
+    |> Repo.update()
+  end
+
+  defp update_meta_attrs(meta_id) do
+    meta = MetaActions.get(meta_id)
+
     MetaActions.update_latest_import(meta, DateTime.utc_now())
-    MetaActions.update_next_import(meta)
 
     try do
       {lower, upper} = MetaActions.compute_time_range!(meta)
       MetaActions.update_time_range(meta, lower, upper)
     rescue
-      e -> Logger.error("Tried to compute time range: #{inspect(e)}")
+      error ->
+        Sentry.capture_exception(error, [stacktrace: System.stacktrace()])
+        Logger.error("#{inspect(error)}")
     end
 
     try do
       bbox = MetaActions.compute_bbox!(meta)
       MetaActions.update_bbox(meta, bbox)
     rescue
-      e -> Logger.error("Tried to compute bbox: #{inspect(e)}")
+      error ->
+        Sentry.capture_exception(error, [stacktrace: System.stacktrace()])
+        Logger.error("#{inspect(error)}")
     end
+
+    :ok
   end
 end

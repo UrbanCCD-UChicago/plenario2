@@ -21,13 +21,20 @@ defmodule PlenarioEtl.Changesets.EtlJobChangesets do
 
   def mark_started(job) do
     job
-    |> EtlJob.mark_started()
+    |> EtlJob.start()
     |> set_started_on()
   end
 
-  def mark_completed(job) do
+  def mark_succeeded(job) do
     job
-    |> EtlJob.mark_completed()
+    |> EtlJob.mark_succeeded()
+    |> set_completed_on()
+  end
+
+  def mark_partial_success(job, params) do
+    job
+    |> EtlJob.mark_partial_success()
+    |> cast(params, [:error_message])
     |> set_completed_on()
   end
 

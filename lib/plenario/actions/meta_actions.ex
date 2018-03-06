@@ -99,7 +99,6 @@ defmodule Plenario.Actions.MetaActions do
   @spec update_next_import(meta :: Meta) :: ok_instance
   def update_next_import(%Meta{refresh_rate: nil, refresh_interval: nil} = meta), do: {:ok, meta}
   def update_next_import(%Meta{refresh_rate: rate, refresh_interval: interval} = meta) do
-    Logger.info("Updating next_import", meta_id: meta.id meta_name: meta.name)
     next_import =
       case meta.next_import do
         nil -> DateTime.utc_now()
@@ -110,14 +109,12 @@ defmodule Plenario.Actions.MetaActions do
     next_import =
       case diff > interval do
         true ->
-          Logger.info("Next import has fallen out of sync and we're fastforwarding to now", meta_id: meta.id meta_name: meta.name)
           DateTime.utc_now()
 
         false -> next_import
       end
 
     shifted = Timex.shift(next_import, [{String.to_atom(rate), interval}])
-    Logger.info("Setting next_import to '#{shifted}'", meta_id: meta.id meta_name: meta.name)
     MetaActions.update(meta, next_import: shifted)
   end
 
