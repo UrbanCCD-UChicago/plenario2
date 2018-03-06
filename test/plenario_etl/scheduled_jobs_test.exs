@@ -27,12 +27,13 @@ defmodule PlentioEtl.Testing.ScheduledJobsTest do
         refresh_starts_on: Timex.shift(DateTime.utc_now(), years: -1),
         refresh_ends_on: nil,
         refresh_rate: "minutes",
-        refresh_interval: 1,
-        next_import: Timex.shift(DateTime.utc_now(), years: -1)
+        refresh_interval: 1
       )
+    {:ok, m} = MetaActions.submit_for_approval(meta)
+    {:ok, m} = MetaActions.approve(m)
+    {:ok, m} = MetaActions.mark_first_import(m)
 
-    MetaActions.update_next_import(meta)
-    good_meta = meta
+    good_meta = m
 
     {:ok, meta} =
       MetaActions.create("Some Old Dataset", user.id, "https://www.example.com/some-old-data-set", "csv")

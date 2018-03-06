@@ -19,7 +19,6 @@ defmodule PlenarioEtl.Worker do
   require Logger
 
   @chunk_size Application.get_env(:plenario, PlenarioEtl)[:chunk_size]
-  @timeout 10000
 
   @doc """
   Entrypoint for the `Worker` `GenServer`. Saves you the hassle of writing out
@@ -43,11 +42,6 @@ defmodule PlenarioEtl.Worker do
   def handle_call({:load, meta_id_map}, _, state) do
     Logger.info("[#{inspect(self())}] [handle_call] Received :load call")
     {:reply, load(meta_id_map), state}
-  end
-
-  def handle_call({:load_chunk!, meta, job, chunk, constraints}, _, state) do
-    Logger.info("[#{inspect(self())}] [handle_call] Received :load_chunk! call")
-    {:reply, load_chunk!(meta, job, chunk, constraints), state}
   end
 
   @doc """
@@ -174,22 +168,7 @@ defmodule PlenarioEtl.Worker do
     decode.(path)
     |> Stream.chunk_every(@chunk_size)
     |> Enum.map(fn chunk ->
-      async_load_chunk!(meta, job, chunk, constraints)
-    end)
-    |> Enum.map(fn task ->
-      Task.await(task)
-    end)
-  end
-
-  def async_load_chunk!(meta, job, chunk, constraints) do
-    Task.async(fn ->
-      :poolboy.transaction(
-        :worker,
-        fn pid -> GenServer.call(pid, {:load_chunk!, meta, job, chunk, constraints}) end,
-        @timeout
-      )
-
-      {:ok, self()}
+      load_chunk!(meta, job, chunk, constraints) 
     end)
   end
 
@@ -243,8 +222,8 @@ defmodule PlenarioEtl.Worker do
   """
   @spec contains!(meta :: Meta, rows :: list[map], constraints :: list[atom]) :: Postgrex.Result
   def contains!(meta, rows, [constraint | _] = constraints) when is_atom(constraint) do
-    row_pks = 
-      for row <- rows do 
+    row_pks =
+      for row <- rows do
         for constraint <- constraints do
           row[constraint]
         end
