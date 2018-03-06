@@ -20,10 +20,6 @@ config :logger, :console,
   metadata: [:request_id]
 
 
-# Configure s3 buckets
-config :plenario, :s3_export_bucket, "plenario_exports_#{Mix.env()}"
-
-config :plenario, :s3_export_ttl, days: 5
 
 
 # configure quantum scheduler
@@ -63,7 +59,10 @@ config :sentry,
 config :ex_aws,
   secret_access_key: [{:system, "AWS_SECRET_ACCESS_KEY"}, :instance_role],
   access_key_id: [{:system, "AWS_ACCESS_KEY_ID"}, :instance_role],
-  bucket: System.get_env("AWS_S3_BUCKET")
+  bucket: "plenario-exports-#{Mix.env()}"
+
+config: :plenario_exporter,
+  ttl: [days: 5]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
