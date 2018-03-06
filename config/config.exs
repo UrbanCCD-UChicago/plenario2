@@ -61,7 +61,7 @@ config :ex_aws,
   access_key_id: [{:system, "AWS_ACCESS_KEY_ID"}, :instance_role],
   bucket: "plenario-exports-#{Mix.env()}"
 
-config: :plenario_exporter,
+config :plenario_exporter,
   ttl: [days: 5]
 
 # Import environment specific config. This must remain at the bottom
