@@ -20,7 +20,7 @@ defmodule PlenarioEtl.ScheduledJobs do
     query =
       from m in Meta,
       where:
-        m.state == "ready"
+        fragment("? in ('ready', 'awaiting_first_import')", m.state)
         and fragment("? <= ?::timestamptz", m.refresh_starts_on, ^now)
         and (
           is_nil(m.refresh_ends_on)
@@ -37,9 +37,9 @@ defmodule PlenarioEtl.ScheduledJobs do
     names = for m <- metas, do: m.name
     Logger.info("refreshing #{length(metas)} datasets: #{inspect(names)}")
 
-    Enum.map(metas, fn meta ->
-      async_load!(meta.id)
-    end)
+    # Enum.map(metas, fn meta ->
+    #   async_load!(meta.id)
+    # end)
 
     metas
   end
