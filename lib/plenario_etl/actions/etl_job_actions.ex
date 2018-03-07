@@ -87,14 +87,8 @@ defmodule PlenarioEtl.Actions.EtlJobActions do
   end
 
   def mark_partial_success(job, errors) do
-    errors =
-      case is_bitstring(errors) do
-        true -> errors
-        false -> "#{inspect(errors)}"
-      end
-
     {:ok, job} =
-      EtlJobChangesets.mark_partial_success(job, %{error_message: errors})
+      EtlJobChangesets.mark_partial_success(job, %{error_message: inspect(errors)})
       |> Repo.update()
 
     update_meta_attrs(job.meta_id)
@@ -103,13 +97,7 @@ defmodule PlenarioEtl.Actions.EtlJobActions do
   end
 
   def mark_erred(job, errors) do
-    errors =
-      case is_bitstring(errors) do
-        true -> errors
-        false -> "#{inspect(errors)}"
-      end
-
-    EtlJobChangesets.mark_erred(job, %{error_message: errors})
+    EtlJobChangesets.mark_erred(job, %{error_message: inspect(errors)})
     |> Repo.update()
   end
 
