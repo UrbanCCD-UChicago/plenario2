@@ -8,6 +8,7 @@ defmodule PlenarioEtl.Testing.ScheduledJobsTest do
   setup do
     # checkout a connection
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
+    Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
 
     # setup the user
     {:ok, user} = UserActions.create("Test User", "user@example.com", "password")

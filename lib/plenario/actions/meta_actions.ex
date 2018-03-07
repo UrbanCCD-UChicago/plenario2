@@ -106,9 +106,17 @@ defmodule Plenario.Actions.MetaActions do
       end
 
     diff = Timex.diff(next_import, DateTime.utc_now(), String.to_atom(rate))
+    diff =
+      if diff < 0 do
+        diff * -1
+      else
+        diff
+      end
+    Logger.info("import diff is #{diff} #{rate}")
     next_import =
       case diff > interval do
         true ->
+          Logger.info("next import is way out of whack -- setting epoch to now", ansi_color: "red")
           DateTime.utc_now()
 
         false -> next_import

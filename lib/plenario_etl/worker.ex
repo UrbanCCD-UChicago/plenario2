@@ -19,7 +19,7 @@ defmodule PlenarioEtl.Worker do
 
   def process_etl_job(pid_or_name, %EtlJob{} = job) do
     Logger.info("starting etl process", etl_job: job.id)
-    GenServer.call(pid_or_name, {:process, job})
+    GenServer.call(pid_or_name, {:process, job}, 20_000)
   end
 
   # callback implementation
@@ -141,6 +141,7 @@ defmodule PlenarioEtl.Worker do
         res =
           cast(model, row, columns)
           |> Repo.insert(on_conflict: :replace_all, conflict_target: constraints)
+
         Logger.debug("#{inspect(res)}")
 
         case res do
@@ -154,12 +155,15 @@ defmodule PlenarioEtl.Worker do
       end)
 
     len_results = length(results)
+
     Logger.info("upserted #{len_results} rows")
-    Logger.info("#{inspect(results)}")
+    Logger.debug("#{inspect(results)}")
 
     errors = Enum.filter(results, fn {status, _} -> status == :error end)
     len_errors = length(errors)
+
     Logger.info("there were #{len_errors} erroneous upserts")
+    Logger.debug("#{inspect(errors)}")
 
     case len_errors == 0 do
       true -> {:succeeded, nil}
