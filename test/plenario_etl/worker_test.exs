@@ -83,7 +83,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
       {job, task} = PlenarioEtl.ingest(meta)
 
       # wait for the job to finish
-      Task.await(task, :300_000)
+      Task.await(task, 300_000)
 
       # get the refreshed job from the database and ensure its success
       job = EtlJobActions.get(job.id)
@@ -103,7 +103,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
       {job, task} = PlenarioEtl.ingest(meta)
 
       # wait for the job to finish
-      Task.await(task, :300_000)
+      Task.await(task, 300_000)
 
       # get the refreshed job from the database and ensure its success
       job = EtlJobActions.get(job.id)
@@ -123,7 +123,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
       {job, task} = PlenarioEtl.ingest(meta)
 
       # wait for the job to finish
-      Task.await(task, :300_000)
+      Task.await(task, 300_000)
 
       # get the refreshed job from the database and ensure its success
       job = EtlJobActions.get(job.id)
@@ -143,7 +143,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
       {job, task} = PlenarioEtl.ingest(meta)
 
       # wait for the job to finish
-      Task.await(task, :300_000)
+      Task.await(task, 300_000)
 
       # get the refreshed job from the database and ensure its success
       job = EtlJobActions.get(job.id)
@@ -163,7 +163,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
       {job, task} = PlenarioEtl.ingest(meta)
 
       # wait for the job to finish
-      Task.await(task, :300_000)
+      Task.await(task, 300_000)
 
       # get the refreshed job from the database and ensure its success
       job = EtlJobActions.get(job.id)
@@ -183,7 +183,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
       {job, task} = PlenarioEtl.ingest(meta)
 
       # wait for the job to finish
-      Task.await(task, :300_000)
+      Task.await(task, 300_000)
 
       # get the refreshed job from the database and ensure its success
       job = EtlJobActions.get(job.id)
