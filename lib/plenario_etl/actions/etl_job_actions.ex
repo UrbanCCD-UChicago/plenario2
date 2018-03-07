@@ -71,16 +71,23 @@ defmodule PlenarioEtl.Actions.EtlJobActions do
   end
 
   def mark_started(job) do
+    Logger.info("[#{inspect self()}] [mark_started] Marking etl job ##{job.id} as started...")
+
     EtlJobChangesets.mark_started(job)
     |> Repo.update()
   end
 
   def mark_erred(job, params = %{error_message: _}) do
+    Logger.info("[#{inspect self()}] [mark_erred] Marking etl job ##{job.id} as erred...")
+    Logger.error(params[:error_message])
+
     EtlJobChangesets.mark_erred(job, params)
     |> Repo.update()
   end
 
   def mark_completed(job) do
+    Logger.info("[#{inspect self()}] [mark_completed] Marking etl job ##{job.id} as completed...")
+    
     EtlJobChangesets.mark_completed(job)
     |> Repo.update()
 
