@@ -28,5 +28,6 @@ defmodule PlenarioMailer.Emails do
     base()
     |> to(email)
     |> text_body(message)
+    |> PlenarioMailer.deliver_now()
   end
 end
