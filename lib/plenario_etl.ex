@@ -10,12 +10,14 @@ defmodule PlenarioEtl do
       EtlJobActions.create!(meta)
       |> EtlJobActions.start()
 
-    Task.async(fn ->
+    task = Task.async(fn ->
       :poolboy.transaction(
         :worker,
         fn pid -> Worker.process_etl_job(pid, job) end,
         :infinity
       )
     end)
+
+    {job, task}
   end
 end
