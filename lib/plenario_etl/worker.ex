@@ -19,7 +19,7 @@ defmodule PlenarioEtl.Worker do
 
   def process_etl_job(pid_or_name, %EtlJob{} = job) do
     Logger.info("starting etl process", etl_job: job.id)
-    GenServer.cast(pid_or_name, {:process, job})
+    GenServer.call(pid_or_name, {:process, job})
   end
 
   # callback implementation
@@ -33,7 +33,7 @@ defmodule PlenarioEtl.Worker do
 
   # server implementation
 
-  def handle_cast({:process, job}, state) do
+  def handle_call({:process, job}, _, state) do
     meta = MetaActions.get(job.meta_id)
 
     # download the source document
@@ -79,7 +79,7 @@ defmodule PlenarioEtl.Worker do
     end
 
     # dump
-    {:noreply, state}
+    {:reply, nil, state}
   end
 
   defp download!(meta) do
@@ -164,7 +164,7 @@ defmodule PlenarioEtl.Worker do
     case len_errors == 0 do
       true -> {:succeeded, nil}
       false ->
-        case len_errors == results do
+        case len_errors == len_results do
           true -> {:erred, errors}
           false -> {:partial_success, errors}
         end

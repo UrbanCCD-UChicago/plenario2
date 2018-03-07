@@ -22,8 +22,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 15:54:30",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.92
@@ -42,8 +42,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 15:54:56",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.78
@@ -62,8 +62,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 15:55:22",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.88
@@ -82,8 +82,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 15:55:48",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.81
@@ -102,8 +102,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 15:56:14",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.73
@@ -122,8 +122,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 15:56:40",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.64
@@ -142,8 +142,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 15:57:06",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.57
@@ -162,8 +162,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 15:57:31",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.43
@@ -182,8 +182,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 15:57:57",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.34
@@ -202,8 +202,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 15:58:23",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.34
@@ -222,8 +222,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 15:58:49",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.33
@@ -242,8 +242,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 15:59:15",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.16
@@ -262,8 +262,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 15:59:41",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.13
@@ -282,8 +282,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:00:07",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.0
@@ -302,8 +302,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:00:33",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.05
@@ -322,8 +322,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:00:59",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.12
@@ -342,8 +342,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:01:25",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.28
@@ -362,8 +362,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:01:50",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.37
@@ -382,8 +382,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:02:16",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.14
@@ -402,8 +402,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:02:42",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.28
@@ -422,8 +422,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:03:08",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.54
@@ -442,8 +442,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:03:34",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.72
@@ -462,8 +462,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:04:00",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.67
@@ -482,8 +482,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:04:26",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.5
@@ -502,8 +502,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:04:52",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.38
@@ -522,8 +522,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:05:18",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.16
@@ -542,8 +542,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:05:44",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.31
@@ -562,8 +562,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:06:09",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.13
@@ -582,8 +582,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:06:35",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.07
@@ -602,8 +602,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:07:01",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.0
@@ -622,8 +622,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:07:27",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.01
@@ -642,8 +642,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:07:53",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.16
@@ -662,8 +662,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:08:19",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.15
@@ -682,8 +682,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:08:45",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.18
@@ -702,8 +702,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:09:11",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.27
@@ -722,8 +722,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:09:37",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.33
@@ -742,8 +742,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:10:03",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.41
@@ -762,8 +762,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:10:28",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.29
@@ -782,8 +782,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:10:54",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.26
@@ -802,8 +802,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:11:20",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.16
@@ -822,8 +822,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:11:46",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.12
@@ -842,8 +842,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:12:12",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.07
@@ -862,8 +862,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:12:38",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.17
@@ -882,8 +882,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:13:04",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.03
@@ -902,8 +902,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:13:30",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.14
@@ -922,8 +922,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:13:56",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.24
@@ -942,8 +942,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:14:22",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.2
@@ -962,8 +962,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:14:47",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.18
@@ -982,8 +982,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:15:13",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.31
@@ -1002,8 +1002,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:15:39",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.43
@@ -1022,8 +1022,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:16:05",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.2
@@ -1042,8 +1042,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:16:31",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.14
@@ -1062,8 +1062,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:16:57",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.03
@@ -1082,8 +1082,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:17:23",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.27
@@ -1102,8 +1102,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:17:49",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": -0.04
@@ -1122,8 +1122,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:18:15",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.09
@@ -1142,8 +1142,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:18:41",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.19
@@ -1162,8 +1162,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:19:06",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.29
@@ -1182,8 +1182,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:19:32",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.22
@@ -1202,8 +1202,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:19:58",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.25
@@ -1222,8 +1222,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:20:24",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.43
@@ -1242,8 +1242,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:20:50",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.48
@@ -1262,8 +1262,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:21:16",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.61
@@ -1282,8 +1282,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:21:42",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.48
@@ -1302,8 +1302,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:22:08",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.48
@@ -1322,8 +1322,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:22:34",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.59
@@ -1342,8 +1342,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:22:59",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.37
@@ -1362,8 +1362,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:23:25",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.33
@@ -1382,8 +1382,8 @@
  {
   "node_id": "080",
   "timestamp": "2018-03-07 16:23:51",
-  "latitude": "a",
-  "longitude": "b",
+  "latitude": 41.9691029,
+  "longitude": -87.6601463,
   "observations": {
    "TSYS01": {
     "temperature": 0.35

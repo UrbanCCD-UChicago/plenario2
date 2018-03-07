@@ -20,13 +20,18 @@ defmodule PlenarioEtl.Testing.WorkerTest do
 
   @corrupt_json_fixture_path "test/fixtures/aot-chicago-corrupted.json"
 
+  @fail_json_fixture_path "test/fixtures/aot-chicago-fail.json"
+
   @csv_fixutre_path "test/fixtures/beach-lab-dna.csv"
 
-  @corrupted_csv_fixutre_path "test/fixtures/beach-lab-dna-corrupted.csv"
+  @corrupt_csv_fixutre_path "test/fixtures/beach-lab-dna-corrupted.csv"
+
+  @fail_csv_fixutre_path "test/fixtures/beach-lab-dna-fail.csv"
 
   setup do
     # checkout a connection
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
+    Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
 
     # clear the registry
     ModelRegistry.clear()
@@ -63,71 +68,127 @@ defmodule PlenarioEtl.Testing.WorkerTest do
     {:ok, [csv_meta: csv_meta, json_meta: json_meta]}
   end
 
-  defp mock_options_response(_) do
-    {:ok, %HTTPoison.Response{status_code: 200}}
-  end
+  defp mock_options_response(_), do: {:ok, %HTTPoison.Response{status_code: 200}}
 
-  defp mock_csv_response(path) do
-    body =
-      File.stream!(path)
-      |> CSV.decode(headers: true)
-
-    %HTTPoison.Response{body: body}
-  end
-
-  defp mock_json_response(path) do
-    body =
-      File.read!(path)
-      |> Poison.decode!()
-
-    %HTTPoison.Response{body: body}
-  end
+  defp mock_get_response(path), do: %HTTPoison.Response{body: File.read!(path)}
 
   test "ingest csv", %{csv_meta: meta} do
     with_mock HTTPoison, options: &mock_options_response/1 do
       # set meta's source url so we get the right fixture
-      {:ok, meta} = MetaActions.update(meta, source_url: @csv_fixutre_path)
+      {:ok, _} = MetaActions.update(meta, source_url: @csv_fixutre_path)
     end
 
-    with_mock HTTPoison, get!: &mock_csv_response/1 do
+    with_mock HTTPoison, get!: &mock_get_response/1 do
       # ingest the data set
       {job, task} = PlenarioEtl.ingest(meta)
+
+      # wait for the job to finish
+      Task.await(task)
+
+      # get the refreshed job from the database and ensure its success
+      job = EtlJobActions.get(job.id)
+      assert job.state == "succeeded"
+      refute job.error_message
     end
   end
 
   test "ingest json", %{json_meta: meta} do
     with_mock HTTPoison, options: &mock_options_response/1 do
       # set meta's source url so we get the right fixture
-      {:ok, meta} = MetaActions.update(meta, source_url: @json_fixture_path)
+      {:ok, _} = MetaActions.update(meta, source_url: @json_fixture_path)
     end
 
-    with_mock HTTPoison, get!: &mock_csv_response/1 do
+    with_mock HTTPoison, get!: &mock_get_response/1 do
       # ingest the data set
       {job, task} = PlenarioEtl.ingest(meta)
+
+      # wait for the job to finish
+      Task.await(task)
+
+      # get the refreshed job from the database and ensure its success
+      job = EtlJobActions.get(job.id)
+      assert job.state == "succeeded"
+      refute job.error_message
     end
   end
 
   test "ingest csv partial success", %{csv_meta: meta} do
     with_mock HTTPoison, options: &mock_options_response/1 do
       # set meta's source url so we get the right fixture
-      {:ok, meta} = MetaActions.update(meta, source_url: @corrupted_csv_fixutre_path)
+      {:ok, _} = MetaActions.update(meta, source_url: @corrupt_csv_fixutre_path)
     end
 
-    with_mock HTTPoison, get!: &mock_csv_response/1 do
+    with_mock HTTPoison, get!: &mock_get_response/1 do
       # ingest the data set
       {job, task} = PlenarioEtl.ingest(meta)
+
+      # wait for the job to finish
+      Task.await(task)
+
+      # get the refreshed job from the database and ensure its success
+      job = EtlJobActions.get(job.id)
+      assert job.state == "partial_success"
+      assert job.error_message
     end
   end
 
   test "ingest json partial success", %{json_meta: meta} do
     with_mock HTTPoison, options: &mock_options_response/1 do
       # set meta's source url so we get the right fixture
-      {:ok, meta} = MetaActions.update(meta, source_url: @corrupt_json_fixture_path)
+      {:ok, _} = MetaActions.update(meta, source_url: @corrupt_json_fixture_path)
     end
 
-    with_mock HTTPoison, get!: &mock_csv_response/1 do
+    with_mock HTTPoison, get!: &mock_get_response/1 do
       # ingest the data set
       {job, task} = PlenarioEtl.ingest(meta)
+
+      # wait for the job to finish
+      Task.await(task)
+
+      # get the refreshed job from the database and ensure its success
+      job = EtlJobActions.get(job.id)
+      assert job.state == "partial_success"
+      assert job.error_message
+    end
+  end
+
+  test "ingest csv fail", %{csv_meta: meta} do
+    with_mock HTTPoison, options: &mock_options_response/1 do
+      # set meta's source url so we get the right fixture
+      {:ok, _} = MetaActions.update(meta, source_url: @fail_csv_fixutre_path)
+    end
+
+    with_mock HTTPoison, get!: &mock_get_response/1 do
+      # ingest the data set
+      {job, task} = PlenarioEtl.ingest(meta)
+
+      # wait for the job to finish
+      Task.await(task)
+
+      # get the refreshed job from the database and ensure its success
+      job = EtlJobActions.get(job.id)
+      assert job.state == "erred"
+      assert job.error_message
+    end
+  end
+
+  test "ingest json fail", %{json_meta: meta} do
+    with_mock HTTPoison, options: &mock_options_response/1 do
+      # set meta's source url so we get the right fixture
+      {:ok, _} = MetaActions.update(meta, source_url: @fail_json_fixture_path)
+    end
+
+    with_mock HTTPoison, get!: &mock_get_response/1 do
+      # ingest the data set
+      {job, task} = PlenarioEtl.ingest(meta)
+
+      # wait for the job to finish
+      Task.await(task)
+
+      # get the refreshed job from the database and ensure its success
+      job = EtlJobActions.get(job.id)
+      assert job.state == "erred"
+      assert job.error_message
     end
   end
 end
