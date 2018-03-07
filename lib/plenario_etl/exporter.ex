@@ -53,6 +53,8 @@ defmodule PlenarioEtl.Exporter do
   `job`. The `state` value of `job` is managed by this function.
   """
   def export(job) do
+    job = Repo.preload(job, [:meta, :user])
+
     job =
       ExportJobActions.mark_started(job)
       |> update!()
@@ -109,10 +111,12 @@ defmodule PlenarioEtl.Exporter do
   end
 
   defp send_success_email(job) do
-    Logger.info("[#{inspect(self())}] [send_email] Sending s3 link to user")
     export_link = "https://s3.amazonaws.com/#{@bucket}/#{job.export_path}"
-    job = Repo.preload(job, [:user])
     target_email = job.user.email
+
+    Logger.info("[#{inspect(self())}] [send_email] Sending s3 link #{export_link}")
+    Logger.info("[#{inspect(self())}] [send_email] Sending link to #{target_email}")
+
     message = "Success! Your export results can be downloaded at: #{export_link}"
     email = Emails.send_email(target_email, message)
 
@@ -120,10 +124,10 @@ defmodule PlenarioEtl.Exporter do
   end
 
   defp send_failure_email(job) do
-    Logger.info("[#{inspect(self())}] [send_email] Sending error to user")
     target_email = job.user.email
-    message = "Your export errored! Please contact the plenario folks."
-    email = Emails.send_email(target_email, message)
+    Logger.info("[#{inspect(self())}] [send_failure_email] Sending error to #{target_email}")
+    job = ExportJobActions.get!(job.id)
+    email = Emails.send_email(target_email, job.error_message)
 
     {job, email}
   end

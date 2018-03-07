@@ -95,4 +95,18 @@ defmodule PlenarioEtl.Actions.ExportJobActions do
   defp set_completed_on(changeset) do
     Changeset.put_change(changeset, :updated_at, DateTime.utc_now())
   end
+
+  @doc """
+  Return a job struct for a given id.
+  """
+  def get(id) do
+    Repo.one(from job in ExportJob, where: job.id == ^id)
+  end
+
+  @doc """
+  Return a job struct for a given id.
+  """
+  def get!(id) do
+    Repo.one!(from job in ExportJob, where: job.id == ^id)
+  end
 end
