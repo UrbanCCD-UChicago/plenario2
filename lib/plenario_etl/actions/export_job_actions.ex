@@ -64,18 +64,24 @@ defmodule PlenarioEtl.Actions.ExportJobActions do
   end
 
   def mark_started(job) do
+    Logger.info("[#{inspect self()}] [mark_started] Marking export job ##{job.id} as started...")
+
     job
     |> ExportJob.mark_started()
     |> set_started_on()
   end
 
   def mark_completed(job) do
+    Logger.info("[#{inspect self()}] [mark_completed] Marking export job ##{job.id} as complete...")
+
     job
     |> ExportJob.mark_completed()
     |> set_completed_on()
   end
 
   def mark_erred(job, params) do
+    Logger.info("[#{inspect self()}] [mark_erred] Marking export job ##{job.id} as errored...")
+    
     job
     |> ExportJob.mark_erred()
     |> Changeset.cast(params, [:error_message])

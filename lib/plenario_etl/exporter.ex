@@ -2,6 +2,7 @@ defmodule PlenarioEtl.Exporter do
   use GenServer
 
   alias Plenario.Actions.MetaActions
+  alias Plenario.Repo
   alias PlenarioEtl.Actions.ExportJobActions
   alias PlenarioMailer.Emails
 
@@ -11,7 +12,6 @@ defmodule PlenarioEtl.Exporter do
   require Logger
 
   @bucket Application.get_env(:plenario, :s3_export_bucket)
-  @timeout 100_000
 
   @doc """
   Entrypoint for the `Exporter` `GenServer`. Saves you the hassle of writing out
@@ -33,11 +33,11 @@ defmodule PlenarioEtl.Exporter do
   worker pool. Can be awaited on.
   """
   def export_task(job) do
-    export_fn = fn pid -> GenServer.call(pid, {:export, job}) end
+    export_fn = fn pid -> GenServer.call(pid, {:export, job}, :infinity) end
 
     {:ok,
      Task.async(fn ->
-       :poolboy.transaction(:exporter, export_fn, @timeout)
+       :poolboy.transaction(:exporter, export_fn, :infinity)
      end)}
   end
 
@@ -111,6 +111,7 @@ defmodule PlenarioEtl.Exporter do
   defp send_success_email(job) do
     Logger.info("[#{inspect(self())}] [send_email] Sending s3 link to user")
     export_link = "https://s3.amazonaws.com/#{@bucket}/#{job.export_path}"
+    job = Repo.preload(job, [:user])
     target_email = job.user.email
     message = "Success! Your export results can be downloaded at: #{export_link}"
     email = Emails.send_email(target_email, message)

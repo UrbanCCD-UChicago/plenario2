@@ -175,6 +175,7 @@ defmodule PlenarioEtl.Worker do
   def async_load!(meta_id) do
     meta = MetaActions.get(meta_id)
     job = EtlJobActions.create!(meta)
+    # Set next import here
     {:ok, job} = EtlJobActions.mark_started(job)
 
     task = Task.async(fn ->
@@ -185,11 +186,12 @@ defmodule PlenarioEtl.Worker do
             GenServer.call(pid, {:load, %{
               meta_id: meta_id,
               job_id: job.id
-            }})
+            }}, :infinity)
             EtlJobActions.mark_completed(job)
           catch
-            :exit, code ->
-              EtlJobActions.mark_erred(job, %{error_message: inspect(code)})
+            :exit, message ->
+              Logger.error(inspect(message))
+              EtlJobActions.mark_erred(job, %{error_message: inspect(message)})
           end
         end,
         :infinity
