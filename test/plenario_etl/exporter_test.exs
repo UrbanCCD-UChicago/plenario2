@@ -38,8 +38,8 @@ defmodule PlenarioEtl.ExporterTest do
     with_mock ExAws, request!: fn _a, _b -> :ok end do
       {_job, email} = Exporter.export(context.export_job)
 
-      assert email.from == "plenario@uchicago.edu"
-      assert email.to == context.user.email
+      assert email.from == {nil, "plenario@uchicago.edu"}
+      assert email.to == [nil: context.user.email]
       assert email.subject == "Plenario Notification"
       assert email.text_body =~ "Success!"
       assert email.html_body == nil
@@ -50,11 +50,25 @@ defmodule PlenarioEtl.ExporterTest do
     with_mock ExAws, request!: fn _a, _b -> throw("Intentional Error") end do
       {_job, email} = Exporter.export(context.export_job)
 
-      assert email.from == "plenario@uchicago.edu"
-      assert email.to == context.user.email
+      assert email.from == {nil, "plenario@uchicago.edu"}
+      assert email.to == [nil: context.user.email]
       assert email.subject == "Plenario Notification"
       assert email.text_body =~ "Intentional Error"
       assert email.html_body == nil
+    end
+  end
+
+  test "export/1 sends success email", context do
+    with_mock ExAws, request!: fn _a, _b -> :ok end do
+      {_job, email} = Exporter.export(context.export_job)
+      assert_delivered_email(email)
+    end
+  end
+
+  test "export/1 sends error email", context do
+    with_mock ExAws, request!: fn _a, _b -> throw("Intentional Error") end do
+      {_job, email} = Exporter.export(context.export_job)
+      assert_delivered_email(email)
     end
   end
 end
