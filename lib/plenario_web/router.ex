@@ -61,6 +61,8 @@ defmodule PlenarioWeb.Router do
     resources "/data-sets", DataSetController
     post "/data-sets/:id/submit-for-approval", DataSetController, :submit_for_approval
     post "/data-sets/:id/ingest-now", DataSetController, :ingest_now
+    get "/data-sets/:id/request-changes", DataSetController, :request_changes
+
     post "/data-sets/:meta_id/export", ExportController, :export_meta
 
     resources "/data-sets/:dsid/fields", DataSetFieldController

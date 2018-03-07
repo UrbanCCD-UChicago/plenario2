@@ -12,6 +12,8 @@ defmodule PlenarioWeb.Web.DataSetController do
 
   alias PlenarioWeb.Web.ControllerUtils
 
+  alias PlenarioMailer
+
   plug :authorize_resource, model: Meta
 
   def show(conn, %{"id" => id}) do
@@ -179,5 +181,17 @@ defmodule PlenarioWeb.Web.DataSetController do
         |> put_flash(:error, "Cannot ingest at this time")
         |> redirect(to: data_set_path(conn, :show, id))
     end
+  end
+
+  def request_changes(conn, %{"id" => id}) do
+    meta = MetaActions.get(id)
+    fields = MetaActions.get_column_names(meta)
+
+    do_request_changes(meta, id, fields, conn)
+  end
+
+  defp do_request_changes(%Meta{} = meta, id, fields, conn) do
+    conn
+    |> render("request-changes.html", meta: meta, fields: fields)
   end
 end
