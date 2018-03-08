@@ -1,6 +1,8 @@
 defmodule Plenario.Testing.MetaActionsTest do
   use Plenario.Testing.DataCase, async: true
 
+  import Mock
+
   alias Plenario.Repo
 
   alias Plenario.Actions.{
@@ -11,6 +13,18 @@ defmodule Plenario.Testing.MetaActionsTest do
     VirtualPointFieldActions,
     UniqueConstraintActions
   }
+
+  defp mock_200(_) do
+    %HTTPoison.Response{status_code: 200}
+  end
+
+  defp mock_204(_) do
+    %HTTPoison.Response{status_code: 204}
+  end
+
+  defp mock_non_200(_) do
+    %HTTPoison.Response{status_code: 302}
+  end
 
   test "new" do
     changeset = MetaActions.new()
@@ -27,6 +41,45 @@ defmodule Plenario.Testing.MetaActionsTest do
 
     test "with user id", %{user: user} do
       {:ok, _} = MetaActions.create("a new meta", user.id, "https://example.com/new-meta", "csv")
+    end
+
+    test "with a 200 response on the options request", %{user: user} do
+      with_mock HTTPoison, options!: &mock_200/1 do
+        {:ok, _} = MetaActions.create("a new meta", user.id, "https://example.com/new-meta", "csv")
+      end
+    end
+
+    test "with a 204 response on the options request", %{user: user} do
+      with_mock HTTPoison, options!: &mock_204/1 do
+        {:ok, _} = MetaActions.create("a new meta", user.id, "https://example.com/new-meta", "csv")
+      end
+    end
+
+    test "with a 200 response on the head request", %{user: user} do
+      with_mocks([
+        {HTTPoison, [], head!: &mock_non_200/1},
+        {HTTPoison, [], options!: &mock_200/1}
+      ]) do
+        {:ok, _} = MetaActions.create("a new meta", user.id, "https://example.com/new-meta", "csv")
+      end
+    end
+
+    test "with a 204 response on the head request", %{user: user} do
+      with_mocks([
+        {HTTPoison, [], head!: &mock_non_200/1},
+        {HTTPoison, [], options!: &mock_204/1}
+      ]) do
+        {:ok, _} = MetaActions.create("a new meta", user.id, "https://example.com/new-meta", "csv")
+      end
+    end
+
+    test "with a non-200 response on either of the requests", %{user: user} do
+      with_mocks([
+        {HTTPoison, [], head!: &mock_non_200/1},
+        {HTTPoison, [], options!: &mock_non_200/1}
+      ]) do
+        {:error, _} = MetaActions.create("a new meta", user.id, "https://example.com/new-meta", "csv")
+      end
     end
   end
 
