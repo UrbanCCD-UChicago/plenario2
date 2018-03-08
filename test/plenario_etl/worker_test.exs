@@ -68,12 +68,12 @@ defmodule PlenarioEtl.Testing.WorkerTest do
     {:ok, [csv_meta: csv_meta, json_meta: json_meta]}
   end
 
-  defp mock_options_response(_), do: {:ok, %HTTPoison.Response{status_code: 200}}
+  defp mock_options_response(_), do: %HTTPoison.Response{status_code: 200}
 
   defp mock_get_response(path), do: %HTTPoison.Response{body: File.read!(path)}
 
   test "ingest csv", %{csv_meta: meta} do
-    with_mock HTTPoison, options: &mock_options_response/1 do
+    with_mock HTTPoison, options!: &mock_options_response/1 do
       # set meta's source url so we get the right fixture
       {:ok, _} = MetaActions.update(meta, source_url: @csv_fixutre_path)
     end
@@ -93,7 +93,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
   end
 
   test "ingest json", %{json_meta: meta} do
-    with_mock HTTPoison, options: &mock_options_response/1 do
+    with_mock HTTPoison, options!: &mock_options_response/1 do
       # set meta's source url so we get the right fixture
       {:ok, _} = MetaActions.update(meta, source_url: @json_fixture_path)
     end
@@ -113,7 +113,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
   end
 
   test "ingest csv partial success", %{csv_meta: meta} do
-    with_mock HTTPoison, options: &mock_options_response/1 do
+    with_mock HTTPoison, options!: &mock_options_response/1 do
       # set meta's source url so we get the right fixture
       {:ok, _} = MetaActions.update(meta, source_url: @corrupt_csv_fixutre_path)
     end
@@ -133,7 +133,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
   end
 
   test "ingest json partial success", %{json_meta: meta} do
-    with_mock HTTPoison, options: &mock_options_response/1 do
+    with_mock HTTPoison, options!: &mock_options_response/1 do
       # set meta's source url so we get the right fixture
       {:ok, _} = MetaActions.update(meta, source_url: @corrupt_json_fixture_path)
     end
@@ -153,7 +153,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
   end
 
   test "ingest csv fail", %{csv_meta: meta} do
-    with_mock HTTPoison, options: &mock_options_response/1 do
+    with_mock HTTPoison, options!: &mock_options_response/1 do
       # set meta's source url so we get the right fixture
       {:ok, _} = MetaActions.update(meta, source_url: @fail_csv_fixutre_path)
     end
@@ -173,7 +173,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
   end
 
   test "ingest json fail", %{json_meta: meta} do
-    with_mock HTTPoison, options: &mock_options_response/1 do
+    with_mock HTTPoison, options!: &mock_options_response/1 do
       # set meta's source url so we get the right fixture
       {:ok, _} = MetaActions.update(meta, source_url: @fail_json_fixture_path)
     end
