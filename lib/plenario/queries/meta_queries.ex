@@ -152,11 +152,8 @@ defmodule Plenario.Queries.MetaQueries do
   A composable query that filters returned Metas whose relation to User
   is the user passed as the filter value.
   """
-  @spec for_user(query :: Ecto.Query.t(), user :: User) :: Ecto.Query.t()
-  def for_user(query, user) when not is_integer(user), do: for_user(query, user.id)
-
-  @spec for_user(query :: Ecto.Query.t(), user_id :: integer) :: Ecto.Query.t()
-  def for_user(query, user_id) when is_integer(user_id), do: from m in query, where: m.user_id == ^user_id
+  def for_user(query, %User{} = user), do: for_user(query, user.id)
+  def for_user(query, user_id), do: from m in query, where: m.user_id == ^user_id
 
   @doc """
   A composable query that filters returned Metas whose bounding box intersects
