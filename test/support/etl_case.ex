@@ -36,27 +36,6 @@ defmodule Plenario.Testing.EtlCase do
     end
   end
 
-  @insert_rows [
-    %{
-      "data" => "crackers",
-      "datetime" => "2017-01-01T00:00:00+00:00",
-      "location" => "(0, 1)",
-      "pk" => 1
-    },
-    %{
-      "data" => "and",
-      "datetime" => "2017-01-02T00:00:00+00:00",
-      "location" => "(0, 2)",
-      "pk" => 2
-    },
-    %{
-      "data" => "cheese",
-      "datetime" => "2017-01-03T00:00:00+00:00",
-      "location" => "(0, 3)",
-      "pk" => 3
-    }
-  ]
-
   setup_all _tags do
     Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
     Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
@@ -71,7 +50,17 @@ defmodule Plenario.Testing.EtlCase do
     {:ok, _} = UniqueConstraintActions.create(meta.id, [pk.id])
 
     DataSetActions.up!(meta)
-    Worker.upsert!(meta, @insert_rows, [:pk])
+
+    insert_sql = """
+    INSERT INTO <%= table_name %>
+      ("data", "datetime", "location", "pk")
+      VALUES
+        ('crackers', '2017-01-01T00:00:00+00:00', '(0, 1)', 1),
+        ('and', '2017-01-02T00:00:00+00:00', '(0, 2)', 2),
+        ('cheese', '2017-01-03T00:00:00+00:00', '(0, 3)', 3)
+    """
+    sql = EEx.eval_string(insert_sql, [table_name: meta.table_name], trim: true)
+    Ecto.Adapters.SQL.query(Plenario.Repo, sql)
 
     # Create export job fixture
     query = from(m in ModelRegistry.lookup(meta.slug))

@@ -10,20 +10,24 @@ defmodule PlenarioEtl.Schemas.EtlJob do
 
   use Ecto.Schema
   use EctoStateMachine,
-    states: [:new, :started, :erred, :completed],
+    states: [:new, :running, :erred, :partial_success, :succeeded],
     events: [
       [
-        name: :mark_started,
+        name: :start,
         from: [:new],
-        to: :started
+        to: :running
       ], [
         name: :mark_erred,
-        from: [:started],
+        from: [:running],
         to: :erred
       ], [
-        name: :mark_completed,
-        from: [:started],
-        to: :completed
+        name: :mark_succeeded,
+        from: [:running],
+        to: :succeeded
+      ], [
+        name: :mark_partial_success,
+        from: [:running],
+        to: :partial_success
       ]
     ]
 

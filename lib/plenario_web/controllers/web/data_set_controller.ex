@@ -171,7 +171,8 @@ defmodule PlenarioWeb.Web.DataSetController do
   defp do_ingest_now(%Meta{} = meta, id, conn) do
     case Enum.member?(["awaiting_first_import", "ready", "erred"], meta.state) do
       true ->
-        PlenarioEtl.Worker.async_load!(id)
+        PlenarioEtl.ingest(meta)
+
         conn
         |> put_flash(:success, "Begining ingest process")
         |> redirect(to: data_set_path(conn, :show, id))

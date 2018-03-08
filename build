@@ -30,7 +30,7 @@ echo -e "\n${CYAN}container id is $CONTAINER_ID${NORM}"
 
 
 echo -e "\n${CYAN}copying prod secrets to the container...${NORM}"
-docker cp config/prod.secret.exs $CONTAINER_ID:/plenario2/config/prod.secret.exs
+docker cp ./config/prod.secret.exs $CONTAINER_ID:/plenario2/config/prod.secret.exs
 
 
 echo -e "\n${CYAN}building the release...${NORM}"
