@@ -19,11 +19,10 @@ defmodule Plenario.FieldGuesser do
     guesses =
       for row <- rows do
         for {key, value} <- row do
-          {key, guess(value)} 
+          {key, guess(value)}
         end
       end
       |> List.flatten()
-
     Logger.info("registered #{length(guesses)} guesses")
     Logger.debug("guesses = #{inspect(guesses)}")
 
@@ -38,12 +37,14 @@ defmodule Plenario.FieldGuesser do
 
     Logger.info("finding most frequently paired type to column")
     maxes =
-      Enum.reduce(counts, %{}, fn {{column, _type}, count}, accumulator ->
-        Map.update(accumulator, column, count, fn current_max -> count 
-          if count > current_max, do: count, else: current_max
-        end)
+      Enum.reduce(counts, %{}, fn {{k, _}, c}, acc ->
+        curr = Map.get(acc, k, 0)
+        if c > curr do
+          Map.update(acc, k, c, &(&1 - &1 + c))
+        else
+          acc
+        end
       end)
-
     Logger.info("max type counts per column = #{inspect(maxes)}")
 
     Logger.info("matching keys and max counts to types from counts")
@@ -65,7 +66,7 @@ defmodule Plenario.FieldGuesser do
   end
 
   defp download_async!(meta) do
-    {:ok, response} = HTTPoison.get(meta.source_url, %{}, stream_to: self())
+    {:ok, response} = HTTPoison.get(meta.source_url, %{}, stream_to: self)
     {:ok, messages} = receive_messages(response.id)
 
     messages
@@ -77,7 +78,7 @@ defmodule Plenario.FieldGuesser do
   end
 
   defp receive_messages(id, limit \\ 10), do: receive_messages(id, limit, [])
-  defp receive_messages(_id, limit, acc) when length(acc) >= limit, do: {:ok, acc}
+  defp receive_messages(id, limit, acc) when length(acc) >= limit, do: {:ok, acc}
   defp receive_messages(id, limit, acc) do
     receive do
       %HTTPoison.AsyncStatus{id: ^id, code: 200} ->
@@ -109,7 +110,7 @@ defmodule Plenario.FieldGuesser do
     |> Enum.take(count)
   end
 
-  defp parse!(_filename, _, %Meta{source_type: "shp"}) do
+  defp parse!(filename, _, %Meta{source_type: "shp"}) do
     []
   end
 
@@ -125,52 +126,26 @@ defmodule Plenario.FieldGuesser do
   end
 
   def boolean?(value) when is_boolean(value), do: true
-
-  def boolean?(value) when is_bitstring(value) do 
-    case value do
-      "true" -> true
-      "false" -> true
-      "t" -> true
-      "f" -> true
-      _ -> false
-    end
-  end
-
-  def boolean?(_value), do: false
+  def boolean?(value) when is_bitstring(value), do: Regex.match?(~r/^t$|^true$|^f$|^false$/i, value)
+  def boolean?(value), do: false
 
   def integer?(value) when is_integer(value), do: true
   def integer?(value) when is_bitstring(value), do: Regex.match?(~r/^-?\d+$/, value)
-  def integer?(_value), do: false
+  def integer?(value), do: false
 
   def float?(value) when is_float(value), do: true
   def float?(value) when is_bitstring(value), do: Regex.match?(~r/^-?\d+\.\d+$/, value)
-  def float?(_value), do: false
+  def float?(value), do: false
 
-  # MM/DD/YYYY
-  # MM/DD/YYYY HH:MM:SS [AM|PM]
-  # MM-DD-YYYY
-  # MM-DD-YYYY HH:MM:SS [AM|PM]
-  # YYYY-MM-DD HH:MM:SS
-  # YYYY-MM-DD HH:MM:SS.USEC
-  def date?(value) when is_bitstring(value) do 
-    # http://www.regexlib.com/REDetails.aspx?regexp_id=376
-    pattern = ~r/^((((((0?[13578])|(1[02]))[\-\/\s]?((0?[1-9])|([1-2][0-9])|(3[01])))|(((0?[469])|(11))[\-\/\s]?((0?[1-9])|([1-2][0-9])|(30)))|(0?2[\-\/\s]?((0?[1-9])|([1-2][0-9]))))[\-\/\s]?\d{2}(([02468][048])|([13579][26])))|(((((0?[13578])|(1[02]))[\-\/\s]?((0?[1-9])|([1-2][0-9])|(3[01])))|(((0?[469])|(11))[\-\/\s]?((0?[1-9])|([1-2][0-9])|(30)))|(0?2[\-\/\s]?((0?[1-9])|(1[0-9])|(2[0-8]))))[\-\/\s]?\d{2}(([02468][1235679])|([13579][01345789]))))(\s(((0?[1-9])|(1[0-2]))\:([0-5][0-9])((\s)|(\:([0-5][0-9])\s))([AM|PM|am|pm]{2,2})))?$/
-    case Ecto.DateTime.cast(value) do
-      {:ok, _} -> true
-      :error -> Regex.match?(pattern, value)
-    end
-  end
-
-  def date?(_value), do: false
+  def date?(value) when is_bitstring(value), do: Regex.match?(~r/\d{2,4}[-\/]\d{2}[-\/]\d{2,4}(.\d{1,2}:\d{1,2}:\d{1,2})?(.[ap]m)?/i, value)
+  def date?(value), do: false
 
   def json?(value) when is_map(value) or is_list(value), do: true
-
-  def json?(value) when is_bitstring(value) do 
+  def json?(value) when is_bitstring(value) do
     case Poison.decode(value) do
       {:ok, _} -> true
-      {:error, _} -> false
+      _ -> false
     end
   end
-
-  def json?(_value), do: false
+  def json?(value), do: false
 end
