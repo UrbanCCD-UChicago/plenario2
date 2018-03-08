@@ -51,13 +51,6 @@ defmodule PlenarioWeb.Router do
     post "/register", AuthController, :register
     post "/logout", AuthController, :logout
 
-    # user pages
-    get "/me", MeController, :index
-    get "/me/edit", MeController, :edit
-    put "/me/update", MeController, :update
-    get "/me/change-password", MeController, :edit_password
-    put "/me/change-password", MeController, :update_password
-
     resources "/data-sets", DataSetController
     post "/data-sets/:id/submit-for-approval", DataSetController, :submit_for_approval
     post "/data-sets/:id/ingest-now", DataSetController, :ingest_now
@@ -69,6 +62,16 @@ defmodule PlenarioWeb.Router do
     resources "/data-sets/:dsid/virtual-points", VirtualPointController
 
     post "/notes/:id/acknowledge", AdminUserNoteController, :mark_acknowledged
+  end
+
+  scope "/", PlenarioWeb.Web do
+    pipe_through [:browser, :ensure_authenticated]
+
+    get "/me", MeController, :index
+    get "/me/edit", MeController, :edit
+    put "/me/update", MeController, :update
+    get "/me/change-password", MeController, :edit_password
+    put "/me/change-password", MeController, :update_password
   end
 
   ##
