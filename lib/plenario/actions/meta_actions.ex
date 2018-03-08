@@ -4,6 +4,8 @@ defmodule Plenario.Actions.MetaActions do
   Meta schema -- creating, updating, getting, ...
   """
 
+  require Logger
+
   import Ecto.Query
 
   import Plenario.Queries.Utils
@@ -86,7 +88,10 @@ defmodule Plenario.Actions.MetaActions do
   Convenience function for updating a Meta's latest_import attribute.
   """
   @spec update_latest_import(meta :: Meta, timestamp :: DateTime) :: ok_instance
-  def update_latest_import(meta, timestamp), do: MetaActions.update(meta, latest_import: timestamp)
+  def update_latest_import(meta, timestamp) do
+    Logger.info("updating meta '#{meta.name}' latest import to '#{timestamp}'")
+    MetaActions.update(meta, latest_import: timestamp)
+  end
 
   @doc """
   Convenience function for updating a Meta's next_import attribute.
@@ -94,13 +99,24 @@ defmodule Plenario.Actions.MetaActions do
   @spec update_next_import(meta :: Meta) :: ok_instance
   def update_next_import(%Meta{refresh_rate: nil, refresh_interval: nil} = meta), do: {:ok, meta}
   def update_next_import(%Meta{refresh_rate: rate, refresh_interval: interval} = meta) do
-    current =
+    next_import =
       case meta.next_import do
         nil -> DateTime.utc_now()
         _ -> meta.next_import
       end
 
-    shifted = Timex.shift(current, [{String.to_atom(rate), interval}])
+    diff = abs(Timex.diff(next_import, DateTime.utc_now(), String.to_atom(rate)))
+    Logger.info("import diff is #{diff} #{rate}")
+    next_import =
+      case diff > interval do
+        true ->
+          Logger.info("next_import has fallen out of sync -- using `now` as the base to increment", ansi_color: "red")
+          DateTime.utc_now()
+
+        false -> next_import
+      end
+
+    shifted = Timex.shift(next_import, [{String.to_atom(rate), interval}])
     MetaActions.update(meta, next_import: shifted)
   end
 

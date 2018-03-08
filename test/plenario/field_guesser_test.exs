@@ -85,23 +85,6 @@ defmodule Plenario.FieldGuesserTest do
     }
   end
 
-  setup context do
-    Plenario.ModelRegistry.clear()
-
-    meta = context.meta
-    {:ok, _} = UserActions.create("Trusted User", "trusted@example.com", "password")
-    {:ok, pk_field} = DataSetFieldActions.create(meta.id, "pk", "integer")
-    {:ok, _} = DataSetFieldActions.create(meta.id, "datetime", "timestamptz")
-    {:ok, loc_field} = DataSetFieldActions.create(meta.id, "location", "text")
-    {:ok, _} = DataSetFieldActions.create(meta.id, "data", "text")
-    {:ok, _} = UniqueConstraintActions.create(meta.id, [pk_field.id, loc_field.id])
-    {:ok, _} = EtlJobActions.create(meta.id)
-    VirtualPointFieldActions.create(meta.id, loc_field: loc_field)
-    DataSetActions.up!(meta)
-
-    %{meta: meta}
-  end
-
   test "guess_field_types!/1 of csv", %{meta: meta} do
     with_mock HTTPoison, get: &mock_csv_data_request/3 do
       assert guess_field_types!(meta) == %{

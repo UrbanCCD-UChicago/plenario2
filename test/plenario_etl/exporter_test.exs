@@ -2,6 +2,23 @@ defmodule PlenarioEtl.ExporterTest do
   use Plenario.Testing.EtlCase
   use Bamboo.Test
 
+  alias Plenario.ModelRegistry
+
+  alias Plenario.Actions.{
+    DataSetActions,
+    DataSetFieldActions,
+    MetaActions,
+    UniqueConstraintActions,
+    UserActions
+  }
+
+  alias PlenarioEtl.{Exporter, Worker}
+  alias PlenarioEtl.Actions.ExportJobActions
+  alias PlenarioEtl.Schemas.ExportJob
+
+  import Ecto.Query
+  import Mock
+
   test "export/1 async api", %{export_job: job} do
     with_mock ExAws, request!: fn _a, _b -> :ok end do
       {:ok, task} = Exporter.export_task(job)

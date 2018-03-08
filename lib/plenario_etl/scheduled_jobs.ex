@@ -2,42 +2,41 @@ defmodule PlenarioEtl.ScheduledJobs do
 
   require Logger
 
-  import PlenarioEtl.Worker, only: [async_load!: 1]
+  import Ecto.Query
 
-  alias Plenario.Actions.MetaActions
+  alias Plenario.Schemas.Meta
+
+  alias Plenario.Repo
 
   def refresh_datasets() do
     offset = Application.get_env(:plenario, :refresh_offest)
-    now = DateTime.utc_now()
+    now = %DateTime{DateTime.utc_now() | second: 0, microsecond: {0, 0}}
     last_check = Timex.shift(now, offset)
 
-    Logger.info("[#{inspect self()}] [refresh_datasets] time bounds: now=#{now} last_check=#{last_check}")
+    Logger.info("time bounds: now=#{now} last_check=#{last_check}")
 
-    all_metas =
-      MetaActions.list(only_ready: true)
-      |> Enum.reject(fn m ->
-        not is_nil(m.refresh_ends_on)
-        and Date.compare(m.refresh_ends_on, now) == :lt
-      end)
+    query =
+      from m in Meta,
+      where:
+        fragment("? in ('ready', 'awaiting_first_import')", m.state)
+        and fragment("? <= ?::timestamptz", m.refresh_starts_on, ^now)
+        and (
+          is_nil(m.refresh_ends_on)
+          or fragment("? >= ?::timestamptz", m.refresh_ends_on, ^now)
+        )
+        and (
+          is_nil(m.next_import)
+          or fragment("? between ?::timestamptz and ?::timestamptz", m.next_import, ^last_check, ^now)
+        )
 
-    never_imported = Enum.filter(all_metas, fn m ->
-      not is_nil(m.refresh_rate)
-      and is_nil(m.next_import)
-    end)
-
-    ready_now = Enum.filter(all_metas, fn m ->
-      not is_nil(m.refresh_rate)
-      and not is_nil(m.next_import)
-      and Enum.member?([:gt, :ge], DateTime.compare(m.next_import, last_check))
-      and Enum.member?([:lt, :le], DateTime.compare(m.next_import, now))
-    end)
-
-    metas = never_imported ++ ready_now
+    q = Ecto.Adapters.SQL.to_sql(:all, Repo, query)
+    Logger.info("running query: #{inspect(q)}")
+    metas = Repo.all(query)
     names = for m <- metas, do: m.name
-    Logger.info("[#{inspect self()}] [refresh_datasets] Refreshing #{length(metas)} datasets: #{inspect(names)}")
+    Logger.info("refreshing #{length(metas)} datasets: #{inspect(names)}")
 
     Enum.map(metas, fn meta ->
-      async_load!(meta.id)
+      PlenarioEtl.ingest(meta)
     end)
 
     metas
