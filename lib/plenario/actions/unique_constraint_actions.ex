@@ -98,6 +98,7 @@ defmodule Plenario.Actions.UniqueConstraintActions do
   Gets a list field names for the fields this constraint is built with.
   """
   @spec get_field_names(constraint :: UniqueConstraint) :: list(String.t())
+  def get_field_names(nil), do: []
   def get_field_names(constraint) do
     fields = DataSetFieldActions.list(by_ids: constraint.field_ids)
     names = for f <- fields do f.name end

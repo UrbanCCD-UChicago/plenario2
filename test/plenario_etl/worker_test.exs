@@ -28,6 +28,8 @@ defmodule PlenarioEtl.Testing.WorkerTest do
 
   @fail_csv_fixutre_path "test/fixtures/beach-lab-dna-fail.csv"
 
+  @shp_fixture_path "test/fixtures/Watersheds.zip"
+
   setup do
     # checkout a connection
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
@@ -65,7 +67,7 @@ defmodule PlenarioEtl.Testing.WorkerTest do
     :ok = DataSetActions.up!(json_meta)
 
     # return context
-    {:ok, [csv_meta: csv_meta, json_meta: json_meta]}
+    {:ok, [csv_meta: csv_meta, json_meta: json_meta, user: user]}
   end
 
   defp mock_options_response(_), do: %HTTPoison.Response{status_code: 200}
@@ -189,6 +191,28 @@ defmodule PlenarioEtl.Testing.WorkerTest do
       job = EtlJobActions.get(job.id)
       assert job.state == "erred"
       assert job.error_message
+    end
+  end
+
+  test "ingest shapefile", %{user: user} do
+    with_mocks([
+      {HTTPoison, [], options!: &mock_options_response/1},
+      {HTTPoison, [], get!: &mock_get_response/1}
+    ]) do
+      {:ok, meta} = MetaActions.create("watersheds", user.id, @shp_fixture_path, "shp")
+
+      :ok = DataSetActions.up!(meta)
+
+      # ingest the data set
+      {job, task} = PlenarioEtl.ingest(meta)
+
+      # wait for the job to finish
+      Task.await(task, 300_000)
+
+      # get the refreshed job from the database and ensure its success
+      job = EtlJobActions.get(job.id)
+      assert job.state == "succeeded"
+      refute job.error_message
     end
   end
 end
