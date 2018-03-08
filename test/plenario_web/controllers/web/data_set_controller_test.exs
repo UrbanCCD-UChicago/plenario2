@@ -131,4 +131,10 @@ defmodule PlenarioWeb.Web.Testing.DataSetControllerTest do
       assert response =~ "Cannot ingest at this time"
     end
   end
+
+  test "redirects to 404 for invalid ids", %{conn: conn} do
+    conn
+    |> get(data_set_path(conn, :show, "list"))
+    |> html_response(404)
+  end
 end
