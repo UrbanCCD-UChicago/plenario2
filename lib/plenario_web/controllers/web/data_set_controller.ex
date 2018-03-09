@@ -12,6 +12,7 @@ defmodule PlenarioWeb.Web.DataSetController do
 
   alias PlenarioWeb.Web.ControllerUtils
 
+  plug Plenario.Plugs.AssertIdIsInteger
   plug :authorize_resource, model: Meta
 
   def show(conn, %{"id" => id}) do
