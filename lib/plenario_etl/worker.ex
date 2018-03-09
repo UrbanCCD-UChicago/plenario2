@@ -63,7 +63,7 @@ defmodule PlenarioEtl.Worker do
         "json" -> load_json!(path, model, columns, constraints)
         "csv" -> load_csv!(path, model, columns, constraints)
         "tsv" -> load_tsv!(path, model, columns, constraints)
-        "shp" -> load_shp!(path, model, columns, constraints)
+        "shp" -> load_shp!(path, meta)
       end
 
     # update the job
@@ -126,8 +126,24 @@ defmodule PlenarioEtl.Worker do
     end)
   end
 
-  defp load_shp!(path, model, columns, constraints) do
-    {:erred, "not implemented"}
+  defp load_shp!(path, meta) do
+    Logger.info("using shp loader")
+
+    {:ok, file_paths} = :zip.unzip(String.to_charlist(path), cwd: '/tmp/')
+
+    Logger.info("Looking for .shp file")
+
+    shp =
+      Enum.find(file_paths, fn path ->
+        String.ends_with?(to_string(path), ".shp")
+      end)
+      |> to_string()
+
+    Logger.info("Prep loader for shapefile at #{shp}")
+    case PlenarioEtl.Shapefile.load(shp, meta.table_name) do
+      {:ok, _} -> {:succeeded, nil}
+      {:error, error} -> {:erred, error}
+    end
   end
 
   defp load!(model, path, columns, constraints, decode) do
