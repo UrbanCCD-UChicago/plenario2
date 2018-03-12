@@ -4,7 +4,7 @@ defmodule Plenario.Plugs.AssertIdIsInteger do
 
   def init(default), do: default
 
-  def call(%Plug.Conn{params: %{"id" => id}} = conn, default) do
+  def call(%Plug.Conn{params: %{"id" => id}} = conn, _default) do
     if is_integer(id) do
       conn
     else
@@ -16,5 +16,9 @@ defmodule Plenario.Plugs.AssertIdIsInteger do
           |> render(PlenarioWeb.ErrorView, "404.html")
       end
     end
+  end
+
+  def call(%Plug.Conn{} = conn, _default) do
+    conn
   end
 end
