@@ -1,6 +1,7 @@
 defmodule Plenario.Plugs.AssertIdIsInteger do
   import Plug.Conn
   import Phoenix.Controller
+  use PlenarioWeb, :web_controller
 
   def init(default), do: default
 
@@ -12,8 +13,8 @@ defmodule Plenario.Plugs.AssertIdIsInteger do
         {_, _} ->
           conn
         :error ->
-          put_status(conn, 404)
-          |> render(PlenarioWeb.ErrorView, "404.html")
+          do_404(conn)
+          |> halt()
       end
     end
   end
