@@ -2,18 +2,7 @@ defmodule PlenarioEtl.ExporterTest do
   use Plenario.Testing.EtlCase
   use Bamboo.Test
 
-  alias Plenario.ModelRegistry
-
-  alias Plenario.Actions.{
-    DataSetActions,
-    DataSetFieldActions,
-    MetaActions,
-    UniqueConstraintActions,
-    UserActions
-  }
-
-  alias PlenarioEtl.{Exporter, Worker}
-  alias PlenarioEtl.Actions.ExportJobActions
+  alias PlenarioEtl.Exporter
   alias PlenarioEtl.Schemas.ExportJob
 
   import Ecto.Query
