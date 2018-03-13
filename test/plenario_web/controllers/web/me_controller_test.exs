@@ -121,4 +121,10 @@ defmodule PlenarioWeb.Web.Testing.MeControllerTest do
       |> html_response(:bad_request)
     end
   end
+
+  test "/me redirects an unautorized user to login", %{conn: conn} do
+    conn
+    |> get(me_path(conn, :index, %{}))
+    |> html_response(302)
+  end
 end

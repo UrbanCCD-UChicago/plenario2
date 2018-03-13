@@ -1,19 +1,19 @@
 CREATE TABLE IF NOT EXISTS "<%= meta.table_name %>" (
-  <% len_constrs = length(constraints) %>
+  <% len_fields = length(meta.fields) %>
 
-  <%= for f <- meta.fields do %>
-  "<%= f.name %>" <%= String.upcase(f.type) %> DEFAULT NULL,
+  <%= for {f, idx} <- Enum.with_index(meta.fields) do %>
+  "<%= f.name %>" <%= String.upcase(f.type) %> DEFAULT NULL <%= if idx+1 < len_fields do %>,<% end %>
   <% end %>
 
   <%= for f <- meta.virtual_dates do %>
-  "<%= f.name %>" TIMESTAMPTZ DEFAULT NULL,
+  , "<%= f.name %>" TIMESTAMPTZ DEFAULT NULL
   <% end %>
 
   <%= for f <- meta.virtual_points do %>
-  "<%= f.name %>" GEOMETRY DEFAULT NULL,
+  , "<%= f.name %>" GEOMETRY DEFAULT NULL
   <% end %>
 
   <%= for {{name, fields}, i} <- Enum.with_index(constraints) do %>
-  CONSTRAINT "<%= name %>" UNIQUE ("<%= fields %>")<%= if i+1 < len_constrs do %>,<% end %>
+  , CONSTRAINT "<%= name %>" UNIQUE ("<%= fields %>")
   <% end %>
 );
