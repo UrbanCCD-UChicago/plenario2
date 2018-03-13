@@ -1,5 +1,5 @@
 defmodule PlenarioWeb.Testing.ControllerUtilsTest do
-  use Plenario.Testing.DataCase, async: true
+  use Plenario.Testing.DataCase 
 
   alias PlenarioWeb.Controllers.Utils
 
