@@ -79,7 +79,7 @@ defmodule PlenarioEtl.Exporter do
 
   defp generate_stream(job) do
     {query, _} = Code.eval_string(job.query)
-    Logger.info("[#{inspect(self())}] [generate_stream] Evaluating query: #{inspect query}")
+    Logger.info("Evaluating query: #{inspect query}")
     {job, stream(query)}
   end
 
@@ -87,7 +87,7 @@ defmodule PlenarioEtl.Exporter do
     path = "/tmp/#{inspect(uuid4())}"
     file = File.open!(path, [:write, :utf8])
 
-    Logger.info("[#{inspect(self())}] [stream_to_local_storage] Writing to #{path}")
+    Logger.info("Writing to #{path}")
     transaction(fn ->
       stream
       |> CSV.encode(headers: header(job.meta))
@@ -98,8 +98,8 @@ defmodule PlenarioEtl.Exporter do
   end
 
   defp upload_to_s3({job, path}) do
-    Logger.info("[#{inspect(self())}] [upload_to_s3] Uploading to bucket #{@bucket}")
-    Logger.info("[#{inspect(self())}] [upload_to_s3] At #{job.export_path}")
+    Logger.info("Uploading to bucket #{@bucket}")
+    Logger.info("At #{job.export_path}")
 
     path
     |> ExAws.S3.Upload.stream_file()
@@ -113,8 +113,8 @@ defmodule PlenarioEtl.Exporter do
     export_link = "https://s3.amazonaws.com/#{@bucket}/#{job.export_path}"
     target_email = job.user.email
 
-    Logger.info("[#{inspect(self())}] [send_email] Sending s3 link #{export_link}")
-    Logger.info("[#{inspect(self())}] [send_email] Sending link to #{target_email}")
+    Logger.info("Sending s3 link #{export_link}")
+    Logger.info("Sending link to #{target_email}")
 
     message = "Success! Your export results can be downloaded at: #{export_link}"
     email = Emails.send_email(target_email, message)
@@ -124,7 +124,7 @@ defmodule PlenarioEtl.Exporter do
 
   defp send_failure_email(job) do
     target_email = job.user.email
-    Logger.error("[#{inspect(self())}] [send_failure_email] Sending error to #{target_email}")
+    Logger.info("Sending error to #{target_email}")
     job = ExportJobActions.get!(job.id)
     email = Emails.send_email(target_email, job.error_message)
 
@@ -136,7 +136,7 @@ defmodule PlenarioEtl.Exporter do
   end
 
   def handle_info({:delivered_email, email}, state) do
-    Logger.info("[#{inspect(self())}] [PlenarioEtl.Exporter] Successfuly sent email #{inspect(email, pretty: true)}")
+    Logger.info("Successfuly sent email #{inspect(email, pretty: true)}")
     {:noreply, state}
   end
 end

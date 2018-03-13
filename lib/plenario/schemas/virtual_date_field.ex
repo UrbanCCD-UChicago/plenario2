@@ -23,7 +23,7 @@ defmodule Plenario.Schemas.VirtualDateField do
     belongs_to :second_field, Plenario.Schemas.DataSetField
   end
 
-  def get_field_choices(nil = param), do: [{}]
+  def get_field_choices(nil), do: [{}]
   def get_field_choices(%VirtualDateField{meta_id: meta_id}), do: get_field_choices(meta_id)
   def get_field_choices(meta_id) do
     fields = DataSetFieldActions.list(for_meta: meta_id)

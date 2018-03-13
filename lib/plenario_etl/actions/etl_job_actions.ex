@@ -111,8 +111,7 @@ defmodule PlenarioEtl.Actions.EtlJobActions do
       MetaActions.update_time_range(meta, lower, upper)
     rescue
       error ->
-        Sentry.capture_exception(error, [stacktrace: System.stacktrace()])
-        Logger.error("#{inspect(error)}")
+        handle_error(error, Application.get_env(:plenario, :env))
     end
 
     try do
@@ -120,10 +119,20 @@ defmodule PlenarioEtl.Actions.EtlJobActions do
       MetaActions.update_bbox(meta, bbox)
     rescue
       error ->
-        Sentry.capture_exception(error, [stacktrace: System.stacktrace()])
-        Logger.error("#{inspect(error)}")
+        handle_error(error, Application.get_env(:plenario, :env))
     end
 
     :ok
+  end
+
+  defp handle_error(error, :prod) do
+    Sentry.capture_exception(error, [stacktrace: System.stacktrace()])
+    Logger.error("#{inspect(error)}")
+  end
+
+  defp handle_error(error, _env) do
+    if not String.contains?(inspect(error), "__INTENTIONAL__") do
+      Logger.error("#{inspect(error)}")
+    end
   end
 end

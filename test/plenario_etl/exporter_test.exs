@@ -30,14 +30,14 @@ defmodule PlenarioEtl.ExporterTest do
   end
 
   test "export/1 errs", %{export_job: job} do
-    with_mock ExAws, request!: fn _a, _b -> throw("Intentional Error") end do
+    with_mock ExAws, request!: fn _a, _b -> throw("__INTENTIONAL__") end do
       Exporter.export(job)
     end
 
     job = Repo.one!(from(e in ExportJob, where: e.id == ^job.id))
 
     assert job.state == "erred"
-    assert job.error_message =~ "Intentional Error"
+    assert job.error_message =~ "__INTENTIONAL__"
   end
 
   test "export/1 success email", context do
@@ -53,13 +53,13 @@ defmodule PlenarioEtl.ExporterTest do
   end
 
   test "export/1 err email", context do
-    with_mock ExAws, request!: fn _a, _b -> throw("Intentional Error") end do
+    with_mock ExAws, request!: fn _a, _b -> throw("__INTENTIONAL__") end do
       {_job, email} = Exporter.export(context.export_job)
 
       assert email.from == {nil, "plenario@uchicago.edu"}
       assert email.to == [nil: context.user.email]
       assert email.subject == "Plenario Notification"
-      assert email.text_body =~ "Intentional Error"
+      assert email.text_body =~ "__INTENTIONAL__"
       assert email.html_body == nil
     end
   end
@@ -72,7 +72,7 @@ defmodule PlenarioEtl.ExporterTest do
   end
 
   test "export/1 sends error email", context do
-    with_mock ExAws, request!: fn _a, _b -> throw("Intentional Error") end do
+    with_mock ExAws, request!: fn _a, _b -> throw("__INTENTIONAL__") end do
       {_job, email} = Exporter.export(context.export_job)
       assert_delivered_email(email)
     end

@@ -22,6 +22,6 @@ defmodule PlenarioWeb.Testing.ControllerUtilsTest do
 
   test "something that doesn't parse" do
     result = Utils.parse_date_string("whenever")
-    assert result = Timex.format!(Timex.today(), "{YYYY}-{0M}-{0D}")
+    assert ^result = Timex.format!(Timex.today(), "{YYYY}-{0M}-{0D}")
   end
 end

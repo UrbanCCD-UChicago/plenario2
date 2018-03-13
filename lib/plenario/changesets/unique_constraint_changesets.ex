@@ -11,7 +11,7 @@ defmodule Plenario.Changesets.UniqueConstraintChangesets do
     set_random_name: 2
   ]
 
-  alias Plenario.Schemas.{UniqueConstraint, DataSetField}
+  alias Plenario.Schemas.UniqueConstraint
 
   alias Plenario.Actions.DataSetFieldActions
 
@@ -69,21 +69,20 @@ defmodule Plenario.Changesets.UniqueConstraintChangesets do
     meta_id = get_field(changeset, :meta_id)
     meta_fields = DataSetFieldActions.list(for_meta: meta_id)
     meta_field_ids =
-      Enum.reduce(meta_fields, HashSet.new(), fn f, acc ->
-        HashSet.put(acc, f.id)
+      Enum.reduce(meta_fields, MapSet.new(), fn f, acc ->
+        MapSet.put(acc, f.id)
       end)
 
     param_field_ids =
-      Enum.reduce(field_ids, HashSet.new(), fn id, acc ->
-        HashSet.put(acc, id)
+      Enum.reduce(field_ids, MapSet.new(), fn id, acc ->
+        MapSet.put(acc, id)
       end)
 
-    diff = HashSet.difference(param_field_ids, meta_field_ids)
-    changeset =
-      case HashSet.size(diff) > 0 do
-        true -> add_error(changeset, :field_ids, "Invalid field(s) selected")
-        false -> changeset
-      end
+    diff = MapSet.difference(param_field_ids, meta_field_ids)
+    case MapSet.size(diff) > 0 do
+      true -> add_error(changeset, :field_ids, "Invalid field(s) selected")
+      false -> changeset
+    end
   end
   defp validate_field_ids(changeset), do: changeset
 end

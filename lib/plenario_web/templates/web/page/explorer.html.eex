@@ -7,7 +7,7 @@
     <h3>Select a Time</h3>
     <hr>
 
-    <%= form_for @conn, page_path(@conn, :explorer), [method: :get], fn f -> %>
+    <%= form_for @conn, page_path(@conn, :explorer), [method: :get], fn _f -> %>
 
     <div class="form-group">
       <label class="control-label">Starting On:</label>

@@ -1,7 +1,15 @@
 use Mix.Config
 
+# Store the environment atom for situations where the `Mix` module is 
+# unavailable such as production or when compiling releases through
+# Exrm or Distillery. Any code looking to use the environment atom should
+# do so through `Application.get_env(:plenario, :env)`
+config :plenario, env: Mix.env()
+
 # Configure the database and application repo
-config :plenario, Plenario.Repo, types: Plenario.PostGisTypes
+config :plenario, Plenario.Repo, 
+  timeout: 30000,
+  types: Plenario.PostGisTypes
 
 config :plenario, ecto_repos: [Plenario.Repo]
 

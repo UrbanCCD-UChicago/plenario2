@@ -3,8 +3,6 @@ defmodule PlenarioWeb.Web.MeController do
 
   alias Plenario.Actions.{MetaActions, UserActions}
 
-  alias Plenario.Schemas.User
-
   alias PlenarioMailer.Actions.AdminUserNoteActions
 
   def index(conn, _) do
@@ -72,7 +70,7 @@ defmodule PlenarioWeb.Web.MeController do
                 |> put_flash(:success, "Password updated!")
                 |> redirect(to: me_path(conn, :index))
 
-              {:error, changeset} ->
+              {:error, _changeset} ->
                 conn
                 |> put_status(:bad_request)
                 |> put_flash(:error, "Invalid new password")
