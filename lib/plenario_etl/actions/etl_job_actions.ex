@@ -131,8 +131,6 @@ defmodule PlenarioEtl.Actions.EtlJobActions do
   end
 
   defp handle_error(error, _env) do
-    if not String.contains?(inspect(error), "__INTENTIONAL__") do
-      Logger.error("#{inspect(error)}")
-    end
+    Logger.error("#{inspect(error)}")
   end
 end

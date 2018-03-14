@@ -27,8 +27,9 @@ defmodule Plenario.Testing.DataCase do
     end
   end
 
-  setup tags do
+  setup _tags do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
+    Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
 
     # create a user
     {:ok, user} = UserActions.create("Test User", "test@example.com", "password")
@@ -41,10 +42,6 @@ defmodule Plenario.Testing.DataCase do
         "https://www.example.com/chicago-tree-trimming",
         "csv"
       )
-
-    unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
-    end
 
     {
       :ok,
