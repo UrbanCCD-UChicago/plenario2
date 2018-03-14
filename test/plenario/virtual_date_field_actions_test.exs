@@ -1,5 +1,5 @@
 defmodule Plenario.Testing.VirtualDateFieldActionsTest do
-  use Plenario.Testing.DataCase, async: true
+  use Plenario.Testing.DataCase 
 
   alias Plenario.Actions.{DataSetFieldActions, VirtualDateFieldActions}
 

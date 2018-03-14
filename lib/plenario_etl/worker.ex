@@ -120,7 +120,7 @@ defmodule PlenarioEtl.Worker do
   defp load_tsv!(path, model, columns, constraints) do
     Logger.info("using tsv loader")
 
-    load!(model, path, columns, constraints, fn pth ->
+    load!(model, path, columns, constraints, fn _pth ->
       File.stream!(path)
       |> CSV.decode!(headers: true, separator: ?\t)
     end)
@@ -167,7 +167,7 @@ defmodule PlenarioEtl.Worker do
           _ -> :ok
         end
 
-        acc = acc ++ [res]
+        acc ++ [res]
       end)
 
     len_results = length(results)

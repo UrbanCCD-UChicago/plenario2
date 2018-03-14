@@ -23,9 +23,10 @@ defmodule PlenarioEtl.Actions.ExportJobActions do
   Creates a new instance of ExportJob
   """
   @spec create(meta :: Meta | integer, user :: User | integer, query :: String.t(), include_diffs :: boolean) :: ok_job
+  def create(meta, user, query, include_diffs \\ false)
   def create(meta, user, query, include_diffs) when not is_integer(meta), do: create(meta.id, user, query, include_diffs)
   def create(meta, user, query, include_diffs) when not is_integer(user), do: create(meta, user.id, query, include_diffs)
-  def create(meta, user, query, include_diffs \\ false) when is_integer(meta) and is_integer(user) do
+  def create(meta, user, query, include_diffs) when is_integer(meta) and is_integer(user) do
     params = %{
       meta_id: meta,
       user_id: user,

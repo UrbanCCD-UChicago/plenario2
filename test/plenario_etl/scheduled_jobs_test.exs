@@ -1,5 +1,5 @@
 defmodule PlenarioEtl.Testing.ScheduledJobsTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case 
 
   alias Plenario.Actions.{MetaActions, UserActions}
 

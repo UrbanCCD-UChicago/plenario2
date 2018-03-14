@@ -33,7 +33,7 @@ defmodule PlenarioWeb.Web.PageController do
     coords = Poison.decode!(coords)
     bbox = build_polygon(coords)
 
-    map_center = get_poly_center(bbox)
+    _map_center = get_poly_center(bbox)
     map_bbox =
       List.first(bbox.coordinates)
       |> Enum.map(fn {lat, lon} -> [lat, lon] end)
@@ -56,7 +56,7 @@ defmodule PlenarioWeb.Web.PageController do
       ends: ends)
   end
 
-  def aot_explorer(conn, params) do
+  def aot_explorer(conn, _params) do
     meta = Repo.one(from m in Meta, where: m.name == "Array of Things Chicago")
     model = ModelRegistry.lookup(meta.slug)
 
@@ -87,28 +87,26 @@ defmodule PlenarioWeb.Web.PageController do
     ;
     """
     sql = EEx.eval_string(temps_query, [table_name: meta.table_name], trim: true)
-    case Ecto.Adapters.SQL.query(Repo, sql) do
-      {:ok, result} ->
-        labels =
-          for [{{y, mo, d}, {h, mi, s, _}} | _] <- result.rows do
+
+    {labels, rows} =
+      case Ecto.Adapters.SQL.query(Repo, sql) do
+        {:ok, result} ->
+          {for [{{y, mo, d}, {h, mi, s, _}} | _] <- result.rows do
             case NaiveDateTime.from_erl({{y, mo, d}, {h, mi, s}}) do
               {:ok, ndt} -> ndt
               _ -> ""
             end
-          end
+          end, result.rows}
 
-        rows = Enum.reverse(result.rows)
+        {:error, _} ->
+          {[], []}
+      end
 
-        temps = for row <- rows, do: Enum.at(row, 1)
-        temps_data = [{"Average Temperature", temps}]
-        humid = for row <- rows, do: Enum.at(row, 2)
-        humid_data = [{"Average Humidity", humid}]
-
-
-      {:error, _} ->
-        labels = nil
-        data = nil
-    end
+    reversed_rows = Enum.reverse(rows)
+    temps = for row <- reversed_rows, do: Enum.at(row, 1)
+    temps_data = [{"Average Temperature", temps}]
+    humid = for row <- reversed_rows, do: Enum.at(row, 2)
+    humid_data = [{"Average Humidity", humid}]
 
     temp_hm_query = """
     SELECT
@@ -124,9 +122,10 @@ defmodule PlenarioWeb.Web.PageController do
     ;
     """
     sql = EEx.eval_string(temp_hm_query, [table_name: meta.table_name], trim: true)
-    case Ecto.Adapters.SQL.query(Repo, sql) do
-      {:ok, result} ->
-        temp_hm_data =
+
+    temp_hm_data = 
+      case Ecto.Adapters.SQL.query(Repo, sql) do
+        {:ok, result} ->
           for row <- result.rows do
             latlong = Enum.at(row, 0)
             [lat, long] = String.split(latlong, ",")
@@ -134,9 +133,9 @@ defmodule PlenarioWeb.Web.PageController do
             {lat, long, avg}
           end
 
-      {:error, _} ->
-        temp_hm_data = []
-    end
+        {:error, _} ->
+          []
+      end
 
     humid_hm_query = """
     SELECT
@@ -152,9 +151,10 @@ defmodule PlenarioWeb.Web.PageController do
     ;
     """
     sql = EEx.eval_string(humid_hm_query, [table_name: meta.table_name], trim: true)
-    case Ecto.Adapters.SQL.query(Repo, sql) do
-      {:ok, result} ->
-        humid_hm_data =
+
+    humid_hm_data = 
+      case Ecto.Adapters.SQL.query(Repo, sql) do
+        {:ok, result} ->
           for row <- result.rows do
             latlong = Enum.at(row, 0)
             [lat, long] = String.split(latlong, ",")
@@ -162,9 +162,9 @@ defmodule PlenarioWeb.Web.PageController do
             {lat, long, avg}
           end
 
-      {:error, _} ->
-        humid_hm_data = []
-    end
+        {:error, _} ->
+          []
+      end
 
     render(conn, "aot-explorer.html",
       points: points,

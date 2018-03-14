@@ -1,5 +1,5 @@
 defmodule Plenario.Testing.MetaActionsTest do
-  use Plenario.Testing.DataCase, async: true
+  use Plenario.Testing.DataCase
 
   import Mock
 

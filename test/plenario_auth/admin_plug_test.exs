@@ -1,5 +1,5 @@
 defmodule PlenarioAuth.Testing.AdminPlugTest do
-  use PlenarioWeb.Testing.ConnCase, async: true
+  use PlenarioWeb.Testing.ConnCase 
 
   @tag :anon
   test "anonymous users cannot access admin routes", %{conn: conn} do

@@ -1,5 +1,5 @@
 defmodule Plenario.Testing.UserActionsTest do
-  use Plenario.Testing.DataCase, async: true
+  use Plenario.Testing.DataCase 
 
   alias Plenario.Actions.UserActions
 

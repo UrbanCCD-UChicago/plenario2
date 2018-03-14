@@ -1,4 +1,4 @@
 defmodule PlenarioEtl.Testing.ShapefileTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case 
   doctest PlenarioEtl.Shapefile
 end
