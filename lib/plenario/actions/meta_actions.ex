@@ -405,7 +405,7 @@ defmodule Plenario.Actions.MetaActions do
       {:error, _} ->
         %{
           labels: ["Uno", "Dos", "Tres", "Quattro", "Cinco", "Sies"],
-          data: [{"Foo", [1,5,4,2,5,6]}, {"Bar", [2,3,1,5,6,5]}, {"Baz", [4,3,4,7,8,2]}]
+          data: [{"Sensor 1", [1,5,4,2,5,6]}, {"Sensor 2", [2,3,1,5,6,5]}, {"Sensor 3", [4,3,4,7,8,2]}]
         }
     end
   end
