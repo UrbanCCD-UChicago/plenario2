@@ -8,7 +8,10 @@ config :plenario, env: Mix.env()
 
 # Configure the database and application repo
 config :plenario, Plenario.Repo, 
-  types: Plenario.PostGisTypes
+  types: Plenario.PostGisTypes,
+  handshake_timeout: 120000,
+  pool_timeout: 120000,
+  timeout: 120000
 
 config :plenario, ecto_repos: [Plenario.Repo]
 
