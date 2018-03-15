@@ -6,7 +6,7 @@ defmodule PlenarioEtl.Exporter do
   alias PlenarioEtl.Actions.ExportJobActions
   alias PlenarioMailer.Emails
 
-  import Plenario.Repo, only: [stream: 1, transaction: 2, update!: 1]
+  import Plenario.Repo
   import UUID, only: [uuid4: 0]
 
   require Logger
