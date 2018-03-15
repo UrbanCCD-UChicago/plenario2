@@ -6,7 +6,7 @@ defmodule PlenarioEtl.Exporter do
   alias PlenarioEtl.Actions.ExportJobActions
   alias PlenarioMailer.Emails
 
-  import Plenario.Repo, only: [stream: 1, transaction: 1, update!: 1]
+  import Plenario.Repo, only: [stream: 1, transaction: 2, update!: 1]
   import UUID, only: [uuid4: 0]
 
   require Logger
@@ -80,7 +80,7 @@ defmodule PlenarioEtl.Exporter do
   defp generate_stream(job) do
     {query, _} = Code.eval_string(job.query)
     Logger.info("Evaluating query: #{inspect query}")
-    {job, stream(query)}
+    {job, stream(query, timeout: :infinity)}
   end
 
   defp stream_to_local_storage({job, stream}) do
@@ -92,7 +92,7 @@ defmodule PlenarioEtl.Exporter do
       stream
       |> CSV.encode(headers: header(job.meta))
       |> Enum.each(&IO.write(file, &1))
-    end)
+    end, timeout: :infinity)
 
     {job, path}
   end

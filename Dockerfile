@@ -25,7 +25,7 @@ RUN elixir -v
 # clone repo down
 
 RUN apt-get install git -y
-RUN git clone https://github.com/UrbanCCD-UChicago/plenario2.git
+RUN git clone -b issue-236 https://github.com/UrbanCCD-UChicago/plenario2.git
 WORKDIR plenario2/
 
 # install dependencies
