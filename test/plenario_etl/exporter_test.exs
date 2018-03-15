@@ -77,12 +77,4 @@ defmodule PlenarioEtl.ExporterTest do
       assert_delivered_email(email)
     end
   end
-
-  test "exports taking longer than 15000ms don't timeout", context do
-    with_mock CSV, encode: fn _, _ -> :timer.sleep(15001) end do
-      {job, email} = Exporter.export(context.export_job)
-      assert_delivered_email(email)
-      assert job.status = "completed"
-    end
-  end
 end
