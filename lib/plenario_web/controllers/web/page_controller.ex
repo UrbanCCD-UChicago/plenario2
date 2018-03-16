@@ -1,13 +1,11 @@
 defmodule PlenarioWeb.Web.PageController do
   use PlenarioWeb, :web_controller
 
-  import Ecto.Query
-
   alias Plenario.Schemas.Meta
-
   alias Plenario.{Repo, ModelRegistry}
 
-  alias PlenarioWeb.Controllers.Utils
+  import Ecto.Query
+  import Plug.Conn
 
   def index(conn, _), do: render(conn, "index.html")
 
@@ -17,43 +15,57 @@ defmodule PlenarioWeb.Web.PageController do
     starts = Map.get(params, "starting_on", nil)
     ends = Map.get(params, "ending_on", nil)
 
-    do_explorer(zoom, coords, starts, ends, conn)
+    {startdt, conn} = parse_dt(conn, starts)
+    {enddt, conn} = parse_dt(conn, ends)
+
+    do_explorer(zoom, coords, startdt, enddt, conn)
+  end
+
+  defp parse_dt(conn, nil) do
+    {nil, conn}
+  end
+
+  defp parse_dt(conn, datetime_string) do
+    error = "Invalid format for datetime argument, must be formatted as YYYY-MM-DD"
+    case DateTime.from_iso8601("#{datetime_string}T00:00:00.0Z") do
+      {_, datetime, _} ->
+        {datetime, conn}
+      {:error, :invalid_format} ->
+        {nil, put_flash(conn, :error, error)}
+    end
   end
 
   defp do_explorer(nil, nil, nil, nil, conn) do
-    render(conn, "explorer.html",
-      map_center: "[41.9, -87.7]",
-      map_zoom: 10,
-      bbox: nil,
-      starts: "",
-      ends: ""
-    )
+    render_explorer(conn, nil, "[41.9, -87.7]", 10, nil, "", "")
   end
-  defp do_explorer(zoom, coords, starts, ends, conn) do
+
+  defp do_explorer(_, _, _, _, conn = %Plug.Conn{private: %{:phoenix_flash => %{"error" => _}}}) do
+    render_explorer(conn, nil, "[41.9, -87.7]", 10, nil, "", "")
+  end
+
+  defp do_explorer(zoom, coords, startdt, enddt, conn) do
     coords = Poison.decode!(coords)
     bbox = build_polygon(coords)
 
-    _map_center = get_poly_center(bbox)
     map_bbox =
       List.first(bbox.coordinates)
       |> Enum.map(fn {lat, lon} -> [lat, lon] end)
 
-    clean_starts = Utils.parse_date_string(starts)
-    clean_ends = Utils.parse_date_string(ends)
+    {:ok, range} = Plenario.TsTzRange.dump([startdt, enddt])
 
-    {_, lower, _} = DateTime.from_iso8601("#{clean_starts}T00:00:00.0Z")
-    {_, upper, _} = DateTime.from_iso8601("#{clean_ends}T00:00:00.0Z")
-    {:ok, range} = Plenario.TsTzRange.dump([lower, upper])
-
+    center = get_poly_center(bbox)
     results = Plenario.search_data_sets(bbox, range)
+    render_explorer(conn, results, center, zoom, inspect(map_bbox), startdt, enddt) 
+  end
 
+  defp render_explorer(conn, results, center, zoom, bbox, startdt, enddt) do
     render(conn, "explorer.html",
       results: results,
-      map_center: get_poly_center(bbox),
+      map_center: center,
       map_zoom: zoom,
-      bbox: "#{inspect(map_bbox)}",
-      starts: starts,
-      ends: ends)
+      bbox: bbox,
+      starts: startdt,
+      ends: enddt)
   end
 
   def aot_explorer(conn, _params) do
