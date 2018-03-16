@@ -19,5 +19,5 @@ defmodule PlenarioAuth do
       true -> {:ok, user}
       false -> {:error, "Incorrect email or password"}
     end
-end
+  end
 end

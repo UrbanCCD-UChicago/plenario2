@@ -18,7 +18,7 @@ defmodule Plenario.Schemas.UniqueConstraint do
     belongs_to :meta, Plenario.Schemas.Meta
   end
 
-  def get_field_choices(nil = param), do: [{}]
+  def get_field_choices(nil), do: [{}]
   def get_field_choices(%UniqueConstraint{meta_id: meta_id}), do: get_field_choices(meta_id)
   def get_field_choices(meta_id) do
     fields = DataSetFieldActions.list(for_meta: meta_id)

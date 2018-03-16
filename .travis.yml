@@ -25,4 +25,4 @@ before_script:
   - mix do ecto.create, ecto.migrate
 
 script:
-  - mix coveralls.travis
+  - mix coveralls.travis --trace

@@ -49,10 +49,12 @@ exports.config = {
       $: 'jquery',
       jQuery: 'jquery',
       L: 'leaflet',
-      Chart: 'chart.js'
+      Chart: 'chart.js',
+      Pikaday: 'pikaday'
     },
     styles: {
-      leaflet: ['dist/leaflet.css', 'dist/leaflet.draw.css']
+      leaflet: ['dist/leaflet.css', 'dist/leaflet.draw.css'],
+      pikaday: ['css/pikaday.css']
     }
   }
 };

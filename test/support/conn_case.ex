@@ -37,6 +37,7 @@ defmodule PlenarioWeb.Testing.ConnCase do
   setup tags do
     # sandbox the db connection
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
+    Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
 
     # create an admin user
     {:ok, admin_user} = UserActions.create("Admin User", "admin@example.com", "password")
@@ -44,10 +45,6 @@ defmodule PlenarioWeb.Testing.ConnCase do
 
     # create a regular user
     {:ok, reg_user} = UserActions.create("Regular User", "regular@example.com", "password")
-
-    unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
-    end
 
     # setup connection
     conn_ = Phoenix.ConnTest.build_conn()

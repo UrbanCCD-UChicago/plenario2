@@ -1,16 +1,6 @@
 defmodule Plenario.FieldGuesserTest do
   use Plenario.Testing.DataCase
 
-  alias Plenario.Actions.{
-    DataSetActions,
-    UniqueConstraintActions,
-    DataSetFieldActions,
-    VirtualPointFieldActions,
-    UserActions
-  }
-
-  alias PlenarioEtl.Actions.EtlJobActions
-
   import Plenario.FieldGuesser
   import Mock
 

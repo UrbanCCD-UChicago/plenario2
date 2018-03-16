@@ -66,7 +66,7 @@ defmodule Plenario.FieldGuesser do
   end
 
   defp download_async!(meta) do
-    {:ok, response} = HTTPoison.get(meta.source_url, %{}, stream_to: self)
+    {:ok, response} = HTTPoison.get(meta.source_url, %{}, stream_to: self())
     {:ok, messages} = receive_messages(response.id)
 
     messages
@@ -78,7 +78,7 @@ defmodule Plenario.FieldGuesser do
   end
 
   defp receive_messages(id, limit \\ 10), do: receive_messages(id, limit, [])
-  defp receive_messages(id, limit, acc) when length(acc) >= limit, do: {:ok, acc}
+  defp receive_messages(_id, limit, acc) when length(acc) >= limit, do: {:ok, acc}
   defp receive_messages(id, limit, acc) do
     receive do
       %HTTPoison.AsyncStatus{id: ^id, code: 200} ->
@@ -110,7 +110,7 @@ defmodule Plenario.FieldGuesser do
     |> Enum.take(count)
   end
 
-  defp parse!(filename, _, %Meta{source_type: "shp"}) do
+  defp parse!(_, _, %Meta{source_type: "shp"}) do
     []
   end
 
@@ -127,18 +127,18 @@ defmodule Plenario.FieldGuesser do
 
   def boolean?(value) when is_boolean(value), do: true
   def boolean?(value) when is_bitstring(value), do: Regex.match?(~r/^t$|^true$|^f$|^false$/i, value)
-  def boolean?(value), do: false
+  def boolean?(_), do: false
 
   def integer?(value) when is_integer(value), do: true
   def integer?(value) when is_bitstring(value), do: Regex.match?(~r/^-?\d+$/, value)
-  def integer?(value), do: false
+  def integer?(_), do: false
 
   def float?(value) when is_float(value), do: true
   def float?(value) when is_bitstring(value), do: Regex.match?(~r/^-?\d+\.\d+$/, value)
-  def float?(value), do: false
+  def float?(_), do: false
 
   def date?(value) when is_bitstring(value), do: Regex.match?(~r/\d{2,4}[-\/]\d{2}[-\/]\d{2,4}(.\d{1,2}:\d{1,2}:\d{1,2})?(.[ap]m)?/i, value)
-  def date?(value), do: false
+  def date?(_), do: false
 
   def json?(value) when is_map(value) or is_list(value), do: true
   def json?(value) when is_bitstring(value) do
@@ -147,5 +147,5 @@ defmodule Plenario.FieldGuesser do
       _ -> false
     end
   end
-  def json?(value), do: false
+  def json?(_), do: false
 end

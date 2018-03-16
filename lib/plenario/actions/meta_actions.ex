@@ -8,14 +8,9 @@ defmodule Plenario.Actions.MetaActions do
 
   import Ecto.Query
 
-  import Plenario.Queries.Utils
-
   alias Plenario.{Repo, ModelRegistry}
-
   alias Plenario.Schemas.{Meta, User}
-
   alias Plenario.Changesets.MetaChangesets
-
   alias Plenario.Queries.MetaQueries
 
   alias Plenario.Actions.{
@@ -331,8 +326,7 @@ defmodule Plenario.Actions.MetaActions do
     Repo.one(from m in model, select: fragment("count(*)"))
   end
 
-  def get_agg_data(meta, starts, ends) do
-    model = ModelRegistry.lookup(meta.slug)
+  def get_agg_data(meta, _starts, _ends) do
     fields = DataSetFieldActions.list(for_meta: meta)
 
     number_fields =
@@ -408,10 +402,10 @@ defmodule Plenario.Actions.MetaActions do
           data: data
         }
 
-      {:error, whatever} ->
+      {:error, _} ->
         %{
           labels: ["Uno", "Dos", "Tres", "Quattro", "Cinco", "Sies"],
-          data: [{"Foo", [1,5,4,2,5,6]}, {"Bar", [2,3,1,5,6,5]}, {"Baz", [4,3,4,7,8,2]}]
+          data: [{"Sensor 1", [1,5,4,2,5,6]}, {"Sensor 2", [2,3,1,5,6,5]}, {"Sensor 3", [4,3,4,7,8,2]}]
         }
     end
   end

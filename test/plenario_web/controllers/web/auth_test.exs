@@ -1,5 +1,5 @@
 defmodule PlenarioWeb.Web.Testing.AuthControllerTest do
-  use PlenarioWeb.Testing.ConnCase, async: true
+  use PlenarioWeb.Testing.ConnCase 
 
   describe "index" do
     @tag :auth

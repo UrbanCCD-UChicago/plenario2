@@ -1,5 +1,5 @@
 defmodule PlenarioEtl.Testing.ScheduledJobsTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case 
 
   alias Plenario.Actions.{MetaActions, UserActions}
 
@@ -29,7 +29,7 @@ defmodule PlenarioEtl.Testing.ScheduledJobsTest do
       refresh_interval: 1,
       refresh_starts_on: Timex.shift(now, years: -3),
       refresh_ends_on: Timex.shift(now, years: -2),
-      next_import: Timex.shift(now, years: -2),
+      next_import: Timex.shift(now, years: -2)
     )
     {:ok, meta1} = MetaActions.submit_for_approval(meta1)
     {:ok, meta1} = MetaActions.approve(meta1)

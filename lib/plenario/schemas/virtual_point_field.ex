@@ -20,7 +20,7 @@ defmodule Plenario.Schemas.VirtualPointField do
     belongs_to :loc_field, Plenario.Schemas.DataSetField
   end
 
-  def get_field_choices(nil = param), do: [{}]
+  def get_field_choices(nil), do: [{}]
   def get_field_choices(%VirtualPointField{meta_id: meta_id}), do: get_field_choices(meta_id)
   def get_field_choices(meta_id) do
     fields = DataSetFieldActions.list(for_meta: meta_id)

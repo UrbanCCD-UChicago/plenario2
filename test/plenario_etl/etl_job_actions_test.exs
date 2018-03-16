@@ -1,5 +1,5 @@
 defmodule PlenarioEtl.Testing.EtlJobActionsTest do
-  use Plenario.Testing.DataCase, async: true
+  use Plenario.Testing.DataCase
 
   alias PlenarioEtl.Actions.EtlJobActions
 

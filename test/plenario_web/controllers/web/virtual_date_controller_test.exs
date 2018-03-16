@@ -1,5 +1,5 @@
 defmodule PlenarioWeb.Web.Testing.VirtualDateControllerTest do
-  use PlenarioWeb.Testing.ConnCase, async: true
+  use PlenarioWeb.Testing.ConnCase 
 
   alias Plenario.Actions.{
     MetaActions,
