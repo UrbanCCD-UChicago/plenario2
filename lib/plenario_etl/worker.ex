@@ -15,11 +15,13 @@ defmodule PlenarioEtl.Worker do
 
   alias PlenarioEtl.Schemas.EtlJob
 
+  @timeout 1_000 * 60 * 5  # 5 minutes
+
   # client api
 
   def process_etl_job(pid_or_name, %EtlJob{} = job) do
     Logger.info("starting etl process", etl_job: job.id)
-    GenServer.call(pid_or_name, {:process, job}, 20_000)
+    GenServer.call(pid_or_name, {:process, job}, @timeout)
   end
 
   # callback implementation
