@@ -9,6 +9,7 @@ defmodule PlenarioWeb.Web.DataSetController do
   }
 
   alias Plenario.Schemas.Meta
+  require Logger
 
   alias PlenarioWeb.Web.ControllerUtils
 
@@ -186,12 +187,26 @@ defmodule PlenarioWeb.Web.DataSetController do
   def request_changes(conn, %{"id" => id}) do
     meta = MetaActions.get(id)
     fields = MetaActions.get_column_names(meta)
-
-    do_request_changes(meta, id, fields, conn)
+    do_request_changes(conn, meta, fields)
   end
 
-  defp do_request_changes(%Meta{} = meta, id, fields, conn) do
+  defp do_request_changes(conn, %Meta{} = meta, fields) do
     conn
     |> render("request-changes.html", meta: meta, fields: fields)
   end
+
+  def send_email(conn, params) do
+    IO.puts("-----------PAAAARRAAAMMMSSSS--------------")
+    IO.puts(IO.inspect(conn.params))
+    do_send_email(conn, params)
+  end
+
+  defp do_send_email(conn, params) do
+    id = Map.get(params, "id", nil)
+
+    conn
+    |> put_flash(:success, "Sending email to admins")
+    |> redirect(to: data_set_path(conn, :request_changes, id))
+  end
+
 end

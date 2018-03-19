@@ -3,42 +3,57 @@
 </div>
 
 <div class="row">
-  <h3>Select fields that require modification for data set <%= @meta.name %></h3>
+  <h3>Select fields that require modification for data set: <%= @meta.name %></h3>
   <hr>
 </div>
 
+<%= form_for @conn, data_set_path(@conn, :send_email, @meta.id), [method: :post], fn _f -> %>
+
 <div class="row">
+  <div class="form-group">
+      <div class="col-sm-3"><p>Request Deletion?</p></div>
+      <div class="col-sm-9">
+        <p><%= checkbox(_f, :request_delete) %> <strong>Delete</strong></p>
+      </div>
+  </div>
+</div>
+
+<hr>
+
+<div class="row">
+  
   <div class="col-sm-3">
     <h3>Field name</h3>
     <%= for f <- @fields  do %>
       <p> <%= f %> </p>
     <% end %>
   </div>
+
   <div class="col-sm-9">
     <h3>Select</h3>
-      <%= for i <- @fields  do %>
-        <p><input class="form-check-input" type="checkbox" id="select" style="margin: 0"></p>
+      <%= for f <- @fields  do %>
+         <p><input class="form-check-input" type="checkbox" name="<%= f %>" style="margin: 0"></p>
       <% end %>
   </div>
 </div>
+
 <hr>
+
 <div class="row">
   <div class="form-group">
-      <div class="col-sm-3"><p>Request Deletion?</p></div>
+      <div class="col-sm-3"><p>Comments</p></div>
       <div class="col-sm-9">
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" id="delete">
-          <label class="form-check-label" for="delete">Delete</label>
-        </div>
+        <p><%= textarea _f, :comments %></p>
       </div>
+    <input id="meta-name" name="<%= @meta.name %>" hidden>
   </div>
 </div>
+
 <hr>
-<div class="row">
-</div>
 
 <div class="form-group row">
     <div class="col-sm-3">
       <button type="submit" class="btn btn-primary">Submit</button>
     </div>
 </div>
+<% end %>
