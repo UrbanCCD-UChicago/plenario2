@@ -29,3 +29,21 @@
    border-bottom: dotted 1px;
    border-color: #ccc
 }
+
+
+body { 
+  padding-top: 60px; 
+}
+
+#plenario-navbar {
+  padding: 0.5em;
+}
+
+#plenario-navbar-brand {
+  padding: 0.5em;
+}
+
+#plenario-logo {
+  max-width: 100%;
+  max-height: 100%;
+}
