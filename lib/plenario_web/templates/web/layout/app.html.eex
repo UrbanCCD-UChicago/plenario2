@@ -16,10 +16,21 @@
   </head>
 
   <body>
-    <div class="container">
-      <header class="header">
-        <nav role="navigation">
-          <ul class="nav nav-pills pull-right">
+
+    <nav class="navbar navbar-default navbar-fixed-top">
+      <div id="plenario-navbar" class="container">
+        <div class="navbar-header">
+          <a id="plenario-navbar-brand"
+            class="navbar-brand" href="/">
+            <img id="plenario-logo" 
+              src="<%= static_path(@conn, "/images/logo-large.png") %>">
+          </a>
+        </div>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="/explore">Explore</a></li>
+          <li><a href="/explore/array-of-things">Array of Things</a></li>
+          <li><a href="https://github.com/UrbanCCD-UChicago/plenario2">Contribute</a></li>
+          <li><a href="https://github.com/UrbanCCD-UChicago/plenario2/wiki">Wiki</a></li>
             <%= if @current_user do %>
               <li><%= link "Hi #{@current_user.name}!", to: me_path(@conn, :index) %></li>
               <%= if @current_user.is_admin do %>
@@ -27,15 +38,13 @@
               <% end %>
               <li><%= link "Sign Out", to: auth_path(@conn, :logout), method: :post %></li>
             <% else %>
-              <li><%= link "Sign In or Register", to: auth_path(@conn, :index) %><li>
+            <li><%= link "Sign In", to: auth_path(@conn, :index) %><li>
             <% end %>
           </ul>
-        </nav>
-        <a href="/">
-          <span class="logo"></span>
-        </a>
-      </header>
+      </div> <!-- plenario-navbar -->
+    </nav>
 
+    <div class="container">
       <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
       <p class="alert alert-success" role="alert"><%= get_flash(@conn, :success) %></p>
       <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
@@ -43,7 +52,6 @@
       <main role="main">
         <%= render @view_module, @view_template, assigns %>
       </main>
-
     </div>
   </body>
 </html>
