@@ -7,13 +7,13 @@
   <hr>
 </div>
 
-<%= form_for @conn, data_set_path(@conn, :send_email, @meta.id), [method: :post], fn _f -> %>
+<%= form for @conn, data_set_path(@conn, :send_email, @meta.id), [method: :post], fn f -> %>
 
 <div class="row">
   <div class="form-group">
       <div class="col-sm-3"><p>Request Deletion?</p></div>
       <div class="col-sm-9">
-        <p><%= checkbox(_f, :request_delete) %> <strong>Delete</strong></p>
+        <p><%= checkbox(f, :request_delete) %> <strong>Delete</strong></p>
       </div>
   </div>
 </div>
@@ -43,7 +43,7 @@
   <div class="form-group">
       <div class="col-sm-3"><p>Comments</p></div>
       <div class="col-sm-9">
-        <p><%= textarea _f, :comments %></p>
+        <p><%= textarea f, :comments %></p>
       </div>
     <input id="meta-name" name="<%= @meta.name %>" hidden>
   </div>
