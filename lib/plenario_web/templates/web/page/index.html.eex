@@ -20,9 +20,15 @@
     </div>
     <div class="col-lg-4">
       <%= if @current_user do %>
-        <%= link "Add a New Data Set", to: "/", class: "btn btn-success", style: "font-size:1.5em" %>
+        <%= link "Add a New Data Set", 
+          to: data_set_path(@conn, :new), 
+          class: "btn btn-success", 
+          style: "font-size:1.5em" %>
       <% else %>
-        <%= link "Sign Up to Add Data", to: "/", class: "btn btn-success", style: "font-size:1.5em" %>
+        <%= link "Sign Up to Add Data", 
+          to: auth_path(@conn, :index, redir: data_set_path(@conn, :create)), 
+          class: "btn btn-success", 
+          style: "font-size:1.5em" %>
       <% end %>
     </div>
   </div>

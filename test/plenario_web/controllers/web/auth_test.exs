@@ -1,5 +1,5 @@
 defmodule PlenarioWeb.Web.Testing.AuthControllerTest do
-  use PlenarioWeb.Testing.ConnCase 
+  use PlenarioWeb.Testing.ConnCase
 
   describe "index" do
     @tag :auth
@@ -17,7 +17,7 @@ defmodule PlenarioWeb.Web.Testing.AuthControllerTest do
         |> html_response(:ok)
 
       assert response =~ "Login"
-      assert response =~ "Register"
+      assert response =~ "Sign In"
     end
   end
 
