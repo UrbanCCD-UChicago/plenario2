@@ -192,9 +192,9 @@
   </div>
 
   <div class="col-lg-6" id="request-changes">
-    <%= if @meta.state == "ready" do %>
+    <%= if @meta.state != "new" do %>
       <%= link "Request Changes", to: data_set_path(@conn, :request_changes, @meta), class: "btn btn-primary pull-left", 
-      title: "You must request changes to an administrator once a data set has been approved." %>
+      title: "You must request changes to an administrator once a data set has been submitted or approved." %>
     <% end %>
     
   </div>

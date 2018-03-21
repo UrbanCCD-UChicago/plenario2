@@ -32,7 +32,7 @@
   <div class="col-sm-9">
     <h3>Select</h3>
       <%= for f <- @fields  do %>
-         <p><input class="form-check-input" type="checkbox" name="<%= f %>" style="margin: 0"></p>
+         <p><input class="form-check-input" type="checkbox" name="<%= f %>" value="true" style="margin: 0"></p>
       <% end %>
   </div>
 </div>
@@ -45,7 +45,7 @@
       <div class="col-sm-9">
         <p><%= textarea f, :comments %></p>
       </div>
-    <input id="meta-name" name="<%= @meta.name %>" hidden>
+    <input id="meta-name" name="meta_name" value="<%= @meta.name %>" hidden>
   </div>
 </div>
 
