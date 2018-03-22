@@ -23,3 +23,7 @@ import "phoenix_html"
 import 'leaflet'
 import 'leaflet-draw'
 import 'chart.js'
+
+$(document).ready(function(){
+    $('[data-toggle="tooltip"]').tooltip();
+});
