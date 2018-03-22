@@ -136,7 +136,7 @@
       <span 
         data-toggle="tooltip" 
         data-placement="top" 
-        title="A composite field constructed from discreet fields in the data set: if the data set contains separate fields for, say, year, month and day, we can construct a single date field to index to better query the data.">
+        title="A composite field constructed from discrete fields in the data set: if the data set contains separate fields for, say, year, month and day, we can construct a single date field to index to better query the data.">
         🛈
       </span>
       <%= if show_edits? do %>
