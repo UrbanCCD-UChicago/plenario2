@@ -132,7 +132,13 @@
 <div class="row">
   <div class="col-lg-6">
     <h3>
-      Computed Date Fields
+      Computed Date Fields 
+      <span 
+        data-toggle="tooltip" 
+        data-placement="top" 
+        title="A composite field constructed from discrete fields in the data set: if the data set contains separate fields for, say, year, month and day, we can construct a single date field to index to better query the data.">
+        🛈
+      </span>
       <%= if show_edits? do %>
         <%= link "Add a New Date Field", to: virtual_date_path(@conn, :new, @meta.id), class: "btn btn-success pull-right" %>
       <% end %>
@@ -166,6 +172,12 @@
   <div class="col-lg-6">
     <h3>
       Computed Point Fields
+      <span 
+        data-toggle="tooltip" 
+        data-placement="top" 
+        title="A location field constructed from primitive fields in the data set: if the data set contains a single or separate fields that represent coordinate points, we can derive a coordinate field.">
+        🛈
+      </span>
       <%= if show_edits? do %>
         <%= link "Add a New Point Field", to: virtual_point_path(@conn, :new, @meta.id), class: "btn btn-success pull-right" %>
       <% end %>
