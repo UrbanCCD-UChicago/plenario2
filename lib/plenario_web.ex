@@ -67,6 +67,7 @@ defmodule PlenarioWeb do
       import PlenarioWeb.Router.Helpers
       import PlenarioWeb.ErrorHelpers
       import PlenarioWeb.Gettext
+      import PlenarioWeb.TemplateHelpers
     end
   end
 
