@@ -39,7 +39,7 @@
 
   <div class="form-group">
     <%= label f, "Refresh Rate", class: "control-label" %>
-    <%= tooltip "The base the unit of measurement for setting when to refresh your dataset." %>
+    <%= tooltip "The base unit of measurement for setting when to refresh your dataset." %>
     <%= select f, :refresh_rate, @refresh_rate_choices, class: "form-control" %>
     <%= error_tag f, :refresh_rate %>
   </div>
