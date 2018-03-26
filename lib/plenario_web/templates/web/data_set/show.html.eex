@@ -82,7 +82,7 @@
 </div>
 
 <div class="row">
-  <div class="col-lg-6">
+  <div id="data-set-fields" class="col-lg-6">
     <h3>
       Data Set Fields
     </h3>
@@ -91,6 +91,7 @@
         <tr>
           <th>Name</th>
           <th>Type</th>
+          <th>Description</th>
           <%= if show_edits? do %><th></th><% end %>
         </tr>
       </thead>
@@ -99,11 +100,12 @@
         <tr>
           <td><%= f.name %></td>
           <td><%= f.type %></td>
+          <td style="max-width: 6em; word-wrap: break-word;"><%= f.description %></td>
           <%= if show_edits? do %><td><%= link "Edit", to: data_set_field_path(@conn, :edit, @meta.id, f.id) %></td><% end %>
         <% end %>
       </tbody>
-    </table>
-  </div>
+    </table> <!-- .table.table-striped -->
+  </div> <!-- .col-lg-6 -->
   <div class="col-lg-6">
     <h3>
       Constraints

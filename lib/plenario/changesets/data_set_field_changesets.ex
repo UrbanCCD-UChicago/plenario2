@@ -13,19 +13,21 @@ defmodule Plenario.Changesets.DataSetFieldChangesets do
   @type create_params :: %{
     name: String.t(),
     type: String.t(),
+    description: String.t(),
     meta_id: integer
   }
 
   @type update_params :: %{
     name: String.t(),
-    type: String.t()
+    type: String.t(),
+    description: String.t()
   }
 
   @required_keys [:name, :type, :meta_id]
 
-  @create_keys [:name, :type, :meta_id]
+  @create_keys [:name, :description, :type, :meta_id]
 
-  @update_keys [:name, :type]
+  @update_keys [:name, :description, :type]
 
   @spec new() :: Ecto.Changeset.t()
   def new(), do: %DataSetField{} |> cast(%{}, @create_keys)
