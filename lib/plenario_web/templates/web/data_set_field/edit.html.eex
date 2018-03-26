@@ -1,19 +1,78 @@
-<h2>
-  Editing <%= @field.name %>
-  <%= link "Back to Parent Data Set", to: data_set_path(@conn, :show, @field.meta_id), class: "btn btn-primary pull-right" %>
-</h2>
 
-<div class="row col-lg-6">
-  <%= form_for @changeset, @action, fn f -> %>
-  <div class="form-group">
-    <%= label f, "Field Type", class: "control-label" %>
-    <%= select f, :type, @type_choices, class: "form-control" %>
-    <%= error_tag f, :type %>
-  </div>
+<div class="container">
+  <div class="row">
+    <div class="col-lg-12">
+      <h2>
+        Editing <%= @field.name %>
+        <%= link "Back to Parent Data Set", to: data_set_path(@conn, :show, @field.meta_id), class: "btn btn-primary pull-right" %>
+      </h2>
+      <%= form_for @changeset, @action, fn f -> %>
+        <div class="form-group">
+          <%= label f, "Field Type", class: "control-label" %>
+          <%= select f, :type, @type_choices, class: "form-control" %>
+          <%= error_tag f, :type %>
+        </div>
 
-  <div class="form-group">
-    <%= submit "Save", class: "btn btn-primary" %>
-    <%= button "Delete Field", to: data_set_field_path(@conn, :delete, @field.meta_id, @field.id), method: :delete, class: "btn btn-danger pull-right" %>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Field Type</th>
+            <th scope="col">Examples</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Text</th>
+            <td><code>Words</code>, <code>123*456-789</code>, <code>Hello!</code></td>
+          </tr>
+          <tr>
+            <th scope="row">Integer</th>
+            <td>
+              <code>1</code>,
+              <code>0</code>,
+              <code>-1</code>
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">Decimal</th>
+            <td>
+              <code>1.0</code>,
+              <code>0.0</code>,
+              <code>-1.0</code>
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">True/False</th>
+            <td>
+              <code>t</code>,
+              <code>true</code>,
+              <code>f</code>,
+              <code>false</code>
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">Date</th>
+            <td>
+              <code>2018-01-01 00:00:00</code>,
+              <code>2018-01-01</code>
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">JSON</th>
+            <td>
+              <code>{"foo": "bar"}</code>,
+              <code>[{"foo": "bar"}, {"baz": "fizz"}]</code>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+        <div class="form-group">
+          <%= submit "Save", class: "btn btn-primary" %>
+          <%= button "Delete Field", to: data_set_field_path(@conn, :delete, @field.meta_id, @field.id), method: :delete, class: "btn btn-danger pull-right" %>
+    </div>
+      <% end %>
+    </div>
   </div>
-  <% end %>
 </div>
+

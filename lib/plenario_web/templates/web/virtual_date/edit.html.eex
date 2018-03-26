@@ -1,55 +1,75 @@
-<h2>
-  Updating Virtual Date
-  <%= link "Back to Parent Data Set", to: data_set_path(@conn, :show, @field.meta_id), class: "btn btn-primary pull-right" %>
-</h2>
-
-<div class="row col-lg-6">
-
-  <%= form_for @changeset, @action, fn f -> %>
-
-  <%= hidden_input f, :meta_id, value: @field.meta_id %>
-
-  <div class="form-group">
-    <%= label f, "Year Column", class: "control-label" %>
-    <%= select f, :year_field_id, @field_choices, class: "form-control" %>
-    <%= error_tag f, :year_field_id %>
+<div class="container">
+  <div class="row">
+    <div class="col-lg-12">
+      <h2>
+        Updating Virtual Date
+        <%= link "Back to Parent Data Set", to: data_set_path(@conn, :show, @field.meta_id), class: "btn btn-primary pull-right" %>
+      </h2>
+    </div>
   </div>
+  <div class="row">
+    <div class="row col-lg-6">
 
-  <div class="form-group">
-    <%= label f, "Month Column", class: "control-label" %>
-    <%= select f, :month_field_id, @field_choices, class: "form-control" %>
-    <%= error_tag f, :month_field_id %>
+      <%= form_for @changeset, @action, fn f -> %>
+
+      <%= hidden_input f, :meta_id, value: @field.meta_id %>
+
+      <div class="form-group">
+        <%= label f, "Year Column", class: "control-label" %>
+        <%= select f, :year_field_id, @field_choices, class: "form-control" %>
+        <%= error_tag f, :year_field_id %>
+      </div>
+
+      <div class="form-group">
+        <%= label f, "Month Column", class: "control-label" %>
+        <%= select f, :month_field_id, @field_choices, class: "form-control" %>
+        <%= error_tag f, :month_field_id %>
+      </div>
+
+      <div class="form-group">
+        <%= label f, "Day Column", class: "control-label" %>
+        <%= select f, :day_field_id, @field_choices, class: "form-control" %>
+        <%= error_tag f, :day_field_id %>
+      </div>
+
+      <div class="form-group">
+        <%= label f, "Hour Column", class: "control-label" %>
+        <%= select f, :hour_field_id, @field_choices, class: "form-control" %>
+        <%= error_tag f, :hour_field_id %>
+      </div>
+
+      <div class="form-group">
+        <%= label f, "Minute Column", class: "control-label" %>
+        <%= select f, :minute_field_id, @field_choices, class: "form-control" %>
+        <%= error_tag f, :minute_field_id %>
+      </div>
+
+      <div class="form-group">
+        <%= label f, "Second Column", class: "control-label" %>
+        <%= select f, :second_field_id, @field_choices, class: "form-control" %>
+        <%= error_tag f, :second_field_id %>
+      </div>
+
+      <div class="form-group">
+        <%= submit "Update", class: "btn btn-primary" %>
+        <%= button "Delete", to: virtual_date_path(@conn, :delete, @field.meta_id, @field.id), method: :delete, class: "btn btn-danger pull-right" %>
+      </div>
+
+      <% end %>
+
+    </div>
+
+    <div class="col-lg-6">
+      <div class="panel panel-default">
+        <div class="panel-body">
+          The virtual fields are used to build machine parsed dates and points for dataset indexing.
+          If a date is broken up as multiple values across different columns, we can derive a date
+          field within the database. The minimum requirement for a date field is a single field for 
+          the year portion of a date. You are able to add values for the month, day, hour, minute and 
+          second values. If those values are not present, they will default to their minimum value: 
+          January 1st at Midnight (year-01-01 00:00:00).
+        </div>
+      </div>
+    </div>
   </div>
-
-  <div class="form-group">
-    <%= label f, "Day Column", class: "control-label" %>
-    <%= select f, :day_field_id, @field_choices, class: "form-control" %>
-    <%= error_tag f, :day_field_id %>
-  </div>
-
-  <div class="form-group">
-    <%= label f, "Hour Column", class: "control-label" %>
-    <%= select f, :hour_field_id, @field_choices, class: "form-control" %>
-    <%= error_tag f, :hour_field_id %>
-  </div>
-
-  <div class="form-group">
-    <%= label f, "Minute Column", class: "control-label" %>
-    <%= select f, :minute_field_id, @field_choices, class: "form-control" %>
-    <%= error_tag f, :minute_field_id %>
-  </div>
-
-  <div class="form-group">
-    <%= label f, "Second Column", class: "control-label" %>
-    <%= select f, :second_field_id, @field_choices, class: "form-control" %>
-    <%= error_tag f, :second_field_id %>
-  </div>
-
-  <div class="form-group">
-    <%= submit "Update", class: "btn btn-primary" %>
-    <%= button "Delete", to: virtual_date_path(@conn, :delete, @field.meta_id, @field.id), method: :delete, class: "btn btn-danger pull-right" %>
-  </div>
-
-  <% end %>
-
 </div>
