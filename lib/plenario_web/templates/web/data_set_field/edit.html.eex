@@ -13,64 +13,70 @@
           <%= error_tag f, :type %>
         </div>
 
-      <table class="table">
-        <thead>
-          <tr>
-            <th scope="col">Field Type</th>
-            <th scope="col">Examples</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th scope="row">Text</th>
-            <td><code>Words</code>, <code>123*456-789</code>, <code>Hello!</code></td>
-          </tr>
-          <tr>
-            <th scope="row">Integer</th>
-            <td>
-              <code>1</code>,
-              <code>0</code>,
-              <code>-1</code>
-            </td>
-          </tr>
-          <tr>
-            <th scope="row">Decimal</th>
-            <td>
-              <code>1.0</code>,
-              <code>0.0</code>,
-              <code>-1.0</code>
-            </td>
-          </tr>
-          <tr>
-            <th scope="row">True/False</th>
-            <td>
-              <code>t</code>,
-              <code>true</code>,
-              <code>f</code>,
-              <code>false</code>
-            </td>
-          </tr>
-          <tr>
-            <th scope="row">Date</th>
-            <td>
-              <code>2018-01-01 00:00:00</code>,
-              <code>2018-01-01</code>
-            </td>
-          </tr>
-          <tr>
-            <th scope="row">JSON</th>
-            <td>
-              <code>{"foo": "bar"}</code>,
-              <code>[{"foo": "bar"}, {"baz": "fizz"}]</code>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+        <div class="form-group">
+          <%= label f, "Description", class: "control-label" %>
+          <%= text_input f, :description, class: "form-control" %>
+          <%= error_tag f, :description %>
+        </div>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Field Type</th>
+              <th scope="col">Examples</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Text</th>
+              <td><code>Words</code>, <code>123*456-789</code>, <code>Hello!</code></td>
+            </tr>
+            <tr>
+              <th scope="row">Integer</th>
+              <td>
+                <code>1</code>,
+                <code>0</code>,
+                <code>-1</code>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Decimal</th>
+              <td>
+                <code>1.0</code>,
+                <code>0.0</code>,
+                <code>-1.0</code>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">True/False</th>
+              <td>
+                <code>t</code>,
+                <code>true</code>,
+                <code>f</code>,
+                <code>false</code>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Date</th>
+              <td>
+                <code>2018-01-01 00:00:00</code>,
+                <code>2018-01-01</code>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">JSON</th>
+              <td>
+                <code>{"foo": "bar"}</code>,
+                <code>[{"foo": "bar"}, {"baz": "fizz"}]</code>
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
         <div class="form-group">
           <%= submit "Save", class: "btn btn-primary" %>
           <%= button "Delete Field", to: data_set_field_path(@conn, :delete, @field.meta_id, @field.id), method: :delete, class: "btn btn-danger pull-right" %>
-    </div>
+        </div>
       <% end %>
     </div>
   </div>
