@@ -1,5 +1,5 @@
 defmodule PlenarioWeb.Web.Testing.DataSetFieldControllerTest do
-  use PlenarioWeb.Testing.ConnCase 
+  use PlenarioWeb.Testing.ConnCase
 
   alias Plenario.Actions.{MetaActions, DataSetFieldActions}
 
@@ -22,7 +22,8 @@ defmodule PlenarioWeb.Web.Testing.DataSetFieldControllerTest do
     test "with good inputs", %{conn: conn, meta: meta, field: field} do
       params = %{
         "data_set_field" => %{
-          "type" => "jsonb"
+          "type" => "jsonb",
+          "description" => "lorem ipsum"
         }
       }
 
@@ -38,7 +39,8 @@ defmodule PlenarioWeb.Web.Testing.DataSetFieldControllerTest do
     test "with bad inputs", %{conn: conn, meta: meta, field: field} do
       params = %{
         "data_set_field" => %{
-          "type" => "i have no idea"
+          "type" => "i have no idea",
+          "description" => 10
         }
       }
 
