@@ -9,7 +9,7 @@ defmodule PlenarioWeb.Api.DetailController do
     render(conn, "head.json", %{})
   end
 
-  def options(conn, _params) do
-    render(conn, "options.json", %{})
+  def describe(conn, _params) do
+    render(conn, "describe.json", %{})
   end
 end

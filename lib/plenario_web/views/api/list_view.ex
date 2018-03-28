@@ -6,10 +6,10 @@ defmodule PlenarioWeb.Api.ListView do
   end
 
   def render("head.json", _params) do
-    %{foo: "bar"}
+    %{}
   end
 
-  def render("options.json", _params) do
+  def render("describe.json", _params) do
     %{}
   end
 end

@@ -9,7 +9,7 @@ defmodule PlenarioWeb.Api.AotView do
     %{}
   end
 
-  def render("options.json", _params) do
+  def render("describe.json", _params) do
     %{}
   end
 end

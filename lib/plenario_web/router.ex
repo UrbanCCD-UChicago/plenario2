@@ -102,17 +102,17 @@ defmodule PlenarioWeb.Router do
   scope "/api/v2", PlenarioWeb.Api do
     pipe_through [:api]
 
-    # get "/data-sets", ListController, :get
-    head "/data-sets", ListController, :head
-    # options "/data-sets", ListController, :options
+    get "/data-sets", ListController, :get
+    get "/data-sets/@head", ListController, :head
+    get "/data-sets/@describe", ListController, :describe
 
     get "/detail", DetailController, :get
-    head "/detail", DetailController, :head
-    options "/detail", DetailController, :options
+    get "/detail/@head", DetailController, :head
+    get "/detail/@describe", DetailController, :describe
 
     get "/aot", AotController, :get
-    head "/aot", AotController, :head
-    options "/aot", AotController, :options
+    get "/aot/@head", AotController, :head
+    get "/aot/@describe", AotController, :describe
   end
 end
 

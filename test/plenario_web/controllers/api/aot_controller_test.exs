@@ -6,13 +6,13 @@ defmodule PlenarioWeb.Api.AotControllerTest do
     assert json_response(conn, 200) == %{}
   end
 
-  test "HEAD /api/v2/aot", %{conn: conn} do
-    conn = head(conn, "/api/v2/aot")
+  test "GET /api/v2/aot/@head", %{conn: conn} do
+    conn = get(conn, "/api/v2/aot/@head")
     assert json_response(conn, 200) == %{}
   end
 
-  test "OPTIONS /api/v2/aot", %{conn: conn} do
-    conn = options(conn, "/api/v2/aot")
+  test "GET /api/v2/aot/@describe", %{conn: conn} do
+    conn = get(conn, "/api/v2/aot/@describe")
     assert json_response(conn, 200) == %{}
   end
 end
