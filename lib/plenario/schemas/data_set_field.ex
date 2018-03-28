@@ -26,6 +26,7 @@ defmodule Plenario.Schemas.DataSetField do
   schema "data_set_fields" do
     field :name, :string
     field :type, :string
+    field :description, :string
 
     timestamps(type: :utc_datetime)
 

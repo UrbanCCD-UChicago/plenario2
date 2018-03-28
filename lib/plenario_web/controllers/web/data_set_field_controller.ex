@@ -22,14 +22,14 @@ defmodule PlenarioWeb.Web.DataSetFieldController do
     render(conn, "edit.html", field: field, changeset: changeset, action: action, type_choices: type_choices)
   end
 
-  def update(conn, %{"dsid" => _,"id" => id, "data_set_field" => %{"type" => type}}) do
+  def update(conn, %{"dsid" => _,"id" => id, "data_set_field" => %{"description" => description, "type" => type}}) do
     field = DataSetFieldActions.get(id)
-    do_update(field, id, type, conn)
+    do_update(field, id, type, description, conn)
   end
 
-  defp do_update(nil, _, _, conn), do: do_404(conn)
-  defp do_update(%DataSetField{} = field, id, type, conn) do
-    case DataSetFieldActions.update(field, type: type) do
+  defp do_update(nil, _, _, _, conn), do: do_404(conn)
+  defp do_update(%DataSetField{} = field, id, type, description, conn) do
+    case DataSetFieldActions.update(field, type: type, description: description) do
       {:ok, field} ->
         conn
         |> put_flash(:success, "Successfully updated field #{field.name}!")

@@ -26,12 +26,12 @@ defmodule PlenarioWeb.Web.PageController do
   end
 
   defp parse_dt(conn, datetime_string) do
-    error = "Invalid format for datetime argument, must be formatted as YYYY-MM-DD"
     case DateTime.from_iso8601("#{datetime_string}T00:00:00.0Z") do
       {_, datetime, _} ->
         {datetime, conn}
       {:error, :invalid_format} ->
-        {nil, put_flash(conn, :error, error)}
+        {nil, put_flash(conn, :error, 
+          "Invalid datetime #{datetime_string}, must be formatted as YYYY-MM-DD")}
     end
   end
 
@@ -41,6 +41,11 @@ defmodule PlenarioWeb.Web.PageController do
 
   defp do_explorer(_, _, _, _, conn = %Plug.Conn{private: %{:phoenix_flash => %{"error" => _}}}) do
     render_explorer(conn, nil, "[41.9, -87.7]", 10, nil, "", "")
+  end
+
+  defp do_explorer(zoom, coords, startdt, enddt, conn) when startdt >= enddt do
+    do_explorer(zoom, coords, startdt, enddt, put_flash(conn, :error,
+      "The starting datetime #{startdt} cannot be greater than the ending datetime #{enddt}"))
   end
 
   defp do_explorer(zoom, coords, startdt, enddt, conn) do

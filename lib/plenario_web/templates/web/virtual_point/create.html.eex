@@ -1,35 +1,53 @@
-<h2>Creating a New Virtual Point</h2>
-
-<div class="row col-lg-6">
-
-  <%= form_for @changeset, @action, fn f -> %>
-
-  <%= hidden_input f, :meta_id, value: @dsid %>
-
-  <div class="form-group">
-    <%= label f, "Location Column", class: "control-label" %>
-    <%= select f, :loc_field_id, @field_choices, class: "form-control" %>
-    <%= error_tag f, :loc_field_id %>
+<div class="container">
+  <div class="row">
+    <div class="col-lg-12">
+      <h2>Creating a New Virtual Point</h2>
+    </div>
   </div>
 
-  <div class="form-group"><strong>Or</strong></div>
+  <div class="row">
+    <div class="col-lg-6">
+      <div class="row col-lg-6">
+        <%= form_for @changeset, @action, fn f -> %>
+          <%= hidden_input f, :meta_id, value: @dsid %>
+          <div class="form-group">
+            <%= label f, "Location Column", class: "control-label" %>
+            <%= select f, :loc_field_id, @field_choices, class: "form-control" %>
+            <%= error_tag f, :loc_field_id %>
+          </div>
 
-  <div class="form-group">
-    <%= label f, "Latitude Column", class: "control-label" %>
-    <%= select f, :lat_field_id, @field_choices, class: "form-control" %>
-    <%= error_tag f, :lat_field_id %>
+          <div class="form-group"><strong>Or</strong></div>
+
+          <div class="form-group">
+            <%= label f, "Latitude Column", class: "control-label" %>
+            <%= select f, :lat_field_id, @field_choices, class: "form-control" %>
+            <%= error_tag f, :lat_field_id %>
+          </div>
+
+          <div class="form-group">
+            <%= label f, "Longitude Column", class: "control-label" %>
+            <%= select f, :lon_field_id, @field_choices, class: "form-control" %>
+            <%= error_tag f, :lon_field_id %>
+          </div>
+
+          <div class="form-group">
+            <%= submit "Create", class: "btn btn-primary" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="panel panel-default">
+        <div class="panel-body">
+          The virtual fields are used to build machine parsed dates and points 
+          for dataset indexing. If a dataset contains fields for longitude and 
+          latitude, we can automatically add a trigger to the database that 
+          will read those fields and construct an additional Point field on the 
+          dataset and parse each row for the values needed to fulfill that 
+          additional field. 
+        </div>
+      </div>
+    </div>
   </div>
-
-  <div class="form-group">
-    <%= label f, "Longitude Column", class: "control-label" %>
-    <%= select f, :lon_field_id, @field_choices, class: "form-control" %>
-    <%= error_tag f, :lon_field_id %>
-  </div>
-
-  <div class="form-group">
-    <%= submit "Create", class: "btn btn-primary" %>
-  </div>
-
-  <% end %>
-
 </div>
+

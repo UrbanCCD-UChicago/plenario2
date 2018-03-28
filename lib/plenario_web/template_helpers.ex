@@ -1,4 +1,6 @@
 defmodule PlenarioWeb.TemplateHelpers do
+  import Phoenix.HTML.Tag
+
   def s_plural(word, length_) do
     case length_ do
       1 -> word
@@ -31,5 +33,14 @@ defmodule PlenarioWeb.TemplateHelpers do
       },
       value
     )
+  end
+
+  @doc """
+  A helper function that generates a tooltip.
+  """
+  def tooltip(message) do
+    content_tag(:span, "🛈",
+      data: [toggle: "tooltip", placement: "top"],
+      title: message)
   end
 end

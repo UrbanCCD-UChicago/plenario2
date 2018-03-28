@@ -82,7 +82,7 @@
 </div>
 
 <div class="row">
-  <div class="col-lg-6">
+  <div id="data-set-fields" class="col-lg-6">
     <h3>
       Data Set Fields
     </h3>
@@ -91,6 +91,7 @@
         <tr>
           <th>Name</th>
           <th>Type</th>
+          <th>Description</th>
           <%= if show_edits? do %><th></th><% end %>
         </tr>
       </thead>
@@ -99,11 +100,12 @@
         <tr>
           <td><%= f.name %></td>
           <td><%= f.type %></td>
+          <td style="max-width: 6em; word-wrap: break-word;"><%= f.description %></td>
           <%= if show_edits? do %><td><%= link "Edit", to: data_set_field_path(@conn, :edit, @meta.id, f.id) %></td><% end %>
         <% end %>
       </tbody>
-    </table>
-  </div>
+    </table> <!-- .table.table-striped -->
+  </div> <!-- .col-lg-6 -->
   <div class="col-lg-6">
     <h3>
       Constraints
@@ -133,12 +135,7 @@
   <div class="col-lg-6">
     <h3>
       Computed Date Fields 
-      <span 
-        data-toggle="tooltip" 
-        data-placement="top" 
-        title="A composite field constructed from discrete fields in the data set: if the data set contains separate fields for, say, year, month and day, we can construct a single date field to index to better query the data.">
-        🛈
-      </span>
+      <%= tooltip "A composite field constructed from discrete fields in the data set: if the data set contains separate fields for, say, year, month and day, we can construct a single date field to index to better query the data." %>
       <%= if show_edits? do %>
         <%= link "Add a New Date Field", to: virtual_date_path(@conn, :new, @meta.id), class: "btn btn-success pull-right" %>
       <% end %>
@@ -172,12 +169,7 @@
   <div class="col-lg-6">
     <h3>
       Computed Point Fields
-      <span 
-        data-toggle="tooltip" 
-        data-placement="top" 
-        title="A location field constructed from primitive fields in the data set: if the data set contains a single or separate fields that represent coordinate points, we can derive a coordinate field.">
-        🛈
-      </span>
+      <%= tooltip "A location field constructed from primitive fields in the data set: if the data set contains a single or separate fields that represent coordinate points, we can derive a coordinate field." %>
       <%= if show_edits? do %>
         <%= link "Add a New Point Field", to: virtual_point_path(@conn, :new, @meta.id), class: "btn btn-success pull-right" %>
       <% end %>
