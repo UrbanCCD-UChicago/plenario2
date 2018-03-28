@@ -197,8 +197,10 @@
 
   <div class="col-lg-6" id="request-changes">
     <%= if @meta.state != "new" do %>
-      <%= link "Request Changes", to: data_set_path(@conn, :request_changes, @meta), class: "btn btn-primary pull-left", 
-      title: "You must request changes to an administrator once a data set has been submitted or approved." %>
+      <h3>
+      <%= link "Request Changes", to: data_set_path(@conn, :request_changes, @meta), class: "btn btn-primary pull-left" %> 
+      <div class="col-lg-6"><%= tooltip "You must request changes to an administrator once a data set has been submitted or approved." %></div>
+      </h3>
     <% end %>
     
   </div>
