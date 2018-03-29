@@ -1,5 +1,8 @@
 FROM ubuntu:xenial
 
+# ensure tag
+ARG tag
+
 # install erlang 20.2.2
 
 RUN apt-get update -qq
@@ -25,7 +28,7 @@ RUN elixir -v
 # clone repo down
 
 RUN apt-get install git -y
-RUN git clone https://github.com/UrbanCCD-UChicago/plenario2.git
+RUN git clone --branch v$tag --depth 1 https://github.com/UrbanCCD-UChicago/plenario2.git
 WORKDIR plenario2/
 
 # install dependencies
