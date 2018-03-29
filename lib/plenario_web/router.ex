@@ -117,6 +117,11 @@ defmodule PlenarioWeb.Router do
     get "/aot/@head", AotController, :head
     get "/aot/@describe", AotController, :describe
   end
+
+  if Mix.env == :dev do
+    forward "/sent_emails", Bamboo.EmailPreviewPlug
+  end
+
 end
 
 
