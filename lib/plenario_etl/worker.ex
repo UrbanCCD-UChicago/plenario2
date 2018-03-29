@@ -29,7 +29,6 @@ defmodule PlenarioEtl.Worker do
   def start_link(_), do: GenServer.start_link(__MODULE__, nil, [])
 
   def init(state) do
-    Logger.info("starting etl worker")
     {:ok, state}
   end
 
