@@ -91,7 +91,16 @@ The target environment for releases is Ubuntu 16.04 with locales set to
 Xenial as their dev environment, so to make the release build process as clean
 as possible we use Docker.
 
-To build the image, run `./build`.
+To build the image, run
+
+```
+./build --tag {version number here}
+```
+
+This will build the release, tag it properly, copy it to your host machine,
+and upload it to S3.
+
+If you don't want to upload it to S3, append the `--skip-upload` flag.
 
 **Note:** you will need the following software installed and configured on
 your host/build machine:
@@ -108,7 +117,17 @@ Deployments are naive -- they will download a specific release archive from S3
 to your machine and then upload it to the target server. This is done so that you
 make deliberate choices.
 
-To deploy, run `./deploy {{ version number }} {{ hostname }}`
+To deploy, run
+
+```
+./deploy --tag {{ version number }} --host {{ hostname }}
+```
+
+This will download a built release archive from S3 and deploy it to the target
+host.
+
+If you already have a local copy of the archive, you can skip the
+download with the `--skip-download` flag.
 
 **Note:** you will need the hostname configured in your local SSH config. You
 should also have configured your AWS credentials set up (`$ aws config`).
@@ -118,4 +137,7 @@ should also have configured your AWS credentials set up (`$ aws config`).
 If the latest changes have deployments, there's a convenience wrapper included
 to run the changes. all you have to do is append `--run-migrations` to the
 end of the deployment command:
-`./deploy {{ version_number }} {{ hostname }} --run-migrations`.
+
+```
+./deploy --tag {{ version number }} --host {{ hostname }} --run-migrations
+```
