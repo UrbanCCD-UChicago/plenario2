@@ -9,9 +9,8 @@ defmodule PlenarioWeb.Web.DataSetController do
   }
 
   alias Plenario.Schemas.Meta
-  require Logger
-
   alias PlenarioWeb.Web.ControllerUtils
+  alias PlenarioMailer.Emails
 
   plug Plenario.Plugs.AssertIdIsInteger
   plug :authorize_resource, model: Meta
@@ -196,17 +195,22 @@ defmodule PlenarioWeb.Web.DataSetController do
   end
 
   def send_email(conn, params) do
-    IO.puts("-----------PAAAARRAAAMMMSSSS--------------")
-    IO.puts(IO.inspect(conn.params))
-    do_send_email(conn, params)
-  end
+    user_id = Map.get(params, "user_id", nil)
+    meta_id = Map.get(params, "id", nil)
+    meta_name = Map.get(params, "meta_name", nil)
+    fields = for {key, "true"} <- params, do: key
 
-  defp do_send_email(conn, params) do
-    id = Map.get(params, "id", nil)
+    email_body = "Requested changes from user ID: #{user_id}
+    Meta ID: #{meta_id}
+    Meta name: #{meta_name}
+    Fields to investigate: #{Enum.join(fields, ", ")}
+    Comments: #{params["comments"]}"
+
+    Emails.send_email(Application.get_env(:plenario, :email_sender), email_body)
 
     conn
     |> put_flash(:success, "Sending email to admins")
-    |> redirect(to: data_set_path(conn, :request_changes, id))
+    |> redirect(to: data_set_path(conn, :request_changes, meta_id))
   end
 
 end
