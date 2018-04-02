@@ -55,7 +55,7 @@ defmodule PlenarioWeb.Router do
     post "/data-sets/:id/submit-for-approval", DataSetController, :submit_for_approval
     post "/data-sets/:id/ingest-now", DataSetController, :ingest_now
     get "/data-sets/:id/request-changes", DataSetController, :request_changes
-    post "/data-sets/:id/send-email", DataSetController, :send_email
+    post "/data-sets/:id/send-change-request-email", DataSetController, :send_change_request_email
 
     post "/data-sets/:meta_id/export", ExportController, :export_meta
 
@@ -119,7 +119,7 @@ defmodule PlenarioWeb.Router do
   end
 
   if Mix.env == :dev do
-    forward "/sent_emails", Bamboo.EmailPreviewPlug
+    forward "/sent-emails", Bamboo.EmailPreviewPlug
   end
 
 end

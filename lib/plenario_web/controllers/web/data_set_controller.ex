@@ -194,7 +194,7 @@ defmodule PlenarioWeb.Web.DataSetController do
     |> render("request-changes.html", meta: meta, fields: fields)
   end
 
-  def send_email(conn, params) do
+  def send_change_request_email(conn, params) do
     user_id = Map.get(params, "user_id", nil)
     meta_id = Map.get(params, "id", nil)
     meta_name = Map.get(params, "meta_name", nil)

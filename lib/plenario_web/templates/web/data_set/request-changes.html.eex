@@ -7,7 +7,7 @@
   <hr>
 </div>
 
-<%= form_for @conn, data_set_path(@conn, :send_email, @meta.id), [method: :post], fn f -> %>
+<%= form_for @conn, data_set_path(@conn, :send_change_request_email, @meta.id), [method: :post], fn f -> %>
 
 <div class="row">
   <div class="form-group">
