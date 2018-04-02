@@ -43,7 +43,7 @@ defmodule PlenarioWeb.Endpoint do
     key: "_plenario_key",
     signing_salt: "r4oVhcR/"
   )
-
+  plug(CORSPlug)
   plug(PlenarioWeb.Router)
 
   @doc """
