@@ -1,13 +1,13 @@
 use Mix.Config
 
-# Store the environment atom for situations where the `Mix` module is 
+# Store the environment atom for situations where the `Mix` module is
 # unavailable such as production or when compiling releases through
 # Exrm or Distillery. Any code looking to use the environment atom should
 # do so through `Application.get_env(:plenario, :env)`
 config :plenario, env: Mix.env()
 
 # Configure the database and application repo
-config :plenario, Plenario.Repo, 
+config :plenario, Plenario.Repo,
   types: Plenario.PostGisTypes,
   handshake_timeout: 120000,
   pool_timeout: 120000,
@@ -58,6 +58,9 @@ config :plenario, PlenarioMailer, adapter: Bamboo.LocalAdapter
 config :plenario, :email_sender, "plenario@uchicago.edu"
 config :plenario, :email_subject, "Plenario Notification"
 
+config :cors_plug,
+  max_age: 300000,
+  methods: ["GET", "HEAD", "OPTIONS"]
 
 # configure sentry
 config :sentry,
