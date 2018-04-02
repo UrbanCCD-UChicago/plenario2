@@ -47,6 +47,7 @@
       </div>
     <input id="meta-name" name="meta_name" value="<%= @meta.name %>" hidden>
     <input id="user-id" name="user_id" value="<%= @meta.user_id %>" hidden>
+    <input id="user-name" name="user_name" value="<%= @meta.user.name %>" hidden>
   </div>
 </div>
 

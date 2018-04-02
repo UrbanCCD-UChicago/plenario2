@@ -184,7 +184,7 @@ defmodule PlenarioWeb.Web.DataSetController do
   end
 
   def request_changes(conn, %{"id" => id}) do
-    meta = MetaActions.get(id)
+    meta = MetaActions.get(id, with_user: true)
     fields = MetaActions.get_column_names(meta)
     do_request_changes(conn, meta, fields)
   end
@@ -196,13 +196,15 @@ defmodule PlenarioWeb.Web.DataSetController do
 
   def send_change_request_email(conn, params) do
     user_id = Map.get(params, "user_id", nil)
+    user_name = Map.get(params, "user_name", nil)
     meta_id = Map.get(params, "id", nil)
     meta_name = Map.get(params, "meta_name", nil)
     fields = for {key, "true"} <- params, do: key
 
-    email_body = "Requested changes from user ID: #{user_id}
-    Meta ID: #{meta_id}
+    email_body = "Requested changes from user: #{user_name}
+    User ID: #{user_id}
     Meta name: #{meta_name}
+    Meta ID: #{meta_id}
     Fields to investigate: #{Enum.join(fields, ", ")}
     Comments: #{params["comments"]}"
 
