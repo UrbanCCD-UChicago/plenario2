@@ -64,12 +64,12 @@ defmodule PlenarioWeb.Admin.MetaController do
           true)
 
         conn
-        |> put_flash(:success, "Meta #{inspect(meta.name)} approved.")
+        |> put_flash(:success, "Meta #{meta.name} approved.")
         |> redirect(to: meta_path(conn, :index))
 
       {:error, _} ->
         conn
-        |> put_flash(:error, "Something went wrong when approving meta #{inspect(meta.name)}")
+        |> put_flash(:error, "Something went wrong when approving meta #{meta.name}")
         |> redirect(to: meta_path(conn, :index))
     end
   end
@@ -82,16 +82,16 @@ defmodule PlenarioWeb.Admin.MetaController do
       {:ok, meta} ->
         AdminUserNoteActions.create_for_meta(
           meta.id, admin.id, meta.user_id,
-          "#{inspect(meta.name)} has been disapproved. Please review the documentation regarding submitting new data sets.",
+          "#{meta.name} has been disapproved. Please review the documentation regarding submitting new data sets.",
           true)
 
         conn
-        |> put_flash(:success, "Meta #{inspect(meta.name)} disapproved.")
+        |> put_flash(:success, "Meta #{meta.name} disapproved.")
         |> redirect(to: meta_path(conn, :index))
 
       {:error, _} ->
         conn
-        |> put_flash(:error, "Something went wrong when disapproving meta #{inspect(meta.name)}")
+        |> put_flash(:error, "Something went wrong when disapproving meta #{meta.name}")
         |> redirect(to: meta_path(conn, :index))
     end
   end
