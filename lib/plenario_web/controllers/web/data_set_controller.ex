@@ -9,8 +9,8 @@ defmodule PlenarioWeb.Web.DataSetController do
   }
 
   alias Plenario.Schemas.Meta
-
   alias PlenarioWeb.Web.ControllerUtils
+  alias PlenarioMailer.Emails
 
   plug Plenario.Plugs.AssertIdIsInteger
   plug :authorize_resource, model: Meta
@@ -182,4 +182,37 @@ defmodule PlenarioWeb.Web.DataSetController do
         |> redirect(to: data_set_path(conn, :show, id))
     end
   end
+
+  def request_changes(conn, %{"id" => id}) do
+    meta = MetaActions.get(id, with_user: true)
+    fields = MetaActions.get_column_names(meta)
+    do_request_changes(conn, meta, fields)
+  end
+
+  defp do_request_changes(conn, %Meta{} = meta, fields) do
+    conn
+    |> render("request-changes.html", meta: meta, fields: fields)
+  end
+
+  def send_change_request_email(conn, params) do
+    user_id = Map.get(params, "user_id", nil)
+    user_name = Map.get(params, "user_name", nil)
+    meta_id = Map.get(params, "id", nil)
+    meta_name = Map.get(params, "meta_name", nil)
+    fields = for {key, "true"} <- params, do: key
+
+    email_body = "Requested changes from user: #{user_name}
+    User ID: #{user_id}
+    Meta name: #{meta_name}
+    Meta ID: #{meta_id}
+    Fields to investigate: #{Enum.join(fields, ", ")}
+    Comments: #{params["comments"]}"
+
+    Emails.send_email(Application.get_env(:plenario, :email_sender), email_body)
+
+    conn
+    |> put_flash(:success, "Sending email to admins")
+    |> redirect(to: data_set_path(conn, :request_changes, meta_id))
+  end
+
 end
