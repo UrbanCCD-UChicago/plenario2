@@ -5,6 +5,7 @@ defmodule PlenarioWeb.Api.Response.Meta.Links do
     next: binary()
   }
 
+  @derive [Poison.Encoder]
   defstruct [
     current: "",
     previous: "",
@@ -18,6 +19,7 @@ defmodule PlenarioWeb.Api.Response.Meta.Params do
     page_size: integer()
   }
 
+  @derive [Poison.Encoder]
   defstruct [
     page_size: 500
   ]
@@ -32,6 +34,7 @@ defmodule PlenarioWeb.Api.Response.Meta.Counts do
     errors: integer()
   }
 
+  @derive [Poison.Encoder]
   defstruct [
     pages: 0,
     total_records: 0,
@@ -48,6 +51,7 @@ defmodule PlenarioWeb.Api.Response.Meta do
     counts: Counts.t()
   }
 
+  @derive [Poison.Encoder]
   defstruct [
     links: %PlenarioWeb.Api.Response.Meta.Links{},
     params: %PlenarioWeb.Api.Response.Meta.Params{},
@@ -62,6 +66,7 @@ defmodule PlenarioWeb.Api.Response do
     data: list(map)
   }
 
+  @derive [Poison.Encoder]
   defstruct [
     meta: %PlenarioWeb.Api.Response.Meta{},
     data: []
@@ -75,6 +80,9 @@ defmodule PlenarioWeb.Api.ErrorResponse do
     error: Error.t()
   }
 
-  @enforce_keys [:meta, :error]
-  defstruct @enforce_keys
+  @derive [Poison.Encoder]
+  defstruct [
+    meta: %PlenarioWeb.Api.Response.Meta{},
+    error: []
+  ]
 end

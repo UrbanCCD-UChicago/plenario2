@@ -3,25 +3,43 @@ defmodule PlenarioWeb.Api.ListController do
 
   alias Plenario.Repo
   alias Plenario.Schemas.Meta
-  alias PlenarioWeb.Api.Response
 
   import Ecto.Query
 
-  # todo(heyzoos): return all results for a query
+  @associations [:fields, :unique_constraints, :virtual_dates, :virtual_points, :user]
+
+  @doc """
+  Lists all metadata objects satisfying the provided query.
+  """
   def get(conn, %{}) do
     metas =
       from(meta in Meta, limit: 500)
       |> Repo.all()
-    render(conn, "get.json", %{})
+      |> Enum.map(fn row -> Map.drop(row, @associations) end)
+    render(conn, "get.json", %{metas: metas})
   end
 
-  # todo(heyzoos): return a single result for a query
+  @doc """
+  Lists a single metadata object satisfying the provided query.
+  """
   def head(conn, _params) do
-    render(conn, "head.json", %{})
+    meta =
+      first(Meta)
+      |> Repo.one()
+      |> Map.drop(@associations)
+    render(conn, "head.json", %{meta: meta})
   end
 
-  # todo(heyzoos): describe the `Meta` schema
+  @doc """
+  Lists all single metadata objects satisfying the provided query. The metadata
+  objects have all associations preloaded.
+  https://stackoverflow.com/questions/34750899/render-many-to-many-relationship-json-in-phoenix-framework
+  """
   def describe(conn, _params) do
-    render(conn, "describe.json", %{})
+    metas =
+      from(meta in Meta, limit: 500)
+      |> Repo.all()
+      |> Enum.map(fn row -> Map.drop(row, @associations) end)
+    render(conn, "describe.json", %{metas: metas})
   end
 end

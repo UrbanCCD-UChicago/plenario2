@@ -64,6 +64,7 @@ defmodule Plenario.Schemas.Meta do
     Shapefile: "shp"
   ]
 
+  @derive [Poison.Encoder]
   schema "metas" do
     field :name, :string
     field :slug, :string
