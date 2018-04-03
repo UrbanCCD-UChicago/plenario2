@@ -2,12 +2,18 @@
 
 <h2>
   <%= @meta.name %>
+  <div id="meta-buttons">
   <%= if show_edits? do %>
     <%= button "Submit for Approval", to: data_set_path(@conn, :submit_for_approval, @meta.id), class: "btn btn-success pull-right" %>
   <% end %>
   <%= if @user_is_owner? and not Enum.member?(["new", "needs_approval", "erred"], @meta.state) do %>
-    <%= button "Ingest Now", to: data_set_path(@conn, :ingest_now, @meta.id), class: "btn btn-primary pull-right" %>
+    <%= button "Ingest Now", to: data_set_path(@conn, :ingest_now, @meta.id), class: "btn btn-primary" %>
   <% end %>
+  <%= if @meta.state != "new" do %>
+    <%= link "Request Changes", to: data_set_path(@conn, :request_changes, @meta), class: "btn btn-danger",
+    title: "Users must request changes to an administrator once a data set has been submitted or approved." %>
+  <% end %>
+  </div>
 </h2>
 
 <hr>
@@ -193,15 +199,5 @@
         <% end %>
       </tbody>
     </table>
-  </div>
-
-  <div class="col-lg-6" id="request-changes">
-    <%= if @meta.state != "new" do %>
-      <h3>
-      <%= link "Request Changes", to: data_set_path(@conn, :request_changes, @meta), class: "btn btn-primary pull-left" %> 
-      <div class="col-lg-6"><%= tooltip "You must request changes to an administrator once a data set has been submitted or approved." %></div>
-      </h3>
-    <% end %>
-    
   </div>
 </div>
