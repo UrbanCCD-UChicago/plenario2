@@ -54,6 +54,9 @@ defmodule PlenarioWeb.Router do
     resources "/data-sets", DataSetController
     post "/data-sets/:id/submit-for-approval", DataSetController, :submit_for_approval
     post "/data-sets/:id/ingest-now", DataSetController, :ingest_now
+    get "/data-sets/:id/request-changes", DataSetController, :request_changes
+    post "/data-sets/:id/send-change-request-email", DataSetController, :send_change_request_email
+
     post "/data-sets/:meta_id/export", ExportController, :export_meta
 
     resources "/data-sets/:dsid/fields", DataSetFieldController
@@ -114,6 +117,11 @@ defmodule PlenarioWeb.Router do
     get "/aot/@head", AotController, :head
     get "/aot/@describe", AotController, :describe
   end
+
+  if Mix.env == :dev do
+    forward "/sent-emails", Bamboo.EmailPreviewPlug
+  end
+
 end
 
 

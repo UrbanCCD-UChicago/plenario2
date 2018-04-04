@@ -69,7 +69,7 @@ defmodule PlenarioWeb.Admin.MetaController do
 
       {:error, _} ->
         conn
-        |> put_flash(:error, "Something went wrong when approving meta #{meta}")
+        |> put_flash(:error, "Something went wrong when approving meta #{meta.name}")
         |> redirect(to: meta_path(conn, :index))
     end
   end
@@ -91,7 +91,7 @@ defmodule PlenarioWeb.Admin.MetaController do
 
       {:error, _} ->
         conn
-        |> put_flash(:error, "Something went wrong when disapproving meta #{meta}")
+        |> put_flash(:error, "Something went wrong when disapproving meta #{meta.name}")
         |> redirect(to: meta_path(conn, :index))
     end
   end
