@@ -33,13 +33,11 @@ defmodule PlenarioWeb.Api.ListController do
   @doc """
   Lists all single metadata objects satisfying the provided query. The metadata
   objects have all associations preloaded.
-  https://stackoverflow.com/questions/34750899/render-many-to-many-relationship-json-in-phoenix-framework
   """
   def describe(conn, _params) do
     metas =
-      from(meta in Meta, limit: 500)
+      from(meta in Meta, limit: 500, preload: ^@associations)
       |> Repo.all()
-      |> Enum.map(fn row -> Map.drop(row, @associations) end)
     render(conn, "describe.json", %{metas: metas})
   end
 end

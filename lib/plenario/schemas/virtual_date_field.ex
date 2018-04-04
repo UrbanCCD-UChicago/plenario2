@@ -9,6 +9,7 @@ defmodule Plenario.Schemas.VirtualDateField do
 
   alias Plenario.Schemas.VirtualDateField
 
+  @derive {Poison.Encoder, only: [:name]}
   schema "virtual_date_fields" do
     field :name, :string
 

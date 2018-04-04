@@ -9,6 +9,7 @@ defmodule Plenario.Schemas.UniqueConstraint do
 
   alias Plenario.Schemas.UniqueConstraint
 
+  @derive {Poison.Encoder, only: [:name, :field_ids]}
   schema "unique_constraints" do
     field :name, :string
     field :field_ids, {:array, :integer}

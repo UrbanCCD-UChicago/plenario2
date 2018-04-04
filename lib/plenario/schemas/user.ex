@@ -5,6 +5,7 @@ defmodule Plenario.Schemas.User do
 
   use Ecto.Schema
 
+  @derive {Poison.Encoder, only: [:name, :email, :bio]}
   schema "users" do
     field :name, :string
     field :email, :string

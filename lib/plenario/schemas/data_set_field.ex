@@ -23,6 +23,7 @@ defmodule Plenario.Schemas.DataSetField do
     JSON: "jsonb"
   ]
 
+  @derive {Poison.Encoder, only: [:id, :name, :type, :description]}
   schema "data_set_fields" do
     field :name, :string
     field :type, :string
