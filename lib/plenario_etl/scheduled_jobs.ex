@@ -13,8 +13,6 @@ defmodule PlenarioEtl.ScheduledJobs do
     now = %DateTime{DateTime.utc_now() | second: 0, microsecond: {0, 0}}
     last_check = Timex.shift(now, offset)
 
-    Logger.info("time bounds: now=#{now} last_check=#{last_check}")
-
     query =
       from m in Meta,
       where:
@@ -29,11 +27,13 @@ defmodule PlenarioEtl.ScheduledJobs do
           or fragment("? between ?::timestamptz and ?::timestamptz", m.next_import, ^last_check, ^now)
         )
 
-    q = Ecto.Adapters.SQL.to_sql(:all, Repo, query)
-    Logger.info("running query: #{inspect(q)}")
     metas = Repo.all(query)
     names = for m <- metas, do: m.name
-    Logger.info("refreshing #{length(metas)} datasets: #{inspect(names)}")
+
+    if length(metas) > 0 do
+      Logger.info("refreshing #{length(metas)} datasets: #{inspect(names)}")
+      Logger.info("time bounds: now=#{now} last_check=#{last_check}")
+    end
 
     Enum.map(metas, fn meta ->
       PlenarioEtl.ingest(meta)

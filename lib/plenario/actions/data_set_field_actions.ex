@@ -5,14 +5,12 @@ defmodule Plenario.Actions.DataSetFieldActions do
   """
 
   alias Plenario.Repo
-
   alias Plenario.Actions.MetaActions
-
   alias Plenario.Schemas.{Meta, DataSetField}
-
   alias Plenario.Changesets.DataSetFieldChangesets
-
   alias Plenario.Queries.DataSetFieldQueries
+
+  import Ecto.Query
 
   @type ok_instance :: {:ok, DataSetField} | {:error, Ecto.Changeset.t()}
 
@@ -86,5 +84,9 @@ defmodule Plenario.Actions.DataSetFieldActions do
       "new" -> Repo.delete(field)
       _ -> {:error, "Meta is locked."}
     end
+  end
+
+  def field_names(ids) when is_list(ids) do
+    Repo.all(from(d in DataSetField, where: d.id in ^ids, select: d.name))
   end
 end
