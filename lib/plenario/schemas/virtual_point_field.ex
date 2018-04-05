@@ -9,8 +9,6 @@ defmodule Plenario.Schemas.VirtualPointField do
 
   alias Plenario.Schemas.VirtualPointField
 
-  @derive {Poison.Encoder, only: [:name, :meta_id, :lat_field_id,
-    :long_field_id, :loc_field_id]}
   schema "virtual_point_fields" do
     field :name, :string
 
