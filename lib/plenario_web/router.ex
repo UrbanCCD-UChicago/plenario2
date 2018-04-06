@@ -109,9 +109,9 @@ defmodule PlenarioWeb.Router do
     get "/data-sets/@head", ListController, :head
     get "/data-sets/@describe", ListController, :describe
 
-    get "/detail", DetailController, :get
-    get "/detail/@head", DetailController, :head
-    get "/detail/@describe", DetailController, :describe
+    get "/data-sets/:slug", DetailController, :get
+    get "/data-sets/:slug/@head", DetailController, :head
+    get "/data-sets/:slug/@describe", DetailController, :describe
 
     get "/aot", AotController, :get
     get "/aot/@head", AotController, :head
