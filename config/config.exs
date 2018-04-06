@@ -59,7 +59,7 @@ config :plenario, :email_sender, "plenario@uchicago.edu"
 config :plenario, :email_subject, "Plenario Notification"
 
 config :cors_plug,
-  max_age: 300000,
+  max_age: 300, # five minutes
   methods: ["GET", "HEAD", "OPTIONS"]
 
 # configure sentry
