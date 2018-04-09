@@ -13,5 +13,4 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     assert headers["access-control-allow-origin"] == "*"
     assert headers["access-control-max-age"] == "300"
   end
-
 end

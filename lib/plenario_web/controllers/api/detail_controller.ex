@@ -5,12 +5,15 @@ defmodule PlenarioWeb.Api.DetailController do
   alias Plenario.Repo
 
   import Ecto.Query
+  import PlenarioWeb.Api.Utils, only: [render_page: 5]
+
+  # assigns conn.assigns[:pagination_params]
+  plug PlenarioWeb.Api.ParsePaginationParams
 
   def get(conn, %{"slug" => slug}) do
-    records =
-      from(r in ModelRegistry.lookup(slug), limit: 500)
-      |> Repo.all()
-    render(conn, "get.json", %{records: records})
+    pagination_params = Map.get(conn.assigns, :pagination_params)
+    page = Repo.paginate(ModelRegistry.lookup(slug), pagination_params)
+    render_page(conn, "get.json", pagination_params, page.entries, page)
   end
 
   def head(conn, %{"slug" => slug}) do
@@ -21,9 +24,8 @@ defmodule PlenarioWeb.Api.DetailController do
   end
 
   def describe(conn, %{"slug" => slug}) do
-    records =
-      from(r in ModelRegistry.lookup(slug), limit: 500)
-      |> Repo.all()
-    render(conn, "describe.json", %{records: records})
+    pagination_params = Map.get(conn.assigns, :pagination_params)
+    page = Repo.paginate(ModelRegistry.lookup(slug), pagination_params)
+    render_page(conn, "get.json", pagination_params, page.entries, page)
   end
 end
