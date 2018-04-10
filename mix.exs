@@ -4,7 +4,7 @@ defmodule Plenario.Mixfile do
   def project do
     [
       app: :plenario,
-      version: "0.6.3",
+      version: "0.6.4",
       elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
@@ -55,17 +55,21 @@ defmodule Plenario.Mixfile do
       {:timex, "~> 3.2.1"},
       {:httpoison, "~> 0.13.0"},
       {:mock, "~> 0.3.1", only: :test},
-      {:quantum, "~> 2.2.5"},
       {:guardian, "~> 1.0"},
       {:ecto_state_machine, "~> 0.3.0"},
       {:canary, "~> 1.1"},
       {:canada, "~> 1.0"},
       {:distillery, "~> 1.5"},
       {:slugify, "~> 1.1"},
-      {:bamboo, "~> 0.8"},
-      {:bamboo_smtp, "~> 1.4.0"},
       {:sentry, "~> 6.1.0"},
       {:cors_plug, "~> 1.5"},
+
+      # Job scheduler
+      {:quantum, "~> 2.2.7"},
+
+      # Emailing libraries
+      {:bamboo, "~> 0.8"},
+      {:bamboo_smtp, "~> 1.4.0"},
 
       # Parsing libraries
       {:csv, "~> 2.0"},          # csv
@@ -75,6 +79,10 @@ defmodule Plenario.Mixfile do
       # Aws client libraries
       {:ex_aws, "~> 2.0"},
       {:ex_aws_s3, "~> 2.0"},
+
+      # Result pagination libraries
+      {:scrivener, "~> 2.5"},
+      {:scrivener_ecto, "~> 1.3"},
     ]
   end
 

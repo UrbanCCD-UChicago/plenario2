@@ -1,22 +1,38 @@
 defmodule PlenarioWeb.Api.ListControllerTest do
   use PlenarioWeb.Testing.ConnCase
 
+  alias Plenario.Actions.{MetaActions, UserActions}
+
+  setup do
+    Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
+    Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
+
+    {:ok, user} = UserActions.create("API Test User", "test@example.com", "password")
+    {:ok, _} = MetaActions.create("API Test Dataset", user.id, "https://www.example.com", "csv")
+    {:ok, _} = MetaActions.create("API Test Dataset 2", user.id, "https://www.example.com/2", "csv")
+    {:ok, _} = MetaActions.create("API Test Dataset 3", user.id, "https://www.example.com/3", "csv")
+    {:ok, _} = MetaActions.create("API Test Dataset 4", user.id, "https://www.example.com/4", "csv")
+    {:ok, _} = MetaActions.create("API Test Dataset 5", user.id, "https://www.example.com/5", "csv")
+
+    :ok
+  end
+
   test "GET /api/v2/data-sets", %{conn: conn} do
     conn = get(conn, "/api/v2/data-sets")
     result = json_response(conn, 200)
-    assert result["data"] == []
+    assert length(result["data"]) == 5
   end
 
   test "GET /api/v2/data-sets/@head", %{conn: conn} do
-    conn = get(conn, "/api/v2/data-sets")
+    conn = get(conn, "/api/v2/data-sets/@head")
     result = json_response(conn, 200)
-    assert result["data"] == []
+    assert is_map(result["data"])
   end
 
   test "GET /api/v2/data-sets/@describe", %{conn: conn} do
-    conn = get(conn, "/api/v2/data-sets")
+    conn = get(conn, "/api/v2/data-sets/@describe")
     result = json_response(conn, 200)
-    assert result["data"] == []
+    assert length(result["data"]) == 5
   end
 
   test "OPTIONS /api/v2/data-sets status", %{conn: conn} do

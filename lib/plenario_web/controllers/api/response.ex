@@ -28,7 +28,7 @@ end
 
 defmodule PlenarioWeb.Api.Response.Meta.Counts do
   @type t :: %__MODULE__{
-    pages: integer(),
+    total_pages: integer(),
     total_records: integer(),
     data: integer(),
     errors: integer()
@@ -36,7 +36,7 @@ defmodule PlenarioWeb.Api.Response.Meta.Counts do
 
   @derive [Poison.Encoder]
   defstruct [
-    pages: 0,
+    total_pages: 0,
     total_records: 0,
     data: 0,
     errors: 0

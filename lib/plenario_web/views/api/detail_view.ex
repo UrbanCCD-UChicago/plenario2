@@ -4,15 +4,48 @@ alias PlenarioWeb.Api.Response
 defmodule PlenarioWeb.Api.DetailView do
   use PlenarioWeb, :api_view
 
-  def render("get.json", %{records: records}) do
-    %Response{data: records}
+  def render("get.json", params) do
+    counts = %Response.Meta.Counts{
+      total_pages: params[:total_pages],
+      total_records: params[:total_records],
+      data: params[:data_count]
+    }
+
+    %Response{
+      meta: %Response.Meta{
+        params: params[:params],
+        counts: counts
+      },
+      data: params[:data]
+    }
+  end
+
+  def render("head.json", %{record: nil}) do
+    counts = %Response.Meta.Counts{
+      total_pages: 1,
+      total_records: 1,
+      data: 0
+    }
+
+    %Response{
+      meta: %Response.Meta{
+        counts: counts
+      }
+    }
   end
 
   def render("head.json", %{record: record}) do
-    %Response{data: record}
-  end
+    counts = %Response.Meta.Counts{
+      total_pages: 1,
+      total_records: 1,
+      data: 1
+    }
 
-  def render("describe.json", %{records: records}) do
-    %Response{data: records}
+    %Response{
+      meta: %Response.Meta{
+        counts: counts
+      },
+      data: record
+    }
   end
 end

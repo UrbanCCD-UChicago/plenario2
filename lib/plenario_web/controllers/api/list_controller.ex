@@ -5,28 +5,28 @@ defmodule PlenarioWeb.Api.ListController do
   alias Plenario.Schemas.Meta
 
   import Ecto.Query
+  import PlenarioWeb.Api.Utils, only: [render_page: 5]
+
+  # assigns conn.assigns[:pagination_params]
+  plug PlenarioWeb.Api.ParsePaginationParams
 
   @associations [:fields, :unique_constraints, :virtual_dates, :virtual_points, :user]
 
   @doc """
   Lists all metadata objects satisfying the provided query.
   """
-  def get(conn, %{}) do
-    metas =
-      from(meta in Meta, limit: 500)
-      |> Repo.all()
-      |> Enum.map(fn row -> Map.drop(row, @associations) end)
-    render(conn, "get.json", %{metas: metas})
+  def get(conn, _params) do
+    pagination_params = Map.get(conn.assigns, :pagination_params)
+    page = Repo.paginate(Meta, pagination_params)
+    entries = Enum.map(page.entries, fn row -> Map.drop(row, @associations) end)
+    render_page(conn, "get.json", pagination_params, entries, page)
   end
 
   @doc """
   Lists a single metadata object satisfying the provided query.
   """
   def head(conn, _params) do
-    meta =
-      first(Meta)
-      |> Repo.one()
-      |> Map.drop(@associations)
+    meta = first(Meta) |> Repo.one() |> Map.drop(@associations)
     render(conn, "head.json", %{meta: meta})
   end
 
@@ -35,9 +35,12 @@ defmodule PlenarioWeb.Api.ListController do
   objects have all associations preloaded.
   """
   def describe(conn, _params) do
-    metas =
-      from(meta in Meta, limit: 500, preload: ^@associations)
-      |> Repo.all()
-    render(conn, "describe.json", %{metas: metas})
+    pagination_params = Map.get(conn.assigns, :pagination_params)
+    page =
+      from(meta in Meta, preload: ^@associations)
+      |> Repo.paginate(pagination_params)
+    entries = page.entries
+    render_page(conn, "get.json", pagination_params, entries, page)
   end
+
 end
