@@ -17,10 +17,8 @@ defmodule PlenarioWeb.Api.DetailController do
   end
 
   def head(conn, %{"slug" => slug}) do
-    record =
-      first(ModelRegistry.lookup(slug))
-      |> Repo.one()
-    render(conn, "head.json", %{record: record})
+    entry = Repo.one(first(ModelRegistry.lookup(slug)))
+    render(conn, "head.json", %{record: entry})
   end
 
   def describe(conn, %{"slug" => slug}) do

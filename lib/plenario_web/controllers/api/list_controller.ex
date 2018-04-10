@@ -26,10 +26,7 @@ defmodule PlenarioWeb.Api.ListController do
   Lists a single metadata object satisfying the provided query.
   """
   def head(conn, _params) do
-    meta =
-      first(Meta)
-      |> Repo.one()
-      |> Map.drop(@associations)
+    meta = first(Meta) |> Repo.one() |> Map.drop(@associations)
     render(conn, "head.json", %{meta: meta})
   end
 

@@ -20,7 +20,32 @@ defmodule PlenarioWeb.Api.DetailView do
     }
   end
 
+  def render("head.json", %{record: nil}) do
+    counts = %Response.Meta.Counts{
+      total_pages: 1,
+      total_records: 1,
+      data: 0
+    }
+
+    %Response{
+      meta: %Response.Meta{
+        counts: counts
+      }
+    }
+  end
+
   def render("head.json", %{record: record}) do
-    %Response{data: record}
+    counts = %Response.Meta.Counts{
+      total_pages: 1,
+      total_records: 1,
+      data: 1
+    }
+
+    %Response{
+      meta: %Response.Meta{
+        counts: counts
+      },
+      data: record
+    }
   end
 end
