@@ -417,4 +417,10 @@ defmodule Plenario.Actions.MetaActionsTest do
       assert meta.state == "erred"
     end
   end
+
+  test "dump_bbox/1 returns properly formatted string", %{meta: meta} do
+    assert MetaActions.dump_bbox(meta) == nil
+    meta = %{meta | bbox: %Geo.Polygon{coordinates: [[{0, 0}, {1, 0}]]}}
+    assert MetaActions.dump_bbox(meta) == "[[0,0], [1,0]]"
+  end
 end
