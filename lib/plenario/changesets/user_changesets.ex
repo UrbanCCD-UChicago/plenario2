@@ -41,7 +41,6 @@ defmodule Plenario.Changesets.UserChangesets do
     |> validate_required(@create_keys)
     |> unique_constraint(:email)
     |> validate_format(:email, @email_regex)
-    |> validate_password()
     |> hash_password()
     |> put_change(:is_active, true)
   end
@@ -53,17 +52,8 @@ defmodule Plenario.Changesets.UserChangesets do
     |> validate_required(@required_keys)
     |> unique_constraint(:email)
     |> validate_format(:email, @email_regex)
-    |> validate_password()
     |> hash_password()
   end
-
-  defp validate_password(%Ecto.Changeset{valid?: true, changes: %{password: plaintext}} = changeset) do
-    case plaintext != :empty do
-      true -> changeset
-      false -> add_error(changeset, :password, "bad length")
-    end
-  end
-  defp validate_password(changeset), do: changeset
 
   defp hash_password(%Ecto.Changeset{valid?: true, changes: %{password: plaintext}} = changeset) do
     hashed = Comeonin.Bcrypt.hashpwsalt(plaintext)

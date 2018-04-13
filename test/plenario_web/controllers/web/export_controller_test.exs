@@ -1,7 +1,6 @@
 defmodule PlenarioWeb.Controllers.Web.ExportControllerTest do
   use Plenario.Testing.DataCase
   alias Plenario.Actions.UserActions
-  alias Plenario.Schemas.User
 
   setup do
     %{conn: build_conn()}
