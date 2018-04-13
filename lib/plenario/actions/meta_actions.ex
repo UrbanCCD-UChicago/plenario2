@@ -145,7 +145,7 @@ defmodule Plenario.Actions.MetaActions do
       e in Postgrex.Error ->
         DataSetActions.down!(meta)
         mark_erred(meta)
-        {:error, e.postgres.message}
+        {:error, e.message}
     end
   end
 

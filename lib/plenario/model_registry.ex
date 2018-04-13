@@ -97,10 +97,6 @@ defmodule Plenario.ModelRegistry do
     {:reply, Map.fetch!(state, slug), state}
   end
 
-  def handle_call(request, sender, state) do
-    super(request, sender, state)
-  end
-
   def handle_cast(:clear, _) do
     {:noreply, %{}}
   end

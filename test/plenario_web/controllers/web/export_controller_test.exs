@@ -22,6 +22,5 @@ defmodule PlenarioWeb.Controllers.Web.ExportControllerTest do
 
     conn
     |> post(path)
-    |> IO.inspect
   end
 end

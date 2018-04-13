@@ -1,4 +1,4 @@
-defmodule Plenario.Testing.MetaActionsTest do
+defmodule Plenario.Actions.MetaActionsTest do
   use Plenario.Testing.DataCase
 
   import Mock
@@ -401,5 +401,20 @@ defmodule Plenario.Testing.MetaActionsTest do
       ],
       srid: 4326
     }
+  end
+
+  # todo(heyzoos) If I mock up! I also have to mock down? Investigate.
+  # todo(heyzoos) Add a test to make sure down! cleans up properly.
+  test "approve/1 with failing call to `up!/1`", %{meta: meta} do
+    with_mock(DataSetActions, 
+      up!: fn _ -> raise(Postgrex.Error, message: "Intentional Postgres.Error") end,
+      down!: fn _ -> :ok end
+    ) do
+      MetaActions.submit_for_approval(meta)
+      meta = MetaActions.get(meta.id())
+      MetaActions.approve(meta)
+      meta = MetaActions.get(meta.id())
+      assert meta.state == "erred"
+    end
   end
 end

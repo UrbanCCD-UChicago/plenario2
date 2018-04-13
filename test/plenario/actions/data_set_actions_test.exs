@@ -1,4 +1,4 @@
-defmodule Plenario.Testing.DataSetActionsTest do
+defmodule Plenario.Actions.DataSetActionsTest do
   use Plenario.Testing.DataCase 
 
   alias Plenario.Repo
