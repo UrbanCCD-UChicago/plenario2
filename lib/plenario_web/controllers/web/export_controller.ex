@@ -14,13 +14,16 @@ defmodule PlenarioWeb.Web.ExportController do
   def export_meta(conn, %{"meta_id" => meta_id}) do
     meta = MetaActions.get(meta_id)
     user = Guardian.Plug.current_resource(conn)
+    export_meta(conn, meta, user)
+  end
 
-    if user == nil do
-      conn
-      |> put_flash(:error, "You must sign in to export data sets.")
-      |> redirect(to: auth_path(conn, :index))
-    end
+  def export_meta(conn, meta, nil) do
+    conn
+    |> put_flash(:error, "You must sign in to export \"#{meta.name}\".")
+    |> redirect(to: auth_path(conn, :index))
+  end
 
+  def export_meta(conn, meta, user) do
     model = ModelRegistry.lookup(meta.slug)
     query = from(m in model)
     query_string = inspect(query, structs: false)

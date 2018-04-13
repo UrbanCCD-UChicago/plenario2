@@ -18,12 +18,17 @@ defmodule Plenario.Testing.DataCase do
 
   using do
     quote do
+      use Phoenix.ConnTest
+
       alias Plenario.Repo
 
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
       import Plenario.Testing.DataCase
+      import PlenarioWeb.Router.Helpers
+
+      @endpoint PlenarioWeb.Endpoint
     end
   end
 
