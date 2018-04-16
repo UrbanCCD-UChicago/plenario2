@@ -1,5 +1,6 @@
 defmodule PlenarioWeb.Web.Testing.PageControllerTest do
   use PlenarioWeb.Testing.ConnCase
+  import PlenarioWeb.Router.Helpers
 
   alias Plenario.Actions.{
     UserActions,
@@ -172,5 +173,17 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     conn
     |> get(page_path(conn, :aot_explorer))
     |> html_response(:ok)
+  end
+
+  @tag :anon
+  test "explorer receives start datetime greater than end datetime", %{conn: conn} do
+    conn = get(conn, page_path(conn, :explorer), %{"starting_on" => "3000-01-01", "ending_on" => "2000-01-01"})
+    assert get_flash(conn)["error"] =~ "cannot be greater than"
+  end
+
+  @tag :anon
+  test "explorer receives a terribly formatted datetime", %{conn: conn} do
+    conn = get(conn, page_path(conn, :explorer), %{"starting_on" => "woopwoop", "ending_on" => "2000-01-01"})
+    assert get_flash(conn)["error"] =~ "Invalid datetime woopwoop"
   end
 end
