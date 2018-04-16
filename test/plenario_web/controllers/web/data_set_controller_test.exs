@@ -1,7 +1,9 @@
 defmodule PlenarioWeb.Web.Testing.DataSetControllerTest do
-  use PlenarioWeb.Testing.ConnCase 
+  use PlenarioWeb.Testing.ConnCase
 
   alias Plenario.Actions.MetaActions
+
+  import Phoenix.Controller, only: [view_template: 1]
 
   setup %{reg_user: user} do
     {:ok, meta} = MetaActions.create("name", user, "https://example.com/", "csv")
@@ -136,5 +138,36 @@ defmodule PlenarioWeb.Web.Testing.DataSetControllerTest do
     conn
     |> get(data_set_path(conn, :show, "list"))
     |> html_response(404)
+  end
+
+  @tag :auth
+  test "request_changes/2", %{conn: conn, meta: meta} do
+    conn =
+      conn
+      |> get(data_set_path(conn, :request_changes, meta.id()))
+
+    assert view_template(conn) == "request-changes.html"
+  end
+
+  @tag :auth
+  test "send_request_change_email/2", %{conn: conn, meta: meta, reg_user: user} do
+    opts = %{
+      "user_id": user.id(),
+      "user_name": user.name(),
+      "meta_id": meta.id(),
+      "meta_name": meta.name(),
+
+      "column_1": "true",
+      "column_2": "false",
+      "column_3": "true",
+
+      "comments": "lorem ipsum"
+    }
+
+    conn =
+      conn
+      |> post(data_set_path(conn, :send_change_request_email, meta.id(), opts))
+
+    assert redirected_to(conn) =~ "/request-changes"
   end
 end

@@ -24,6 +24,7 @@
   },
 
   "skip_files": [
+    "lib/plenario/release_tasks.ex",
     "deps/",
     "test/"
   ]

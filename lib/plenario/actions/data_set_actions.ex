@@ -183,14 +183,6 @@ defmodule Plenario.Actions.DataSetActions do
   end
 
   defp execute_sql!(sql) do
-    case Ecto.Adapters.SQL.query(Repo, sql) do
-      {:ok, _} ->
-        :ok
-
-      {:error, error} ->
-        Logger.error(error.postgres.message)
-        Logger.error(sql)
-        raise error
-    end
+    Ecto.Adapters.SQL.query!(Repo, sql)
   end
 end

@@ -86,6 +86,7 @@ defmodule Plenario.Actions.DataSetFieldActions do
     end
   end
 
+  def field_names(nil), do: []
   def field_names(ids) when is_list(ids) do
     Repo.all(from(d in DataSetField, where: d.id in ^ids, select: d.name))
   end
