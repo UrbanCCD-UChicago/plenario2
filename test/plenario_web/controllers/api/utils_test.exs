@@ -1,5 +1,6 @@
 defmodule PlenarioWeb.Api.UtilsTest do
   use ExUnit.Case, async: true
+  import Ecto.Query
   import PlenarioWeb.Api.Utils
 
   alias Plenario.{ModelRegistry, Repo}
@@ -36,20 +37,14 @@ defmodule PlenarioWeb.Api.UtilsTest do
   test "map_to_query/2", %{slug: slug} do
     query_map = %{
       "inserted_at" => {"le", ~N[2000-01-01 13:30:15]},
-      "updated_at" => {"le", ~N[2000-01-01 13:30:15]}
+      "updated_at" => {"lt", ~N[2000-01-01 13:30:15]},
+      "float_column" => {"ge", 0.0},
+      "integer_column" => {"gt", 42},
+      "string_column" => {"eq", "hello!"}
     }
 
     query =
       ModelRegistry.lookup(slug)
       |> map_to_query(query_map)
-      |> IO.inspect()
-  end
-
-  test "tuple_to_where_condition/1", %{slug: slug} do
-    tuple_condition = {"datetime_column", {"le", ~N[2000-01-01 13:30:15]}}
-    query =
-      ModelRegistry.lookup(slug)
-      |> tuple_to_where_condition(tuple_condition)
-      |> IO.inspect()
   end
 end

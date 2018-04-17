@@ -10,22 +10,15 @@ defmodule PlenarioWeb.Api.Utils do
       data: entries})
   end
 
-  def tuple_to_where_condition(query, {column, {operator, value}}) do
-    case operator do
-      "le" ->
-        query |> where(^String.to_atom(column) <= ^value)
-    end
-  end
+  def where_condition(query, {column, {"le", value}}), do: where(query, ^String.to_atom(column) <= ^value)
+  def where_condition(query, {column, {"lt", value}}), do: where(query, ^String.to_atom(column) < ^value)
+  def where_condition(query, {column, {"ge", value}}), do: where(query, ^String.to_atom(column) >= ^value)
+  def where_condition(query, {column, {"gt", value}}), do: where(query, ^String.to_atom(column) > ^value)
+  def where_condition(query, {column, {"eq", value}}), do: where(query, ^String.to_atom(column) == ^value)
 
-  def map_to_query(query, []) do
-    query
-  end
-
-  def map_to_query(query, params) when is_map(params) do
-    map_to_query(query, Map.to_list(params))
-  end
-
+  def map_to_query(query, []), do: query
+  def map_to_query(query, params) when is_map(params), do: map_to_query(query, Map.to_list(params))
   def map_to_query(query, [condition_tuple | params]) do
-    map_to_query(query |> tuple_to_where_condition(condition_tuple), params)
+    map_to_query(query |> where_condition(condition_tuple), params)
   end
 end
