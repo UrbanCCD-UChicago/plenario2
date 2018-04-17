@@ -15,23 +15,23 @@ defmodule PlenarioWeb.Web.PageController do
     starts = Map.get(params, "starting_on", nil)
     ends = Map.get(params, "ending_on", nil)
 
-    {startdt, conn} = parse_dt(conn, starts)
-    {enddt, conn} = parse_dt(conn, ends)
+    {startdt, conn} = parse_date(conn, starts)
+    {enddt, conn} = parse_date(conn, ends)
 
     do_explorer(zoom, coords, startdt, enddt, conn)
   end
 
-  defp parse_dt(conn, nil) do
+  defp parse_date(conn, nil) do
     {nil, conn}
   end
 
-  defp parse_dt(conn, datetime_string) do
-    case DateTime.from_iso8601("#{datetime_string}T00:00:00.0Z") do
+  defp parse_date(conn, date_string) do
+    case DateTime.from_iso8601("#{date_string}T00:00:00.0Z") do
       {_, datetime, _} ->
         {datetime, conn}
       {:error, :invalid_format} ->
-        {nil, put_flash(conn, :error, 
-          "Invalid datetime #{datetime_string}, must be formatted as YYYY-MM-DD")}
+        {nil, put_flash(conn, :error,
+          "Invalid date #{date_string}, must be formatted as YYYY-MM-DD")}
     end
   end
 
@@ -60,7 +60,7 @@ defmodule PlenarioWeb.Web.PageController do
 
     center = get_poly_center(bbox)
     results = Plenario.search_data_sets(bbox, range)
-    render_explorer(conn, results, center, zoom, inspect(map_bbox), startdt, enddt) 
+    render_explorer(conn, results, center, zoom, inspect(map_bbox), startdt, enddt)
   end
 
   defp render_explorer(conn, results, center, zoom, bbox, startdt, enddt) do
@@ -140,7 +140,7 @@ defmodule PlenarioWeb.Web.PageController do
     """
     sql = EEx.eval_string(temp_hm_query, [table_name: meta.table_name], trim: true)
 
-    temp_hm_data = 
+    temp_hm_data =
       case Ecto.Adapters.SQL.query(Repo, sql) do
         {:ok, result} ->
           for row <- result.rows do
@@ -169,7 +169,7 @@ defmodule PlenarioWeb.Web.PageController do
     """
     sql = EEx.eval_string(humid_hm_query, [table_name: meta.table_name], trim: true)
 
-    humid_hm_data = 
+    humid_hm_data =
       case Ecto.Adapters.SQL.query(Repo, sql) do
         {:ok, result} ->
           for row <- result.rows do
