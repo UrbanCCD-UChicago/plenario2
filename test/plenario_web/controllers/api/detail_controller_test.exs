@@ -72,6 +72,27 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     assert response["meta"]["params"]["page_size"] == 5
   end
 
+  test "GET /api/v2/data-sets/:slug pagination is stable with backfills", %{slug: slug} do
+    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=5&page=2")
+    response = json_response(conn, 200)
+
+    assert length(response["data"]) == 5
+    assert response["meta"]["params"]["page"] == 2
+    assert response["meta"]["params"]["page_size"] == 5
+  end
+
+  test "GET /api/v2/data-sets/:slug populates pagination links", %{slug: slug} do
+    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=5&page=2")
+    response = json_response(conn, 200)
+
+    datetime = DateTime.to_iso8601(DateTime.utc_now())
+
+    assert length(response["data"]) == 5
+    assert response["meta"]["links"]["current"] == "#{PlenarioWeb.Endpoint.url}/api/v2/data-sets/${slug}?page_size=5&page=2&inserted_at=lt:#{datetime}"
+    assert response["meta"]["links"]["previous"] == "#{PlenarioWeb.Endpoint.url}/api/v2/data-sets/${slug}?page_size=5&page=1&inserted_at=lt:#{datetime}"
+    assert response["meta"]["links"]["next"] == "#{PlenarioWeb.Endpoint.url}/api/v2/data-sets/${slug}?page_size=5&page=3&inserted_at=lt:#{datetime}"
+  end
+
   test "OPTIONS /api/v2/data-sets/:slug status", %{conn: conn} do
     conn = options(conn, "/api/v2/data-sets")
     assert conn.status == 204
