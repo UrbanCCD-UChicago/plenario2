@@ -7,6 +7,7 @@ defmodule Plenario.Actions.MetaActions do
   require Logger
 
   import Ecto.Query
+  import Slug, only: [slugify: 2]
 
   alias Plenario.{Repo, ModelRegistry}
   alias Plenario.Schemas.{Meta, User}
@@ -220,10 +221,16 @@ defmodule Plenario.Actions.MetaActions do
   Gets a list of the field names for a given Meta.
   """
   def get_column_names(meta) do
-    fields = DataSetFieldActions.list(for_meta: meta)
-    field_names = for f <- fields, do: f.name
+    for f <- DataSetFieldActions.list(for_meta: meta), do: f.name
+  end
 
-    field_names
+  @doc """
+  Gets a list of the slugified field names and types for a given Meta.
+  """
+  def get_column_name_slugs_and_types(meta) do
+    for f <- DataSetFieldActions.list(for_meta: meta) do
+      {slugify(f.name, separator: "_"), f.type}
+    end
   end
 
   @doc """

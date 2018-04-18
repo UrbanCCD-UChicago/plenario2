@@ -1,8 +1,6 @@
-# todo(heyzoos) given the similarity of this plug to `parse_pagination_params.ex`, and depending on
-# todo(heyzoos) how similar this is to Sanil's implementation, might be able to abstract this into
-# todo(heyzoos) a single module that takes keys as an argument
 defmodule PlenarioWeb.Api.ParseDbOperationParams do
   use PlenarioWeb, :api_controller
+  import PlenarioWeb.Api.Utils, only: [to_naive_datetime: 1]
 
   @db_operation_keys ["updated_at", "inserted_at"]
 
@@ -27,18 +25,5 @@ defmodule PlenarioWeb.Api.ParseDbOperationParams do
     end)
 
     assign(conn, :db_operation_params, Enum.filter(params, &(&1)))
-  end
-
-  def to_naive_datetime(string) do
-    case Date.from_iso8601(string) do
-      {:ok, date} ->
-        date_erl = Date.to_erl(date)
-        {:ok, NaiveDateTime.from_erl!({date_erl}, {0, 0, 0})}
-      {:error, _} ->
-        case NaiveDateTime.from_iso8601(string) do
-          {:ok, datetime} -> {:ok, datetime}
-          {:error, message, _} -> {:error, message}
-        end
-    end
   end
 end
