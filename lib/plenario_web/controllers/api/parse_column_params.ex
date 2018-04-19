@@ -11,25 +11,22 @@ defmodule PlenarioWeb.Controllers.Api.ParseColumnParams do
     columns_and_types =
       conn.params["slug"]
       |> MetaActions.get()
-      |> MetaActions.get_column_name_slugs_and_types()
-
+      |> MetaActions.get_column_names_and_types()
 
     columns = for {column, type} <- columns_and_types, do: column
     column_type_map = Map.new(columns_and_types)
 
+    IO.inspect(Map.get(conn, :params))
+
     {params, _} =
       Map.get(conn, :params)
       |> Map.split(columns)
-
-    IO.inspect(columns_and_types)
 
     column_params = Enum.map(params, fn {key, value} ->
       [operator, operand] = String.split(value, ":", parts: 2)
       casted_operand = cast(operand, column_type_map[key])
       {key, {operator, casted_operand}}
     end)
-
-    IO.inspect(column_params)
 
     assign(conn, :column_params, column_params)
   end
