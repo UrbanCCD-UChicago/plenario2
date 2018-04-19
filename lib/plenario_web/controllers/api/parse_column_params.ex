@@ -18,6 +18,10 @@ defmodule PlenarioWeb.Controllers.Api.ParseColumnParams do
 
     {params, _} =
       Map.get(conn, :params)
+      |> Enum.map(fn {key, value} ->
+        {URI.decode(key), URI.decode(value)}
+      end)
+      |> Map.new()
       |> Map.split(columns)
 
     column_params = Enum.map(params, fn {key, value} ->

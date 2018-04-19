@@ -16,6 +16,10 @@ defmodule PlenarioWeb.Api.Utils do
       data: entries})
   end
 
+  @doc """
+  Generates the url links for navigating pages in the meta["links"] part of
+  the api response.
+  """
   def generate_links(conn, page) do
     page_number = page.page_number
     total_pages = page.total_pages
@@ -23,11 +27,9 @@ defmodule PlenarioWeb.Api.Utils do
 
     # Remove the pagination parameters so when we reconstruct the query string,
     # we don't repeat them unnecessarily.
-    #
-    # Also sometimes a "" can sneak in? This guards against that.
-    all_params = String.split(conn.query_string, "&") |> Enum.filter(&(&1 != ""))
-    non_page_params = Enum.filter(all_params, fn param ->
-      [key, _] = String.split(param, "=")
+    all_params = URI.decode_query(conn.query_string)
+
+    non_page_params = Enum.filter(all_params, fn {key, _} ->
       key not in ["page", "page_size"]
     end)
 
@@ -52,12 +54,13 @@ defmodule PlenarioWeb.Api.Utils do
     }
   end
 
-  def construct_url(conn, params, page_size, nil), do: nil
+  @doc """
+  Generates the url used to navigate the pages. The first head of this function
+  returns nil if no page number is specified, this is just for convenience.
+  """
+  def construct_url(_, _, _, nil), do: nil
   def construct_url(conn, params, page_size, page) do
-    params_kwlist = Enum.map(params, fn param ->
-      [key, value] = String.split(param, "=")
-      {key, value}
-    end) ++ [page_size: page_size, page: page]
+    params_kwlist = params ++ [page_size: page_size, page: page]
     PlenarioWeb.Router.Helpers.detail_url(conn, :get, conn.params["slug"], params_kwlist)
   end
 
