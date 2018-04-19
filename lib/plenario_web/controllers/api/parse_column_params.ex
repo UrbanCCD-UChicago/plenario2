@@ -13,10 +13,8 @@ defmodule PlenarioWeb.Controllers.Api.ParseColumnParams do
       |> MetaActions.get()
       |> MetaActions.get_column_names_and_types()
 
-    columns = for {column, type} <- columns_and_types, do: column
+    columns = for {column, _} <- columns_and_types, do: column
     column_type_map = Map.new(columns_and_types)
-
-    IO.inspect(Map.get(conn, :params))
 
     {params, _} =
       Map.get(conn, :params)
