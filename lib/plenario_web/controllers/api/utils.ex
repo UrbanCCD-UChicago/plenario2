@@ -1,5 +1,6 @@
 defmodule PlenarioWeb.Api.Utils do
   import Ecto.Query
+  import PlenarioWeb.Router.Helpers, only: [detail_url: 4, list_url: 3]
 
   @doc """
   Utility function for rendering a `Scrivener.Page` of results. Even if the
@@ -40,10 +41,28 @@ defmodule PlenarioWeb.Api.Utils do
     # And of course
     current_page_number = page_number
 
+    # Check if there is a `inserted_at` filter present, if not - add one
+    datetime_now = NaiveDateTime.to_iso8601(NaiveDateTime.utc_now)
+
+    kwlist_params = Enum.map(non_page_params, fn {k, v} ->
+      if is_atom(k) do
+        {k, v}
+      else
+        {String.to_atom(k), v}
+      end
+    end)
+
+    inserted_at_params = case Keyword.has_key?(kwlist_params, :inserted_at) do
+      true -> []
+      false -> [inserted_at: "le:#{datetime_now}"]
+    end
+
+    params = kwlist_params ++ inserted_at_params
+
     # Construct the query strings
-    previous_page_url = construct_url(conn, non_page_params, page_size, previous_page_number)
-    next_page_url = construct_url(conn, non_page_params, page_size, next_page_number)
-    current_page_url = construct_url(conn, non_page_params, page_size, current_page_number)
+    previous_page_url = construct_url(conn, params, page_size, previous_page_number)
+    next_page_url = construct_url(conn, params, page_size, next_page_number)
+    current_page_url = construct_url(conn, params, page_size, current_page_number)
 
     %{
       previous: previous_page_url,
@@ -57,9 +76,15 @@ defmodule PlenarioWeb.Api.Utils do
   returns nil if no page number is specified, this is just for convenience.
   """
   def construct_url(_, _, _, nil), do: nil
+
+  def construct_url(%Plug.Conn{params: %{"slug" => slug}} = conn, params, page_size, page) do
+    params_kwlist = params ++ [page_size: page_size, page: page]
+    detail_url(conn, :get, slug, params_kwlist)
+  end
+
   def construct_url(conn, params, page_size, page) do
     params_kwlist = params ++ [page_size: page_size, page: page]
-    PlenarioWeb.Router.Helpers.detail_url(conn, :get, conn.params["slug"], params_kwlist)
+    list_url(conn, :get, params_kwlist)
   end
 
   @doc """

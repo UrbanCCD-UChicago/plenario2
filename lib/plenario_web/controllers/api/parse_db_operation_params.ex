@@ -14,14 +14,9 @@ defmodule PlenarioWeb.Api.ParseDbOperationParams do
       |> Map.split(@db_operation_keys)
 
     params = Enum.map(params, fn {key, value} ->
-      {operator, datetime_str} = String.split(value, ":", parts: 2)
-      {key, {operator, case to_naive_datetime(datetime_str) do
-        {:ok, naive_datetime} ->
-          {String.to_atom(key), naive_datetime}
-        {:error, _message} ->
-          # put the message into the meta error list
-          nil
-      end}}
+      [operator, datetime_str] = String.split(value, ":", parts: 2)
+      {:ok, datetime} = to_naive_datetime(datetime_str)
+      {key, {operator, datetime}}
     end)
 
     assign(conn, :db_operation_params, Enum.filter(params, &(&1)))
