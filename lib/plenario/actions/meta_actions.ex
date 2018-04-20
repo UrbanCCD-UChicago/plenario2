@@ -220,10 +220,16 @@ defmodule Plenario.Actions.MetaActions do
   Gets a list of the field names for a given Meta.
   """
   def get_column_names(meta) do
-    fields = DataSetFieldActions.list(for_meta: meta)
-    field_names = for f <- fields, do: f.name
+    for f <- DataSetFieldActions.list(for_meta: meta), do: f.name
+  end
 
-    field_names
+  @doc """
+  Gets a list of the slugified field names and types for a given Meta.
+  """
+  def get_column_names_and_types(meta) do
+    for f <- DataSetFieldActions.list(for_meta: meta) do
+      {f.name, f.type}
+    end
   end
 
   @doc """

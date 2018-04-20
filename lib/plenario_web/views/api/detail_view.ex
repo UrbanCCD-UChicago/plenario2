@@ -11,10 +11,17 @@ defmodule PlenarioWeb.Api.DetailView do
       data: params[:data_count]
     }
 
+    links = %Response.Meta.Links{
+      previous: params[:links][:previous],
+      current: params[:links][:current],
+      next: params[:links][:next]
+    }
+
     %Response{
       meta: %Response.Meta{
         params: params[:params],
-        counts: counts
+        counts: counts,
+        links: links
       },
       data: params[:data]
     }

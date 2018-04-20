@@ -184,6 +184,6 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
   @tag :anon
   test "explorer receives a terribly formatted datetime", %{conn: conn} do
     conn = get(conn, page_path(conn, :explorer), %{"starting_on" => "woopwoop", "ending_on" => "2000-01-01"})
-    assert get_flash(conn)["error"] =~ "Invalid datetime woopwoop"
+    assert get_flash(conn)["error"] =~ "Invalid date woopwoop"
   end
 end

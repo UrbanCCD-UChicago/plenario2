@@ -1,0 +1,3 @@
+ALTER TABLE "<%= table_name %>"
+    ADD COLUMN IF NOT EXISTS inserted_at timestamp,
+    ADD COLUMN IF NOT EXISTS updated_at timestamp;

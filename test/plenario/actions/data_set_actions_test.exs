@@ -1,5 +1,5 @@
 defmodule Plenario.Actions.DataSetActionsTest do
-  use Plenario.Testing.DataCase 
+  use Plenario.Testing.DataCase
 
   alias Plenario.Repo
 
@@ -67,7 +67,8 @@ defmodule Plenario.Actions.DataSetActionsTest do
       1, 12.3, 2018, 1, 1, 10.1, 20.9, "(10.1, 20.9)",
       {{2018, 1, 1}, {0, 0, 0, 0}}, # virtual date
       %Geo.Point{coordinates: {20.9, 10.1}, srid: 4326},  # virtual point
-      %Geo.Point{coordinates: {20.9, 10.1}, srid: 4326}
+      %Geo.Point{coordinates: {20.9, 10.1}, srid: 4326},
+      nil, nil
     ]
 
     # check unique key
