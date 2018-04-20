@@ -27,9 +27,7 @@ defmodule PlenarioWeb.Api.Utils do
 
     # Remove the pagination parameters so when we reconstruct the query string,
     # we don't repeat them unnecessarily.
-    all_params = URI.decode_query(conn.query_string)
-
-    non_page_params = Enum.filter(all_params, fn {key, _} ->
+    non_page_params = Enum.filter(conn.params, fn {key, _} ->
       key not in ["page", "page_size"]
     end)
 

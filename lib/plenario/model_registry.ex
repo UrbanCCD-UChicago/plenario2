@@ -126,6 +126,7 @@ defmodule Plenario.ModelRegistry do
             field unquote(name), unquote(type)
           end
         end)
+        timestamps()
       end
     end, Macro.Env.location(__ENV__))
   end

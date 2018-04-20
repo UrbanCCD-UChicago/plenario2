@@ -61,7 +61,10 @@ defmodule Plenario.Actions.DataSetActions do
     sql = create_trigger_sql(trigger_name, meta.table_name, fname)
     execute_sql!(sql)
 
-    # done!
+    meta.table_name()
+    |> add_timestamps_sql()
+    |> execute_sql!()
+
     :ok
   end
 
@@ -180,6 +183,11 @@ defmodule Plenario.Actions.DataSetActions do
       trim: true)
 
     sql
+  end
+
+  defp add_timestamps_sql(table_name) do
+    Path.join(:code.priv_dir(:plenario), "#{@template_dir}/add-timestamps.sql.eex")
+    |> EEx.eval_file([table_name: table_name], trim: true)
   end
 
   defp execute_sql!(sql) do
