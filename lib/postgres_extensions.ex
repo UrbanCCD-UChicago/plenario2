@@ -85,7 +85,7 @@ defmodule Plenario.ForgivingDatetime do
   end
   def cast(_), do: :error
 
-  def load({{y, m, d}, {h, mm, s, _}}) do 
+  def load({{y, m, d}, {h, mm, s, _}}) do
     {:ok, NaiveDateTime.from_erl!({{y, m, d}, {h, mm, s}})}
   end
 

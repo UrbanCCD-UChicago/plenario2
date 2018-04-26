@@ -1,6 +1,5 @@
 defmodule PlenarioWeb.Api.UtilsTest do
   use ExUnit.Case, async: true
-  import Ecto.Query
   import PlenarioWeb.Api.Utils
 
   alias Plenario.{ModelRegistry, Repo}
@@ -9,7 +8,8 @@ defmodule PlenarioWeb.Api.UtilsTest do
     DataSetFieldActions,
     MetaActions,
     UniqueConstraintActions,
-    UserActions
+    UserActions,
+    VirtualPointFieldActions
   }
 
   setup do
@@ -20,8 +20,9 @@ defmodule PlenarioWeb.Api.UtilsTest do
     {:ok, meta} = MetaActions.create("API Test Dataset", user.id, "https://www.example.com", "csv")
     {:ok, pk} = DataSetFieldActions.create(meta.id, "pk", "integer")
     {:ok, _} = DataSetFieldActions.create(meta.id, "datetime", "timestamptz")
-    {:ok, _} = DataSetFieldActions.create(meta.id, "location", "text")
     {:ok, _} = DataSetFieldActions.create(meta.id, "data", "text")
+    {:ok, location} = DataSetFieldActions.create(meta.id, "location", "text")
+    {:ok, vpf} = VirtualPointFieldActions.create(meta, location.id)
     {:ok, _} = UniqueConstraintActions.create(meta.id, [pk.id])
 
     DataSetActions.up!(meta)
@@ -29,9 +30,21 @@ defmodule PlenarioWeb.Api.UtilsTest do
     # Insert 100 empty rows
     ModelRegistry.clear()
     model = ModelRegistry.lookup(meta.slug())
-    (1..100) |> Enum.each(fn _ -> Repo.insert(model.__struct__) end)
+    (1..50) |> Enum.each(fn _ ->
+      Repo.insert(%{model.__struct__ | datetime: ~N[2000-01-01 00:00:00]})
+    end)
 
-    %{slug: meta.slug()}
+    (50..100) |> Enum.each(fn _ ->
+      Repo.insert(%{model.__struct__ | datetime: ~N[2000-01-02 00:00:00]})
+    end)
+
+
+    (100..120) |> Enum.each(fn _ ->
+      Repo.insert(%{model.__struct__ | location: "(50, 50)"})
+    end)
+
+    # vpf: virtual point field
+    %{slug: meta.slug(), vpf: vpf}
   end
 
   test "map_to_query/2", %{slug: slug} do
@@ -43,8 +56,35 @@ defmodule PlenarioWeb.Api.UtilsTest do
       "string_column" => {"eq", "hello!"}
     }
 
-    query =
-      ModelRegistry.lookup(slug)
-      |> map_to_query(query_map)
+    ModelRegistry.lookup(slug)
+    |> map_to_query(query_map)
+  end
+
+  test "generates a geospatial query using a bounding box", %{slug: slug, vpf: vpf} do
+    # vpf: virtual point field
+
+    model = ModelRegistry.lookup(slug)
+    polygon = %Geo.Polygon{
+      coordinates: [[{0, 0}, {0, 100}, {100, 100}, {100, 0}, {0, 0}]],
+      srid: 4326
+    }
+
+    query = where_condition(model, {vpf.name, {"in", polygon}})
+
+    results = Repo.all(query)
+
+    assert length(results) == 21
+  end
+
+  test "generates a ranged query using bounding values", %{slug: slug} do
+    model = ModelRegistry.lookup(slug)
+    query = where_condition(model, {"datetime", {"in", %{
+      lower: ~N[2000-01-01 00:00:00],
+      upper: ~N[2000-01-01 12:00:00]
+    }}})
+
+    results = Repo.all(query)
+
+    assert length(results) == 50
   end
 end

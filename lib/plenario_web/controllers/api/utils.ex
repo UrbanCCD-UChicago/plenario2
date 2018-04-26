@@ -1,6 +1,7 @@
 defmodule PlenarioWeb.Api.Utils do
   import Ecto.Query
   import PlenarioWeb.Router.Helpers, only: [detail_url: 4, list_url: 3]
+  import Geo.PostGIS
 
   @doc """
   Utility function for rendering a `Scrivener.Page` of results. Even if the
@@ -114,6 +115,26 @@ defmodule PlenarioWeb.Api.Utils do
   def where_condition(query, {column, {"lt", value}}), do: from(q in query, where: field(q, ^column) < ^value)
   def where_condition(query, {column, {"le", value}}), do: from(q in query, where: field(q, ^column) <= ^value)
   def where_condition(query, {column, {"eq", value}}), do: from(q in query, where: field(q, ^column) == ^value)
+
+  @doc """
+  where_condition(query, {column, {operator, operand}})
+
+  This function generates a `within` geospatial query condition if the value contains
+  some `coordinates` and an `srid`.
+  """
+  def where_condition(query, {column, {"in", %Geo.Polygon{} = polygon}}) do
+    from(q in query, where: st_within(field(q, ^column), ^polygon))
+  end
+
+  @doc """
+  where_condition(query, {column, {operator, operand}})
+
+  This function generates a ranged query for the given bounds.
+  """
+  def where_condition(query, {column, {"in", %{lower: lower, upper: upper}}}) do
+    where_condition(query, {column, {"ge", lower}})
+    |> where_condition({column, {"le", upper}})
+  end
 
   @doc """
   This function provides an accessible way of creating a query with multiple

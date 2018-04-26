@@ -8,8 +8,8 @@ defmodule Plenario.ModelRegistry do
     "float" => :float,
     "integer" => :integer,
     "text" => :string,
-    "date" => Plenario.ForgivingDatetime,
-    "timestamptz" => Plenario.ForgivingDatetime,
+    "date" => :naive_datetime,
+    "timestamptz" => :naive_datetime,
     "jsonb" => Plenario.Jsonb
   }
 
