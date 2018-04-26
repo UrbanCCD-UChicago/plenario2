@@ -34,3 +34,9 @@ node_modules/
 
 # build and release
 .deliver/releases/
+
+# Visual Studio Code
+.vscode/
+
+# Coverage Reports
+excoveralls.html
