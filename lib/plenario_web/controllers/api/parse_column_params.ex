@@ -8,46 +8,26 @@ defmodule PlenarioWeb.Controllers.Api.ParseColumnParams do
   end
 
   def call(conn, _options) do
-    columns_and_types =
+    columns =
       conn.params["slug"]
       |> MetaActions.get()
-      |> MetaActions.get_column_names_and_types()
-
-    columns = for {column, _} <- columns_and_types, do: column
-    column_type_map = Map.new(columns_and_types)
+      |> MetaActions.get_column_names()
 
     {params, _} =
-      Map.get(conn, :params)
-      |> Enum.map(fn {key, value} ->
-        {URI.decode(key), URI.decode(value)}
-      end)
+      conn.params
+      |> Enum.map(fn {key, value} -> {URI.decode(key), URI.decode(value)} end)
       |> Map.new()
       |> Map.split(columns)
 
-    column_params = Enum.map(params, fn {key, value} ->
+    column_params = Enum.map(params, fn {column, value} ->
       [operator, operand] = String.split(value, ":", parts: 2)
-      casted_operand = cast(operand, column_type_map[key])
-      {key, {operator, casted_operand}}
+
+      case Poison.decode(operand) do
+        {:ok, map} -> {column, {operator, map}}
+        {:error, _} -> {column, {operator, operand}}
+      end
     end)
 
     assign(conn, :column_params, column_params)
-  end
-
-  defp cast(value, "float") do
-    {float, _} = Float.parse(value)
-    float
-  end
-
-  defp cast(value, "integer") do
-    {integer, _} = Integer.parse(value)
-    integer
-  end
-
-  defp cast(value, "datetime") do
-    to_naive_datetime(value)
-  end
-
-  defp cast(value, _) do
-    value
   end
 end

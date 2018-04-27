@@ -83,13 +83,15 @@ defmodule Plenario.ForgivingDatetime do
         end
     end
   end
+
   def cast(_), do: :error
 
-  def load({{y, m, d}, {h, mm, s, _}}) do 
+  def load({{y, m, d}, {h, mm, s, _}}) do
     {:ok, NaiveDateTime.from_erl!({{y, m, d}, {h, mm, s}})}
   end
 
   def dump(nil), do: {:ok, nil}
+
   def dump(value) do
     case Regex.scan(@iso_dt_string, value, capture: :all_names) do
       [[day, hr, min, mon, sec, yr] | _] ->

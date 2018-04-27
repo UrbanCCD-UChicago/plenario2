@@ -224,15 +224,6 @@ defmodule Plenario.Actions.MetaActions do
   end
 
   @doc """
-  Gets a list of the slugified field names and types for a given Meta.
-  """
-  def get_column_names_and_types(meta) do
-    for f <- DataSetFieldActions.list(for_meta: meta) do
-      {f.name, f.type}
-    end
-  end
-
-  @doc """
   Selects all dates in the data set's table and finds the minimum and maximum
   values. From those values, it creates a TsTzRange.
   """
