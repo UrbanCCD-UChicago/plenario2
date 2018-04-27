@@ -1,6 +1,5 @@
 defmodule PlenarioWeb.Api.ParseDbOperationParams do
   use PlenarioWeb, :api_controller
-  import PlenarioWeb.Api.Utils, only: [to_naive_datetime: 1]
 
   @db_operation_keys ["updated_at", "inserted_at"]
 
@@ -14,8 +13,7 @@ defmodule PlenarioWeb.Api.ParseDbOperationParams do
       |> Map.split(@db_operation_keys)
 
     params = Enum.map(params, fn {key, value} ->
-      [operator, datetime_str] = String.split(value, ":", parts: 2)
-      {:ok, datetime} = to_naive_datetime(datetime_str)
+      [operator, datetime] = String.split(value, ":", parts: 2)
       {key, {operator, datetime}}
     end)
 

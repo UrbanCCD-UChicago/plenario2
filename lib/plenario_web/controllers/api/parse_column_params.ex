@@ -1,6 +1,5 @@
 defmodule PlenarioWeb.Controllers.Api.ParseColumnParams do
   use PlenarioWeb, :api_controller
-  import PlenarioWeb.Api.Utils, only: [to_naive_datetime: 1]
   alias Plenario.Actions.MetaActions
 
   def init(default) do

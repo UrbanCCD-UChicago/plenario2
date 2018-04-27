@@ -144,8 +144,8 @@ defmodule PlenarioWeb.Api.Utils do
   ## Examples
 
       iex> params = %{
-      ...>   "Inserted At" => {"le", ~N[2000-01-01 13:30:15]},
-      ...>   "updated_at" => {"lt", ~N[2000-01-01 13:30:15]},
+      ...>   "Inserted At" => {"le", "2000-01-01 13:30:15"},
+      ...>   "updated_at" => {"lt", "2000-01-01 13:30:15"},
       ...>   "Float Column" => {"ge", 0.0},
       ...>   "integer_column" => {"gt", 42},
       ...>   "String Column" => {"eq", "hello!"}
@@ -157,35 +157,5 @@ defmodule PlenarioWeb.Api.Utils do
   def map_to_query(query, params) when is_map(params), do: map_to_query(query, Map.to_list(params))
   def map_to_query(query, [condition_tuple | params]) do
     map_to_query(query |> where_condition(condition_tuple), params)
-  end
-
-  @doc """
-  Attempts to derive a datetime from a string. The string can specify a date or
-  a datetime, and the function will produce a naive datetime. If it fails to
-  parse a datetime, it will return a tuple specifying the error.
-
-  ## Examples
-
-      iex> to_naive_datetime("2000-01-01")
-      {:ok, datetime}
-
-      iex> to_naive_datetime("2000-01-01T00:00:00")
-      {:ok, datetime}
-
-      iex> to_naive_datetime("nani")
-      {:error, message}
-
-  """
-  def to_naive_datetime(string) do
-    case Date.from_iso8601(string) do
-      {:ok, date} ->
-        date_erl = Date.to_erl(date)
-        {:ok, NaiveDateTime.from_erl!({date_erl}, {0, 0, 0})}
-      {:error, _} ->
-        case NaiveDateTime.from_iso8601(string) do
-          {:ok, datetime} -> {:ok, datetime}
-          {:error, message, _} -> {:error, message}
-        end
-    end
   end
 end
