@@ -31,11 +31,11 @@ defmodule PlenarioWeb.Api.UtilsTest do
     ModelRegistry.clear()
     model = ModelRegistry.lookup(meta.slug())
     (1..50) |> Enum.each(fn _ ->
-      Repo.insert(%{model.__struct__ | datetime: ~N[2000-01-01 00:00:00]})
+      Repo.insert(%{model.__struct__ | datetime: "2000-01-01 00:00:00"})
     end)
 
     (50..100) |> Enum.each(fn _ ->
-      Repo.insert(%{model.__struct__ | datetime: ~N[2000-01-02 00:00:00]})
+      Repo.insert(%{model.__struct__ | datetime: "2000-01-02 00:00:00"})
     end)
 
 
@@ -49,8 +49,8 @@ defmodule PlenarioWeb.Api.UtilsTest do
 
   test "map_to_query/2", %{slug: slug} do
     query_map = %{
-      "inserted_at" => {"le", ~N[2000-01-01 13:30:15]},
-      "updated_at" => {"lt", ~N[2000-01-01 13:30:15]},
+      "inserted_at" => {"le", "2000-01-01 13:30:15"},
+      "updated_at" => {"lt", "2000-01-01 13:30:15"},
       "float_column" => {"ge", 0.0},
       "integer_column" => {"gt", 42},
       "string_column" => {"eq", "hello!"}
@@ -79,8 +79,8 @@ defmodule PlenarioWeb.Api.UtilsTest do
   test "generates a ranged query using bounding values", %{slug: slug} do
     model = ModelRegistry.lookup(slug)
     query = where_condition(model, {"datetime", {"in", %{
-      lower: ~N[2000-01-01 00:00:00],
-      upper: ~N[2000-01-01 12:00:00]
+      "lower" => "2000-01-01 00:00:00",
+      "upper" => "2000-01-01 12:00:00"
     }}})
 
     results = Repo.all(query)

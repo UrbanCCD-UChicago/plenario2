@@ -84,19 +84,6 @@ defmodule Plenario.ForgivingDatetime do
     end
   end
 
-  @doc """
-  Allows you to query against `ForgivingDatetime` columns with `NaiveDateTime`
-  values. It didn't make sense to me to be restricted to providing strings.
-
-  ## Examples
-
-      iex> from(m in model, where: m.forgivingdt >= ~N[2000-01-01 00:00:00])
-
-  """
-  def cast(%NaiveDateTime{} = naivedt) do
-    {:ok, NaiveDateTime.to_iso8601(naivedt)}
-  end
-
   def cast(_), do: :error
 
   def load({{y, m, d}, {h, mm, s, _}}) do
@@ -104,10 +91,6 @@ defmodule Plenario.ForgivingDatetime do
   end
 
   def dump(nil), do: {:ok, nil}
-
-  def dump(%NaiveDateTime{} = naivedt) do
-    dump(NaiveDateTime.to_iso8601(naivedt))
-  end
 
   def dump(value) do
     case Regex.scan(@iso_dt_string, value, capture: :all_names) do

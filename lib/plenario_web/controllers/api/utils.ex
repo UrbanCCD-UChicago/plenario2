@@ -131,7 +131,7 @@ defmodule PlenarioWeb.Api.Utils do
 
   This function generates a ranged query for the given bounds.
   """
-  def where_condition(query, {column, {"in", %{lower: lower, upper: upper}}}) do
+  def where_condition(query, {column, {"in", %{"lower" => lower, "upper" => upper}}}) do
     where_condition(query, {column, {"ge", lower}})
     |> where_condition({column, {"le", upper}})
   end
