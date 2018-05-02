@@ -1,25 +1,29 @@
 defmodule PlenarioWeb.Api.DetailController do
-  alias Plenario.ModelRegistry
-  alias Plenario.Repo
+  use PlenarioWeb, :api_controller
   import Ecto.Query
   import PlenarioWeb.Api.Utils, only: [render_page: 5, map_to_query: 2]
-  use PlenarioWeb, :api_controller
+  alias Plenario.{ModelRegistry, Repo}
+  alias Plenario.Actions.MetaActions
+  alias PlenarioWeb.Controllers.Api.CaptureArgs
 
-  # assigns conn.assigns[:pagination_params]
-  #   :page
-  #   :page_size
-  plug PlenarioWeb.Api.ParsePaginationParams
+  defmodule CaptureColumnArgs do
+    import Plug.Conn
 
-  # assigns conn.assigns[:db_operation_params]
-  #   :inserted_at
-  #   :updated_at
-  plug PlenarioWeb.Api.ParseDbOperationParams
+    def init(opts), do: opts
 
-  # assigns conn.assigns[:column_params]
-  #   :columns for MetaActions.get(:slug)
-  plug PlenarioWeb.Controllers.Api.ParseColumnParams
+    def call(%Plug.Conn{"slug" => slug} = conn, opts) do
+      columns = MetaActions.get(slug) |> MetaActions.get_column_names()
+      CaptureArgs.call(conn, opts ++ [fields: columns])
+    end
+  end
+
+  plug(CaptureArgs, assign: :geospatial_fields, fields: ["bbox"])
+  plug(CaptureArgs, assign: :ordering_fields, fields: ["order_by"])
+  plug(CaptureArgs, assign: :pagination_fields, fields: ["page", "page_size"])
+  plug(CaptureColumnArgs, assign: :column_fields)
 
   def get(conn, %{"slug" => slug}) do
+    IO.inspect(conn.assigns)
     pagination_params = Map.get(conn.assigns, :pagination_params)
     db_operation_params = Map.get(conn.assigns, :db_operation_params)
     column_params = Map.get(conn.assigns, :column_params)
@@ -30,9 +34,7 @@ defmodule PlenarioWeb.Api.DetailController do
       |> map_to_query(column_params)
       |> Repo.paginate(pagination_params)
 
-    query_params = pagination_params
-      ++ db_operation_params
-      ++ column_params
+    query_params = pagination_params ++ db_operation_params ++ column_params
 
     render_page(conn, "get.json", query_params, page.entries, page)
   end
