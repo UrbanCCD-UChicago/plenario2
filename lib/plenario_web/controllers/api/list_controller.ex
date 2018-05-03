@@ -53,7 +53,7 @@ defmodule PlenarioWeb.Api.ListController do
     render_page(conn, "get.json", params_used ++ pagination_fields, page.entries, page)
   end
 
-  def head(conn, params) do
+  def head(conn, _params) do
     pagination_fields = Map.get(conn.assigns, :pagination_fields)
     {query, params_used} = construct_query_from_conn_assigns(conn)
     page = Repo.paginate(query, page_size: 1, page: 1)

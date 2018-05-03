@@ -36,13 +36,13 @@ defmodule PlenarioWeb.Api.DetailView do
     end
   end
 
-  defp clean(records) when is_list(records), do: clean(records, [])
   defp clean([], acc), do: Enum.reverse(acc)
   defp clean([head | tail], acc) do
     cleaned = clean(head)
     clean(tail, [cleaned | acc])
   end
 
+  defp clean(records) when is_list(records), do: clean(records, [])
   defp clean(record) when is_map(record) do
     Map.to_list(record)
     |> Enum.filter(fn {key, value} -> is_clean(key, value) end)

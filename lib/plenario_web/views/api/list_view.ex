@@ -1,6 +1,3 @@
-alias PlenarioWeb.Api.Response
-
-
 defmodule PlenarioWeb.Api.ListView do
   use PlenarioWeb, :api_view
 

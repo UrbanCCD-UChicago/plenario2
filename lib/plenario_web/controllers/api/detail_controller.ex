@@ -1,9 +1,7 @@
 defmodule PlenarioWeb.Api.DetailController do
   use PlenarioWeb, :api_controller
-  import Ecto.Query
   import PlenarioWeb.Api.Utils, only: [render_page: 5, map_to_query: 2]
   alias Plenario.{ModelRegistry, Repo}
-  alias Plenario.Actions.MetaActions
   alias Plenario.Schemas.Meta
   alias PlenarioWeb.Controllers.Api.CaptureArgs
 
