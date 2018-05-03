@@ -3,12 +3,14 @@ defmodule PlenarioWeb.Api.ListController do
 
   alias Plenario.Repo
   alias Plenario.Schemas.Meta
+  alias PlenarioWeb.Controllers.Api.CaptureArgs
 
   import Ecto.Query
   import PlenarioWeb.Api.Utils, only: [render_page: 5]
 
   # assigns conn.assigns[:pagination_params]
-  plug PlenarioWeb.Api.ParsePaginationParams
+  plug(CaptureArgs, assign: :pagination_params, fields: ["page", "page_size"])
+  # plug PlenarioWeb.Api.ParsePaginationParams
 
   @associations [:fields, :unique_constraints, :virtual_dates, :virtual_points, :user]
 

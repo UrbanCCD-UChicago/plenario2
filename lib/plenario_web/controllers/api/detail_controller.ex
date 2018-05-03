@@ -7,11 +7,9 @@ defmodule PlenarioWeb.Api.DetailController do
   alias PlenarioWeb.Controllers.Api.CaptureArgs
 
   defmodule CaptureColumnArgs do
-    import Plug.Conn
-
     def init(opts), do: opts
 
-    def call(%Plug.Conn{"slug" => slug} = conn, opts) do
+    def call(%Plug.Conn{:params => %{"slug" => slug}} = conn, opts) do
       columns = MetaActions.get(slug) |> MetaActions.get_column_names()
       CaptureArgs.call(conn, opts ++ [fields: columns])
     end
@@ -19,22 +17,28 @@ defmodule PlenarioWeb.Api.DetailController do
 
   plug(CaptureArgs, assign: :geospatial_fields, fields: ["bbox"])
   plug(CaptureArgs, assign: :ordering_fields, fields: ["order_by"])
+  plug(CaptureArgs, assign: :windowing_fields, fields: ["inserted_at", "updated_at"])
   plug(CaptureArgs, assign: :pagination_fields, fields: ["page", "page_size"])
   plug(CaptureColumnArgs, assign: :column_fields)
 
   def get(conn, %{"slug" => slug}) do
     IO.inspect(conn.assigns)
-    pagination_params = Map.get(conn.assigns, :pagination_params)
-    db_operation_params = Map.get(conn.assigns, :db_operation_params)
-    column_params = Map.get(conn.assigns, :column_params)
+
+    geospatial_fields = Map.get(conn.assigns, :geospatial_fields)
+    ordering_fields = Map.get(conn.assigns, :ordering_fields)
+    windowing_fields = Map.get(conn.assigns, :windowing_fields)
+    pagination_fields = Map.get(conn.assigns, :pagination_fields)
+    column_fields = Map.get(conn.assigns, :column_fields)
 
     page =
       ModelRegistry.lookup(slug)
-      |> map_to_query(db_operation_params)
-      |> map_to_query(column_params)
-      |> Repo.paginate(pagination_params)
+      |> map_to_query(geospatial_fields)
+      |> map_to_query(ordering_fields)
+      |> map_to_query(windowing_fields)
+      |> map_to_query(column_fields)
+      |> Repo.paginate(pagination_fields)
 
-    query_params = pagination_params ++ db_operation_params ++ column_params
+    query_params = geospatial_fields ++ ordering_fields ++ pagination_fields ++ column_fields
 
     render_page(conn, "get.json", query_params, page.entries, page)
   end
