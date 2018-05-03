@@ -118,6 +118,10 @@ defmodule PlenarioWeb.Api.Utils do
   def where_condition(query, {:order_by, {"desc", column}}), do: from(q in query, order_by: [desc: field(q, ^String.to_atom(column))])
   def where_condition(query, {:order_by, {"asc", column}}), do: from(q in query, order_by: [asc: field(q, ^String.to_atom(column))])
 
+  # Shortcut for {column}=eq:{value}
+  # User can provide the conditions as just {column}={value}
+  def where_condition(query, {column, value}), do: from(q in query, where: field(q, ^column) == ^value)
+
   @doc """
   where_condition(query, {column, {operator, operand}})
 

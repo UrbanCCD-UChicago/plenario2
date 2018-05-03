@@ -4,7 +4,7 @@ alias PlenarioWeb.Api.Response
 defmodule PlenarioWeb.Api.DetailView do
   use PlenarioWeb, :api_view
 
-  def render("get.json", params) do
+  def construct_response(params) do
     counts = %Response.Meta.Counts{
       total_pages: params[:total_pages],
       total_records: params[:total_records],
@@ -23,36 +23,33 @@ defmodule PlenarioWeb.Api.DetailView do
         counts: counts,
         links: links
       },
-      data: params[:data]
+      data: nil
     }
   end
 
-  def render("head.json", %{record: nil}) do
-    counts = %Response.Meta.Counts{
-      total_pages: 1,
-      total_records: 1,
-      data: 0
-    }
-
-    %Response{
-      meta: %Response.Meta{
-        counts: counts
-      }
-    }
+  def render("get.json", params) do
+    response = construct_response(params)
+    if length(params[:data]) == 1 do
+      %{response | data: clean(List.first(params[:data]))}
+    else
+      %{response | data: clean(params[:data])}
+    end
   end
 
-  def render("head.json", %{record: record}) do
-    counts = %Response.Meta.Counts{
-      total_pages: 1,
-      total_records: 1,
-      data: 1
-    }
-
-    %Response{
-      meta: %Response.Meta{
-        counts: counts
-      },
-      data: record
-    }
+  defp clean(records) when is_list(records), do: clean(records, [])
+  defp clean([], acc), do: Enum.reverse(acc)
+  defp clean([head | tail], acc) do
+    cleaned = clean(head)
+    clean(tail, [cleaned | acc])
   end
+
+  defp clean(record) when is_map(record) do
+    Map.to_list(record)
+    |> Enum.filter(fn {key, value} -> is_clean(key, value) end)
+    |> Map.new()
+  end
+
+  defp is_clean(_, %Ecto.Association.NotLoaded{}), do: false
+  defp is_clean(key, _) when key == :__meta__, do: false
+  defp is_clean(_, _), do: true
 end

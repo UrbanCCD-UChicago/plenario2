@@ -4,7 +4,6 @@ defmodule PlenarioWeb.Controllers.Api.CaptureArgs do
   def init(opts), do: opts
 
   def call(conn, opts) do
-    IO.inspect opts
     conn.params
     |> Map.split(opts[:fields])
     |> elem(0)
