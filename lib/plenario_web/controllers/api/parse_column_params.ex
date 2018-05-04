@@ -1,32 +1,18 @@
-defmodule PlenarioWeb.Controllers.Api.ParseColumnParams do
-  use PlenarioWeb, :api_controller
-  alias Plenario.Actions.MetaActions
+defmodule PlenarioWeb.Controllers.Api.CaptureArgs do
+  import Plug.Conn
 
-  def init(default) do
-    default
+  def init(opts), do: opts
+
+  def call(conn, opts) do
+    conn.params
+    |> Map.split(opts[:fields])
+    |> elem(0)
+    |> Stream.map(&split_value/1)
+    |> Enum.map(&to_condition_tuple/1)
+    |> (&assign(conn, opts[:assign], &1)).()
   end
 
-  def call(conn, _options) do
-    columns =
-      conn.params["slug"]
-      |> MetaActions.get()
-      |> MetaActions.get_column_names()
-
-    {params, _} =
-      conn.params
-      |> Enum.map(fn {key, value} -> {URI.decode(key), URI.decode(value)} end)
-      |> Map.new()
-      |> Map.split(columns)
-
-    column_params = Enum.map(params, fn {column, value} ->
-      [operator, operand] = String.split(value, ":", parts: 2)
-
-      case Poison.decode(operand) do
-        {:ok, map} -> {column, {operator, map}}
-        {:error, _} -> {column, {operator, operand}}
-      end
-    end)
-
-    assign(conn, :column_params, column_params)
-  end
+  defp split_value({col, val}), do: {col, String.split(val, ":", parts: 2)}
+  defp to_condition_tuple({col, [val]}), do: {col, val}
+  defp to_condition_tuple({col, [op, val]}), do: {col, {op, val}}
 end

@@ -68,8 +68,8 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     conn = get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=5&page=2")
     response = json_response(conn, 200)
     assert length(response["data"]) == 5
-    assert response["meta"]["params"]["page"] == 2
-    assert response["meta"]["params"]["page_size"] == 5
+    assert response["meta"]["params"]["page"] == "2"
+    assert response["meta"]["params"]["page_size"] == "5"
   end
 
   test "GET /api/v2/data-sets/:slug pagination is stable with backfills", %{slug: slug} do
@@ -77,8 +77,8 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     response = json_response(conn, 200)
 
     assert length(response["data"]) == 5
-    assert response["meta"]["params"]["page"] == 2
-    assert response["meta"]["params"]["page_size"] == 5
+    assert response["meta"]["params"]["page"] == "2"
+    assert response["meta"]["params"]["page_size"] == "5"
   end
 
   test "GET /api/v2/data-sets/:slug populates pagination links", %{slug: slug} do
