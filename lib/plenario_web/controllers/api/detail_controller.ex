@@ -1,15 +1,18 @@
 defmodule PlenarioWeb.Api.DetailController do
   use PlenarioWeb, :api_controller
   import PlenarioWeb.Api.Utils, only: [render_page: 5, map_to_query: 2]
+  alias Plenario.Actions.MetaActions
   alias Plenario.{ModelRegistry, Repo}
-  alias Plenario.Schemas.Meta
   alias PlenarioWeb.Controllers.Api.CaptureArgs
 
   defmodule CaptureColumnArgs do
     def init(opts), do: opts
 
     def call(conn, opts) do
-      columns = Map.keys(Meta.__struct__)
+      columns = 
+        conn.params["slug"]
+        |> MetaActions.get()
+        |> MetaActions.get_column_names()
       CaptureArgs.call(conn, opts ++ [fields: columns])
     end
   end
