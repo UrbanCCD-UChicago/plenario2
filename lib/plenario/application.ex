@@ -23,7 +23,11 @@ defmodule Plenario.Application do
       supervisor(Plenario.ModelRegistry, [%{}]),
 
       # Start the etl supervisor
-      supervisor(PlenarioEtl.Application, [])
+      supervisor(PlenarioEtl.Application, []),
+
+      # Start the aot supervisor
+      supervisor(PlenarioAot.AotScheduler, []),
+      supervisor(PlenarioAot.AotApplication, [])
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

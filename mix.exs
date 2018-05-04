@@ -65,7 +65,7 @@ defmodule Plenario.Mixfile do
       {:cors_plug, "~> 1.5"},
 
       # Job scheduler
-      {:quantum, "~> 2.2.7"},
+      {:quantum, "~> 2.2"},
 
       # Emailing libraries
       {:bamboo, "~> 0.8"},
