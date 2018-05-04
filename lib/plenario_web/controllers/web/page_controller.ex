@@ -5,9 +5,7 @@ defmodule PlenarioWeb.Web.PageController do
 
   import Plug.Conn
 
-  alias Plenario.Schemas.Meta
-
-  alias Plenario.{Repo, ModelRegistry}
+  alias Plenario.Repo
 
   alias PlenarioAot.{AotData, AotMeta}
 
