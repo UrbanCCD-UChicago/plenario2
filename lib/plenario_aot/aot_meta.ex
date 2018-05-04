@@ -14,7 +14,7 @@ defmodule PlenarioAot.AotMeta do
     timestamps()
   end
 
-  def changeset(meta \\ %AotMeta{}, params) do
+  def changeset(meta \\ %AotMeta{}, params \\ []) do
     case is_map(params) do
       true -> do_changeset(meta, params)
       false -> do_changeset(meta, Enum.into(params, %{}))

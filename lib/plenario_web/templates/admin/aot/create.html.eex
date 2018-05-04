@@ -1,0 +1,23 @@
+<h2>Create a new AoT Network</h2>
+
+<div class="row col-lg-12">
+  <%= form_for @changeset, aot_path(@conn, :create), fn f -> %>
+
+    <div class="form-group">
+      <%= label f, "Network Name", class: "control-label" %>
+      <%= text_input f, :network_name, class: "form-control" %>
+      <%= error_tag f, :network_name %>
+    </div>
+
+    <div class="form-group">
+      <%= label f, "Source URL", class: "control-label" %>
+      <%= text_input f, :source_url, class: "form-control" %>
+      <%= error_tag f, :source_url %>
+    </div>
+
+    <div class="form-group">
+      <%= submit "Create", class: "btn btn-primary" %>
+    </div>
+
+  <% end %>
+</div>

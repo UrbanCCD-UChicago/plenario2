@@ -19,8 +19,8 @@ defmodule PlenarioAot.AotActions do
 
   def list_metas, do: Repo.all(AotMeta)
 
-  def get_meta(identifier) when is_integer(identifier), do: Repo.one(AotMeta, id: identifier)
-  def get_meta(identifier) when is_bitstring(identifier), do: Repo.one(AotMeta, slug: identifier)
+  def get_meta(identifier) when is_integer(identifier), do: Repo.get_by(AotMeta, id: identifier)
+  def get_meta(identifier) when is_bitstring(identifier), do: Repo.get_by(AotMeta, slug: identifier)
 
   def update_meta(%AotMeta{} = meta, params \\ []) do
     params = Enum.into(params, %{})
@@ -95,6 +95,13 @@ defmodule PlenarioAot.AotActions do
         {:error, "No available timestamp tuple"}
     end
   end
+
+  def format_time_range(%AotMeta{time_range: [lower, upper]}) do
+    lower = Timex.format!(lower, "{ISOdate} {ISOtime}")
+    upper = Timex.format!(upper, "{ISOdate} {ISOtime}")
+    "#{lower} to #{upper}"
+  end
+  def format_time_range(_), do: "-"
 
   def insert_data(%AotMeta{} = meta, %{} = json_payload), do: insert_data(meta.id, json_payload)
   def insert_data(meta, json_payload) do
