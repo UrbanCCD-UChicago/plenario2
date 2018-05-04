@@ -1,11 +1,15 @@
 defmodule PlenarioWeb.Web.PageController do
   use PlenarioWeb, :web_controller
 
+  import Ecto.Query
+
+  import Plug.Conn
+
   alias Plenario.Schemas.Meta
+
   alias Plenario.{Repo, ModelRegistry}
 
-  import Ecto.Query
-  import Plug.Conn
+  alias PlenarioAot.{AotData, AotMeta}
 
   def index(conn, _), do: render(conn, "index.html")
 
@@ -74,123 +78,115 @@ defmodule PlenarioWeb.Web.PageController do
   end
 
   def aot_explorer(conn, _params) do
-    meta = Repo.one(from m in Meta, where: m.name == "Array of Things Chicago")
-    model = ModelRegistry.lookup(meta.slug)
+    meta =
+      try do
+        Repo.get_by!(AotMeta, slug: "chicago")
+      rescue
+        _ -> Repo.one!(AotMeta)
+      end
 
-    point_data =
-      model
+    node_locations_data =
+      AotData
       |> select([:latitude, :longitude, :human_address, :node_id])
       |> distinct([:latitude, :longitude])
-      |> limit(30)
+      |> where([d], fragment("? >= current_date - interval '24' hour", d.timestamp))
+      |> where([d], d.aot_meta_id == ^meta.id)
       |> Repo.all()
+      |> Enum.map(fn row ->
+        {
+          "[#{row.latitude}, #{row.longitude}]",
+          String.trim(row.human_address),
+          row.node_id
+        }
+      end)
 
-    points =
-      for p <- point_data do
-        {"[#{p.latitude}, #{p.longitude}]", p.human_address, p.node_id}
-      end
+    temp_humid_graph_data =
+      AotData
+      |> select([d], %{
+        trunc_timestamp: fragment("date_trunc('hour', ?) as trunc_timestamp", d.timestamp),
+        avg_temp: fragment("avg((observations->'HTU21D'->>'temperature')::float)"),
+        avg_humid: fragment("avg((observations->'HTU21D'->>'humidity')::float)")
+      })
+      |> where([d], fragment("? >= current_date - interval '24' hour", d.timestamp))
+      |> where([d], d.aot_meta_id == ^meta.id)
+      |> group_by(fragment("trunc_timestamp"))
+      |> order_by(asc: fragment("trunc_timestamp"))
+      |> Repo.all()
+      |> Enum.map(fn row ->
+        [
+          Timex.format!(row.trunc_timestamp, "{ISOdate} {ISOtime}"),
+          row.avg_temp,
+          row.avg_humid
+        ]
+      end)
+      |> format_line_chart(["Average Temperature", "Average Humidity"])
 
-    temps_query = """
-    SELECT
-      date_trunc('hour', "timestamp"),
-      avg(("observations"->'BMP180'->>'temperature')::numeric),
-      avg(("observations"->'HTU21D'->>'humidity')::numeric)
-    FROM
-      "<%= table_name %>"
-    GROUP BY
-      date_trunc('hour', "timestamp")
-    ORDER BY
-      date_trunc('hour', "timestamp") DESC
-    LIMIT 24
-    ;
-    """
-    sql = EEx.eval_string(temps_query, [table_name: meta.table_name], trim: true)
+    temp_heatmap_data =
+      AotData
+      |> select([d], {
+        d.latitude,
+        d.longitude,
+        fragment("(avg((observations->'HTU21D'->>'temperature')::float) * 2.1) + 20")
+      })
+      |> distinct([d], [d.latitude, d.longitude])
+      |> where([d], fragment("? >= current_date - interval '24' hour", d.timestamp))
+      |> where([d], d.aot_meta_id == ^meta.id)
+      |> group_by([d], [d.latitude, d.longitude])
+      |> Repo.all()
+      |> Enum.reject(fn {_, _, temp} -> is_nil(temp) end)
 
-    {labels, rows} =
-      case Ecto.Adapters.SQL.query(Repo, sql) do
-        {:ok, result} ->
-          {for [{{y, mo, d}, {h, mi, s, _}} | _] <- result.rows do
-            case NaiveDateTime.from_erl({{y, mo, d}, {h, mi, s}}) do
-              {:ok, ndt} -> ndt
-              _ -> ""
-            end
-          end, result.rows}
+    humid_heatmap_data =
+      AotData
+      |> select([d], {
+        d.latitude,
+        d.longitude,
+        fragment("avg((observations->'HTU21D'->>'humidity')::float)")
+      })
+      |> distinct([d], [d.latitude, d.longitude])
+      |> where([d], fragment("? >= current_date - interval '24' hour", d.timestamp))
+      |> where([d], d.aot_meta_id == ^meta.id)
+      |> group_by([d], [d.latitude, d.longitude])
+      |> Repo.all()
+      |> Enum.reject(fn {_, _, humid} -> is_nil(humid) end)
 
-        {:error, _} ->
-          {[], []}
-      end
+    render(conn, "aot-explorer.html", [
+      points: node_locations_data,
+      temp_hm_data: temp_heatmap_data,
+      humid_hm_data: humid_heatmap_data,
+      labels: temp_humid_graph_data[:labels],
+      temps_data: Enum.at(temp_humid_graph_data[:datasets], 0),
+      humid_data: Enum.at(temp_humid_graph_data[:datasets], 1)
+    ])
+  end
 
-    reversed_rows = Enum.reverse(rows)
-    temps = for row <- reversed_rows, do: Enum.at(row, 1)
-    temps_data = [{"Average Temperature", temps}]
-    humid = for row <- reversed_rows, do: Enum.at(row, 2)
-    humid_data = [{"Average Humidity", humid}]
+  @red "255, 99, 132"
+  @blue "54, 162, 235"
+  @yellow "255, 206, 86"
+  @green "75, 192, 192"
+  @purple "153, 102, 255"
 
-    temp_hm_query = """
-    SELECT
-      subq."latitude" || ',' || subq."longitude" AS latlong,
-      AVG((subq."observations"->'BMP180'->>'temperature')::numeric)
-    FROM (
-      SELECT *
-      FROM "<%= table_name %>"
-      WHERE "timestamp" >= current_date - interval '24' hour
-    ) AS subq
-    GROUP BY
-      latlong
-    ;
-    """
-    sql = EEx.eval_string(temp_hm_query, [table_name: meta.table_name], trim: true)
+  defp bgrnd_color(base), do: "rgba(#{base}, 0.2)"
 
-    temp_hm_data =
-      case Ecto.Adapters.SQL.query(Repo, sql) do
-        {:ok, result} ->
-          for row <- result.rows do
-            latlong = Enum.at(row, 0)
-            [lat, long] = String.split(latlong, ",")
-            avg = Enum.at(row, 1)
-            {lat, long, avg}
-          end
+  defp border_color(base), do: "rgba(#{base}, 1)"
 
-        {:error, _} ->
-          []
-      end
+  defp format_line_chart(records, keys) do
+    labels = Enum.map(records, fn [dt | _] -> dt end)
+    datasets =
+      keys
+      |> Enum.with_index(1)
+      |> Enum.map(fn {key, index} ->
+        data = Enum.map(records, fn row -> Enum.at(row, index) end)
+        %{
+          label: key,
+          data: data,
+          backgroundColor: Enum.at(Stream.cycle([@red, @blue, @yellow, @green, @purple]), index) |> bgrnd_color(),
+          borderColor: Enum.at(Stream.cycle([@red, @blue, @yellow, @green, @purple]), index) |> border_color(),
+          border: 1,
+          fill: true
+        }
+      end)
 
-    humid_hm_query = """
-    SELECT
-      subq."latitude" || ',' || subq."longitude" AS latlong,
-      AVG((subq."observations"->'HTU21D'->>'humidity')::numeric)
-    FROM (
-      SELECT *
-      FROM "<%= table_name %>"
-      WHERE "timestamp" >= current_date - interval '24' hour
-    ) AS subq
-    GROUP BY
-      latlong
-    ;
-    """
-    sql = EEx.eval_string(humid_hm_query, [table_name: meta.table_name], trim: true)
-
-    humid_hm_data =
-      case Ecto.Adapters.SQL.query(Repo, sql) do
-        {:ok, result} ->
-          for row <- result.rows do
-            latlong = Enum.at(row, 0)
-            [lat, long] = String.split(latlong, ",")
-            avg = Enum.at(row, 1)
-            {lat, long, avg}
-          end
-
-        {:error, _} ->
-          []
-      end
-
-    render(conn, "aot-explorer.html",
-      points: points,
-      labels: labels,
-      temps_data: temps_data,
-      humid_data: humid_data,
-      temp_hm_data: temp_hm_data,
-      humid_hm_data: humid_hm_data
-    )
+    %{labels: labels, datasets: datasets}
   end
 
   defp build_polygon(coords) when is_list(coords) do
