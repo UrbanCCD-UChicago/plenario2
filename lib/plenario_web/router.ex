@@ -98,6 +98,8 @@ defmodule PlenarioWeb.Router do
     resources "/etl-jobs", EtlJobController
 
     resources "/export-jobs", ExportJobController
+
+    resources "/aot", AotController
   end
 
   ##

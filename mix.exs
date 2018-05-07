@@ -4,7 +4,7 @@ defmodule Plenario.Mixfile do
   def project do
     [
       app: :plenario,
-      version: "0.7.5",
+      version: "0.8.0",
       elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
@@ -65,7 +65,7 @@ defmodule Plenario.Mixfile do
       {:cors_plug, "~> 1.5"},
 
       # Job scheduler
-      {:quantum, "~> 2.2.7"},
+      {:quantum, "~> 2.2"},
 
       # Emailing libraries
       {:bamboo, "~> 0.8"},

@@ -1,0 +1,37 @@
+<h2>
+  AoT Network: <%= @meta.network_name %>
+  <%= link "Edit", to: aot_path(@conn, :edit, @meta.id), class: "btn btn-info pull-right" %>
+</h2>
+
+<div class="row">
+  <div class="col-lg-12">
+    <table class="table">
+      <tbody>
+        <tr>
+          <th>Network Name</th>
+          <td><%= @meta.network_name %></td>
+        </tr>
+        <tr>
+          <th>Source URL</th>
+          <td><a hreaf="<%= @meta.source_url %>" target="_blank"><%= @meta.source_url %></a></td>
+        </tr>
+        <tr>
+          <th>Time Range</th>
+          <td>
+            <%= PlenarioAot.AotActions.format_time_range(@meta) %>
+          </td>
+        </tr>
+        <tr>
+          <th>Number of Observations in last 24 Hours</th>
+          <td><%= @count_observations %></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-12">
+    <%= PlenarioWeb.SharedView.render_map(draw_controls: false, map_height: 600, map_zoom: 11, map_center: "[41.84, -87.7]", points: @nodes)%>
+  </div>
+</div>
