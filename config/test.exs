@@ -8,7 +8,7 @@ config :plenario, PlenarioWeb.Endpoint,
 
 
 # Print only warnings and errors during test
-config :logger, level: :error, metadata: [:request_id]
+config :logger, level: :warn, metadata: [:request_id]
 
 
 # Configure your database
