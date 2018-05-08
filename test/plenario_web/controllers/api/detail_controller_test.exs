@@ -106,4 +106,18 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     assert headers["access-control-allow-origin"] == "*"
     assert headers["access-control-max-age"] == "300"
   end
+
+  test "GET /api/v2/data-sets/:slug bbox query", %{conn: conn, slug: slug} do
+    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?bbox=#{geojson}")
+
+  end
+
+  test "GET /api/v2/data-sets/:slug range query", %{conn: conn, slug: slug} do
+    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?datetime={\"upper\": \"2000-01-01\", \"lower\": \"3000-01-01\"}")
+  end
+
+  test "GET /api/v2/data-sets/:slug location query", %{conn: conn, slug: slug} do
+    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=5&page=2")
+
+  end
 end
