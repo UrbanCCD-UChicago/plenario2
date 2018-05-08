@@ -5,7 +5,7 @@ defmodule PlenarioWeb.Api.AotController do
 
   import Geo.PostGIS, only: [st_intersects: 2]
 
-  import PlenarioWeb.Api.Utils, only: [render_page: 5]
+  import PlenarioWeb.Api.Utils, only: [render_page: 6]
 
   alias Plenario.Repo
 
@@ -167,6 +167,16 @@ defmodule PlenarioWeb.Api.AotController do
         value -> from d in data, where: d.id in ^value
       end
 
+    # finally apply the windowing `inserted_at` filter
+    window =
+      case Map.get(conn.params, "inserted_at") do
+        nil -> DateTime.utc_now()
+        value ->
+          [_, term] = String.split(value, ":", parts: 2)
+          parse_datetime(term)
+      end
+    data = from d in data, where: d.inserted_at <= ^window
+
     # return meta and data queries
     [meta_query: metas, data_query: data]
   end
@@ -180,14 +190,14 @@ defmodule PlenarioWeb.Api.AotController do
     ]
 
     page = Repo.paginate(query, pagination)
-    render_page(conn, "get.json", conn.params, page.entries, page)
+    render_page(conn, "get.json", conn.params, page.entries, page, true)
   end
 
   def head(conn, _) do
     [meta_query: _, data_query: query] = handle_conn_params(conn)
 
     page = Repo.paginate(query, page: 1, page_size: 1)
-    render_page(conn, "get.json", conn.params, page.entries, page)
+    render_page(conn, "get.json", conn.params, page.entries, page, true)
   end
 
   def describe(conn, _) do
@@ -199,6 +209,6 @@ defmodule PlenarioWeb.Api.AotController do
     ]
 
     page = Repo.paginate(query, pagination)
-    render_page(conn, "get.json", conn.params, page.entries, page)
+    render_page(conn, "get.json", conn.params, page.entries, page, true)
   end
 end
