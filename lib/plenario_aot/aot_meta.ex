@@ -3,8 +3,9 @@ defmodule PlenarioAot.AotMeta do
 
   import Ecto.Changeset
 
-  alias PlenarioAot.AotMeta
+  alias PlenarioAot.{AotData, AotMeta}
 
+  @derive [Poison.Encoder]
   schema "aot_metas" do
     field :network_name, :string
     field :slug, :string
@@ -12,6 +13,8 @@ defmodule PlenarioAot.AotMeta do
     field :bbox, Geo.Polygon
     field :time_range, Plenario.TsTzRange
     timestamps()
+
+    has_many :data, AotData
   end
 
   def changeset(meta \\ %AotMeta{}, params \\ []) do
