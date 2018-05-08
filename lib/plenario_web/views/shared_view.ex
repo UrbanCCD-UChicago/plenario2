@@ -63,6 +63,20 @@ defmodule PlenarioWeb.SharedView do
     render(PlenarioWeb.SharedView, "doughnut.html", assigns)
   end
 
+  def render_better_line(labels, chart_map, opts \\ []) do
+    defaults = [
+      chart_id: "line",
+      height: 50
+    ]
+    opts = Keyword.merge(defaults, opts)
+
+    assigns = Keyword.merge(opts, [
+      labels: labels,
+      datasets: [Poison.encode!(chart_map)]
+    ])
+    render(PlenarioWeb.SharedView, "line.html", assigns)
+  end
+
   def render_line(x_labels, key_values, opts \\ []) do
     defaults = [
       chart_id: "line",

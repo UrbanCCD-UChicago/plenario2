@@ -1,0 +1,32 @@
+<h2>
+  AoT Metas
+  <%= link "New AoT Network", to: aot_path(@conn, :new), class: "btn btn-success pull-right" %>
+</h2>
+
+<div class="row">
+  <div class="col-lg-12">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Network Name</th>
+          <th>Source URL</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <%= for meta <- @metas do %>
+        <tr>
+          <td><%= meta.network_name %></td>
+          <td><a hreaf="<%= meta.source_url %>" target="_blank"><%= meta.source_url %></a></td>
+          <td>
+            <%= link "Details", to: aot_path(@conn, :show, meta.id) %> |
+            <%= link "Edit", to: aot_path(@conn, :edit, meta.id) %>
+          </td>
+        </tr>
+        <% end %>
+      </tbody>
+    </table>
+
+    <%= link "New AoT Network", to: aot_path(@conn, :new), class: "btn btn-success" %>
+  </div>
+</div>
