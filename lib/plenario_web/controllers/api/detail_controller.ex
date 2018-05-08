@@ -3,7 +3,6 @@ defmodule PlenarioWeb.Api.DetailController do
   import PlenarioWeb.Api.Utils, only: [render_page: 5, map_to_query: 2]
   alias Plenario.{ModelRegistry, Repo}
   alias Plenario.Actions.MetaActions
-  alias Plenario.Schemas.{VirtualPointField}
   alias PlenarioWeb.Controllers.Api.CaptureArgs
 
   defmodule CaptureColumnArgs do
