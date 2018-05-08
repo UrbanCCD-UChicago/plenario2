@@ -1,6 +1,6 @@
 defmodule PlenarioWeb.Api.Utils do
   import Ecto.Query
-  import PlenarioWeb.Router.Helpers, only: [detail_url: 4, list_url: 3]
+  import PlenarioWeb.Router.Helpers, only: [detail_url: 4, list_url: 3, aot_url: 3]
   import Geo.PostGIS
 
   @doc """
@@ -8,9 +8,9 @@ defmodule PlenarioWeb.Api.Utils do
   controller actions that produce these pages are different, there's enough
   in common that they can share a rendering function.
   """
-  def render_page(conn, view, params, entries, page) do
+  def render_page(conn, view, params, entries, page, aot \\ false) do
     Phoenix.Controller.render(conn, view, %{
-      links: generate_links(conn, page),
+      links: generate_links(conn, page, aot),
       params: Map.new(params),
       data_count: length(entries),
       total_pages: page.total_pages,
@@ -22,7 +22,7 @@ defmodule PlenarioWeb.Api.Utils do
   Generates the url links for navigating pages in the meta["links"] part of
   the api response.
   """
-  def generate_links(conn, page) do
+  def generate_links(conn, page, aot \\ false) do
     page_number = page.page_number
     total_pages = page.total_pages
     page_size = page.page_size
@@ -61,9 +61,21 @@ defmodule PlenarioWeb.Api.Utils do
     params = kwlist_params ++ inserted_at_params
 
     # Construct the query strings
-    previous_page_url = construct_url(conn, params, page_size, previous_page_number)
-    next_page_url = construct_url(conn, params, page_size, next_page_number)
-    current_page_url = construct_url(conn, params, page_size, current_page_number)
+    previous_page_url =
+      case aot do
+        false -> construct_url(conn, params, page_size, previous_page_number)
+        true -> construct_aot_url(conn, params, page_size, previous_page_number)
+      end
+    next_page_url =
+      case aot do
+        false -> construct_url(conn, params, page_size, next_page_number)
+        true -> construct_aot_url(conn, params, page_size, next_page_number)
+      end
+    current_page_url =
+      case aot do
+        false -> construct_url(conn, params, page_size, current_page_number)
+        true -> construct_aot_url(conn, params, page_size, current_page_number)
+      end
 
     %{
       previous: previous_page_url,
@@ -86,6 +98,11 @@ defmodule PlenarioWeb.Api.Utils do
   def construct_url(conn, params, page_size, page) do
     params_kwlist = params ++ [page_size: page_size, page: page]
     list_url(conn, :get, params_kwlist)
+  end
+
+  def construct_aot_url(conn, params, page_size, page) do
+    params_kwlist = params ++ [page_size: page_size, page: page]
+    aot_url(conn, :get, params_kwlist)
   end
 
   @doc """
@@ -141,7 +158,7 @@ defmodule PlenarioWeb.Api.Utils do
   @doc """
   Shortcut for {column}=eq:{value}. User can provide the conditions as just {column}={value}.
   """
-  def where_condition(query, {column, value}) do 
+  def where_condition(query, {column, value}) do
     from(q in query, where: field(q, ^column) == ^value)
   end
 
