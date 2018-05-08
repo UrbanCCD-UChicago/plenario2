@@ -13,8 +13,6 @@ defmodule PlenarioWeb.Api.AotController do
 
   require Logger
 
-  require IEx
-
   defp parse_bbox(value) do
     try do
       Poison.decode!(value) |> Geo.JSON.decode()
@@ -60,7 +58,6 @@ defmodule PlenarioWeb.Api.AotController do
   end
 
   defp handle_conn_params(conn) do
-    # IEx.pry()
     # handle meta level filters: network_name, bbox
     metas = from m in AotMeta
     metas =
@@ -85,7 +82,6 @@ defmodule PlenarioWeb.Api.AotController do
       select: m.id,
       distinct: m.id
     )
-    # IEx.pry()
 
     # handle data level filters: node_id, timestamp
     data = from d in AotData, where: d.aot_meta_id in ^meta_ids
