@@ -47,4 +47,35 @@ defmodule PlenarioWeb.Api.ListControllerTest do
     assert headers["access-control-allow-origin"] == "*"
     assert headers["access-control-max-age"] == "300"
   end
+
+  test "POST api/v2/data-sets status", %{conn: conn} do
+    conn = post(conn, "/api/v2/data-sets")
+    assert conn.status == 405
+  end
+
+  test "PUT /api/v2/data-sets status", %{conn: conn} do
+    conn = put(conn, "/api/v2/data-sets")
+    assert conn.status == 405
+  end
+
+  test "PATCH /api/v2/data-sets status", %{conn: conn} do
+    conn = patch(conn, "/api/v2/data-sets")
+    assert conn.status == 405
+  end
+
+  test "DELETE /api/v2/data-sets status", %{conn: conn} do
+    conn = delete(conn, "/api/v2/data-sets")
+    assert conn.status == 405
+  end
+
+  test "TRACE /api/v2/data-sets status", %{conn: conn} do
+    conn = trace(conn, "/api/v2/data-sets")
+    assert conn.status == 405
+  end
+
+  test "CONNECT /api/v2/data-sets status", %{conn: conn} do
+    conn = connect(conn, "/api/v2/data-sets")
+    assert conn.status == 405
+  end
+
 end
