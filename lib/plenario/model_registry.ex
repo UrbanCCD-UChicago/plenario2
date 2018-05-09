@@ -90,7 +90,7 @@ defmodule Plenario.ModelRegistry do
         true ->
           state
         false ->
-          meta = MetaActions.get(slug, [with_fields: true])
+          meta = MetaActions.get(slug, [with_fields: true, with_virtual_points: true])
           Map.merge(state, register(meta))
       end
 
@@ -108,7 +108,13 @@ defmodule Plenario.ModelRegistry do
       Enum.map(meta.fields, fn field ->
         {String.to_atom(field.name), Map.fetch!(@type_map, field.type)}
       end)
-    create_module(module, table, fields)
+
+    vpfs = 
+      Enum.map(meta.virtual_points, fn field ->
+        {String.to_atom(field.name), Geo.Point}
+      end)
+
+    create_module(module, table, fields ++ vpfs)
 
     %{
       meta.id => String.to_atom(module),
