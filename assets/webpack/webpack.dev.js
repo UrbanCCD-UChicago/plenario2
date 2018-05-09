@@ -1,14 +1,14 @@
 /* eslint-disable import/no-extraneous-dependencies */
 
-const merge = require("webpack-merge");
-const common = require("./webpack.common");
+const merge = require('webpack-merge');
+const common = require('./webpack.common');
 
 module.exports = merge(common, {
-  devtool: "inline-source-map",
+  devtool: 'inline-source-map',
   stats: {
-    colors: true
+    colors: true,
   },
   performance: {
-    hints: false
-  }
+    hints: false,
+  },
 });

@@ -2,11 +2,11 @@
 
 module.exports = {
   plugins: [
-    require("postcss-import"),
-    require("postcss-cssnext"),
-    require("postcss-flexbugs-fixes"),
-    require("cssnano")({
-      preset: "default"
-    })
-  ]
+    require('postcss-import'),
+    require('postcss-cssnext'),
+    require('postcss-flexbugs-fixes'),
+    require('cssnano')({
+      preset: 'default',
+    }),
+  ],
 };
