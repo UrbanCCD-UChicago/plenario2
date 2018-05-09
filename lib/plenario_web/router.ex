@@ -118,6 +118,11 @@ defmodule PlenarioWeb.Router do
     get "/aot", AotController, :get
     get "/aot/@head", AotController, :head
     get "/aot/@describe", AotController, :describe
+
+    # Method not allowed
+    [&post/3, &put/3, &patch/3, &delete/3, &connect/3, &trace/3]
+    |> Enum.each(fn(verb) -> verb.("/*path", MethodNotAllowedController, :match) end)
+
   end
 
   if Mix.env == :dev do
