@@ -1,3 +1,6 @@
 @import "variables";
-@import "~bootstrap/scss/bootstrap";
-// @import "phoenix";
+@import "~bootstrap/scss/bootstrap.scss";
+@import "~leaflet/dist/leaflet";
+@import "~leaflet-draw/dist/leaflet.draw";
+
+@import "phoenix";

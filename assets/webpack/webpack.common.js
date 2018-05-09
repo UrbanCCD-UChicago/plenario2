@@ -5,24 +5,27 @@ const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const Dotenv = require('dotenv-webpack');
+const path = require('path');
 
 const { OUTPUT_PATH, SOURCE_PATH } = require('./paths');
 const config = require('../package');
 
 const ExtractCSS = new ExtractTextPlugin({
   filename: 'css/[name].css',
+  allChunks: true,
 });
 
 const ExtractSCSS = new ExtractTextPlugin({
   filename: 'css/[name].css',
+  allChunks: true,
 });
 
 module.exports = {
   target: 'web',
 
   entry: {
-    polyfills: './src/polyfills.js',
-    app: ['./src/index.js'],
+    polyfills: './src/js/polyfills.js',
+    app: ['./src/js/app.js'],
   },
 
   output: {
@@ -44,18 +47,6 @@ module.exports = {
           // It enables caching results in ./node_modules/.cache/babel-loader/
           // directory for faster rebuilds.
           cacheDirectory: true,
-        },
-      },
-      {
-        test: /\.elm$/,
-        exclude: [/elm-stuff/, /node_modules/],
-        use: {
-          loader: 'elm-webpack-loader',
-          options: {
-            verbose: true,
-            warn: true,
-            debug: true,
-          },
         },
       },
       {
@@ -92,6 +83,8 @@ module.exports = {
     }),
     new Webpack.ProvidePlugin({
       jQuery: 'jquery',
+      $: 'jquery',
+      Pikaday: 'pikaday',
     }),
     new Webpack.EnvironmentPlugin({
       APP_NAME: config.name,
@@ -114,4 +107,18 @@ module.exports = {
       },
     ]),
   ],
+
+  resolve: {
+    alias: {
+      // Help Webpack find Leaflet and Leaflet.Draw's icons
+      './images/layers.png$': path.resolve(__dirname, '../node_modules/leaflet/dist/images/layers.png'),
+      './images/layers-2x.png$': path.resolve(__dirname, '../node_modules/leaflet/dist/images/layers-2x.png'),
+      './images/marker-icon.png$': path.resolve(__dirname, '../node_modules/leaflet/dist/images/marker-icon.png'),
+      './images/marker-icon-2x.png$': path.resolve(__dirname, '../node_modules/leaflet/dist/images/marker-icon-2x.png'),
+      './images/marker-shadow.png$': path.resolve(__dirname, '../node_modules/leaflet/dist/images/marker-shadow.png'),
+      './images/spritesheet.png$': path.resolve(__dirname, '../node_modules/leaflet-draw/dist/images/spritesheet.png'),
+      './images/spritesheet-2x.png$': path.resolve(__dirname, '../node_modules/leaflet-draw/dist/images/spritesheet-2x.png'),
+      './images/spritesheet.svg$': path.resolve(__dirname, '../node_modules/leaflet-draw/dist/images/spritesheet.svg'),
+    },
+  },
 };
