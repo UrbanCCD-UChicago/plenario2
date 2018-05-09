@@ -11,7 +11,13 @@
 //
 // If you no longer want to use a dependency, remember
 // to also remove its path from "config.paths.watched".
-import "phoenix_html"
+import 'phoenix_html'
+
+import 'bootstrap'
+import 'chart.js'
+import 'leaflet'
+import 'leaflet-draw'
+import 'pikaday'
 
 // Import local files
 //
@@ -19,10 +25,6 @@ import "phoenix_html"
 // paths "./socket" or full ones "web/static/js/socket".
 
 // import socket from "./socket"
-
-import 'leaflet'
-import 'leaflet-draw'
-import 'chart.js'
 
 $(document).ready(function(){
     $('[data-toggle="tooltip"]').tooltip();
