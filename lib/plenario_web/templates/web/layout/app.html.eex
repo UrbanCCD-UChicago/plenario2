@@ -32,7 +32,7 @@
               <a href="/explore" class="nav-link">Explore</a>
             </li>
             <li class="nav-item">
-              <a href="/array-of-things" class="nav-link">Array of Things</a>
+              <a href="/explore/array-of-things" class="nav-link">Array of Things</a>
             </li>
             <li class="nav-item">
               <a href="https://github.com/UrbanCCD-UChicago/plenario2" class="nav-link">Contribute</a>
