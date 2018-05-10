@@ -1,55 +1,57 @@
-<div class="row">
-  <div class="col-lg-5">
-    <h2>Login</h2>
-    <%= form_for @changeset, @login_action, fn f -> %>
+<div class="container mt-2 mb-5">
+  <div class="row">
+    <div class="col-md-6">
+      <h1>Login</h1>
+      <%= form_for @changeset, @login_action, fn f -> %>
 
-      <div class="form-group">
-        <%= label f, "Email", class: "control-label" %>
-        <%= text_input f, :email, class: "form-control" %>
-        <%= error_tag f, :email %>
-      </div>
+        <div class="form-group">
+          <%= label f, "Email", class: "control-label" %>
+          <%= text_input f, :email, class: "form-control" %>
+          <%= error_tag f, :email %>
+        </div>
 
-      <div class="form-group">
-        <%= label f, "Password", class: "control-label" %>
-        <%= password_input f, :password, class: "form-control" %>
-        <%= error_tag f, :password %>
-      </div>
+        <div class="form-group">
+          <%= label f, "Password", class: "control-label" %>
+          <%= password_input f, :password, class: "form-control" %>
+          <%= error_tag f, :password %>
+        </div>
 
-      <div class="from-group">
-        <%= submit "Login", class: "btn btn-primary" %>
-      </div>
+        <div class="form-group text-right">
+          <%= submit "Login", class: "btn btn-primary" %>
+        </div>
 
-    <% end %>
-  </div>
+      <% end %>
+    </div>
 
-  <div class="col-lg-2"></div>
+    <hr class="w-100 d-md-none">
 
-  <div class="col-lg-5">
-    <h2>Sign Up</h2>
-    <%= form_for @changeset, @register_action, fn f -> %>
+    <div class="col-md-6">
+      <h1>Sign Up</h1>
+      <%= form_for @changeset, @register_action, fn f -> %>
 
-      <div class="form-group">
-        <%= label f, "Name", class: "control-label" %>
-        <%= text_input f, :name, class: "form-control" %>
-        <%= error_tag f, :name %>
-      </div>
+        <div class="form-group">
+          <%= label f, "Name", class: "control-label" %>
+          <%= text_input f, :name, class: "form-control" %>
+          <%= error_tag f, :name %>
+        </div>
 
-      <div class="form-group">
-        <%= label f, "Email Address", class: "control-label" %>
-        <%= text_input f, :email, class: "form-control" %>
-        <%= error_tag f, :email %>
-      </div>
+        <div class="form-group">
+          <%= label f, "Email Address", class: "control-label" %>
+          <%= text_input f, :email, class: "form-control" %>
+          <%= error_tag f, :email %>
+        </div>
 
-      <div class="form-group">
-        <%= label f, "Password", class: "control-label" %>
-        <%= password_input f, :password, class: "form-control" %>
-        <%= error_tag f, :password %>
-      </div>
+        <div class="form-group">
+          <%= label f, "Password", class: "control-label" %>
+          <%= password_input f, :password, class: "form-control" %>
+          <%= error_tag f, :password %>
+        </div>
 
-      <div class="from-group">
-        <%= submit "Sign Up", class: "btn btn-primary" %>
-      </div>
+        <div class="form-group text-right">
+          <%= submit "Sign Up", class: "btn btn-primary" %>
+        </div>
 
-    <% end %>
+      <% end %>
+    </div>
   </div>
 </div>
