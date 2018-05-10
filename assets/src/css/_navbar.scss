@@ -1,0 +1,11 @@
+body {
+  padding-top: 66px; // Avoid the fixed primary navbar
+}
+
+#primary-nav {
+  .navbar-brand {
+    img {
+      max-height: 2em;
+    }
+  }
+}

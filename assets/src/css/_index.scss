@@ -1,0 +1,21 @@
+#hero-jumbotron {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/images/jumbotron-city-xs.jpg");
+  background-position-y: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  @include media-breakpoint-up(sm) {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/images/jumbotron-city-sm.jpg");
+  }
+  @include media-breakpoint-up(md) {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/images/jumbotron-city-md.jpg");
+  }
+  @include media-breakpoint-up(lg) {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/images/jumbotron-city-lg.jpg");
+  }
+  @include media-breakpoint-up(xl) {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/images/jumbotron-city-xl.jpg");
+  }
+  h1, p {
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+  }
+}
