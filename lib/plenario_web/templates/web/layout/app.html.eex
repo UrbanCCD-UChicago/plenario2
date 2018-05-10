@@ -19,7 +19,7 @@
 
     <nav id="primary-nav" class="navbar navbar-light navbar-expand-md fixed-top justify-content-between bg-light shadow-sm">
       <div class="container">
-        <a href="" class="navbar-brand">
+        <a href="/" class="navbar-brand">
           <img src="<%= static_path(@conn, "/images/logo-large.png") %>" alt="Plenario logo, a stylized red brick archway">
         </a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible"
