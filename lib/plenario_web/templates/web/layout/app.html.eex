@@ -42,16 +42,16 @@
             </li>
             <%= if @current_user do %>
               <li class="nav-item">
-                <%= link "Hi #{@current_user.name}!", to: me_path(@conn, :index), class: "nav-link" %>
+                <%= link "#{@current_user.name}", to: me_path(@conn, :index), class: "nav-link" %>
               </li>
-              <%= if @current_user.is_admin do %>
-                <li class="nav-item">
-                  <%= link "Admin", to: admin_page_path(@conn, :index), class: "nav-link" %>
-                </li>
-              <% end %>
               <li class="nav-item">
                 <%= link "Sign Out", to: auth_path(@conn, :logout), method: :post, class: "nav-link" %>
               </li>
+              <%= if @current_user.is_admin do %>
+                <li class="nav-item">
+                  <%= link "Admin", to: admin_page_path(@conn, :index), class: "nav-link text-danger" %>
+                </li>
+              <% end %>
             <% else %>
               <li class="nav-item">
                 <%= link "Sign In", to: auth_path(@conn, :index), class: "nav-link" %>
