@@ -221,4 +221,11 @@ defmodule PlenarioWeb.Web.PageController do
     "[#{lat}, #{lon}]"
   end
   defp get_poly_center(_), do: "[41.9, -87.7]"
+
+  @doc """
+  Simple action for rendering the embedded API documentation.
+  """
+  def docs(conn, _) do
+    render(conn, "docs.html")
+  end
 end

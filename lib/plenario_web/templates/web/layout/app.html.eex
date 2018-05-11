@@ -29,6 +29,7 @@
         <ul class="nav navbar-nav navbar-right">
           <li><a href="/explore">Explore</a></li>
           <li><a href="/explore/array-of-things">Array of Things</a></li>
+          <li><a href="/api/v2">API</a></li>
           <li><a href="https://github.com/UrbanCCD-UChicago/plenario2">Contribute</a></li>
           <li><a href="https://github.com/UrbanCCD-UChicago/plenario2/wiki">Wiki</a></li>
             <%= if @current_user do %>

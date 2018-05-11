@@ -102,6 +102,11 @@ defmodule PlenarioWeb.Router do
     resources "/aot", AotController
   end
 
+  scope "/api/v2", PlenarioWeb.Web do
+    pipe_through [:browser, :maybe_authenticated]
+    get "/", PageController, :docs
+  end
+
   ##
   # api paths
   scope "/api/v2", PlenarioWeb.Api do
