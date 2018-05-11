@@ -3,6 +3,7 @@
 /* node_modules imports */
 import 'popper.js';
 import 'bootstrap';
+import 'chart.js';
 import 'phoenix_html';
 
 /* Local imports */

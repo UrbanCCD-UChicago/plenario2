@@ -1,4 +1,4 @@
-<div class="container mt-2 mb-5">
+<div class="container mt-2 mb-1">
   <h1>Explore Data Sets</h1>
 
   <div class="row no-gutters">
@@ -35,7 +35,7 @@
               <input id="coords" name="coords" hidden>
               <input id="zoom" name="zoom" hidden>
 
-              <div class="col-3 ml-auto col-lg-12">
+              <div class="col-auto ml-auto col-lg-12">
                 <input type="submit" value="Search" class="btn btn-primary btn-block">
               </div>
 
@@ -49,14 +49,14 @@
     <div class="col-lg-9">
       <div class="card ml-lg-1">
         <div class="card-header">Select an Area</div>
-        <%= PlenarioWeb.SharedView.render_map(draw_controls: true, map_center: @map_center, bbox: @bbox, map_zoom: @map_zoom)%>
+        <%= PlenarioWeb.SharedView.render_map(draw_controls: true, map_height: "75vw", map_center: @map_center, bbox: @bbox, map_zoom: @map_zoom)%>
       </div>
     </div>
   </div>
 
   <%= if assigns[:results] do %>
 
-    <h2 class="mt-4">Search Results</h2>
+    <h2 class="mt-5">Search Results</h2>
 
     <%= if length(@results) > 0 do %>
       <%= for {res, idx} <- Enum.with_index(@results) do %>

@@ -1,4 +1,4 @@
-<div id="<%= @map_id %>" style="height:<%= @map_height %>px"></div>
+<div id="<%= @map_id %>" style="height:<%= @map_height %>; max-height: 75vh"></div>
 
 <script defer>
   // instantiate the map
