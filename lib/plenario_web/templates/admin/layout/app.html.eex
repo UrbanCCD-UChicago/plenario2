@@ -9,56 +9,58 @@
 
     <title>Plenario Admin</title>
 
-    <!-- Import css and js files built by brunch -->
+    <!-- Import css and js files built by Webpack -->
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
     <link rel="shortcut icon" type="image/png" href="<%= static_path(@conn, "/images/favicon.png") %>">
-
-    <style>
-    @media (min-width: 900px) {
-      .container {
-        max-width: 870px;
-      }
-    }
-    @media (min-width: 1150px) {
-      .container {
-        max-width: 1120px;
-      }
-    }
-    @media (min-width: 1400px) {
-      .container {
-        max-width: 1370px;
-      }
-    }
-    </style>
-
   </head>
 
   <body>
-    <div class="container">
-      <header class="header">
-        <nav role="navigation">
-          <ul class="nav nav-pills pull-right">
-            <li><%= link "Admin Home", to: admin_page_path(@conn, :index) %></li>
-            <li><%= link "Users", to: user_path(@conn, :index) %></li>
-            <li><%= link "Metas", to: meta_path(@conn, :index) %></li>
-            <li><%= link "AoT Metas", to: aot_path(@conn, :index) %></li>
-            <li><%= link "ETL Jobs", to: etl_job_path(@conn, :index) %></li>
-            <li><%= link "Export Jobs", to: export_job_path(@conn, :index) %></li>
-          </ul>
-        </nav>
-        <a href="/">
-          <span class="logo"></span>
+    
+    <nav id="primary-nav" class="navbar navbar-dark navbar-expand-md fixed-top justify-content-between bg-dark shadow-sm">
+      <div class="container">
+        <a href="/admin" class="navbar-brand">
+          <img class="d-inline-block align-top mr-1" src="<%= static_path(@conn, "/images/logo-large.png") %>" alt="Plenario logo, a stylized red brick archway">
+          Plenario Admin
         </a>
-      </header>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible"
+          aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div id="navbar-collapsible" class="collapse navbar-collapse">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <%= link "Users", to: user_path(@conn, :index), class: "nav-link" %>
+            </li>
+            <li class="nav-item">
+              <%= link "Metas", to: meta_path(@conn, :index), class: "nav-link" %>
+            </li>
+            <li class="nav-item">
+              <%= link "AoT Metas", to: aot_path(@conn, :index), class: "nav-link" %>
+            </li>
+            <li class="nav-item">
+              <%= link "ETL Jobs", to: etl_job_path(@conn, :index), class: "nav-link" %>
+            </li>
+            <li class="nav-item">
+              <%= link "Export Jobs", to: export_job_path(@conn, :index), class: "nav-link" %>
+            </li>
+            <li class="nav-item">
+              <a href="/" class="nav-link text-danger">Exit</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
 
-      <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
-      <p class="alert alert-success" role="alert"><%= get_flash(@conn, :success) %></p>
-      <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
+    <div class="container my-0">
+      <div class="alert alert-info my-1" role="alert"><%= get_flash(@conn, :info) %></div>
+      <div class="alert alert-success my-1" role="alert"><%= get_flash(@conn, :success) %></div>
+      <div class="alert alert-danger my-1" role="alert"><%= get_flash(@conn, :error) %></div>
+    </div>
 
-      <main role="main">
-        <%= render @view_module, @view_template, assigns %>
-      </main>
+    <main role="main">
+      <%= render @view_module, @view_template, assigns %>
+    </main>
 
     </div>
   </body>

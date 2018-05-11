@@ -1,1 +1,4 @@
-<h2>ohai admin</h2>
+<div class="container mt-5 text-center">
+  <img src="<%= static_path(@conn, "/images/logo-large.png") %>" alt="Plenario logo, a stylized red brick archway">
+  <p class="display-4">Welcome, admin!</p>
+</div>
