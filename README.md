@@ -1,126 +1,263 @@
-# Plenario
-[![Build Status](https://travis-ci.org/UrbanCCD-UChicago/plenario2.svg?branch=master)](https://travis-ci.org/UrbanCCD-UChicago/plenario2)
-[![Coverage Status](https://coveralls.io/repos/github/UrbanCCD-UChicago/plenario2/badge.svg?branch=master)](https://coveralls.io/github/UrbanCCD-UChicago/plenario2?branch=master)
+<div style="text-align: center;">
+  <img src="./assets/static/images/logo-large.png">
+  <h1 style="font-size: 4em; font-weight: 300; margin: 0;">Plenario</h1>
+  <p style="font-size: 1.25em; margin: -1.5em 0 0;">The Premier Open Data Platform</p>
+  <hr style="margin: 0.25em">
+  <a href="https://travis-ci.org/UrbanCCD-UChicago/plenario2">
+    <img alt="build status"
+      src="https://travis-ci.org/UrbanCCD-UChicago/plenario2.svg?branch=master">
+  </a>
+  <a href="https://coveralls.io/github/UrbanCCD-UChicago/plenario2?branch=master">
+    <img alt="coverage status"
+      src="https://coveralls.io/repos/github/UrbanCCD-UChicago/plenario2/badge.svg?branch=master">
+  </a>
+</div>
 
 ## Open RFCs
 
-We encourage everyone to participate in this project -- filing bugs, opening
+We encourage everyone to participate in this project — filing bugs, opening
 feature requests, etc. One of the most impactful areas is participating in open
-RFCs specifically. The following link will bring you to the list of currently
-active RFCs:
-https://github.com/UrbanCCD-UChicago/plenario2/issues?q=is%3Aopen+is%3Aissue+label%3Arfc
+RFCs specifically. You can find the list of currently
+active RFCs [here](https://github.com/UrbanCCD-UChicago/plenario2/issues?q=is%3Aopen+is%3Aissue+label%3Arfc).
 
-## Tool Versioning
+## Software Prerequisites
 
-With the rapid development of Elixir, we want to be deliberate about which tools
-we are using when working with the code. For this, we recommend using
-[asdf](https://github.com/asdf-vm/asdf).
+Plenario is primarily written in the super-fast, functional
+[Elixir](https://elixir-lang.org). This lets us operate on huge amounts of data
+in the blink of an eye; unfortunately it also means setting up a Plenario
+development environment is a little more involved than the average GitHub
+project. Follow the steps below, though, and we'll have you up and running in no
+time!
 
-If you already have Elixir and Erlang installed on your local system, and they
-are not dependencies for anything else, remove them. The next step is to
-install `asdf`, then install the prerequisites for Erlang, then install the
-Erlang and Elixir plugins:
+With the rapid development of Elixir, we want to be deliberate about which
+tool versions we are using when working with the code. We use
+[asdf](https://github.com/asdf-vm/asdf) to automate management of our Erlang,
+Elixir, and Node environments, but you can do it manually if you're feeling
+bold. We also use [Docker](https://docker.com) to set up our Postgres database
+for development and testing and to provide a consistent environment when
+building releases.
 
-```bash
-$ cd ~
-$ git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.4.1  # check the docs from asdf for the current version
-$ echo -e '\n. $HOME/.asdf/asdf.sh' >> ~/.bashrc
-$ sudo apt install build-essential autoconf m4 libncurses5-dev libwxgtk3.0-dev libgl1-mesa-dev libglu1-mesa-dev libssh-dev unixodbc-dev
-$ source .bashrc
-$ asdf plugin-add erlang https://github.com/asdf-vm/asdf-erlang.git
+### Erlang, Elixir, and Node
+
+#### Using asdf
+
+First make sure you have [asdf](https://github.com/asdf-vm/asdf) installed
+and configured properly. Instructions for doing so are available
+[here](https://github.com/asdf-vm/asdf#setup). Make sure to install the system
+packages listed at the end of those instructions.
+
+You'll also need the Erlang, Elixir, and Node plugins
+for asdf. You can check your list of installed plugins with
+
+```sh
+$ asdf plugin-list
+elixir
+erlang
+nodejs
 ```
 
-There's going to be a decent amount of output here, and it's going to take
-_for-freaking-ever_ to compile Erlang. Go get some coffee. Then:
+and add any missing ones with
 
-```bash
-$ asdf install erlang 20.2.2  # or whatever version you want
-$ asdf plugin-add elixir https://github.com/asdf-vm/asdf-elixir.git
-$ asdf install elixir 1.6.0-otp-20  # or whatever version, just make sure you add the corresponding otp version
+```sh
+asdf plugin-add erlang
+asdf plugin-add elixir
+asdf plugin-add nodejs
 ```
 
-After that, you can set the global versions of each:
+Now you can just enter the project directory and run
 
-```bash
-$ asdf global erlang 20.2.2
-$ asdf global elixir 1.6.0-otp-20
+```sh
+asdf install
 ```
 
-Relevant links:
+to automatically install the correct versions of all three tools. When
+inside the project directory tree you'll automatically and transparently use the
+correct tool version when calling commands, e.g. `mix` or `npm`.
 
-- https://github.com/asdf-vm/asdf
-- https://github.com/asdf-vm/asdf-erlang
-- https://github.com/asdf-vm/asdf-elixir
+#### Manually
 
-## Running the Tests
+If you don't want to use asdf, perhaps because you already have other version
+managers running like nvm or kerl, you can find our currently employed versions
+of Erlang, Elixir, and Node listed in human-readable format in
+[.tool-versions](.tool-versions). Install them globally or with your version
+managers of choice, and make sure you're using them when working on Plenario.
 
-You're going to need a local version of Postgres with the PostGIS extension
-enabled running. If you need to install it, use Docker and pull the
-`mdillon/postgis` image:
+### Docker and Postgres
 
-```bash
-$ docker pull mdillon/postgis
-$ docker run -p 5432:5432 -e POSTGRES_PASSWORD=password mdillon/postgis
+We use [Docker](https://docker.com) to stand up our local development database
+environment with Postgres+PostGIS. We also use it to provide a consistent,
+Ubuntu-based build environment to ensure a version of Plenario built on any
+development machine will run just as well in the production environment.
+
+#### Installing Docker
+
+We highly recommend using the latest instructions and installation packages from
+Docker themselves, especially on macOS and Windows. The new Docker for
+Mac/Windows distributions use the native virtualization technologies under those
+operating systems, and so should be more performant than the standard VirtualBox
+distribution.
+
+- [Docker for Mac](https://docs.docker.com/docker-for-mac/install/)
+- [Docker for Windows](https://docs.docker.com/docker-for-windows/install/)
+- Linux
+  - [CentOS](https://docs.docker.com/install/linux/docker-ce/centos/)
+  - [Debian](https://docs.docker.com/install/linux/docker-ce/debian/)
+  - [Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/)
+  - [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
+  - [Binaries](https://docs.docker.com/install/linux/docker-ce/binaries/) (you might also be able to find `docker` in your distro's default package repository)
+
+#### Postgres+PostGIS
+
+Plenario expects to connect to a Postgres database with the PostGIS extension
+enabled. Rather than setting that up yourself, you can pull down a
+pre-configured Docker image with
+
+```sh
+docker pull mdillon/postgis
 ```
 
-When you've got that running, cd into the project, install the dependencies,
-create and migrate the database, and run the test suite:
+### Project Dependencies
 
-```bash
-$ cd plenario2
-$ mix deps.get
-$ MIX_ENV=test mix ecto.create
-$ MIX_ENV=test mix ecto.migrate
-$ mix coveralls
+> **NOTE**  
+> We recommend repeating this step every time you check out a new git branch.
+> Installed dependencies are not tracked in git and will not update
+> automatically when changing branches.
+
+One last step; we need to install the Elixir plugins and NPM modules that
+Plenario depends on. Run the following from the project root:
+
+```sh
+mix deps.get
+cd assets/
+npm install
+```
+
+You're all set! Read [Running Development Server](#running-development-server)
+to get started contributing, and [Running Test Suite](#running-test-suite) learn
+how to run our automated test suite.
+
+## Running Development Sever
+
+> **NOTE**  
+> Remember to re-run the commands in
+> [Project Dependencies](#project-dependecies) if you have checked out a
+> different branch. Git can't update them automatically.
+
+Once you're sure you've got all of your
+[software prerequisites](#software-prerequisites) set up, you're ready to get
+started! This requires just a couple steps:
+
+```sh
+# Stand up the development database and populate it
+docker run -dp 5432:5432 -e POSTGRES_PASSWORD=password mdillon/postgis
+mix ecto.create
+mix ecto.migrate
+
+# Start the Phoenix server
+mix phx.serve
+```
+
+Now you can access the Plenario front end at `http://localhost:4000` and the API
+via `http://localhost:4000/api/v2/...`. HTML/style changes will live update in
+your browser, and most API changes will be visible the next time you call the
+endpoint.
+
+To stop the Phoenix server, press <kbd>Ctrl-C</kbd> twice. You can stop the
+Postgres container with the usual `docker container stop <container name/hash>`.
+
+For more specific information on the locally running server, check the
+[Phoenix Framework documentation](https://hexdocs.pm/phoenix).
+
+### Sample Data
+
+By default, the development server is empty; it doesn't have any users, data
+sets, or Array of Things networks. You can add them manually as needed, but we
+also offer the following command to quickly create a Plenario user with
+administrator privileges and some sample data.
+
+```sh
+mix run priv/repo/seeds.exs
+```
+
+The created user has these login credentials:
+
+- **Email**: `plenario@uchicago.edu`
+- **Password**: `password` (yes, we know)
+
+## Running the Test Suite
+
+> **NOTE**  
+> Remember to re-run the commands in
+> [Project Dependencies](#project-dependecies) if you have checked out a
+> different branch. Git can't update them automatically.
+
+First make sure you've got all of your
+[software prerequisites](#software-prerequisites) set up. Then run the following
+from the project root to execute the automated tests.
+
+```sh
+# Stand up the test database and populate it
+docker run -dp 5432:5432 -e POSTGRES_PASSWORD=password mdillon/postgis
+MIX_ENV=test mix ecto.create
+MIX_ENV=test mix ecto.migrate
+
+# Run the tests
+mix coveralls
 ```
 
 If during development you need to make configuration changes, do that in the
 `config/test.exs` file. If your tests work locally, but something is screwy on
 Travis, update the `config/travis.exs` file.
 
-## Building Releases
+## Building and Deploying Releases
 
-A quick sidebar about building and deploying releases in Elixir and Erlang: it's
-a flipping mess right now. Erlang, which Elixir is built on top of, is old.
-Like really old. Like almost as old as me (Vince). Given it's advanced age, it
-doesn't like being nimble. So, unlike Python or Ruby or (sadly) even Java,
-deploying Elixir is a pain. Hence, this walk through...
+Erlang, which Elixir is built on top of, is old.  
+Like really old.  
+Like old enough to have gone to its 10-year college reunion old.
 
-The target environment for releases is Ubuntu 16.04 with locales set to
-`EN_US.UTF8`. Obviously, not everyone is going to have a clean version of
-Xenial as their dev environment, so to make the release build process as clean
-as possible we use Docker.
+That means Erlang is mature, fast, and well supported, but it also means Elixir
+doesn't have access to the same level of deployment tooling as Node or Python or
+Ruby or even Java. Hence, this walk through&hellip;
 
-To build the image, run
+### Extra Software Prerequisites
 
-```
-./build --tag {version number here}
+In addition to everything listed in the development
+[software prerequisites](#software-prerequisites) above, building a Plenario
+release also requires the following:
+
+- A Docker account, signed in with `docker signin`
+- **awscli**, with your AWS credentials already set up (`aws config`)
+
+### Building
+
+To build the image, run the included `build` script as follows.
+
+```sh
+./build --tag <version number>
 ```
 
 This will build the release, tag it properly, copy it to your host machine,
 and upload it to S3.
 
-If you don't want to upload it to S3, append the `--skip-upload` flag.
+If you don't want to upload it to S3, append the `--skip-upload` flag:
 
-**Note:** you will need the following software installed and configured on
-your host/build machine:
-
-- docker
-- awscli
-
-You should be signed into a docker account (`$ docker signin`) and you should
-have your AWS credentials set up (`$ aws config`).
-
-## Deploying Releases
-
-Deployments are naive -- they will download a specific release archive from S3
-to your machine and then upload it to the target server. This is done so that you
-make deliberate choices.
-
-To deploy, run
-
+```sh
+./build --tag <version number> --skip-upload
 ```
-./deploy --tag {{ version number }} --host {{ hostname }}
+
+### Deploying
+
+Deployments are naive: they will download a specific release archive from S3
+to your machine and then upload it to the target server. This is done so that
+you make deliberate choices.
+
+To deploy, run the included `deploy` script as follows.
+
+> **NOTE**
+> You will need the target hostname configured in your local SSH config.
+
+```sh
+./deploy --tag <version number> --host <hostname>
 ```
 
 This will download a built release archive from S3 and deploy it to the target
@@ -129,15 +266,16 @@ host.
 If you already have a local copy of the archive, you can skip the
 download with the `--skip-download` flag.
 
-**Note:** you will need the hostname configured in your local SSH config. You
-should also have configured your AWS credentials set up (`$ aws config`).
+```sh
+./deploy --tag <version number> --host <hostname> --skip-download
+```
 
-### Deployments with Migrations
+#### Deployments with Migrations
 
 If the latest changes have deployments, there's a convenience wrapper included
-to run the changes. all you have to do is append `--run-migrations` to the
+to run the changes. All you have to do is append `--run-migrations` to the
 end of the deployment command:
 
-```
-./deploy --tag {{ version number }} --host {{ hostname }} --run-migrations
+```sh
+./deploy --tag <version number> --host <hostname> --run-migrations
 ```
