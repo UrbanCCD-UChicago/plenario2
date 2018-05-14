@@ -1,35 +1,27 @@
-<div class="row">
+<div class="container mt-2">
   <h1>Explore the Array of Things</h1>
-</div>
 
-<%= PlenarioWeb.SharedView.render_map(draw_controls: false, map_height: 600, map_zoom: 11, map_center: "[41.84, -87.7]", points: @points)%>
+  <%= PlenarioWeb.SharedView.render_map(draw_controls: false, map_height: "65vh", map_zoom: 11, map_center: "[41.84, -87.7]", points: @points)%>
 
-<hr>
+  <h2 class="mt-4">Temperature</h2>
 
-<div class="row">
-  <h3>Temperature</h3>
-</div>
-
-<div class="row">
-  <div class="col-lg-6">
-    <%= PlenarioWeb.SharedView.render_better_line(@labels, @temps_data, [height: 150, chart_id: "temps"]) %>
+  <div class="row">
+    <div class="col-lg-6">
+      <%= PlenarioWeb.SharedView.render_better_line(@labels, @temps_data, [height: 150, chart_id: "temps"]) %>
+    </div>
+    <div class="col-lg-6">
+      <%= PlenarioWeb.SharedView.render_leaflet_heatmap(@temp_hm_data, map_height: 285, map_id: "heat-temp") %>
+    </div>
   </div>
-  <div class="col-lg-6">
-    <%= PlenarioWeb.SharedView.render_leaflet_heatmap(@temp_hm_data, map_height: 285, map_id: "heat-temp") %>
-  </div>
-</div>
 
-<hr>
+  <h2 class="mt-4">Humidity</h2>
 
-<div class="row">
-  <h3>Humidity</h3>
-</div>
-
-<div class="row">
-  <div class="col-lg-6">
-    <%= PlenarioWeb.SharedView.render_better_line(@labels, @humid_data, [height: 150, chart_id: "humid"]) %>
-  </div>
-  <div class="col-lg-6">
-    <%= PlenarioWeb.SharedView.render_leaflet_heatmap(@humid_hm_data, map_height: 285, map_id: "heat-humid") %>
+  <div class="row">
+    <div class="col-lg-6">
+      <%= PlenarioWeb.SharedView.render_better_line(@labels, @humid_data, [height: 150, chart_id: "humid"]) %>
+    </div>
+    <div class="col-lg-6">
+      <%= PlenarioWeb.SharedView.render_leaflet_heatmap(@humid_hm_data, map_height: 285, map_id: "heat-humid") %>
+    </div>
   </div>
 </div>

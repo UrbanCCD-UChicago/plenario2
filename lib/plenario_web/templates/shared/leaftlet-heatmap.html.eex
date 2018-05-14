@@ -5,14 +5,13 @@
 // instantiate the map
 var heatMap = L.map('<%= @map_id %>').setView(<%= @map_center %>, <%= @map_zoom %>);
 L.tileLayer(
-  'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}',
-  {
-    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
-    maxZoom: 18,
-    id: 'mapbox.streets',
-    accessToken: 'pk.eyJ1IjoicGxlbmFyaW8iLCJhIjoiY2pkM2RicXV4M2d3ajJybnNvczE0NDBnbiJ9.QYYTdm03c_iSP1pHRS6QUw'
-  }
-).addTo(heatMap);
+    'https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
+    {
+      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }
+  ).addTo(heatMap);
 
 // add heat layer
 var heat = L.heatLayer([

@@ -1,45 +1,47 @@
-<h2>Metas</h2>
+<div class="container mt-2">
+  <h1>Metas</h1>
 
-<div class="row">
-  <div class="col-lg-6">
+  <div class="row">
+    <div class="col-lg-6">
 
-    <%= if @num_erred > 0 do %>
-    <h3>Erred</h3>
-    <hr>
-    <%= for m <- @erred_metas do %>
-    <p>
-      <strong><%= m.name %></strong><br>
-      Submitted by <%= m.user.name %><br>
-    </p>
-    <% end %>
-    <% end %>
+      <%= if @num_erred > 0 do %>
+      <h2>Errored</h2>
+      <hr>
+      <%= for m <- @erred_metas do %>
+      <p>
+        <strong><%= m.name %></strong><br>
+        Submitted by <%= m.user.name %><br>
+      </p>
+      <% end %>
+      <% end %>
 
-    <%= if @num_na > 0 do %>
-    <h3>Needs Approval</h3>
-    <hr>
-    <%= for m <- @needs_approval_metas do %>
-    <p>
-      <strong><%= m.name %></strong><br>
-      Submitted by <%= m.user.name %><br>
-      <%= link "Review It", to: meta_path(@conn, :review, m.id) %>
-    </p>
-    <% end %>
-    <% end %>
+      <%= if @num_na > 0 do %>
+      <h2>Needs Approval</h2>
+      <hr>
+      <%= for m <- @needs_approval_metas do %>
+      <p>
+        <strong><%= m.name %></strong><br>
+        Submitted by <%= m.user.name %><br>
+        <%= link "Review It", to: meta_path(@conn, :review, m.id) %>
+      </p>
+      <% end %>
+      <% end %>
 
-    <%= if @num_afi > 0 do %>
-    <h3>Awaiting First Import</h3>
-    <hr>
-    <%= for m <- @awaiting_first_import_metas do %>
-    <p>
-      <strong><%= m.name %></strong><br>
-      Submitted by <%= m.user.name %><br>
-      Scheduled to run on <%= m.refresh_starts_on %>
-    </p>
-    <% end %>
-    <% end %>
-  </div>
+      <%= if @num_afi > 0 do %>
+      <h2>Awaiting First Import</h2>
+      <hr>
+      <%= for m <- @awaiting_first_import_metas do %>
+      <p>
+        <strong><%= m.name %></strong><br>
+        Submitted by <%= m.user.name %><br>
+        Scheduled to run on <%= m.refresh_starts_on %>
+      </p>
+      <% end %>
+      <% end %>
+    </div>
 
-  <div class="col-lg-6">
-    <%= PlenarioWeb.SharedView.render_doughnut(@chart_kvs) %>
+    <div class="col-lg-6">
+      <%= PlenarioWeb.SharedView.render_doughnut(@chart_kvs) %>
+    </div>
   </div>
 </div>
