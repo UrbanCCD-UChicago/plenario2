@@ -7,7 +7,8 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     DataSetFieldActions,
     MetaActions,
     UniqueConstraintActions,
-    UserActions
+    UserActions,
+    VirtualPointFieldActions
   }
 
   setup do
@@ -18,8 +19,9 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     {:ok, meta} = MetaActions.create("API Test Dataset", user.id, "https://www.example.com", "csv")
     {:ok, pk} = DataSetFieldActions.create(meta.id, "pk", "integer")
     {:ok, _} = DataSetFieldActions.create(meta.id, "datetime", "timestamptz")
-    {:ok, _} = DataSetFieldActions.create(meta.id, "location", "text")
+    {:ok, location} = DataSetFieldActions.create(meta.id, "location", "text")
     {:ok, _} = DataSetFieldActions.create(meta.id, "data", "text")
+    {:ok, vpf} = VirtualPointFieldActions.create(meta, location.id)
     {:ok, _} = UniqueConstraintActions.create(meta.id, [pk.id])
 
     DataSetActions.up!(meta)
@@ -27,9 +29,11 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     # Insert 100 empty rows
     ModelRegistry.clear()
     model = ModelRegistry.lookup(meta.slug())
-    (1..100) |> Enum.each(fn _ -> Repo.insert(model.__struct__) end)
+    (1..100) |> Enum.each(fn _ ->
+      Repo.insert(%{model.__struct__ | datetime: "2500-01-01 00:00:00", location: "(50, 50)"})
+    end)
 
-    %{slug: meta.slug()}
+    %{slug: meta.slug(), vpf: vpf}
   end
 
   test "GET /api/v2/data-sets/:slug", %{slug: slug} do
@@ -105,5 +109,101 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     assert headers["access-control-allow-methods"] == "GET,HEAD,OPTIONS"
     assert headers["access-control-allow-origin"] == "*"
     assert headers["access-control-max-age"] == "300"
+  end
+
+  test "GET /api/v2/data-sets/:slug bbox query", %{slug: slug} do
+    geojson = 
+      """
+      {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [0, 0],
+            [0, 100],
+            [100, 100],
+            [100, 0],
+            [0, 0]
+          ]
+        ]
+      }
+      """
+    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?bbox=#{geojson}")
+    response = json_response(conn, 200)
+    assert length(response["data"]) == 100
+  end
+
+  test "GET /api/v2/data-sets/:slug bbox query no results", %{slug: slug} do
+    geojson = 
+      """
+      {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [0, 0],
+            [0, 1],
+            [1, 1],
+            [1, 0],
+            [0, 0]
+          ]
+        ]
+      }
+      """
+    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?bbox=#{geojson}")
+    response = json_response(conn, 200)
+    assert length(response["data"]) == 0
+  end
+
+  test "GET /api/v2/data-sets/:slug range query", %{slug: slug} do
+    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?datetime=in:{\"upper\": \"3000-01-01\", \"lower\": \"2000-01-01\"}")
+    response = json_response(conn, 200)
+    assert length(response["data"]) == 100
+  end
+
+  test "GET /api/v2/data-sets/:slug range query no results", %{slug: slug} do
+    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?datetime=in:{\"upper\": \"2000-01-01\", \"lower\": \"3000-01-01\"}")
+    response = json_response(conn, 200)
+    assert length(response["data"]) == 0
+  end
+
+  test "GET /api/v2/data-sets/:slug location query", %{slug: slug, vpf: vpf} do
+    geojson = 
+      """
+      {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [0, 0],
+            [0, 100],
+            [100, 100],
+            [100, 0],
+            [0, 0]
+          ]
+        ]
+      }
+      """
+    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?#{vpf.id}=in:#{geojson}")
+    response = json_response(conn, 200)
+    assert length(response["data"]) == 100
+  end
+
+  test "GET /api/v2/data-sets/:slug location query no results", %{slug: slug, vpf: vpf} do
+    geojson = 
+      """
+      {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [0, 0],
+            [0, 1],
+            [1, 1],
+            [1, 0],
+            [0, 0]
+          ]
+        ]
+      }
+      """
+    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?#{vpf.name}=in:#{geojson}")
+    response = json_response(conn, 200)
+    assert length(response["data"]) == 0
   end
 end

@@ -5,6 +5,7 @@ defmodule PlenarioAot.AotData do
 
   alias PlenarioAot.AotData
 
+  @derive [Poison.Encoder]
   schema "aot_data" do
     field :aot_meta_id, :id
     field :node_id, :string
