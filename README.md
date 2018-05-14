@@ -1,8 +1,12 @@
-<div style="text-align: center;">
+<h1 align="center">
   <img src="./assets/static/images/logo-large.png">
-  <h1 style="font-size: 4em; font-weight: 300; margin: 0;">Plenario</h1>
-  <p style="font-size: 1.25em; margin: -1.5em 0 0;">The Premier Open Data Platform</p>
-  <hr style="margin: 0.25em">
+  <br>
+  Plenario
+</h1>
+<p align="center">
+  The Premier Open Data Platform
+</p>
+<p align="center">
   <a href="https://travis-ci.org/UrbanCCD-UChicago/plenario2">
     <img alt="build status"
       src="https://travis-ci.org/UrbanCCD-UChicago/plenario2.svg?branch=master">
@@ -11,7 +15,7 @@
     <img alt="coverage status"
       src="https://coveralls.io/repos/github/UrbanCCD-UChicago/plenario2/badge.svg?branch=master">
   </a>
-</div>
+</p>
 
 ## Open RFCs
 
