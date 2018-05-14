@@ -1,0 +1,11 @@
+body {
+  padding-top: 56px; // Clear the fixed primary navbar
+}
+
+#primary-nav {
+  .navbar-brand {
+    img {
+      max-height: 30px;
+    }
+  }
+}
