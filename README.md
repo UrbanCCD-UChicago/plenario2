@@ -24,7 +24,7 @@ feature requests, etc. One of the most impactful areas is participating in open
 RFCs specifically. You can find the list of currently
 active RFCs [here](https://github.com/UrbanCCD-UChicago/plenario2/issues?q=is%3Aopen+is%3Aissue+label%3Arfc).
 
-## Software Prerequisites
+## Development Software Prerequisites
 
 Plenario is primarily written in the super-fast, functional
 [Elixir](https://elixir-lang.org). This lets us operate on huge amounts of data
@@ -108,7 +108,9 @@ distribution.
   - [Debian](https://docs.docker.com/install/linux/docker-ce/debian/)
   - [Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/)
   - [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
-  - [Binaries](https://docs.docker.com/install/linux/docker-ce/binaries/) (you might also be able to find `docker` in your distro's default package repository)
+  - [Binaries](https://docs.docker.com/install/linux/docker-ce/binaries/) (you
+    might also be able to find `docker` in your distro's default package
+    repository)
 
 #### Postgres+PostGIS
 
@@ -148,8 +150,8 @@ how to run our automated test suite.
 > different branch. Git can't update them automatically.
 
 Once you're sure you've got all of your
-[software prerequisites](#software-prerequisites) set up, you're ready to get
-started! This requires just a couple steps:
+[software prerequisites](#development-software-prerequisites) set up, you're
+ready to get started! This requires just a couple steps:
 
 ```sh
 # Stand up the development database and populate it
@@ -196,8 +198,8 @@ The created user has these login credentials:
 > different branch. Git can't update them automatically.
 
 First make sure you've got all of your
-[software prerequisites](#software-prerequisites) set up. Then run the following
-from the project root to execute the automated tests.
+[software prerequisites](#development-software-prerequisites) set up. Then run
+the following from the project root to execute the automated tests.
 
 ```sh
 # Stand up the test database and populate it
@@ -226,8 +228,8 @@ Ruby or even Java. Hence, this walk through&hellip;
 ### Extra Software Prerequisites
 
 In addition to everything listed in the development
-[software prerequisites](#software-prerequisites) above, building a Plenario
-release also requires the following:
+[software prerequisites](#development-software-prerequisites) above, building a
+Plenario release also requires the following:
 
 - A Docker account, signed in with `docker signin`
 - **awscli**, with your AWS credentials already set up (`aws config`)
