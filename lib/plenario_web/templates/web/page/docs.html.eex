@@ -1,6 +1,10 @@
-<script src="https://api.apiary.io/seeds/embed.js"></script>
-<script>
-    var embed = new Apiary.Embed({
-        "subdomain": "plenario"
-    });
-</script>
+<!-- todo(heyzoos) It would be nice if we only included this once -->
+<div id="docs">
+    <script src="https://api.apiary.io/seeds/embed.js"></script>
+    <script>
+        var embed = new Apiary.Embed({
+            "subdomain": "plenario",
+            "element": "#docs"
+        });
+    </script>
+</div>
