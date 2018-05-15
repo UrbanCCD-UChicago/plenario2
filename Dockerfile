@@ -48,5 +48,5 @@ RUN if [ -d "./assets/node_modules" ]; then rm -rf ./assets/node_modules; fi
 RUN cd assets && npm install && cd ..
 
 # compile assets
-RUN cd assets && node node_modules/.bin/brunch build --production && cd ..
+RUN cd assets && npm run deploy && cd ..
 RUN mix phx.digest
