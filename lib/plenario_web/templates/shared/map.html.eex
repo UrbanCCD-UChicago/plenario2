@@ -81,12 +81,15 @@
   <% end %>
 
   <%= if @points do %>
-  let icon = L.icon({
-    iconUrl: '/images/marker-icon.png',
-    shadowUrl: '/images/marker-shadow.png'
-  });
+  const markerOpts = {
+    radius: 5,
+    color: "#fff",
+    weight: 2,
+    fillColor: "#dc3545",
+    fillOpacity: 1,
+  };
   <%= for {{pt, name, node_id}, idx} <- Enum.with_index(@points) do %>
-  let pt_<%= idx %> = L.marker(<%= pt %>, {icon: icon});
+  let pt_<%= idx %> = L.circleMarker(<%= pt %>, markerOpts);
   pt_<%= idx %>.bindPopup("<strong>Node <%= node_id %><br>Located at <%= name %></strong><br><%= pt %>");
   pt_<%= idx %>.addTo(map);
   <% end %>
