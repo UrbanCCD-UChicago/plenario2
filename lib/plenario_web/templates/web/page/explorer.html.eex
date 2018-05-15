@@ -1,102 +1,106 @@
-<div class="row">
-  <h1>Explore All Data Sets</h1>
-</div>
+<div class="container mt-2 mb-1">
+  <h1>Explore Data Sets</h1>
 
-<div class="row">
-  <div class="col-lg-3">
-    <h3>Select a Time</h3>
-    <hr>
+  <div class="row no-gutters">
+    <div class="col-lg-3">
+      <div class="card mb-1">
+        <div class="card-header">Select a Date Range</div>
+        <div class="card-body">
 
-    <%= form_for @conn, page_path(@conn, :explorer), [method: :get], fn _f -> %>
+          <%= form_for @conn, page_path(@conn, :explorer), [method: :get], fn _f -> %>
+            <div class="form-row">
 
-    <div class="form-group">
-      <label class="control-label">Starting On:</label>
-      <input type="text" class="form-control" id="starting_on" name="starting_on" value="<%= @starts %>" placeholder="YYYY-MM-DD" required>
+              <div class="form-group col-6 col-lg-12">
+                <label for="starting_on">Starting On:</label>
+                <input type="text" class="form-control" id="starting_on" name="starting_on" value="<%= @starts %>" placeholder="YYYY-MM-DD" required>
+              </div>
+
+              <div class="form-group col-6 col-lg-12">
+                <label for="ending_on">Ending On:</label>
+                <input type="text" class="form-control" id="ending_on" name="ending_on" value="<%= @ends %>" placeholder="YYYY-MM-DD" required>
+              </div>
+
+              <script>
+                new Pikaday({
+                  field: document.getElementById('starting_on'),
+                  format: 'YYYY-MM-DD'
+                });
+
+                new Pikaday({
+                  field: document.getElementById('ending_on'),
+                  format: 'YYYY-MM-DD'
+                });
+              </script>
+
+              <input id="coords" name="coords" hidden>
+              <input id="zoom" name="zoom" hidden>
+
+              <div class="col-auto ml-auto col-lg-12">
+                <input type="submit" value="Search" class="btn btn-primary btn-block">
+              </div>
+
+            </div>
+
+          <% end %>
+        </div>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label class="control-label">Ending On:</label>
-      <input type="text" class="form-control" id="ending_on" name="ending_on" value="<%= @ends %>" placeholder="YYYY-MM-DD" required>
+    <div class="col-lg-9">
+      <div class="card ml-lg-1">
+        <div class="card-header">Select an Area</div>
+        <%= PlenarioWeb.SharedView.render_map(draw_controls: true, map_height: "75vw", map_center: @map_center, bbox: @bbox, map_zoom: @map_zoom)%>
+      </div>
     </div>
+  </div>
 
-    <script>
-      new Pikaday({
-        field: document.getElementById('starting_on'),
-        format: 'YYYY-MM-DD'
-      });
+  <%= if assigns[:results] do %>
 
-      new Pikaday({
-        field: document.getElementById('ending_on'),
-        format: 'YYYY-MM-DD'
-      });
-    </script>
+    <h2 class="mt-5">Search Results</h2>
 
-    <input id="coords" name="coords" hidden>
-
-    <input id="zoom" name="zoom" hidden>
-
-    <div class="form-group">
-      <input type="submit" value="Search!" class="btn btn-primary">
-    </div>
-
+    <%= if length(@results) > 0 do %>
+      <%= for {res, idx} <- Enum.with_index(@results) do %>
+      <div class="row">
+        <h3><%= res.name %></h3>
+        <div class="col-lg-3">
+          <p>
+            <strong>Source:</strong> <%= res.attribution %>
+          </p>
+          <p>
+            <strong>Description:</strong> <%= res.description %>
+          </p>
+          <p>
+            <strong>Contributor:</strong> <%= res.user.name %>
+          </p>
+          <p>
+            <strong>Records:</strong> <%= Plenario.Actions.MetaActions.get_record_count(res) %>
+          </p>
+          <p>
+            <strong>Time Range:</strong> <%= Plenario.Schemas.Meta.get_time_range_string(res) %>
+          </p>
+          <hr>
+          <p>
+            <%= button "View Details", to: data_set_path(@conn, :show, res.id), method: :get, class: "btn btn-primary" %>
+          </p>
+          <p>
+            <%= button "Export to CSV", to: export_path(@conn, :export_meta, res.id), class: "btn btn-outline-primary" %>
+          </p>
+        </div>
+        <div class="col-lg-9">
+          <% aggs = Plenario.Actions.MetaActions.get_agg_data(res, @starts, @ends) %>
+          <%= PlenarioWeb.SharedView.render_line(aggs.labels, aggs.data, [height: 200, chart_id: "line_#{idx}"]) %>
+        </div>
+      </div>
+      <hr class="dotborder">
     <% end %>
-  </div>
 
-  <div class="col-lg-9">
-    <h3>Select an Area</h3>
-    <hr>
-    <%= PlenarioWeb.SharedView.render_map(draw_controls: true, map_center: @map_center, bbox: @bbox, map_zoom: @map_zoom)%>
-  </div>
+    <% else %>
+      <div class="card bg-light">
+        <div class="card-body">
+          <p class="card-text lead">Sorry, we didn't find any data sets that matched your criteria.</p>
+          <p class="card-text">Try expanding the time range or the map area.</p>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
 </div>
-
-<%= if assigns[:results] do %>
-<div class="row">
-  <h2>Search Results</h2>
-  <hr>
-</div>
-
-<%= if length(@results) > 0 do %>
-<%= for {res, idx} <- Enum.with_index(@results) do %>
-<div class="row">
-  <h3><%= res.name %></h3>
-</div>
-<div class="row">
-  <div class="col-lg-3">
-    <p>
-      <strong>Source:</strong> <%= res.attribution %>
-    </p>
-    <p>
-      <strong>Description:</strong> <%= res.description %>
-    </p>
-    <p>
-      <strong>Contributor:</strong> <%= res.user.name %>
-    </p>
-    <p>
-      <strong>Records:</strong> <%= Plenario.Actions.MetaActions.get_record_count(res) %>
-    </p>
-    <p>
-      <strong>Time Range:</strong> <%= Plenario.Schemas.Meta.get_time_range_string(res) %>
-    </p>
-    <hr>
-    <p>
-      <%= button "View Details", to: data_set_path(@conn, :show, res.id), method: :get, class: "btn btn-success" %>
-    </p>
-    <p>
-      <%= button "Export to CSV", to: export_path(@conn, :export_meta, res.id), class: "btn btn-danger" %>
-    </p>
-  </div>
-  <div class="col-lg-9">
-    <% aggs = Plenario.Actions.MetaActions.get_agg_data(res, @starts, @ends) %>
-    <%= PlenarioWeb.SharedView.render_line(aggs.labels, aggs.data, [height: 200, chart_id: "line_#{idx}"]) %>
-  </div>
-</div>
-<hr class="dotborder">
-<% end %>
-
-<% else %>
-<div class="row">
-  <strong>Sorry, we didn't find any data sets that matched your criteria.</strong><br>
-  Try expanding the time range or the map aread.
-</div>
-<% end %>
-<% end %>

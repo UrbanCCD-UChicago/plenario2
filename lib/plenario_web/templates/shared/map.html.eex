@@ -1,94 +1,94 @@
-<div id="<%= @map_id %>" style="height:<%= @map_height %>px"></div>
+<div id="<%= @map_id %>" style="height:<%= @map_height %>; max-height: 75vh"></div>
 
 <script defer>
-// instantiate the map
-let map = L.map('<%= @map_id %>').setView(<%= @map_center %>, <%= @map_zoom %>);
-L.tileLayer(
-  'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}',
-  {
-    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
-    maxZoom: 18,
-    id: 'mapbox.streets',
-    accessToken: 'pk.eyJ1IjoicGxlbmFyaW8iLCJhIjoiY2pkM2RicXV4M2d3ajJybnNvczE0NDBnbiJ9.QYYTdm03c_iSP1pHRS6QUw'
-  }
-).addTo(map);
+  // instantiate the map
+  const mapId = '<%= @map_id %>';
+  let map = L.map(mapId).setView(<%= @map_center %>, <%= @map_zoom %>);
+  L.tileLayer(
+    'https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
+    {
+      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }
+  ).addTo(map);
 
-// add layer for items drawn to map
-let drawnItems = new L.FeatureGroup();
-map.addLayer(drawnItems);
+  // add layer for items drawn to map
+  let drawnItems = new L.FeatureGroup();
+  map.addLayer(drawnItems);
 
-<%= if @draw_controls do %>
-// add the shape drawing controls to the map
-let drawControl = new L.Control.Draw({
-  edit: {
-    featureGroup: drawnItems
-  },
-  draw: {
-    polyline: false,
-    circle: false,
-    marker: false,
-    circlemarker: false
-  }
-});
-map.addControl(drawControl);
+  <%= if @draw_controls do %>
+  // add the shape drawing controls to the map
+  let drawControl = new L.Control.Draw({
+    edit: {
+      featureGroup: drawnItems
+    },
+    draw: {
+      polyline: false,
+      circle: false,
+      marker: false,
+      circlemarker: false
+    }
+  });
+  map.addControl(drawControl);
 
-// handle drawing events
-map.on('draw:created', function (e) {
-  let latLongs = e.layer.getLatLngs();
-  latLongs = latLongs[0];
+  // handle drawing events
+  map.on('draw:created', function (e) {
+    let latLongs = e.layer.getLatLngs();
+    latLongs = latLongs[0];
 
-  let coords = [];
-  for (var i = 0; i < latLongs.length; i++) {
-    var el = latLongs[i];
-    coords.push([
-      el.lat,
-      el.lng
-    ]);
-  }
+    let coords = [];
+    for (var i = 0; i < latLongs.length; i++) {
+      var el = latLongs[i];
+      coords.push([
+        el.lat,
+        el.lng
+      ]);
+    }
 
-  let coordInput = document.getElementById('<%= @form_input_coords %>');
-  coordInput.value = JSON.stringify(coords);
-  drawnItems.addLayer(e.layer);
-});
+    let coordInput = document.getElementById('<%= @form_input_coords %>');
+    coordInput.value = JSON.stringify(coords);
+    drawnItems.addLayer(e.layer);
+  });
 
-map.on('draw:deleted', function (e) {
-  let coordInput = document.getElementById('<%= @form_input_coords %>');
-  coordInput.value = '';
-  drawnItems.clearLayers(e.layer);
-});
+  map.on('draw:deleted', function (e) {
+    let coordInput = document.getElementById('<%= @form_input_coords %>');
+    coordInput.value = '';
+    drawnItems.clearLayers(e.layer);
+  });
 
-// setup form submit listener
-$('form:first').submit(function (e) {
-  let coordInput = document.getElementById('<%= @form_input_coords %>');
-  let zoomInput = document.getElementById('<%= @form_input_zoom %>');
+  // setup form submit listener
+  $('form:first').submit(function (e) {
+    let coordInput = document.getElementById('<%= @form_input_coords %>');
+    let zoomInput = document.getElementById('<%= @form_input_zoom %>');
 
-  if (!coordInput.value.match(/^\[\[.*\]\]/)) {
-    // set coords to entire map view and set zoom to 1 out
-    let bounds = map.getBounds();
-    coordInput.value = JSON.stringify(bounds);
-    zoomInput.value = map.getBoundsZoom(bounds, true) - 1;
-  } else {
-    // set zoom to current zoom
-    zoomInput.value = map.getZoom();
-  }
+    if (!coordInput.value.match(/^\[\[.*\]\]/)) {
+      // set coords to entire map view and set zoom to 1 out
+      let bounds = map.getBounds();
+      coordInput.value = JSON.stringify(bounds);
+      zoomInput.value = map.getBoundsZoom(bounds, true) - 1;
+    } else {
+      // set zoom to current zoom
+      zoomInput.value = map.getZoom();
+    }
 
-  return true;
-});
-<% end %>
+    return true;
+  });
+  <% end %>
 
-<%= if @bbox do %>
-let bbox = L.polygon(<%= @bbox %>).addTo(map);
-<% end %>
+  <%= if @bbox do %>
+  let bbox = L.polygon(<%= @bbox %>).addTo(map);
+  <% end %>
 
-<%= if @points do %>
-let icon = L.icon({
-  iconUrl: '/images/marker-icon.png',
-  shadowUrl: '/images/marker-shadow.png'
-});
-<%= for {{pt, name, node_id}, idx} <- Enum.with_index(@points) do %>
-let pt_<%= idx %> = L.marker(<%= pt %>, {icon: icon});
-pt_<%= idx %>.bindPopup("<strong>Node <%= node_id %><br>Located at <%= name %></strong><br><%= pt %>");
-pt_<%= idx %>.addTo(map);
-<% end %>
-<% end %>
+  <%= if @points do %>
+  let icon = L.icon({
+    iconUrl: '/images/marker-icon.png',
+    shadowUrl: '/images/marker-shadow.png'
+  });
+  <%= for {{pt, name, node_id}, idx} <- Enum.with_index(@points) do %>
+  let pt_<%= idx %> = L.marker(<%= pt %>, {icon: icon});
+  pt_<%= idx %>.bindPopup("<strong>Node <%= node_id %><br>Located at <%= name %></strong><br><%= pt %>");
+  pt_<%= idx %>.addTo(map);
+  <% end %>
+  <% end %>
 </script>
