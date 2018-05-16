@@ -11,26 +11,20 @@ defmodule PlenarioWeb.Web.PageController do
 
   def index(conn, _), do: render(conn, "index.html")
 
+  def explorer(conn, params) when params == %{} do
+    render_explorer(conn, nil, "[41.9, -87.7]", 10, nil, "", "")
+  end
+
   def explorer(conn, params) do
-    zoom = Map.get(params, "zoom", nil)
-    coords = Map.get(params, "coords", nil)
-    starts = Map.get(params, "starting_on", nil)
-    ends = Map.get(params, "ending_on", nil)
+    zoom = Map.get(params, "zoom")
+    coords = Map.get(params, "coords")
+    starts = Map.get(params, "starting_on")
+    ends = Map.get(params, "ending_on")
 
     {startdt, conn} = parse_date(conn, starts)
     {enddt, conn} = parse_date(conn, ends)
 
-    case DateTime.compare(startdt, enddt) do
-      :gt ->
-        do_explorer(zoom, coords, startdt, enddt, put_flash(conn, :error,
-          "The starting datetime #{startdt} cannot be greater than the ending datetime #{enddt}"))
-      _ ->
-        do_explorer(zoom, coords, startdt, enddt, conn)
-    end
-  end
-
-  defp parse_date(conn, nil) do
-    {nil, conn}
+    do_explorer(zoom, coords, startdt, enddt, conn)
   end
 
   defp parse_date(conn, date_string) do
@@ -40,6 +34,9 @@ defmodule PlenarioWeb.Web.PageController do
       {:error, :invalid_format} ->
         {nil, put_flash(conn, :error,
           "Invalid date #{date_string}, must be formatted as YYYY-MM-DD")}
+      {:error, :invalid_date} ->
+        {nil, put_flash(conn, :error,
+          "Invalid date #{date_string}, date doesn't exist")}
     end
   end
 
@@ -52,14 +49,23 @@ defmodule PlenarioWeb.Web.PageController do
   end
 
   defp do_explorer(zoom, coords, startdt, enddt, conn) do
+    case DateTime.compare(startdt, enddt) do
+      :gt ->
+        do_explorer(zoom, coords, startdt, enddt, put_flash(conn, :error,
+          "The starting datetime #{startdt} cannot be greater than the ending datetime #{enddt}"))
+      _ ->
+        {:ok, range} = Plenario.TsTzRange.dump([startdt, enddt])
+        do_explorer(zoom, coords, startdt, enddt, range, conn)
+    end
+  end
+
+  defp do_explorer(zoom, coords, startdt, enddt, range, conn) do
     coords = Poison.decode!(coords)
     bbox = build_polygon(coords)
 
     map_bbox =
       List.first(bbox.coordinates)
       |> Enum.map(fn {lat, lon} -> [lat, lon] end)
-
-    {:ok, range} = Plenario.TsTzRange.dump([startdt, enddt])
 
     center = get_poly_center(bbox)
     results = Plenario.search_data_sets(bbox, range)
