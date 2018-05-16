@@ -167,8 +167,28 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
   end
 
   @tag :anon
+  test "explorer receives start datetime and end datetime", %{conn: conn} do
+    params = %{
+      "starting_on" => "2018-03-31",
+      "ending_on" => "2018-05-01",
+      "zoom" => 10,
+      "coords" => "[[30, 20], [40, 50], [10, 30], [30, 20]]"
+    }
+
+    conn = get(conn, page_path(conn, :explorer), params)
+    assert get_flash(conn)["error"] == nil
+  end
+
+  @tag :anon
   test "explorer receives start datetime greater than end datetime", %{conn: conn} do
-    conn = get(conn, page_path(conn, :explorer), %{"starting_on" => "3000-01-01", "ending_on" => "2000-01-01"})
+    params = %{
+      "starting_on" => "2018-05-01",
+      "ending_on" => "2018-04-28",
+      "zoom" => 10,
+      "coords" => "[[30, 20], [40, 50], [10, 30], [30, 20]]"
+    }
+
+    conn = get(conn, page_path(conn, :explorer), params)
     assert get_flash(conn)["error"] =~ "cannot be greater than"
   end
 
@@ -177,4 +197,10 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     conn = get(conn, page_path(conn, :explorer), %{"starting_on" => "woopwoop", "ending_on" => "2000-01-01"})
     assert get_flash(conn)["error"] =~ "Invalid date woopwoop"
   end
+
+   @tag :anon
+  test "explorer receives a terribly fake date", %{conn: conn} do
+    conn = get(conn, page_path(conn, :explorer), %{"starting_on" => "2000-01-01", "ending_on" => "2000-19-11"})
+    assert get_flash(conn)["error"] =~ "date doesn't exist"
+  end 
 end
