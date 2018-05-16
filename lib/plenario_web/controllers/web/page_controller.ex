@@ -19,8 +19,15 @@ defmodule PlenarioWeb.Web.PageController do
 
     {startdt, conn} = parse_date(conn, starts)
     {enddt, conn} = parse_date(conn, ends)
+    comparison = DateTime.compare(startdt, enddt)
 
-    do_explorer(zoom, coords, startdt, enddt, conn)
+    case DateTime.compare(startdt, enddt) do
+      :gt ->
+        do_explorer(zoom, coords, startdt, enddt, put_flash(conn, :error,
+          "The starting datetime #{startdt} cannot be greater than the ending datetime #{enddt}"))
+      _ ->
+        do_explorer(zoom, coords, startdt, enddt, conn)
+    end
   end
 
   defp parse_date(conn, nil) do
@@ -43,11 +50,6 @@ defmodule PlenarioWeb.Web.PageController do
 
   defp do_explorer(_, _, _, _, conn = %Plug.Conn{private: %{:phoenix_flash => %{"error" => _}}}) do
     render_explorer(conn, nil, "[41.9, -87.7]", 10, nil, "", "")
-  end
-
-  defp do_explorer(zoom, coords, startdt, enddt, conn) when startdt >= enddt do
-    do_explorer(zoom, coords, startdt, enddt, put_flash(conn, :error,
-      "The starting datetime #{startdt} cannot be greater than the ending datetime #{enddt}"))
   end
 
   defp do_explorer(zoom, coords, startdt, enddt, conn) do

@@ -170,6 +170,9 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
   test "explorer receives start datetime greater than end datetime", %{conn: conn} do
     conn = get(conn, page_path(conn, :explorer), %{"starting_on" => "3000-01-01", "ending_on" => "2000-01-01"})
     assert get_flash(conn)["error"] =~ "cannot be greater than"
+
+    conn = get(conn, page_path(conn, :explorer), %{"starting_on" => "2018-03-31", "ending_on" => "2018-05-01"})
+    assert get_flash(conn)["error"] =~ "cannot be greater than"
   end
 
   @tag :anon
