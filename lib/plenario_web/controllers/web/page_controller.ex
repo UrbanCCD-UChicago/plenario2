@@ -19,7 +19,6 @@ defmodule PlenarioWeb.Web.PageController do
 
     {startdt, conn} = parse_date(conn, starts)
     {enddt, conn} = parse_date(conn, ends)
-    comparison = DateTime.compare(startdt, enddt)
 
     case DateTime.compare(startdt, enddt) do
       :gt ->
