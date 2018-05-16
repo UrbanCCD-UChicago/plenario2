@@ -199,8 +199,8 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
   end
 
    @tag :anon
-  test "explorer receives a terribly a fake date", %{conn: conn} do
-    conn = get(conn, page_path(conn, :explorer), %{"starting_on" => "woopwoop", "ending_on" => "2000-19-11"})
+  test "explorer receives a terribly fake date", %{conn: conn} do
+    conn = get(conn, page_path(conn, :explorer), %{"starting_on" => "2000-01-01", "ending_on" => "2000-19-11"})
     assert get_flash(conn)["error"] =~ "date doesn't exist"
   end 
 end
