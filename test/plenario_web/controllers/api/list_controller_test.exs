@@ -1,18 +1,101 @@
 defmodule PlenarioWeb.Api.ListControllerTest do
   use PlenarioWeb.Testing.ConnCase
 
-  alias Plenario.Actions.{MetaActions, UserActions}
+  alias Plenario.Actions.UserActions
+  alias Plenario.Schemas.Meta
+  alias Plenario.Repo
+
+  @seattle_geojson """
+    {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -122.3169708251953,
+            47.601591191496844
+          ],
+          [
+            -122.3027229309082,
+            47.601591191496844
+          ],
+          [
+            -122.3027229309082,
+            47.60627878178091
+          ],
+          [
+            -122.3169708251953,
+            47.60627878178091
+          ],
+          [
+            -122.3169708251953,
+            47.601591191496844
+          ]
+        ]
+      ]
+    }
+    """
+  
+  @chicago_geojson """
+    {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -87.67776489257812,
+            41.785649068644375
+          ],
+          [
+            -87.59468078613281,
+            41.785649068644375
+          ],
+          [
+            -87.59468078613281,
+            41.90585436043303
+          ],
+          [
+            -87.67776489257812,
+            41.90585436043303
+          ],
+          [
+            -87.67776489257812,
+            41.785649068644375
+          ]
+        ]
+      ]
+    }
+    """
 
   setup do
     Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
     Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
 
     {:ok, user} = UserActions.create("API Test User", "test@example.com", "password")
-    {:ok, _} = MetaActions.create("API Test Dataset", user.id, "https://www.example.com", "csv")
-    {:ok, _} = MetaActions.create("API Test Dataset 2", user.id, "https://www.example.com/2", "csv")
-    {:ok, _} = MetaActions.create("API Test Dataset 3", user.id, "https://www.example.com/3", "csv")
-    {:ok, _} = MetaActions.create("API Test Dataset 4", user.id, "https://www.example.com/4", "csv")
-    {:ok, _} = MetaActions.create("API Test Dataset 5", user.id, "https://www.example.com/5", "csv")
+    seattle_geom = @seattle_geojson |> Poison.decode!() |> Geo.JSON.decode()
+    chicago_geom = @chicago_geojson |> Poison.decode!() |> Geo.JSON.decode()
+
+    (1..3) |> Enum.each(fn i ->
+      Repo.insert(%{Meta.__struct__ | 
+        user: user, 
+        name: "API Test Dataset #{i}",
+        slug: "api_test_dataset_#{i}",
+        table_name: "ds_wootyhooty_#{i}",
+        source_url: "https://www.example.com/#{i}", 
+        source_type: "csv",
+        bbox: %{seattle_geom | srid: 4326}
+      })
+    end)
+
+    (4..5) |> Enum.each(fn i ->
+      Repo.insert(%{Meta.__struct__ | 
+        user: user, 
+        name: "API Test Dataset #{i}",
+        slug: "api_test_dataset_#{i}",
+        table_name: "ds_wootyhooty_#{i}",
+        source_url: "https://www.example.com/#{i}", 
+        source_type: "csv",
+        bbox: %{chicago_geom | srid: 4326}
+      })
+    end)
 
     :ok
   end
@@ -46,5 +129,17 @@ defmodule PlenarioWeb.Api.ListControllerTest do
     assert headers["access-control-allow-methods"] == "GET,HEAD,OPTIONS"
     assert headers["access-control-allow-origin"] == "*"
     assert headers["access-control-max-age"] == "300"
+  end
+
+  test "GET /api/v2/data-sets with bbox arg", %{conn: conn} do
+    conn = get(conn, "/api/v2/data-sets?bbox=#{@seattle_geojson}")
+    result = json_response(conn, 200)
+    assert length(result["data"]) == 3
+  end
+
+  test "GET /api/v2/data-sets/@describe with bbox arg", %{conn: conn} do
+    conn = get(conn, "/api/v2/data-sets/@describe?bbox=#{@chicago_geojson}")
+    result = json_response(conn, 200)
+    assert length(result["data"]) == 2
   end
 end
