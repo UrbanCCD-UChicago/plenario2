@@ -156,6 +156,14 @@ defmodule PlenarioWeb.Api.Utils do
   end
 
   @doc """
+  Generates an intersection query for a given geom. This condition is pretty much only
+  used for the `bbox` filter when applied to metadata records.
+  """
+  def where_condition(query, {column, {"intersects", %Geo.Polygon{} = polygon}}) do
+    from(q in query, where: st_intersects(field(q, ^column), ^polygon))
+  end
+
+  @doc """
   Shortcut for {column}=eq:{value}. User can provide the conditions as just {column}={value}.
   """
   def where_condition(query, {column, value}) do
