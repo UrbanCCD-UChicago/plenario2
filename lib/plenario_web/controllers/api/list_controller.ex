@@ -12,33 +12,55 @@ defmodule PlenarioWeb.Api.ListController do
     def call(conn, opts) do
       columns = 
         Map.keys(Meta.__struct__) 
-        |> Enum.map(&to_string/1)
+        |> Stream.map(&to_string/1)
+        # todo(heyzoos) hardcoded removal of bbox so that it doesn't clash
+        # todo(heyzoos) there has to be a more elegant way of doing this
+        |> Enum.filter(& &1 != "bbox")
       CaptureArgs.call(conn, opts ++ [fields: columns])
     end
   end
 
-  plug(CaptureArgs, assign: :geospatial_fields, fields: ["bbox"])
+  defmodule CaptureBboxArg do
+    def init(opts), do: opts
+
+    def call(%Plug.Conn{params: %{"bbox" => geojson}} = conn, opts) do
+      json = Poison.decode!(geojson) 
+      geom = Geo.JSON.decode(json)
+      geom = %{geom | srid: 4326}
+      query = Map.to_list(%{
+        "bbox" => {"intersects", geom}
+      })
+
+      assign(conn, opts[:assign], query)
+    end
+
+    def call(conn, opts) do
+      assign(conn, opts[:assign], [])
+    end
+  end
+
   plug(CaptureArgs, assign: :ordering_fields, fields: ["order_by"])
   plug(CaptureArgs, assign: :windowing_fields, fields: ["inserted_at", "updated_at"])
   plug(CaptureArgs, assign: :pagination_fields, fields: ["page", "page_size"])
   plug(CaptureColumnArgs, assign: :column_fields)
+  plug(CaptureBboxArg, assign: :bbox_fields)
 
   @associations [:fields, :unique_constraints, :virtual_dates, :virtual_points, :user]
 
   def construct_query_from_conn_assigns(conn) do
-    geospatial_fields = Map.get(conn.assigns, :geospatial_fields)
     ordering_fields = Map.get(conn.assigns, :ordering_fields)
     windowing_fields = Map.get(conn.assigns, :windowing_fields)
     column_fields = Map.get(conn.assigns, :column_fields)
+    bbox_query_map = Map.get(conn.assigns, :bbox_fields)
 
     query = 
       Meta
-      |> map_to_query(geospatial_fields)
       |> map_to_query(ordering_fields)
       |> map_to_query(windowing_fields)
       |> map_to_query(column_fields)
+      |> map_to_query(bbox_query_map)
     
-    params = geospatial_fields ++ windowing_fields ++ ordering_fields ++ column_fields
+    params = windowing_fields ++ ordering_fields ++ column_fields ++ bbox_query_map
 
     {query, params}
   end
