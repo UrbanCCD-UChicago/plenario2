@@ -34,7 +34,7 @@ defmodule PlenarioWeb.Api.ListControllerTest do
       ]
     }
     """
-  
+
   @chicago_geojson """
     {
       "type": "Polygon",
@@ -74,24 +74,24 @@ defmodule PlenarioWeb.Api.ListControllerTest do
     chicago_geom = @chicago_geojson |> Poison.decode!() |> Geo.JSON.decode()
 
     (1..3) |> Enum.each(fn i ->
-      Repo.insert(%{Meta.__struct__ | 
-        user: user, 
+      Repo.insert(%{Meta.__struct__ |
+        user: user,
         name: "API Test Dataset #{i}",
         slug: "api_test_dataset_#{i}",
         table_name: "ds_wootyhooty_#{i}",
-        source_url: "https://www.example.com/#{i}", 
+        source_url: "https://www.example.com/#{i}",
         source_type: "csv",
         bbox: %{seattle_geom | srid: 4326}
       })
     end)
 
     (4..5) |> Enum.each(fn i ->
-      Repo.insert(%{Meta.__struct__ | 
-        user: user, 
+      Repo.insert(%{Meta.__struct__ |
+        user: user,
         name: "API Test Dataset #{i}",
         slug: "api_test_dataset_#{i}",
         table_name: "ds_wootyhooty_#{i}",
-        source_url: "https://www.example.com/#{i}", 
+        source_url: "https://www.example.com/#{i}",
         source_type: "csv",
         bbox: %{chicago_geom | srid: 4326}
       })
@@ -129,6 +129,36 @@ defmodule PlenarioWeb.Api.ListControllerTest do
     assert headers["access-control-allow-methods"] == "GET,HEAD,OPTIONS"
     assert headers["access-control-allow-origin"] == "*"
     assert headers["access-control-max-age"] == "300"
+  end
+
+  test "POST api/v2/data-sets status", %{conn: conn} do
+    conn = post(conn, "/api/v2/data-sets")
+    assert conn.status == 405
+  end
+
+  test "PUT /api/v2/data-sets status", %{conn: conn} do
+    conn = put(conn, "/api/v2/data-sets")
+    assert conn.status == 405
+  end
+
+  test "PATCH /api/v2/data-sets status", %{conn: conn} do
+    conn = patch(conn, "/api/v2/data-sets")
+    assert conn.status == 405
+  end
+
+  test "DELETE /api/v2/data-sets status", %{conn: conn} do
+    conn = delete(conn, "/api/v2/data-sets")
+    assert conn.status == 405
+  end
+
+  test "TRACE /api/v2/data-sets status", %{conn: conn} do
+    conn = trace(conn, "/api/v2/data-sets")
+    assert conn.status == 405
+  end
+
+  test "CONNECT /api/v2/data-sets status", %{conn: conn} do
+    conn = connect(conn, "/api/v2/data-sets")
+    assert conn.status == 405
   end
 
   test "GET /api/v2/data-sets with bbox arg", %{conn: conn} do
