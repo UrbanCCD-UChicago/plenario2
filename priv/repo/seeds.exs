@@ -33,12 +33,12 @@ defmodule Plenario.DevSeed do
 
     user =
       case UserActions.get("plenario@uchicago.edu") do
-        uzer ->
-          uzer
-
         nil ->
           {:ok, user} = UserActions.create("Plenario Admin", "plenario@uchicago.edu", "password")
           user
+
+        uzer ->
+          uzer
       end
 
     {:ok, user} = UserActions.promote_to_admin(user)
