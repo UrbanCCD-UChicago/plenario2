@@ -12,7 +12,6 @@ defmodule Plenario.Testing.EtlCase do
     DataSetActions,
     DataSetFieldActions,
     MetaActions,
-    UniqueConstraintActions,
     UserActions
   }
 
@@ -43,11 +42,10 @@ defmodule Plenario.Testing.EtlCase do
     {:ok, user} = UserActions.create("Test User", "test@example.com", "password")
     {:ok, meta} = MetaActions.create("Test Dataset", user.id, "https://www.example.com", "csv")
 
-    {:ok, pk} = DataSetFieldActions.create(meta.id, "pk", "integer")
+    {:ok, _} = DataSetFieldActions.create(meta.id, "pk", "integer")
     {:ok, _} = DataSetFieldActions.create(meta.id, "datetime", "timestamptz")
     {:ok, _} = DataSetFieldActions.create(meta.id, "location", "text")
     {:ok, _} = DataSetFieldActions.create(meta.id, "data", "text")
-    {:ok, _} = UniqueConstraintActions.create(meta.id, [pk.id])
 
     DataSetActions.up!(meta)
 

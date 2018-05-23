@@ -7,7 +7,6 @@ defmodule PlenarioWeb.Api.UtilsTest do
     DataSetActions,
     DataSetFieldActions,
     MetaActions,
-    UniqueConstraintActions,
     UserActions,
     VirtualPointFieldActions
   }
@@ -18,12 +17,11 @@ defmodule PlenarioWeb.Api.UtilsTest do
 
     {:ok, user} = UserActions.create("API Test User", "test@example.com", "password")
     {:ok, meta} = MetaActions.create("API Test Dataset", user.id, "https://www.example.com", "csv")
-    {:ok, pk} = DataSetFieldActions.create(meta.id, "pk", "integer")
+    {:ok, _} = DataSetFieldActions.create(meta.id, "pk", "integer")
     {:ok, _} = DataSetFieldActions.create(meta.id, "datetime", "timestamptz")
     {:ok, _} = DataSetFieldActions.create(meta.id, "data", "text")
     {:ok, location} = DataSetFieldActions.create(meta.id, "location", "text")
     {:ok, vpf} = VirtualPointFieldActions.create(meta, location.id)
-    {:ok, _} = UniqueConstraintActions.create(meta.id, [pk.id])
 
     DataSetActions.up!(meta)
 

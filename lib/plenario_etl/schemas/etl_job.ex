@@ -40,6 +40,5 @@ defmodule PlenarioEtl.Schemas.EtlJob do
     timestamps(type: :utc_datetime)
 
     belongs_to(:meta, Plenario.Schemas.Meta)
-    has_many(:data_set_diffs, PlenarioEtl.Schemas.DataSetDiff)
   end
 end

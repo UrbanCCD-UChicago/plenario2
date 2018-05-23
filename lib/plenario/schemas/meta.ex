@@ -96,7 +96,6 @@ defmodule Plenario.Schemas.Meta do
     has_many :fields, Plenario.Schemas.DataSetField
     has_many :virtual_dates, Plenario.Schemas.VirtualDateField
     has_many :virtual_points, Plenario.Schemas.VirtualPointField
-    has_many :unique_constraints, Plenario.Schemas.UniqueConstraint
   end
 
   @doc """

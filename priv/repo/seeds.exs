@@ -7,7 +7,6 @@ defmodule Plenario.DevSeed do
     UserActions,
     MetaActions,
     DataSetFieldActions,
-    UniqueConstraintActions,
     VirtualPointFieldActions
   }
 
@@ -53,7 +52,6 @@ defmodule Plenario.DevSeed do
     {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample Timestamp", "timestamptz")
     {:ok, loc} = DataSetFieldActions.create(meta, "Location", "text")
     {:ok, _} = VirtualPointFieldActions.create(meta, loc.id)
-    {:ok, _} = UniqueConstraintActions.create(meta, [id.id])
 
     {:ok, meta} = MetaActions.submit_for_approval(meta)
     {:ok, meta} = MetaActions.approve(meta)

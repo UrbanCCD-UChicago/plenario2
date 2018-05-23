@@ -10,8 +10,8 @@ defmodule PlenarioWeb.Api.ListController do
     def init(opts), do: opts
 
     def call(conn, opts) do
-      columns = 
-        Map.keys(Meta.__struct__) 
+      columns =
+        Map.keys(Meta.__struct__)
         |> Stream.map(&to_string/1)
         # todo(heyzoos) hardcoded removal of bbox so that it doesn't clash
         # todo(heyzoos) there has to be a more elegant way of doing this
@@ -24,7 +24,7 @@ defmodule PlenarioWeb.Api.ListController do
     def init(opts), do: opts
 
     def call(%Plug.Conn{params: %{"bbox" => geojson}} = conn, opts) do
-      json = Poison.decode!(geojson) 
+      json = Poison.decode!(geojson)
       geom = Geo.JSON.decode(json)
       geom = %{geom | srid: 4326}
       query = Map.to_list(%{
@@ -45,7 +45,7 @@ defmodule PlenarioWeb.Api.ListController do
   plug(CaptureColumnArgs, assign: :column_fields)
   plug(CaptureBboxArg, assign: :bbox_fields)
 
-  @associations [:fields, :unique_constraints, :virtual_dates, :virtual_points, :user]
+  @associations [:fields, :virtual_dates, :virtual_points, :user]
 
   def construct_query_from_conn_assigns(conn) do
     ordering_fields = Map.get(conn.assigns, :ordering_fields)
@@ -53,13 +53,13 @@ defmodule PlenarioWeb.Api.ListController do
     column_fields = Map.get(conn.assigns, :column_fields)
     bbox_query_map = Map.get(conn.assigns, :bbox_fields)
 
-    query = 
+    query =
       Meta
       |> map_to_query(ordering_fields)
       |> map_to_query(windowing_fields)
       |> map_to_query(column_fields)
       |> map_to_query(bbox_query_map)
-    
+
     params = windowing_fields ++ ordering_fields ++ column_fields ++ bbox_query_map
 
     {query, params}

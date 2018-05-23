@@ -7,8 +7,7 @@ defmodule Plenario.Actions.DataSetActionsTest do
     DataSetActions,
     DataSetFieldActions,
     VirtualDateFieldActions,
-    VirtualPointFieldActions,
-    UniqueConstraintActions
+    VirtualPointFieldActions
   }
 
   setup %{meta: meta} do
@@ -26,7 +25,6 @@ defmodule Plenario.Actions.DataSetActionsTest do
     {:ok, vpf} = VirtualPointFieldActions.create(meta.id, lat.id, lon.id)
     {:ok, vpf2} = VirtualPointFieldActions.create(meta.id, loc.id)
 
-    {:ok, uc} = UniqueConstraintActions.create(meta.id, [pk.id])
 
     {
       :ok,
@@ -39,14 +37,13 @@ defmodule Plenario.Actions.DataSetActionsTest do
         lon: lon,
         vdf: vdf,
         vpf: vpf,
-        vpf2: vpf2,
-        uc: uc
+        vpf2: vpf2
       ]
     }
   end
 
   test "up!", %{meta: meta} do
-    DataSetActions.up!(meta)
+    :ok = DataSetActions.up!(meta)
 
     insert = """
     INSERT INTO "#{meta.table_name}" VALUES
@@ -70,17 +67,10 @@ defmodule Plenario.Actions.DataSetActionsTest do
       %Geo.Point{coordinates: {20.9, 10.1}, srid: 4326},
       nil, nil
     ]
-
-    # check unique key
-    insert = """
-    INSERT INTO "#{meta.table_name}" VALUES
-      (1, 12.4, 2018, 1, 1, 10.1, 20.9, '(10.1, 20.9)');
-    """
-    {:error, _} = Ecto.Adapters.SQL.query(Repo, insert)
   end
 
   test "down!", %{meta: meta} do
-    DataSetActions.up!(meta)
-    DataSetActions.down!(meta)
+    :ok = DataSetActions.up!(meta)
+    :ok = DataSetActions.down!(meta)
   end
 end

@@ -6,17 +6,15 @@ defmodule PlenarioEtl.Testing.EtlJobActionsTest do
   alias Plenario.Actions.{
     MetaActions,
     DataSetFieldActions,
-    VirtualPointFieldActions,
-    UniqueConstraintActions
+    VirtualPointFieldActions
   }
 
   setup %{meta: meta} do
-    {:ok, id} = DataSetFieldActions.create(meta, "id", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "id", "text")
     {:ok, lat} = DataSetFieldActions.create(meta, "lat", "float")
     {:ok, lon} = DataSetFieldActions.create(meta, "lon", "float")
     {:ok, _} = DataSetFieldActions.create(meta, "timestamp", "timestamptz")
     {:ok, _} = VirtualPointFieldActions.create(meta, lat.id, lon.id)
-    {:ok, _} = UniqueConstraintActions.create(meta, [id.id])
 
     now = DateTime.utc_now()
     {:ok, meta} = MetaActions.update(meta,
