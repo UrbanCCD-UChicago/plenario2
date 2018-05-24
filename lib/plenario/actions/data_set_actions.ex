@@ -36,6 +36,8 @@ defmodule Plenario.Actions.DataSetActions do
 
   def up!(%Meta{id: id}), do: up!(id)
   def up!(meta_id) do
+    Logger.info("starting process to bring up data set table", meta_id: meta_id)
+
     meta = MetaActions.get(meta_id)
     fields = DataSetFieldActions.list(for_meta: meta)
     dates = VirtualDateFieldActions.list(for_meta: meta, with_fields: true)
@@ -46,45 +48,57 @@ defmodule Plenario.Actions.DataSetActions do
 
     Repo.transaction fn ->
       # bring up the table
+      Logger.info("creating table #{inspect(table_name)}", meta_id: meta_id)
       execute!(@create_table, table_name: table_name, fields: fields, len_fields: len_fields, dates: dates, points: points)
 
       # index native timestamp fields
       fields
       |> Enum.filter(fn f -> f.type == "timestamptz" end)
       |> Enum.each(fn f ->
+        Logger.info("adding an index to #{inspect(table_name)} for field #{f.name}", meta_id: meta_id)
         execute!(@create_index, table_name: table_name, field_name: f.name, using: nil)
       end)
 
       # index virtual dates
       Enum.each(dates, fn d ->
+        Logger.info("adding an index to #{inspect(table_name)} for field #{d.name}", meta_id: meta_id)
         execute!(@create_index, table_name: table_name, field_name: d.name, using: nil)
       end)
 
       # index points
       Enum.each(points, fn p ->
+        Logger.info("adding an index to #{inspect(table_name)} for field #{p.name}", meta_id: meta_id)
         execute!(@create_index, table_name: table_name, field_name: p.name, using: "GIST")
       end)
 
       # create parse timestamps trigger and apply it to the table
       if length(dates) > 0 do
+        Logger.info("adding a trigger to #{inspect(table_name)} to parse timestamps", meta_id: meta_id)
         execute!(@create_parse_timestamps, table_name: table_name, dates: dates)
         execute!(@apply_parse_timestamps, table_name: table_name)
       end
 
       # create parse points trigger and apply it to the table
       if length(points) > 0 do
+        Logger.info("adding a trigger to #{inspect(table_name)} to parse points", meta_id: meta_id)
         execute!(@create_parse_points, table_name: table_name, points: points)
         execute!(@apply_parse_points, table_name: table_name)
       end
     end
+
+    Logger.info("data set table #{inspect(table_name)} fully brought up", meta_id: meta_id)
 
     :ok
   end
 
   def down!(%Meta{id: id}), do: down!(id)
   def down!(meta_id) do
+    Logger.info("starting process to drop data set table", meta_id: meta_id)
+
     meta = MetaActions.get(meta_id)
     execute!(@drop_table, table_name: meta.table_name)
+
+    Logger.info("data set table fully dropped", meta_id: meta_id)
 
     :ok
   end
@@ -93,6 +107,8 @@ defmodule Plenario.Actions.DataSetActions do
   def etl!(meta_id, path, opts) do
     opts = Keyword.merge([delimiter: ",", headers?: true], opts)
 
+    Logger.info("starting native postgres etl process; path=#{inspect(path)}; opts=#{inspect(opts)}", meta_id: meta_id)
+
     meta = MetaActions.get(meta_id)
     fields = DataSetFieldActions.list(for_meta: meta)
 
@@ -100,12 +116,28 @@ defmodule Plenario.Actions.DataSetActions do
     len_fields = length(fields)
 
     Repo.transaction fn ->
+      # create a temp table for the data set
+      Logger.info("creating a temp data table", meta_id: meta_id)
       execute!(@create_temp_table, table_name: table_name, fields: fields, len_fields: len_fields)
+
+      # copy from the csv to the temp table
+      Logger.info("copying data from csv #{inspect(path)} to temp table", meta_id: meta_id)
       execute!(@copy_from_csv, table_name: table_name, path: path, delimiter: opts[:delimiter], headers?: opts[:headers?])
+
+      # truncate the existing table
+      Logger.info("truncating exsiting data set table", meta_id: meta_id)
       execute!(@truncate, table_name: table_name)
+
+      # copy from the temp table to the existing table
+      Logger.info("copying data from temp to existing data set table", meta_id: meta_id)
       execute!(@copy_from_temp_table, table_name: table_name, fields: fields, len_fields: len_fields)
+
+      # drop the temp table
+      Logger.info("dropping the temp table", meta_id: meta_id)
       execute!(@drop_temp_table, table_name: table_name)
     end
+
+    Logger.info("native postgres etl complete", meta_id: meta_id)
 
     :ok
   end
