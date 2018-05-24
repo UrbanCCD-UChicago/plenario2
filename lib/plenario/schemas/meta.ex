@@ -55,12 +55,11 @@ defmodule Plenario.Schemas.Meta do
     Years: "years"
   ]
 
-  @source_type_values ["csv", "tsv", "json", "shp"]
+  @source_type_values ["csv", "tsv", "shp"]
 
   @source_type_choices [
     CSV: "csv",
     TSV: "tsv",
-    JSON: "json",
     Shapefile: "shp"
   ]
 

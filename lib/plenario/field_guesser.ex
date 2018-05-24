@@ -104,12 +104,6 @@ defmodule Plenario.FieldGuesser do
     |> Enum.take(count)
   end
 
-  defp parse!(filename, count, %Meta{source_type: "json"}) do
-    File.read!(filename)
-    |> Poison.decode!()
-    |> Enum.take(count)
-  end
-
   defp parse!(_, _, %Meta{source_type: "shp"}) do
     []
   end

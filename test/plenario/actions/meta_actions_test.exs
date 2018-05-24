@@ -100,7 +100,7 @@ defmodule Plenario.Actions.MetaActionsTest do
     end
 
     test "source type", %{meta: meta} do
-      new_type = "json"
+      new_type = "tsv"
       {:ok, _} = MetaActions.update(meta, source_type: new_type)
 
       meta = MetaActions.get(meta.id)

@@ -1,131 +1,103 @@
 defmodule PlenarioEtl.Worker do
+  @moduledoc """
+  """
+
   use GenServer
 
   require Logger
 
-  import Ecto.Changeset
-
-  alias Plenario.Repo
-
-  alias Plenario.ModelRegistry
-
-  alias Plenario.Actions.MetaActions
+  alias Plenario.Actions.{DataSetActions, MetaActions}
 
   alias PlenarioEtl.Actions.EtlJobActions
 
   alias PlenarioEtl.Schemas.EtlJob
 
-  @timeout 1_000 * 60 * 5  # 5 minutes
+  @timeout 1_000 * 60 * 10  # 10 minutes
 
   # client api
 
-  def process_etl_job(pid_or_name, %EtlJob{} = job) do
-    Logger.info("starting etl process", etl_job: job.id)
-    GenServer.call(pid_or_name, {:process, job}, @timeout)
+  def process_etl_job(pid, %EtlJob{} = job) do
+    Logger.info("starting etl", etl_job_id: job.id, meta_id: job.meta_id)
+    GenServer.call(pid, {:process, job}, @timeout)
   end
 
-  # callback implementation
+  # server callbacks
 
   def start_link(_), do: GenServer.start_link(__MODULE__, nil, [])
 
-  def init(state) do
-    {:ok, state}
-  end
-
-  # server implementation
+  def init(state), do: {:ok, state}
 
   def handle_call({:process, job}, _, state) do
+    # get the related meta
     meta = MetaActions.get(job.meta_id)
 
-    # download the source document
-    path = download!(meta)
+    # download the file
+    path = download(meta)
 
-    # get the model
-    model = ModelRegistry.lookup(meta.slug)
-    {model, _} = Code.eval_quoted(quote do %unquote(model){} end)
-    Logger.info("got model for data set")
-
-    # get column names
-    columns =
-      MetaActions.get_column_names(meta)
-      |> Enum.map(fn c -> String.to_atom(c) end)
-    Logger.info("got columns for model -> #{inspect(columns)}")
-
-    # load data
-    {outcome, errors} =
+    # process the file
+    result =
       case meta.source_type do
-        "json" -> load_json!(path, model, columns)
-        "csv" -> load_csv!(path, model, columns)
-        "tsv" -> load_tsv!(path, model, columns)
-        "shp" -> load_shp!(path, meta)
+        "csv" ->
+          load_csv(meta, path)
+
+        "tsv" ->
+          load_csv(meta, path, "\t")
+
+        "shp" ->
+          load_shapefile(meta, path)
       end
 
-    # update the job
-    case outcome do
-      :succeeded ->
+    # update the etl job state
+    case result do
+      :ok ->
         EtlJobActions.mark_succeeded(job)
 
-      :partial_success ->
-        EtlJobActions.mark_partial_success(job, errors)
-
-      :erred ->
-        EtlJobActions.mark_erred(job, errors)
+      _ ->
+        EtlJobActions.mark_erred(job, [])
     end
 
-    # dump
+    # reply
     {:reply, nil, state}
   end
 
-  defp download!(meta) do
-    Logger.info("starting source document download")
-    ext =
-      case meta.source_type == "shp" do
-        true -> "zip"
-        false -> meta.source_type
-      end
+  # helpers
+
+  defp download(meta) do
+    Logger.info("starting to download source file from #{meta.source_url}", meta_id: meta.id)
 
     %HTTPoison.Response{body: body} = HTTPoison.get!(meta.source_url)
-    path = "/tmp/#{meta.slug}.#{ext}"
+    path =
+      case meta.source_type do
+        "shp" ->
+          "/tmp/#{meta.slug}.zip"
+
+        _ ->
+          "/tmp/#{meta.slug}.#{meta.source_type}"
+      end
     File.write!(path, body)
 
-    Logger.info("download stored at #{path}")
+    Logger.info("download complete - file written to #{path}", meta_id: meta.id)
 
     path
   end
 
-  defp load_json!(path, model, columns) do
-    Logger.info("using json loader")
-
-    load!(model, path, columns, fn pth ->
-      File.read!(pth)
-      |> Poison.decode!()
-    end)
+  defp load_csv(meta, path, delimiter \\ ",") do
+    # tons of logging going on in the etl function
+    try do
+      DataSetActions.etl!(meta.id, path, delimiter: delimiter, headers?: true)
+    rescue
+      e in Postgrex.Error ->
+        Logger.error("error loading csv data: #{inspect(Postgrex.Error.message(e))}", meta_id: meta.id)
+        :error
+    end
   end
 
-  defp load_csv!(path, model, columns) do
-    Logger.info("using csv loader")
-
-    load!(model, path, columns, fn pth ->
-      File.stream!(pth)
-      |> CSV.decode!(headers: true)
-    end)
-  end
-
-  defp load_tsv!(path, model, columns) do
-    Logger.info("using tsv loader")
-
-    load!(model, path, columns, fn _pth ->
-      File.stream!(path)
-      |> CSV.decode!(headers: true, separator: ?\t)
-    end)
-  end
-
-  defp load_shp!(path, meta) do
-    Logger.info("using shp loader")
+  defp load_shapefile(meta, path) do
+    Logger.info("using shp loader", meta_id: meta.id)
 
     {:ok, file_paths} = :zip.unzip(String.to_charlist(path), cwd: '/tmp/')
 
-    Logger.info("Looking for .shp file")
+    Logger.info("Looking for .shp file", meta_id: meta.id)
 
     shp =
       Enum.find(file_paths, fn path ->
@@ -133,55 +105,16 @@ defmodule PlenarioEtl.Worker do
       end)
       |> to_string()
 
-    Logger.info("Prep loader for shapefile at #{shp}")
+    Logger.info("Prep loader for shapefile at #{shp}", meta_id: meta.id)
+
     case PlenarioEtl.Shapefile.load(shp, meta.table_name) do
-      {:ok, _} -> {:succeeded, nil}
-      {:error, error} -> {:erred, error}
-    end
-  end
+      {:ok, _} ->
+        Logger.info("successfully loaded shapefile", meta_id: meta.id)
+        :ok
 
-  defp load!(model, path, columns, decode) do
-    Logger.info("ripping file")
-
-    results =
-      decode.(path)
-      |> Enum.reduce([], fn row, acc ->
-        Logger.debug("#{inspect(row)}")
-
-        res =
-          cast(model, row, columns)
-          |> Repo.insert()
-
-        Logger.debug("#{inspect(res)}")
-
-        case res do
-          {:error, message} ->
-            Logger.error("error loading row -> #{inspect(message)}")
-
-          _ -> :ok
-        end
-
-        acc ++ [res]
-      end)
-
-    len_results = length(results)
-
-    Logger.info("upserted #{len_results} rows")
-    Logger.debug("#{inspect(results)}")
-
-    errors = Enum.filter(results, fn {status, _} -> status == :error end)
-    len_errors = length(errors)
-
-    Logger.info("there were #{len_errors} erroneous upserts")
-    Logger.debug("#{inspect(errors)}")
-
-    case len_errors == 0 do
-      true -> {:succeeded, nil}
-      false ->
-        case len_errors == len_results do
-          true -> {:erred, errors}
-          false -> {:partial_success, errors}
-        end
+      {:error, error} ->
+        Logger.error("erro loading shapefile: #{inspect(error)}", meta_id: meta.id)
+        :error
     end
   end
 end
