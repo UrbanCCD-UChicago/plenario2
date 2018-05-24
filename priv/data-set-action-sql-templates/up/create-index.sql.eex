@@ -1,0 +1,4 @@
+CREATE INDEX "index_<%= table_name %>_<%= field_name %>"
+ON "<%= table_name %>"
+<%= if using != nil do %>USING <%= using %><% end %>
+("<%= field_name %>");

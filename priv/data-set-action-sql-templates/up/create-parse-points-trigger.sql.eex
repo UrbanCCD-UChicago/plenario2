@@ -1,0 +1,12 @@
+CREATE OR REPLACE FUNCTION "<%= table_name %>_parse_points"()
+RETURNS TRIGGER AS $$
+  BEGIN
+    <%= for p <- points do %>
+    NEW."<%= p.name %>" :=
+      <%= if p.loc_field_id != nil do %>parse_loc(NEW."<%= p.loc_field.name %>");
+      <% else %>parse_lat_lon(NEW."<%= p.lat_field.name %>", NEW."<%= p.lon_field.name %>");
+      <% end %>
+    <% end %>
+    RETURN NEW;
+  END
+$$ LANGUAGE plpgsql;

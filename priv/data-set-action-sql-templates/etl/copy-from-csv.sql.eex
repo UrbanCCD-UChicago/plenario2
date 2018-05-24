@@ -1,0 +1,3 @@
+COPY "<%= table_name %>_temp"
+FROM '<%= path %>'
+DELIMITER '<%= delimiter %>' CSV <%= if headers? do %>HEADER<% end %>;
