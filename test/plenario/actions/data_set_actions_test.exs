@@ -1,76 +1,79 @@
-defmodule Plenario.Actions.DataSetActionsTest do
-  use Plenario.Testing.DataCase
+defmodule Plenario.Testing.Actions.DataSetActionsTest do
+  use ExUnit.Case
 
-  alias Plenario.Repo
+  alias Plenario.{ModelRegistry, Repo}
 
   alias Plenario.Actions.{
-    DataSetActions,
+    UserActions,
+    MetaActions,
     DataSetFieldActions,
-    VirtualDateFieldActions,
-    VirtualPointFieldActions
+    VirtualPointFieldActions,
+    DataSetActions
   }
 
-  setup %{meta: meta} do
-    {:ok, pk} = DataSetFieldActions.create(meta, "id", "integer")
-    {:ok, _} = DataSetFieldActions.create(meta, "observation", "float")
-    {:ok, yr} = DataSetFieldActions.create(meta, "year", "integer")
-    {:ok, mo} = DataSetFieldActions.create(meta, "month", "integer")
-    {:ok, day} = DataSetFieldActions.create(meta, "day", "integer")
-    {:ok, lat} = DataSetFieldActions.create(meta, "lat", "float")
-    {:ok, lon} = DataSetFieldActions.create(meta, "lon", "float")
-    {:ok, loc} = DataSetFieldActions.create(meta, "loc", "text")
+  setup do
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
+    Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
 
-    {:ok, vdf} = VirtualDateFieldActions.create(meta.id, yr.id, month_field_id: mo.id, day_field_id: day.id)
+    ModelRegistry.clear()
 
-    {:ok, vpf} = VirtualPointFieldActions.create(meta.id, lat.id, lon.id)
-    {:ok, vpf2} = VirtualPointFieldActions.create(meta.id, loc.id)
+    {:ok, user} = UserActions.create("name", "email@example.com", "password")
+    {:ok, meta} = MetaActions.create("name", user, "https://example.com/", "csv")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Test ID", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample Timestamp", "timestamptz")
+    {:ok, _} = DataSetFieldActions.create(meta, "Beach", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample 1 Reading", "float")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample 2 Reading", "float")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Reading Mean", "float")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Test ID", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 1 Timestamp", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 1 Reading", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 2 Reading", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Reading Mean", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Note", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample Interval", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 2 Timestamp", "text")
+    {:ok, lat} = DataSetFieldActions.create(meta, "Latitude", "float")
+    {:ok, lon} = DataSetFieldActions.create(meta, "Longitude", "float")
+    {:ok, _} = DataSetFieldActions.create(meta, "Location", "text")
+    {:ok, _} = VirtualPointFieldActions.create(meta, lat.id, lon.id)
 
-
-    {
-      :ok,
-      [
-        pk: pk,
-        yr: yr,
-        mo: mo,
-        day: day,
-        lat: lat,
-        lon: lon,
-        vdf: vdf,
-        vpf: vpf,
-        vpf2: vpf2
-      ]
-    }
+    {:ok, [meta: meta]}
   end
 
   test "up!", %{meta: meta} do
     :ok = DataSetActions.up!(meta)
-
-    insert = """
-    INSERT INTO "#{meta.table_name}" VALUES
-      (1, 12.3, 2018, 1, 1, 10.1, 20.9, '(10.1, 20.9)'),
-      (2, 12.2, 2018, 1, 1, 10.1, 20.8, '(10.1, 20.8)'),
-      (3, 12.1, 2018, 1, 1, 10.1, 20.7, '(10.1, 20.7)');
-    """
-    {:ok, _} = Ecto.Adapters.SQL.query(Repo, insert)
-
-    query = """
-    SELECT * FROM "#{meta.table_name}"
-    """
-    {:ok, result} = Ecto.Adapters.SQL.query(Repo, query)
-
-    assert length(result.rows) == 3
-    first = List.first(result.rows)
-    assert first == [
-      1, 12.3, 2018, 1, 1, 10.1, 20.9, "(10.1, 20.9)",
-      {{2018, 1, 1}, {0, 0, 0, 0}}, # virtual date
-      %Geo.Point{coordinates: {20.9, 10.1}, srid: 4326},  # virtual point
-      %Geo.Point{coordinates: {20.9, 10.1}, srid: 4326},
-      nil, nil
-    ]
   end
 
   test "down!", %{meta: meta} do
     :ok = DataSetActions.up!(meta)
     :ok = DataSetActions.down!(meta)
+  end
+
+  test "etl!", %{meta: meta} do
+    fixture = "test/fixtures/beach-lab-dna.csv"
+    contents = File.read!(fixture)
+    path = "/tmp/beach-dna.csv"
+    File.write!(path, contents)
+
+    :ok = DataSetActions.up!(meta)
+    :ok = DataSetActions.etl!(meta, path, delimiter: ",", headers?: true)
+
+    model = ModelRegistry.lookup(meta.slug)
+    records = Repo.all(model)
+    assert length(records) == 2936
+
+    # check that it truncates and uses fresh data
+
+    fixture = "test/fixtures/beach-lab-dna-one-line.csv"
+    contents = File.read!(fixture)
+    path = "/tmp/beach-dna.csv"
+    File.write!(path, contents)
+
+    :ok = DataSetActions.etl!(meta, path, delimiter: ",", headers?: true)
+
+    model = ModelRegistry.lookup(meta.slug)
+    records = Repo.all(model)
+    assert length(records) == 1
   end
 end

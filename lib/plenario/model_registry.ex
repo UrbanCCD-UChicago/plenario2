@@ -109,7 +109,7 @@ defmodule Plenario.ModelRegistry do
         {String.to_atom(field.name), Map.fetch!(@type_map, field.type)}
       end)
 
-    vpfs = 
+    vpfs =
       Enum.map(meta.virtual_points, fn field ->
         {String.to_atom(field.name), Geo.Point}
       end)
@@ -132,7 +132,6 @@ defmodule Plenario.ModelRegistry do
             field unquote(name), unquote(type)
           end
         end)
-        timestamps()
       end
     end, Macro.Env.location(__ENV__))
   end

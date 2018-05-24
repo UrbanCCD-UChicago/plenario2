@@ -1,0 +1,7 @@
+INSERT INTO "<%= table_name %>"
+  ("<%= Enum.map(fields, fn f -> f.name end) |> Enum.join("\", \"") %>")
+SELECT
+  <%= for {f, idx} <- Enum.with_index(fields, 1) do %>
+  "<%= f.name %>"<%= if idx < len_fields do %>,<% end %>
+  <% end %>
+FROM "<%= table_name %>_temp";

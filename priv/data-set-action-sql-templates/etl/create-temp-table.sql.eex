@@ -1,0 +1,5 @@
+CREATE TABLE "<%= table_name %>_temp" (
+  <%= for {f, idx} <- Enum.with_index(fields, 1) do %>
+  "<%= f.name %>" <%= String.upcase(f.type) %> DEFAULT NULL <%= if idx < len_fields do %>,<% end %>
+  <% end %>
+)

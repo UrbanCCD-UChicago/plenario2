@@ -1,0 +1,16 @@
+CREATE OR REPLACE FUNCTION "<%= table_name %>_parse_timestamps"()
+RETURNS TRIGGER AS $$
+  BEGIN
+    <%= for d <- dates do %>
+    NEW."<%= d.name %>" := parse_timestamptz(
+      NEW."<%= d.year_field.name %>",
+      <%= if d.month_field_id do %>NEW."<%= d.month_field.name %>"<% else %>NULL<% end %>,
+      <%= if d.day_field_id do %>NEW."<%= d.day_field.name %>"<% else %>NULL<% end %>,
+      <%= if d.hour_field_id do %>NEW."<%= d.hour_field.name %>"<% else %>NULL<% end %>,
+      <%= if d.minute_field_id do %>NEW."<%= d.minute_field.name %>"<% else %>NULL<% end %>,
+      <%= if d.second_field_id do %>NEW."<%= d.second_field.name %>"<% else %>NULL<% end %>
+    );
+    <% end %>
+    RETURN NEW;
+  END
+$$ LANGUAGE plpgsql;

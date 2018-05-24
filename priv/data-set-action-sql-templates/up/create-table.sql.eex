@@ -1,0 +1,16 @@
+CREATE TABLE "<%= table_name %>" (
+  -- fields
+  <%= for {f, idx} <- Enum.with_index(fields, 1) do %>
+  "<%= f.name %>" <%= String.upcase(f.type) %> DEFAULT NULL <%= if idx < len_fields do %>,<% end %>
+  <% end %>
+
+  -- virtual dates
+  <%= for d <- dates do %>
+  , "<%= d.name %>" TIMESTAMPTZ DEFAULT NULL
+  <% end %>
+
+  -- virtual points
+  <%= for p <- points do %>
+  , "<%= p.name %>" GEOMETRY(POINT, 4326) DEFAULT NULL
+  <% end %>
+);
