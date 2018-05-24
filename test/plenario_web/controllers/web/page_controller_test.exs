@@ -6,8 +6,7 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     UserActions,
     MetaActions,
     DataSetFieldActions,
-    VirtualPointFieldActions,
-    UniqueConstraintActions
+    VirtualPointFieldActions
   }
 
   alias PlenarioAot.AotActions
@@ -39,12 +38,11 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     {:ok, meta4} = MetaActions.create("name 4", user, "https://example.com/4", "csv")
 
     for meta <- [meta1, meta2, meta3, meta4] do
-      {:ok, id} = DataSetFieldActions.create(meta, "id", "integer")
+      {:ok, _} = DataSetFieldActions.create(meta, "id", "integer")
       {:ok, _} = DataSetFieldActions.create(meta, "timestamp", "timestamptz")
       {:ok, _} = DataSetFieldActions.create(meta, "observation", "float")
       {:ok, f} = DataSetFieldActions.create(meta, "location", "text")
       {:ok, _} = VirtualPointFieldActions.create(meta, f.id)
-      {:ok, _} = UniqueConstraintActions.create(meta, [id.id])
     end
 
     bbox =
@@ -202,5 +200,5 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
   test "explorer receives a terribly fake date", %{conn: conn} do
     conn = get(conn, page_path(conn, :explorer), %{"starting_on" => "2000-01-01", "ending_on" => "2000-19-11"})
     assert get_flash(conn)["error"] =~ "date doesn't exist"
-  end 
+  end
 end

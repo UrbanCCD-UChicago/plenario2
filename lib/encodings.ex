@@ -1,7 +1,5 @@
-import Plenario.Actions.DataSetFieldActions, only: [field_names: 1]
 import Plenario.Encodings.Helpers
 alias Plenario.Schemas.{
-  UniqueConstraint,
   VirtualDateField,
   VirtualPointField
 }
@@ -51,43 +49,16 @@ defimpl Poison.Encoder, for: Tuple do
 end
 
 
-defimpl Poison.Encoder, for: UniqueConstraint do
-
-  @doc """
-  JSON serialization behaviour for `UniqueConstraints`. Does not include any
-  information about associations besides the stored `field_ids`.
-
-  ## Examples
-
-      iex> Plenario.Schemas.UniqueConstraint
-      iex> Poison.Encoder.encode(%UniqueConstraint{}, [])
-      nil
-
-      iex> Plenario.Schemas.UniqueConstraint
-      iex> Poison.Encoder.encode({1, 2, 3}, [])
-      nil
-      "[1, 2, 3]"
-
-  """
-  def encode(constraint, _options) do
-    Poison.encode!(%{
-      name: constraint.name,
-      fields: field_names(constraint.field_ids)
-    })
-  end
-end
-
-
 defimpl Poison.Encoder, for: VirtualDateField do
 
   @doc """
-  JSON serialization behaviour for `UniqueConstraints`. Does not include any
+  JSON serialization behaviour for `VirtualDateField`. Does not include any
   information about associations besides the stored `field_ids`.
 
   ## Examples
 
       iex> Plenario.Schemas.VirtualDateField
-      iex> Poison.Encoder.encode(%UniqueConstraint{}, [])
+      iex> Poison.Encoder.encode(%VirtualDateField{}, [])
       nil
 
       iex> Plenario.Schemas.VirtualDateField
@@ -111,13 +82,13 @@ end
 defimpl Poison.Encoder, for: VirtualPointField do
 
   @doc """
-  JSON serialization behaviour for `UniqueConstraints`. Does not include any
+  JSON serialization behaviour for `VirtualPointField`. Does not include any
   information about associations besides the stored `field_ids`.
 
   ## Examples
 
       iex> Plenario.Schemas.VirtualPointField
-      iex> Poison.Encoder.encode(%UniqueConstraint{}, [])
+      iex> Poison.Encoder.encode(%VirtualPointField{}, [])
       nil
 
       iex> Plenario.Schemas.VirtualPointField

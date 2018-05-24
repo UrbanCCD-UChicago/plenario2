@@ -5,7 +5,6 @@ defmodule Plenario.Actions.DataSetActions do
   alias Plenario.Repo
 
   alias Plenario.Actions.{
-    DataSetFieldActions,
     MetaActions,
     VirtualDateFieldActions,
     VirtualPointFieldActions
@@ -19,18 +18,10 @@ defmodule Plenario.Actions.DataSetActions do
       meta_id,
       with_fields: true,
       with_virtual_dates: true,
-      with_virtual_points: true,
-      with_constraints: true)
+      with_virtual_points: true)
 
-    # create the table with fields and constraints
-    constraints = for uc <- meta.unique_constraints do
-      field_names =
-        DataSetFieldActions.list(by_ids: uc.field_ids)
-        |> Enum.map(fn f -> f.name end)
-        |> Enum.join("\", \"")
-      {uc.name, field_names}
-    end
-    sql = create_table_sql(meta, constraints)
+    # create the table with fields
+    sql = create_table_sql(meta)
     execute_sql!(sql)
 
     # create timestamp parsing function and trigger
@@ -74,8 +65,7 @@ defmodule Plenario.Actions.DataSetActions do
       meta_id,
       with_fields: true,
       with_virtual_dates: true,
-      with_virtual_points: true,
-      with_constraints: true)
+      with_virtual_points: true)
 
     # drop point functions and triggers
     trigger_name = "#{meta.table_name}_parse_points"
@@ -103,9 +93,9 @@ defmodule Plenario.Actions.DataSetActions do
     :ok
   end
 
-  defp create_table_sql(meta, constraints) do
+  defp create_table_sql(meta) do
     filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/create-table.sql.eex")
-    sql = EEx.eval_file(filename, [meta: meta, constraints: constraints], trim: true)
+    sql = EEx.eval_file(filename, [meta: meta], trim: true)
 
     sql
   end

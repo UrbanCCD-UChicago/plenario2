@@ -60,7 +60,6 @@ defmodule PlenarioWeb.Router do
     post "/data-sets/:meta_id/export", ExportController, :export_meta
 
     resources "/data-sets/:dsid/fields", DataSetFieldController
-    resources "/data-sets/:dsid/constraints", UniqueConstraintController
     resources "/data-sets/:dsid/virtual-dates", VirtualDateController
     resources "/data-sets/:dsid/virtual-points", VirtualPointController
 

@@ -6,7 +6,6 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     DataSetActions,
     DataSetFieldActions,
     MetaActions,
-    UniqueConstraintActions,
     UserActions,
     VirtualPointFieldActions
   }
@@ -17,12 +16,11 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
 
     {:ok, user} = UserActions.create("API Test User", "test@example.com", "password")
     {:ok, meta} = MetaActions.create("API Test Dataset", user.id, "https://www.example.com", "csv")
-    {:ok, pk} = DataSetFieldActions.create(meta.id, "pk", "integer")
+    {:ok, _} = DataSetFieldActions.create(meta.id, "pk", "integer")
     {:ok, _} = DataSetFieldActions.create(meta.id, "datetime", "timestamptz")
     {:ok, location} = DataSetFieldActions.create(meta.id, "location", "text")
     {:ok, _} = DataSetFieldActions.create(meta.id, "data", "text")
     {:ok, vpf} = VirtualPointFieldActions.create(meta, location.id)
-    {:ok, _} = UniqueConstraintActions.create(meta.id, [pk.id])
 
     DataSetActions.up!(meta)
 
@@ -112,7 +110,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
   end
 
   test "GET /api/v2/data-sets/:slug bbox query", %{slug: slug} do
-    geojson = 
+    geojson =
       """
       {
         "type": "Polygon",
@@ -133,7 +131,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
   end
 
   test "GET /api/v2/data-sets/:slug bbox query no results", %{slug: slug} do
-    geojson = 
+    geojson =
       """
       {
         "type": "Polygon",
@@ -166,7 +164,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
   end
 
   test "GET /api/v2/data-sets/:slug location query", %{slug: slug, vpf: vpf} do
-    geojson = 
+    geojson =
       """
       {
         "type": "Polygon",
@@ -187,7 +185,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
   end
 
   test "GET /api/v2/data-sets/:slug location query no results", %{slug: slug, vpf: vpf} do
-    geojson = 
+    geojson =
       """
       {
         "type": "Polygon",

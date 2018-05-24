@@ -10,7 +10,6 @@ defmodule PlenarioEtl.Testing.WorkerTest do
     MetaActions,
     DataSetFieldActions,
     VirtualPointFieldActions,
-    UniqueConstraintActions,
     DataSetActions
   }
 
@@ -43,24 +42,22 @@ defmodule PlenarioEtl.Testing.WorkerTest do
 
     # setup a metas with fields, etc.
     {:ok, csv_meta} = MetaActions.create("Chicago Beach Lab DNA Tests", user, "https://example.com/csv", "csv")
-    {:ok, id} = DataSetFieldActions.create(csv_meta, "DNA Test ID", "text")
+    {:ok, _} = DataSetFieldActions.create(csv_meta, "DNA Test ID", "text")
     {:ok, _} = DataSetFieldActions.create(csv_meta, "DNA Reading Mean", "float")
     {:ok, _} = DataSetFieldActions.create(csv_meta, "DNA Sample 1 Reading", "float")
     {:ok, _} = DataSetFieldActions.create(csv_meta, "DNA Sample 2 Reading", "float")
     {:ok, _} = DataSetFieldActions.create(csv_meta, "DNA Sample Timestamp", "timestamptz")
     {:ok, loc} = DataSetFieldActions.create(csv_meta, "Location", "text")
     {:ok, _} = VirtualPointFieldActions.create(csv_meta, loc.id)
-    {:ok, _} = UniqueConstraintActions.create(csv_meta, [id.id])
 
     {:ok, json_meta} = MetaActions.create("Array of Things Chicago", user, "https://example.com/json", "json")
-    {:ok, id} = DataSetFieldActions.create(json_meta, "node_id", "text")
+    {:ok, _} = DataSetFieldActions.create(json_meta, "node_id", "text")
     {:ok, lat} = DataSetFieldActions.create(json_meta, "latitude", "float")
     {:ok, lon} = DataSetFieldActions.create(json_meta, "longitude", "float")
     {:ok, _} = DataSetFieldActions.create(json_meta, "timestamp", "timestamptz")
     {:ok, _} = DataSetFieldActions.create(json_meta, "observations", "jsonb")
     {:ok, _} = DataSetFieldActions.create(json_meta, "human_address", "text")
     {:ok, _} = VirtualPointFieldActions.create(json_meta, lat.id, lon.id)
-    {:ok, _} = UniqueConstraintActions.create(json_meta, [id.id])
 
     # bring up the data set tables
     :ok = DataSetActions.up!(csv_meta)

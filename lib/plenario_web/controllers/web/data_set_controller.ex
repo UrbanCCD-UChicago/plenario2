@@ -16,7 +16,7 @@ defmodule PlenarioWeb.Web.DataSetController do
   plug :authorize_resource, model: Meta
 
   def show(conn, %{"id" => id}) do
-    meta = MetaActions.get(id, with_user: true, with_fields: true, with_constraints: true)
+    meta = MetaActions.get(id, with_user: true, with_fields: true)
     do_show(meta, conn)
   end
 
@@ -73,7 +73,7 @@ defmodule PlenarioWeb.Web.DataSetController do
 
   def edit(conn, %{"id" => id}) do
     meta = MetaActions.get(id,
-      with_user: true, with_fields: true, with_constraints: true,
+      with_user: true, with_fields: true,
       with_virtual_dates: true, with_virtual_points: true
     )
     do_edit(meta, id, conn)

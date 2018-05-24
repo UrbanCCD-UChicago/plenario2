@@ -84,24 +84,6 @@
     </tbody>
   </table>
 
-  <h2>Unique Constraints</h2>
-  <table class="table table-hover">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Fields</th>
-      </tr>
-    </thead>
-    <tbody>
-      <%= for uc <- @constraints do %>
-        <tr>
-          <td><%= uc.name %></td>
-          <td><%= Enum.join(Plenario.Actions.UniqueConstraintActions.get_field_names(uc), ", ") %></td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
-
   <h2>Virtual Dates</h2>
   <table class="table table-hover">
     <thead>
