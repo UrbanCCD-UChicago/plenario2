@@ -219,4 +219,31 @@ defmodule PlenarioWeb.Api.AotControllerTest do
     # test "observations" do
     # end
   end
+
+  test "page_size param cannot exceed 5000" do
+    %{"meta" => meta, "errors" => errors} =
+      get(build_conn(), "/api/v2/aot?page_size=5001")
+      |> json_response(422)
+
+    assert meta["counts"]["total_records"] == 0
+    assert errors == [[page_size: "Argument cannot exceed 5000."]]
+  end
+
+  test "page_size param cannot be less than 1" do
+    %{"meta" => meta, "errors" => errors} =
+      get(build_conn(), "/api/v2/aot?page_size=0")
+      |> json_response(422)
+
+    assert meta["counts"]["total_records"] == 0
+    assert errors == [[page_size: "Argument cannot be less than 1."]]
+  end
+
+  test "page_size param cannot be negative" do
+    %{"meta" => meta, "errors" => errors} =
+      get(build_conn(), "/api/v2/aot?page_size=-1")
+      |> json_response(422)
+
+    assert meta["counts"]["total_records"] == 0
+    assert errors == [[page_size: "Argument cannot be less than 1."]]
+  end
 end
