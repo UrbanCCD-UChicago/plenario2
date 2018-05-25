@@ -2,6 +2,7 @@ defmodule PlenarioWeb.Api.Utils do
   import Ecto.Query
   import PlenarioWeb.Router.Helpers, only: [detail_url: 4, list_url: 3, aot_url: 3]
   import Geo.PostGIS
+  alias Plenario.Repo
 
   @doc """
   Utility function for rendering a `Scrivener.Page` of results. Even if the
@@ -191,5 +192,19 @@ defmodule PlenarioWeb.Api.Utils do
   def map_to_query(query, params) when is_map(params), do: map_to_query(query, Map.to_list(params))
   def map_to_query(query, [condition_tuple | params]) do
     map_to_query(query |> where_condition(condition_tuple), params)
+  end
+
+  @doc """
+  Truncates a database table, lives here for now until I can find a better place for it.
+  """
+  def truncate([]), do: :ok
+  def truncate([schema | tail]) do
+    truncate(schema)
+    truncate(tail)
+  end
+
+  def truncate(schema) do
+    {nil, table} = schema.__struct__.__meta__.source
+    Ecto.Adapters.SQL.query!(Repo, "truncate #{table} cascade;", [])
   end
 end

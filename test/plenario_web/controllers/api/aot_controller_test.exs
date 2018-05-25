@@ -1,18 +1,36 @@
 defmodule PlenarioWeb.Api.AotControllerTest do
   use PlenarioWeb.Testing.ConnCase
 
-  alias PlenarioAot.AotActions
+  alias Plenario.Repo
+  alias PlenarioAot.{AotActions, AotData, AotMeta}
+
+  import PlenarioWeb.Api.Utils, only: [truncate: 1]
 
   @fixture "test/fixtures/aot-chicago.json"
   @total_records 1_365
 
-  setup do
+  # Setting up the fixure data once _greatly_ reduces the test time. Drops this particular test
+  # case from 40s to 11s as of writing. The downside is that in order to make this work you must
+  # be explicit about database connection ownership and you must also clean up the tests yourself.
+  setup_all do
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
+    Ecto.Adapters.SQL.Sandbox.mode(Repo, :auto)
+
     {:ok, meta} = AotActions.create_meta("Chicago", "https://example.com/")
     File.read!(@fixture)
     |> Poison.decode!()
     |> Enum.map(fn obj -> AotActions.insert_data(meta, obj) end)
     AotActions.compute_and_update_meta_bbox(meta)
     AotActions.compute_and_update_meta_time_range(meta)
+
+    # Registers a callback that runs once (because we're in setup_all) after all the tests have run. Use to clean up!
+    # If things screw up and this isn't called properly, `env MIX_ENV=test mix ecto.drop` (bash) is your friend.
+    on_exit(fn ->
+      # Check out again because this callback is run in another process.
+      :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
+      Ecto.Adapters.SQL.Sandbox.mode(Repo, :auto)
+      truncate([AotMeta, AotData])
+    end)
 
     {:ok, [meta: meta]}
   end
