@@ -70,16 +70,16 @@ defmodule PlenarioWeb.Api.ListController do
   @doc """
   Lists all metadata objects satisfying the provided query.
   """
-  def get(conn, %{"page_size": page_size}) do
-    pagination_fields = Map.get(conn.assigns, :pagination_fields)
+  def get(conn, %{"page_size" => page_size}) do
+    pagination_fields = Map.get(conn.assigns, :pagination_fields) ++ [page_size: page_size]
     {query, params_used} = construct_query_from_conn_assigns(conn)
     # todo(heyzoos) pass in page through params
-    page = Repo.paginate(query, page_size: page_size, page: pagination_fields[:page])
+    page = Repo.paginate(query, pagination_fields)
     render_page(conn, "get.json", params_used ++ pagination_fields, page.entries, page)
   end
 
-  def head(conn, %{"page_size": page_size}) do
-    pagination_fields = Map.get(conn.assigns, :pagination_fields)
+  def head(conn, %{"page_size" => _}) do
+    pagination_fields = Map.get(conn.assigns, :pagination_fields) ++ [page_size: 1]
     {query, params_used} = construct_query_from_conn_assigns(conn)
     page = Repo.paginate(query, page_size: 1, page: 1)
     render_page(conn, "get.json", params_used ++ pagination_fields, page.entries, page)
@@ -89,10 +89,10 @@ defmodule PlenarioWeb.Api.ListController do
   Lists all single metadata objects satisfying the provided query. The metadata
   objects have all associations preloaded.
   """
-  def describe(conn, %{"page_size": page_size}) do
-    pagination_fields = Map.get(conn.assigns, :pagination_fields)
+  def describe(conn, %{"page_size" => page_size}) do
+    pagination_fields = Map.get(conn.assigns, :pagination_fields) ++ [page_size: page_size]
     {query, params_used} = construct_query_from_conn_assigns(conn)
-    page = Repo.paginate(query, page_size: page_size, page: pagination_fields[:page])
+    page = Repo.paginate(preload(query, ^@associations), pagination_fields)
     render_page(conn, "get.json", params_used ++ pagination_fields, page.entries, page)
   end
 end

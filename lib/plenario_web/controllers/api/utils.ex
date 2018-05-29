@@ -196,6 +196,11 @@ defmodule PlenarioWeb.Api.Utils do
 
   @doc """
   Truncates a database table, lives here for now until I can find a better place for it.
+
+  todo(heyzoos) add an informative error if you receive something that isn't a struct
+    - usually caused by passing an atom without aliasing it
+    - or caused by not being an ecto schema
+
   """
   def truncate([]), do: :ok
   def truncate([schema | tail]) do
@@ -205,6 +210,6 @@ defmodule PlenarioWeb.Api.Utils do
 
   def truncate(schema) do
     {nil, table} = schema.__struct__.__meta__.source
-    Ecto.Adapters.SQL.query!(Repo, "truncate #{table} cascade;", [])
+    Ecto.Adapters.SQL.query!(Repo, "truncate \"#{table}\" cascade;", [])
   end
 end

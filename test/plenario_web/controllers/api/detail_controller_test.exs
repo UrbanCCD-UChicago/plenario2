@@ -13,9 +13,10 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
 
   alias Plenario.Schemas.{DataSetField, Meta, UniqueConstraint, User, VirtualPointField}
 
-  # Setting up the fixure data once _greatly_ reduces the test time. Drops this particular test
-  # case from _ to _ as of writing. The downside is that in order to make this work you must
-  # be explicit about database connection ownership and you must also clean up the tests yourself.
+  import PlenarioWeb.Api.Utils, only: [truncate: 1]
+
+  # Setting up the fixure data once _greatly_ reduces the test time. The downside is that in order to make this work
+  # you must be explicit about database connection ownership and you must also clean up the tests yourself.
   setup_all do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
     Ecto.Adapters.SQL.Sandbox.mode(Repo, :auto)
@@ -44,7 +45,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
       # Check out again because this callback is run in another process.
       :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
       Ecto.Adapters.SQL.Sandbox.mode(Repo, :auto)
-      :ok = truncate([DataSetField, Meta, UniqueConstraint, User, VirtualPointField])
+      truncate([DataSetField, Meta, UniqueConstraint, User, VirtualPointField, model])
     end)
 
     %{slug: meta.slug(), vpf: vpf}
@@ -87,7 +88,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     response = json_response(conn, 200)
     assert length(response["data"]) == 5
     assert response["meta"]["params"]["page"] == "2"
-    assert response["meta"]["params"]["page_size"] == "5"
+    assert response["meta"]["params"]["page_size"] == 5
   end
 
   test "GET /api/v2/data-sets/:slug pagination is stable with backfills", %{slug: slug} do
@@ -96,7 +97,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
 
     assert length(response["data"]) == 5
     assert response["meta"]["params"]["page"] == "2"
-    assert response["meta"]["params"]["page_size"] == "5"
+    assert response["meta"]["params"]["page_size"] == 5
   end
 
   test "GET /api/v2/data-sets/:slug populates pagination links", %{slug: slug} do
@@ -126,7 +127,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
   end
 
   test "GET /api/v2/data-sets/:slug bbox query", %{slug: slug} do
-    geojson = 
+    geojson =
       """
       {
         "type": "Polygon",
@@ -147,7 +148,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
   end
 
   test "GET /api/v2/data-sets/:slug bbox query no results", %{slug: slug} do
-    geojson = 
+    geojson =
       """
       {
         "type": "Polygon",
@@ -180,7 +181,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
   end
 
   test "GET /api/v2/data-sets/:slug location query", %{slug: slug, vpf: vpf} do
-    geojson = 
+    geojson =
       """
       {
         "type": "Polygon",
@@ -201,7 +202,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
   end
 
   test "GET /api/v2/data-sets/:slug location query no results", %{slug: slug, vpf: vpf} do
-    geojson = 
+    geojson =
       """
       {
         "type": "Polygon",
@@ -231,7 +232,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
 
   test "page_size param cannot be less than 1", %{slug: slug} do
     error =
-      get(build_conn(), "/api/v2/#{slug}?page_size=0")
+      get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=0")
       |> json_response(422)
 
     assert error == "__ERROR__"
@@ -239,7 +240,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
 
   test "page_size param cannot be negative", %{slug: slug} do
     error =
-      get(build_conn(), "/api/v2/#{slug}?page_size=-1")
+      get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=-1")
       |> json_response(422)
 
     assert error == "__ERROR__"
@@ -247,14 +248,14 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
 
   test "page_size cannot be a string", %{slug: slug} do
     error =
-      get(build_conn(), "/api/v2/#{slug}?page_size=string")
+      get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=string")
       |> json_response(422)
 
     assert error == "__ERROR__"
   end
 
   test "valid page_size param", %{slug: slug} do
-    get(build_conn(), "/api/v2/#{slug}?page_size=501")
+    get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=501")
     |> json_response(200)
   end
 end
