@@ -11,9 +11,15 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     VirtualPointFieldActions
   }
 
-  setup do
-    Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
-    Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
+  alias Plenario.Schemas.{DataSetField, Meta, UniqueConstraint, User, VirtualPointField}
+
+  import PlenarioWeb.Api.Utils, only: [truncate: 1]
+
+  # Setting up the fixure data once _greatly_ reduces the test time. The downside is that in order to make this work
+  # you must be explicit about database connection ownership and you must also clean up the tests yourself.
+  setup_all do
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
+    Ecto.Adapters.SQL.Sandbox.mode(Repo, :auto)
 
     {:ok, user} = UserActions.create("API Test User", "test@example.com", "password")
     {:ok, meta} = MetaActions.create("API Test Dataset", user.id, "https://www.example.com", "csv")
@@ -31,6 +37,15 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     model = ModelRegistry.lookup(meta.slug())
     (1..100) |> Enum.each(fn _ ->
       Repo.insert(%{model.__struct__ | datetime: "2500-01-01 00:00:00", location: "(50, 50)"})
+    end)
+
+    # Registers a callback that runs once (because we're in setup_all) after all the tests have run. Use to clean up!
+    # If things screw up and this isn't called properly, `env MIX_ENV=test mix ecto.drop` (bash) is your friend.
+    on_exit(fn ->
+      # Check out again because this callback is run in another process.
+      :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
+      Ecto.Adapters.SQL.Sandbox.mode(Repo, :auto)
+      truncate([DataSetField, Meta, UniqueConstraint, User, VirtualPointField, model])
     end)
 
     %{slug: meta.slug(), vpf: vpf}
@@ -73,7 +88,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     response = json_response(conn, 200)
     assert length(response["data"]) == 5
     assert response["meta"]["params"]["page"] == "2"
-    assert response["meta"]["params"]["page_size"] == "5"
+    assert response["meta"]["params"]["page_size"] == 5
   end
 
   test "GET /api/v2/data-sets/:slug pagination is stable with backfills", %{slug: slug} do
@@ -82,7 +97,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
 
     assert length(response["data"]) == 5
     assert response["meta"]["params"]["page"] == "2"
-    assert response["meta"]["params"]["page_size"] == "5"
+    assert response["meta"]["params"]["page_size"] == 5
   end
 
   test "GET /api/v2/data-sets/:slug populates pagination links", %{slug: slug} do
@@ -112,7 +127,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
   end
 
   test "GET /api/v2/data-sets/:slug bbox query", %{slug: slug} do
-    geojson = 
+    geojson =
       """
       {
         "type": "Polygon",
@@ -133,7 +148,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
   end
 
   test "GET /api/v2/data-sets/:slug bbox query no results", %{slug: slug} do
-    geojson = 
+    geojson =
       """
       {
         "type": "Polygon",
@@ -166,7 +181,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
   end
 
   test "GET /api/v2/data-sets/:slug location query", %{slug: slug, vpf: vpf} do
-    geojson = 
+    geojson =
       """
       {
         "type": "Polygon",
@@ -187,7 +202,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
   end
 
   test "GET /api/v2/data-sets/:slug location query no results", %{slug: slug, vpf: vpf} do
-    geojson = 
+    geojson =
       """
       {
         "type": "Polygon",
@@ -205,5 +220,42 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     conn = get(build_conn(), "/api/v2/data-sets/#{slug}?#{vpf.name}=in:#{geojson}")
     response = json_response(conn, 200)
     assert length(response["data"]) == 0
+  end
+
+  test "page_size param cannot exceed 5000", %{slug: slug} do
+    error =
+      get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=5001")
+      |> json_response(422)
+
+    assert error == "__ERROR__"
+  end
+
+  test "page_size param cannot be less than 1", %{slug: slug} do
+    error =
+      get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=0")
+      |> json_response(422)
+
+    assert error == "__ERROR__"
+  end
+
+  test "page_size param cannot be negative", %{slug: slug} do
+    error =
+      get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=-1")
+      |> json_response(422)
+
+    assert error == "__ERROR__"
+  end
+
+  test "page_size cannot be a string", %{slug: slug} do
+    error =
+      get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=string")
+      |> json_response(422)
+
+    assert error == "__ERROR__"
+  end
+
+  test "valid page_size param", %{slug: slug} do
+    get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=501")
+    |> json_response(200)
   end
 end

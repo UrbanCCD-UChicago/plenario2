@@ -2,8 +2,10 @@ defmodule PlenarioWeb.Api.ListControllerTest do
   use PlenarioWeb.Testing.ConnCase
 
   alias Plenario.Actions.UserActions
-  alias Plenario.Schemas.Meta
+  alias Plenario.Schemas.{Meta, User}
   alias Plenario.Repo
+
+  import PlenarioWeb.Api.Utils, only: [truncate: 1]
 
   @seattle_geojson """
     {
@@ -65,9 +67,9 @@ defmodule PlenarioWeb.Api.ListControllerTest do
     }
     """
 
-  setup do
-    Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
-    Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
+  setup_all do
+    Ecto.Adapters.SQL.Sandbox.checkout(Repo)
+    Ecto.Adapters.SQL.Sandbox.mode(Repo, :auto)
 
     {:ok, user} = UserActions.create("API Test User", "test@example.com", "password")
     seattle_geom = @seattle_geojson |> Poison.decode!() |> Geo.JSON.decode()
@@ -95,6 +97,15 @@ defmodule PlenarioWeb.Api.ListControllerTest do
         source_type: "csv",
         bbox: %{chicago_geom | srid: 4326}
       })
+    end)
+
+    # Registers a callback that runs once (because we're in setup_all) after all the tests have run. Use to clean up!
+    # If things screw up and this isn't called properly, `env MIX_ENV=test mix ecto.drop` (bash) is your friend.
+    on_exit(fn ->
+      # Check out again because this callback is run in another process.
+      :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
+      Ecto.Adapters.SQL.Sandbox.mode(Repo, :auto)
+      truncate([Meta, User])
     end)
 
     :ok
@@ -171,5 +182,42 @@ defmodule PlenarioWeb.Api.ListControllerTest do
     conn = get(conn, "/api/v2/data-sets/@describe?bbox=#{@chicago_geojson}")
     result = json_response(conn, 200)
     assert length(result["data"]) == 2
+  end
+
+  test "page_size param cannot exceed 5000" do
+    error =
+      get(build_conn(), "/api/v2/data-sets?page_size=5001")
+      |> json_response(422)
+
+    assert error == "__ERROR__"
+  end
+
+  test "page_size param cannot be less than 1" do
+    error =
+      get(build_conn(), "/api/v2/data-sets?page_size=0")
+      |> json_response(422)
+
+    assert error == "__ERROR__"
+  end
+
+  test "page_size param cannot be negative" do
+    error =
+      get(build_conn(), "/api/v2/data-sets?page_size=-1")
+      |> json_response(422)
+
+    assert error == "__ERROR__"
+  end
+
+  test "page_size cannot be a string" do
+    error =
+      get(build_conn(), "/api/v2/data-sets?page_size=string")
+      |> json_response(422)
+
+    assert error == "__ERROR__"
+  end
+
+  test "valid page_size param" do
+    get(build_conn(), "/api/v2/data-sets?page_size=501")
+    |> json_response(200)
   end
 end
