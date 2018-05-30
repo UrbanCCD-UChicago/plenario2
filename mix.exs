@@ -83,6 +83,12 @@ defmodule Plenario.Mixfile do
       # Result pagination libraries
       {:scrivener, "~> 2.5"},
       {:scrivener_ecto, "~> 1.3"},
+
+      # An easy utility for responding with standard HTTP/JSON error payloads 
+      # in Plug and Phoenix based applications.
+      #
+      # MIT
+      {:explode, "~> 1.0.0"}
     ]
   end
 

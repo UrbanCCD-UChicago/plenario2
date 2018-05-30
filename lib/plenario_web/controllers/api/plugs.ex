@@ -34,9 +34,8 @@ defmodule PlenarioWeb.Api.Plugs do
         conn
       false ->
         conn
-        |> put_status(422)  # Indicates request is syntactically correct but unable to be processed.
-        |> json("__ERROR__")  # todo(heyzoos) replace with %Response.Error{} about invalid value
-        |> halt()  # Breaks the request pipeline and returns the `conn` right away.
+        |> put_req_header("accept", "application/vnd.api+json")  # Overwrite the request header to ask for json api content
+        |> Explode.with(422, "Provided page_size '#{page_size}' must be between 0 and #{opts[:page_size_limit]}")
     end
   end
 
@@ -50,9 +49,8 @@ defmodule PlenarioWeb.Api.Plugs do
         with_page_size(%{conn | params: Map.put(conn.params, "page_size", parsed_page_size)}, opts)
       :error ->
         conn
-        |> put_status(422)  # Indicates request is syntactically correct but unable to be processed.
-        |> json("__ERROR__")  # todo(heyzoos) replace with %Response.Error{} about invalid integer
-        |> halt()  # Breaks the request pipeline and returns the `conn` right away.
+        |> put_req_header("accept", "application/vnd.api+json")  # Overwrite the request header to ask for json api content
+        |> Explode.with(422, "Provided page_size '#{page_size}' must be a number.")
     end
   end
 
