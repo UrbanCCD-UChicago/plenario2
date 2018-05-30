@@ -4,7 +4,7 @@ defmodule Plenario.Mixfile do
   def project do
     [
       app: :plenario,
-      version: "0.9.6",
+      version: "0.9.7",
       elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
@@ -83,6 +83,12 @@ defmodule Plenario.Mixfile do
       # Result pagination libraries
       {:scrivener, "~> 2.5"},
       {:scrivener_ecto, "~> 1.3"},
+
+      # An easy utility for responding with standard HTTP/JSON error payloads 
+      # in Plug and Phoenix based applications.
+      #
+      # MIT
+      {:explode, "~> 1.0.0"}
     ]
   end
 

@@ -239,35 +239,23 @@ defmodule PlenarioWeb.Api.AotControllerTest do
   end
 
   test "page_size param cannot exceed 5000" do
-    error =
-      get(build_conn(), "/api/v2/aot?page_size=5001")
-      |> json_response(422)
-
-    assert error == "__ERROR__"
+    get(build_conn(), "/api/v2/aot?page_size=5001")
+    |> json_response(422)
   end
 
   test "page_size param cannot be less than 1" do
-    error =
-      get(build_conn(), "/api/v2/aot?page_size=0")
-      |> json_response(422)
-
-    assert error == "__ERROR__"
+    get(build_conn(), "/api/v2/aot?page_size=0")
+    |> json_response(422)
   end
 
   test "page_size param cannot be negative" do
-    error =
-      get(build_conn(), "/api/v2/aot?page_size=-1")
-      |> json_response(422)
-
-    assert error == "__ERROR__"
+    get(build_conn(), "/api/v2/aot?page_size=-1")
+    |> json_response(422)
   end
 
   test "page_size cannot be a string" do
-    error =
-      get(build_conn(), "/api/v2/aot?page_size=string")
-      |> json_response(422)
-
-    assert error == "__ERROR__"
+    get(build_conn(), "/api/v2/aot?page_size=string")
+    |> json_response(422)
   end
 
   test "valid page_size param" do

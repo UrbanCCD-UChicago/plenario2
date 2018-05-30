@@ -223,35 +223,23 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
   end
 
   test "page_size param cannot exceed 5000", %{slug: slug} do
-    error =
-      get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=5001")
-      |> json_response(422)
-
-    assert error == "__ERROR__"
+    get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=5001")
+    |> json_response(422)
   end
 
   test "page_size param cannot be less than 1", %{slug: slug} do
-    error =
-      get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=0")
-      |> json_response(422)
-
-    assert error == "__ERROR__"
+    get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=0")
+    |> json_response(422)
   end
 
   test "page_size param cannot be negative", %{slug: slug} do
-    error =
-      get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=-1")
-      |> json_response(422)
-
-    assert error == "__ERROR__"
+    get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=-1")
+    |> json_response(422)
   end
 
   test "page_size cannot be a string", %{slug: slug} do
-    error =
-      get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=string")
-      |> json_response(422)
-
-    assert error == "__ERROR__"
+    get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=string")
+    |> json_response(422)
   end
 
   test "valid page_size param", %{slug: slug} do
