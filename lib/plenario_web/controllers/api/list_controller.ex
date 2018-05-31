@@ -1,7 +1,7 @@
 defmodule PlenarioWeb.Api.ListController do
   use PlenarioWeb, :api_controller
   import Ecto.Query
-  import PlenarioWeb.Api.Plugs, only: [with_page_size: 2]
+  import PlenarioWeb.Api.Plugs
   import PlenarioWeb.Api.Utils, only: [render_page: 5, map_to_query: 2]
   alias Plenario.Repo
   alias Plenario.Schemas.Meta
@@ -11,8 +11,8 @@ defmodule PlenarioWeb.Api.ListController do
     def init(opts), do: opts
 
     def call(conn, opts) do
-      columns = 
-        Map.keys(Meta.__struct__) 
+      columns =
+        Map.keys(Meta.__struct__)
         |> Stream.map(&to_string/1)
         # todo(heyzoos) hardcoded removal of bbox so that it doesn't clash
         # todo(heyzoos) there has to be a more elegant way of doing this
@@ -22,10 +22,10 @@ defmodule PlenarioWeb.Api.ListController do
   end
 
   defmodule CaptureBboxArg do
-    def init(opts), do: opts
+
 
     def call(%Plug.Conn{params: %{"bbox" => geojson}} = conn, opts) do
-      json = Poison.decode!(geojson) 
+      json = Poison.decode!(geojson)
       geom = Geo.JSON.decode(json)
       geom = %{geom | srid: 4326}
       query = Map.to_list(%{
@@ -42,8 +42,8 @@ defmodule PlenarioWeb.Api.ListController do
 
   plug(CaptureArgs, assign: :ordering_fields, fields: ["order_by"])
   plug(CaptureArgs, assign: :windowing_fields, fields: ["inserted_at", "updated_at"])
-  plug :with_page_size, default_page_size: 500, page_size_limit: 5000
-  plug(CaptureArgs, assign: :pagination_fields, fields: ["page"])
+  plug :check_page
+  plug :check_page_size, default_page_size: 500, page_size_limit: 5000
   plug(CaptureColumnArgs, assign: :column_fields)
   plug(CaptureBboxArg, assign: :bbox_fields)
 
@@ -55,13 +55,13 @@ defmodule PlenarioWeb.Api.ListController do
     column_fields = Map.get(conn.assigns, :column_fields)
     bbox_query_map = Map.get(conn.assigns, :bbox_fields)
 
-    query = 
+    query =
       Meta
       |> map_to_query(ordering_fields)
       |> map_to_query(windowing_fields)
       |> map_to_query(column_fields)
       |> map_to_query(bbox_query_map)
-    
+
     params = windowing_fields ++ ordering_fields ++ column_fields ++ bbox_query_map
 
     {query, params}
@@ -70,18 +70,17 @@ defmodule PlenarioWeb.Api.ListController do
   @doc """
   Lists all metadata objects satisfying the provided query.
   """
-  def get(conn, %{"page_size" => page_size}) do
-    pagination_fields = Map.get(conn.assigns, :pagination_fields) ++ [page_size: page_size]
+  def get(conn, %{"page" => page, "page_size" => page_size}) do
+    pagination_fields = [page: page, page_size: page_size]
     {query, params_used} = construct_query_from_conn_assigns(conn)
-    # todo(heyzoos) pass in page through params
     page = Repo.paginate(query, pagination_fields)
     render_page(conn, "get.json", params_used ++ pagination_fields, page.entries, page)
   end
 
-  def head(conn, %{"page_size" => _}) do
-    pagination_fields = Map.get(conn.assigns, :pagination_fields) ++ [page_size: 1]
+  def head(conn, %{"page" => page, "page_size" => _}) do
+    pagination_fields = [page: page, page_size: 1]
     {query, params_used} = construct_query_from_conn_assigns(conn)
-    page = Repo.paginate(query, page_size: 1, page: 1)
+    page = Repo.paginate(query, pagination_fields)
     render_page(conn, "get.json", params_used ++ pagination_fields, page.entries, page)
   end
 
@@ -89,8 +88,8 @@ defmodule PlenarioWeb.Api.ListController do
   Lists all single metadata objects satisfying the provided query. The metadata
   objects have all associations preloaded.
   """
-  def describe(conn, %{"page_size" => page_size}) do
-    pagination_fields = Map.get(conn.assigns, :pagination_fields) ++ [page_size: page_size]
+  def describe(conn, %{"page" => page, "page_size" => page_size}) do
+    pagination_fields = [page: page, page_size: page_size]
     {query, params_used} = construct_query_from_conn_assigns(conn)
     page = Repo.paginate(preload(query, ^@associations), pagination_fields)
     render_page(conn, "get.json", params_used ++ pagination_fields, page.entries, page)
