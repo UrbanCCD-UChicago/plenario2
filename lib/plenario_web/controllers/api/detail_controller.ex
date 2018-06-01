@@ -10,9 +10,20 @@ defmodule PlenarioWeb.Api.DetailController do
     def init(opts), do: opts
 
     def call(conn, opts) do
-      meta = MetaActions.get(conn.params["slug"], with_virtual_points: true) 
+      meta = MetaActions.get(conn.params["slug"], with_virtual_points: true)
       columns = MetaActions.get_column_names(meta)
-      vpfs = 
+      input_params = Map.keys(conn.params)
+      allowed_params = columns ++ ["page_size", "slug", "bbox"]
+
+      for p <- input_params do
+        if p not in allowed_params do
+          conn
+          |> put_req_header("accept", "application/vnd.api+json")
+          |> Explode.with(404, "Column not found or bad parameter, check case")
+        end
+      end
+
+      vpfs =
         meta.virtual_points()
         |> Enum.map(fn vpf -> vpf.name() end)
       CaptureArgs.call(conn, opts ++ [fields: columns ++ vpfs])
@@ -27,7 +38,7 @@ defmodule PlenarioWeb.Api.DetailController do
       geom = Poison.decode!(geojson) |>  Geo.JSON.decode()
       geom = %{geom | srid: 4326}
 
-      vpf_query_map = 
+      vpf_query_map =
         meta.virtual_points()
         |> Stream.map(fn vpf -> vpf.name() end)
         |> Enum.map(fn vpf_name -> {vpf_name, {"in", geom}} end)
@@ -53,13 +64,13 @@ defmodule PlenarioWeb.Api.DetailController do
     column_fields = Map.get(conn.assigns, :column_fields)
     bbox_query_map = Map.get(conn.assigns, :bbox_fields)
 
-    query = 
+    query =
       ModelRegistry.lookup(slug)
       |> map_to_query(ordering_fields)
       |> map_to_query(windowing_fields)
       |> map_to_query(column_fields)
       |> map_to_query(bbox_query_map)
-    
+
     params = windowing_fields ++ ordering_fields ++ column_fields ++ bbox_query_map
 
     {query, params}
