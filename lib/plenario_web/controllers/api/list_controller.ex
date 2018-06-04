@@ -22,7 +22,7 @@ defmodule PlenarioWeb.Api.ListController do
   end
 
   defmodule CaptureBboxArg do
-
+    def init(opts), do: opts
 
     def call(%Plug.Conn{params: %{"bbox" => geojson}} = conn, opts) do
       json = Poison.decode!(geojson)
