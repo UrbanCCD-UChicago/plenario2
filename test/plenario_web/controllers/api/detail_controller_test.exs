@@ -87,7 +87,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     conn = get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=5&page=2")
     response = json_response(conn, 200)
     assert length(response["data"]) == 5
-    assert response["meta"]["params"]["page"] == "2"
+    assert response["meta"]["params"]["page"] == 2
     assert response["meta"]["params"]["page_size"] == 5
   end
 
@@ -96,7 +96,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     response = json_response(conn, 200)
 
     assert length(response["data"]) == 5
-    assert response["meta"]["params"]["page"] == "2"
+    assert response["meta"]["params"]["page"] == 2
     assert response["meta"]["params"]["page_size"] == 5
   end
 
@@ -245,5 +245,25 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
   test "valid page_size param", %{slug: slug} do
     get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=501")
     |> json_response(200)
+  end
+
+  test "valid page param", %{slug: slug} do
+    get(build_conn(), "/api/v2/data-sets/#{slug}?page=1")
+    |> json_response(200)
+  end
+
+  test "page param can't be zero", %{slug: slug} do
+    get(build_conn(), "/api/v2/data-sets/#{slug}?page=0")
+    |> json_response(422)
+  end
+
+  test "page param can't be negative", %{slug: slug} do
+    get(build_conn(), "/api/v2/data-sets/#{slug}?page=-1")
+    |> json_response(422)
+  end
+
+  test "page param can't be a word", %{slug: slug} do
+    get(build_conn(), "/api/v2/data-sets/#{slug}?page=wrong")
+    |> json_response(422)
   end
 end
