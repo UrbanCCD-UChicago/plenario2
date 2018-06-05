@@ -3,7 +3,7 @@ defmodule PlenarioWeb.Api.AotController do
 
   import Ecto.Query
   import Geo.PostGIS, only: [st_intersects: 2]
-  import PlenarioWeb.Api.Plugs, only: [with_page_size: 2]
+  import PlenarioWeb.Api.Plugs
   import PlenarioWeb.Api.Utils, only: [render_page: 6]
 
   alias Plenario.Repo
@@ -11,7 +11,8 @@ defmodule PlenarioWeb.Api.AotController do
 
   require Logger
 
-  plug :with_page_size, default_page_size: 500, page_size_limit: 5000
+  plug :check_page
+  plug :check_page_size, default_page_size: 500, page_size_limit: 5000
 
   defp parse_bbox(value) do
     try do

@@ -208,4 +208,24 @@ defmodule PlenarioWeb.Api.ListControllerTest do
     get(build_conn(), "/api/v2/data-sets?page_size=501")
     |> json_response(200)
   end
+
+  test "valid page param" do
+    get(build_conn(), "/api/v2/data-sets?page=1")
+    |> json_response(200)
+  end
+
+  test "page param can't be zero" do
+    get(build_conn(), "/api/v2/data-sets?page=0")
+    |> json_response(422)
+  end
+
+  test "page param can't be negative" do
+    get(build_conn(), "/api/v2/data-sets?page=-1")
+    |> json_response(422)
+  end
+
+  test "page param can't be a word" do
+    get(build_conn(), "/api/v2/data-sets?page=wrong")
+    |> json_response(422)
+  end
 end

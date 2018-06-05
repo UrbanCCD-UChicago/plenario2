@@ -1,6 +1,6 @@
 defmodule PlenarioWeb.Api.DetailController do
   use PlenarioWeb, :api_controller
-  import PlenarioWeb.Api.Plugs, only: [with_page_size: 2]
+  import PlenarioWeb.Api.Plugs
   import PlenarioWeb.Api.Utils, only: [render_page: 5, map_to_query: 2]
   alias Plenario.{ModelRegistry, Repo}
   alias Plenario.Actions.MetaActions
@@ -53,8 +53,8 @@ defmodule PlenarioWeb.Api.DetailController do
 
   plug(CaptureArgs, assign: :ordering_fields, fields: ["order_by"])
   plug(CaptureArgs, assign: :windowing_fields, fields: ["inserted_at", "updated_at"])
-  plug :with_page_size, default_page_size: 500, page_size_limit: 5000
-  plug(CaptureArgs, assign: :pagination_fields, fields: ["page"])
+  plug :check_page
+  plug :check_page_size, default_page_size: 500, page_size_limit: 5000
   plug(CaptureColumnArgs, assign: :column_fields)
   plug(CaptureBboxArg, assign: :bbox_fields)
 
@@ -76,18 +76,17 @@ defmodule PlenarioWeb.Api.DetailController do
     {query, params}
   end
 
-  def get(conn, params = %{"page_size" => page_size}) do
-    pagination_fields = Map.get(conn.assigns, :pagination_fields) ++ [page_size: page_size]
+  def get(conn, params = %{"page" => page, "page_size" => page_size}) do
+    pagination_fields = [page: page, page_size: page_size]
     {query, params_used} = construct_query_from_conn_assigns(conn, params)
-    # todo(heyzoos) pass in page through params
     page = Repo.paginate(query, pagination_fields)
     render_page(conn, "get.json", params_used ++ pagination_fields, page.entries, page)
   end
 
-  def head(conn, params = %{"page_size" => _}) do
-    pagination_fields = Map.get(conn.assigns, :pagination_fields) ++ [page_size: 1]
+  def head(conn, params = %{"page" => page}) do
+    pagination_fields = [page: page, page_size: 1]
     {query, params_used} = construct_query_from_conn_assigns(conn, params)
-    page = Repo.paginate(query, page_size: 1, page: 1)
+    page = Repo.paginate(query, pagination_fields)
     render_page(conn, "get.json", params_used ++ pagination_fields, page.entries, page)
   end
 
