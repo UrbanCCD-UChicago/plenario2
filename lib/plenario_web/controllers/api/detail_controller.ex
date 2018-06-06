@@ -13,7 +13,7 @@ defmodule PlenarioWeb.Api.DetailController do
       meta = MetaActions.get(conn.params["slug"], with_virtual_points: true)
       columns = MetaActions.get_column_names(meta)
       input_params = Map.keys(conn.params)
-      allowed_params = columns ++ ["page_size", "slug", "bbox"]
+      allowed_params = columns ++ ["page", "page_size", "slug", "bbox"]
 
       for p <- input_params do
         if p not in allowed_params do
