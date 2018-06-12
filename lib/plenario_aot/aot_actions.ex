@@ -121,13 +121,6 @@ defmodule PlenarioAot.AotActions do
     end
   end
 
-  def insert_all(meta = %AotMeta{}, records) when is_list(records) do
-    changesets = records
-    |> Stream.map(fn record -> for {k, v} <- record, into: %{}, do: {String.to_atom(k), v} end)
-    |> Enum.map(fn record -> Map.merge(record, %{:aot_meta_id => meta.id()}) end)
-    Repo.insert_all(AotData, changesets, on_conflict: :nothing)
-  end
-
   defp insert_observations(%AotData{} = data) do
     paths_values = get_json_paths_and_values(data.observations)
 
