@@ -1,5 +1,25 @@
 defmodule PlenarioWeb.Api.ShimControllerTest do
   use PlenarioWeb.Testing.ConnCase
+  import PlenarioWeb.Api.Utils, only: [truncate: 1]
+
+  alias Plenario.{
+    ModelRegistry,
+    Repo
+  }
+
+  alias Plenario.Actions.{
+    DataSetActions,
+    DataSetFieldActions,
+    MetaActions, 
+    UniqueConstraintActions,
+    UserActions,
+    VirtualPointFieldActions
+  }
+
+  alias Plenario.Schemas.{Meta, User}
+  alias PlenarioAot.{AotActions, AotData, AotMeta}
+
+  @aot_fixture_path "test/fixtures/aot-chicago.json"
 
   # Setting up the fixure data once _greatly_ reduces the test time. The 
   # downside is that in order to make this work you must be explicit about 
@@ -28,9 +48,12 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
     end)
 
     {:ok, meta} = AotActions.create_meta("Chicago", "https://example.com/")
-    File.read!(@fixture)
-    |> Poison.decode!()
-    |> Enum.map(fn obj -> AotActions.insert_data(meta, obj) end)
+
+    json_records = 
+      File.read!(@aot_fixture_path)
+      |> Poison.decode!()
+
+    AotActions.insert_all(meta, json_records)
     AotActions.compute_and_update_meta_bbox(meta)
     AotActions.compute_and_update_meta_time_range(meta)
 
@@ -46,7 +69,10 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
       truncate([AotMeta, AotData])
     end)
 
-    {:ok, [meta: meta]}
+    {:ok, %{
+      meta: meta,
+      vpf: vpf
+    }}
   end
 
   test "GET /api/v1/data-sets __gt" do
