@@ -1,11 +1,13 @@
 defmodule PlenarioWeb.Api.AotControllerTest do
-  use PlenarioWeb.Testing.ConnCase
+  use ExUnit.Case, async: true
+  use Phoenix.ConnTest
 
   alias Plenario.Repo
   alias PlenarioAot.{AotActions, AotData, AotMeta}
 
   import PlenarioWeb.Api.Utils, only: [truncate: 1]
 
+  @endpoint PlenarioWeb.Endpoint
   @fixture "test/fixtures/aot-chicago.json"
   @total_records 1_365
 
