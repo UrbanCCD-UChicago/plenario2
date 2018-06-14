@@ -1,5 +1,6 @@
 defmodule PlenarioAuth.Testing.AbilitiesTest do
-  use PlenarioWeb.Testing.ConnCase
+  use ExUnit.Case, async: true
+  use Phoenix.ConnTest
 
   alias Plenario.Actions.{
     UserActions,
@@ -10,7 +11,10 @@ defmodule PlenarioAuth.Testing.AbilitiesTest do
     UniqueConstraintActions
   }
 
-  setup %{reg_user: user} do
+  setup_all %{reg_user: user} do
+    Ecto.Adapters.SQL.Sandbox.checkout(Repo)
+    Ecto.Adapters.SQL.Sandbox.mode(Repo, :auto)
+
     {:ok, meta} = MetaActions.create("name", user, "https://example.com/", "csv")
     {:ok, field} = DataSetFieldActions.create(meta, "name", "text")
     {:ok, vdf} = VirtualDateFieldActions.create(meta, field.id)
