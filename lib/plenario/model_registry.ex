@@ -14,11 +14,7 @@ defmodule Plenario.ModelRegistry do
   }
 
   @doc """
-  Entrypoint for the registry. `args` is used to set the initial state of a
-  registry server and is meant to be a map. An empty map is used by default
-  but a prepopulated map can be provided to preload the server.
-
-  Note that by default, this function names the spawned server `__MODULE__1
+  Note that by default, this function names the spawned server `__MODULE__`
   under the assumption that only one registry is in use. This is for usability
   purposes so that clients do not need to explicitly specify the registry name.
 
@@ -26,14 +22,6 @@ defmodule Plenario.ModelRegistry do
 
       iex> alias Plenario.ModelRegistry
       iex> {status, _pid} = ModelRegistry.start_link(%{}, :test)
-      iex> status == :ok
-      true
-
-      iex> alias Plenario.ModelRegistry
-      iex> {status, _pid} = ModelRegistry.start_link(%{
-      ...>   1 => :"Model.ExistingModel",
-      ...>   "slug" => :"Model.ExistingModel"
-      ...> }, :test)
       iex> status == :ok
       true
 
@@ -51,9 +39,9 @@ defmodule Plenario.ModelRegistry do
   end
 
   @doc """
-  Asks the registry to return an atom that identifies an ecto schema that
+  Asks the registry to return an atom identifying an ecto schema that
   corresponds to an instance of `Meta`. A module is created on the fly for
-  the first time a schema is requested.
+  the schema that is requested.
 
   The returned value can be used to compose queries with Ecto's query api.
 
@@ -85,23 +73,16 @@ defmodule Plenario.ModelRegistry do
   end
 
   def handle_call({:lookup, slug}, _sender, state) when is_bitstring(slug) do
-    state =
-      case Map.has_key?(state, slug) do
-        true ->
-          state
-        false ->
-          meta = MetaActions.get(slug, [with_fields: true, with_virtual_points: true])
-          Map.merge(state, register(meta))
-      end
-
-    {:reply, Map.fetch!(state, slug), state}
+    meta = MetaActions.get(slug, [with_fields: true, with_virtual_points: true])
+    schema = register(meta)
+    {:reply, schema, state}
   end
 
   def handle_cast(:clear, _) do
     {:noreply, %{}}
   end
 
-  defp register(meta) do
+  defp register(meta) when not is_nil(meta) do
     module = "Model." <> Slug.slugify(meta.table_name)
     table = meta.table_name
     fields =
@@ -116,10 +97,7 @@ defmodule Plenario.ModelRegistry do
 
     create_module(module, table, fields ++ vpfs)
 
-    %{
-      meta.id => String.to_atom(module),
-      meta.slug => String.to_atom(module)
-    }
+    String.to_atom(module)
   end
 
   defp create_module(module, table, fields) do

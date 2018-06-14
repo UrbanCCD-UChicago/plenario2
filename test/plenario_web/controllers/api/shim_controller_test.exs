@@ -64,8 +64,8 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
 
     {:ok, meta} = AotActions.create_meta("Chicago", "https://example.com/")
 
-      File.read!(@aot_fixture_path)
-      |> Poison.decode!()
+    File.read!(@aot_fixture_path)
+    |> Poison.decode!()
     |> Enum.map(fn obj -> AotActions.insert_data(meta, obj) end)
 
     AotActions.compute_and_update_meta_bbox(meta)
