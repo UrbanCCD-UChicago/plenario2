@@ -9,8 +9,7 @@ defmodule PlenarioAuth.Abilities do
     Meta,
     DataSetField,
     VirtualDateField,
-    VirtualPointField,
-    UniqueConstraint
+    VirtualPointField
   }
 
   alias Plenario.Actions.MetaActions
@@ -67,16 +66,6 @@ defmodule PlenarioAuth.Abilities do
     """
     def can?(%User{}, action, VirtualPointField) when action in [:new, :create], do: true
     def can?(%User{id: user_id}, _, %VirtualPointField{meta_id: meta_id}) do
-      meta = MetaActions.get(meta_id)
-      meta.user_id == user_id
-    end
-
-    @doc """
-    Authenticated users who own the UniqueConstraint's parent Meta are the only
-    users able to access it.
-    """
-    def can?(%User{}, action, UniqueConstraint) when action in [:new, :create], do: true
-    def can?(%User{id: user_id}, _, %UniqueConstraint{meta_id: meta_id}) do
       meta = MetaActions.get(meta_id)
       meta.user_id == user_id
     end

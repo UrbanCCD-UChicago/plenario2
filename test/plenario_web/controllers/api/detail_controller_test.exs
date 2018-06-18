@@ -6,12 +6,11 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     DataSetActions,
     DataSetFieldActions,
     MetaActions,
-    UniqueConstraintActions,
     UserActions,
     VirtualPointFieldActions
   }
 
-  alias Plenario.Schemas.{DataSetField, Meta, UniqueConstraint, User, VirtualPointField}
+  alias Plenario.Schemas.{DataSetField, Meta, User, VirtualPointField}
 
   import PlenarioWeb.Api.Utils, only: [truncate: 1]
 
@@ -23,12 +22,11 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
 
     {:ok, user} = UserActions.create("API Test User", "test@example.com", "password")
     {:ok, meta} = MetaActions.create("API Test Dataset", user.id, "https://www.example.com", "csv")
-    {:ok, pk} = DataSetFieldActions.create(meta.id, "pk", "integer")
+    {:ok, _} = DataSetFieldActions.create(meta.id, "pk", "integer")
     {:ok, _} = DataSetFieldActions.create(meta.id, "datetime", "timestamptz")
     {:ok, location} = DataSetFieldActions.create(meta.id, "location", "text")
     {:ok, _} = DataSetFieldActions.create(meta.id, "data", "text")
     {:ok, vpf} = VirtualPointFieldActions.create(meta, location.id)
-    {:ok, _} = UniqueConstraintActions.create(meta.id, [pk.id])
 
     DataSetActions.up!(meta)
 
@@ -45,7 +43,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
       # Check out again because this callback is run in another process.
       :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
       Ecto.Adapters.SQL.Sandbox.mode(Repo, :auto)
-      truncate([DataSetField, Meta, UniqueConstraint, User, VirtualPointField, model])
+      truncate([DataSetField, Meta, User, VirtualPointField, model])
     end)
 
     %{slug: meta.slug(), vpf: vpf}

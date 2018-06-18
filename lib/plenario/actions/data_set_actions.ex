@@ -5,7 +5,6 @@ defmodule Plenario.Actions.DataSetActions do
   alias Plenario.Repo
 
   alias Plenario.Actions.{
-    DataSetFieldActions,
     MetaActions,
     VirtualDateFieldActions,
     VirtualPointFieldActions
@@ -19,18 +18,9 @@ defmodule Plenario.Actions.DataSetActions do
       meta_id,
       with_fields: true,
       with_virtual_dates: true,
-      with_virtual_points: true,
-      with_constraints: true)
+      with_virtual_points: true)
 
-    # create the table with fields and constraints
-    constraints = for uc <- meta.unique_constraints do
-      field_names =
-        DataSetFieldActions.list(by_ids: uc.field_ids)
-        |> Enum.map(fn f -> f.name end)
-        |> Enum.join("\", \"")
-      {uc.name, field_names}
-    end
-    sql = create_table_sql(meta, constraints)
+    sql = create_table_sql(meta, [])
     execute_sql!(sql)
 
     # create timestamp parsing function and trigger

@@ -10,8 +10,7 @@ defmodule Plenario.Actions.MetaActionsTest do
     DataSetFieldActions,
     MetaActions,
     VirtualDateFieldActions,
-    VirtualPointFieldActions,
-    UniqueConstraintActions
+    VirtualPointFieldActions
   }
 
   defp mock_200(_) do
@@ -267,14 +266,12 @@ defmodule Plenario.Actions.MetaActionsTest do
       {:ok, loc} = DataSetFieldActions.create(meta, "location", "text")
       {:ok, _} = VirtualDateFieldActions.create(meta.id, yr.id)
       {:ok, _} = VirtualPointFieldActions.create(meta.id, loc.id)
-      {:ok, _} = UniqueConstraintActions.create(meta, [yr.id])
 
       meta =
         MetaActions.get(
-          meta.id, with_virtual_dates: true, with_virtual_points: true, with_constraints: true)
+          meta.id, with_virtual_dates: true, with_virtual_points: true)
       assert length(meta.virtual_dates) == 1
       assert length(meta.virtual_points) == 1
-      assert length(meta.unique_constraints) == 1
     end
   end
 
@@ -340,7 +337,7 @@ defmodule Plenario.Actions.MetaActionsTest do
   end
 
   test "compute_time_range!", %{meta: meta} do
-    {:ok, pk} = DataSetFieldActions.create(meta, "id", "integer")
+    {:ok, _} = DataSetFieldActions.create(meta, "id", "integer")
     {:ok, _} = DataSetFieldActions.create(meta, "observation", "float")
     {:ok, _} = DataSetFieldActions.create(meta, "date", "timestamptz")
     {:ok, yr} = DataSetFieldActions.create(meta, "year", "integer")
@@ -350,7 +347,6 @@ defmodule Plenario.Actions.MetaActionsTest do
     {:ok, lon} = DataSetFieldActions.create(meta, "lon", "float")
     {:ok, _} = VirtualDateFieldActions.create(meta.id, yr.id, month_field_id: mo.id, day_field_id: day.id)
     {:ok, _} = VirtualPointFieldActions.create(meta.id, lat.id, lon.id)
-    {:ok, _} = UniqueConstraintActions.create(meta.id, [pk.id])
 
     DataSetActions.up!(meta)
 
@@ -370,7 +366,7 @@ defmodule Plenario.Actions.MetaActionsTest do
   end
 
   test "compute_bbox!", %{meta: meta} do
-    {:ok, pk} = DataSetFieldActions.create(meta, "id", "integer")
+    {:ok, _} = DataSetFieldActions.create(meta, "id", "integer")
     {:ok, _} = DataSetFieldActions.create(meta, "observation", "float")
     {:ok, _} = DataSetFieldActions.create(meta, "date", "timestamptz")
     {:ok, yr} = DataSetFieldActions.create(meta, "year", "integer")
@@ -380,7 +376,6 @@ defmodule Plenario.Actions.MetaActionsTest do
     {:ok, lon} = DataSetFieldActions.create(meta, "lon", "float")
     {:ok, _} = VirtualDateFieldActions.create(meta.id, yr.id, month_field_id: mo.id, day_field_id: day.id)
     {:ok, _} = VirtualPointFieldActions.create(meta.id, lat.id, lon.id)
-    {:ok, _} = UniqueConstraintActions.create(meta.id, [pk.id])
 
     DataSetActions.up!(meta)
 
@@ -406,7 +401,7 @@ defmodule Plenario.Actions.MetaActionsTest do
   # todo(heyzoos) If I mock up! I also have to mock down? Investigate.
   # todo(heyzoos) Add a test to make sure down! cleans up properly.
   test "approve/1 with failing call to `up!/1`", %{meta: meta} do
-    with_mock(DataSetActions, 
+    with_mock(DataSetActions,
       up!: fn _ -> raise(Postgrex.Error, message: "Intentional Postgres.Error") end,
       down!: fn _ -> :ok end
     ) do

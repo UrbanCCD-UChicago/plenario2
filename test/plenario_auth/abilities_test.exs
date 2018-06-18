@@ -6,8 +6,7 @@ defmodule PlenarioAuth.Testing.AbilitiesTest do
     MetaActions,
     DataSetFieldActions,
     VirtualDateFieldActions,
-    VirtualPointFieldActions,
-    UniqueConstraintActions
+    VirtualPointFieldActions
   }
 
   setup %{reg_user: user} do
@@ -15,9 +14,8 @@ defmodule PlenarioAuth.Testing.AbilitiesTest do
     {:ok, field} = DataSetFieldActions.create(meta, "name", "text")
     {:ok, vdf} = VirtualDateFieldActions.create(meta, field.id)
     {:ok, vpf} = VirtualPointFieldActions.create(meta, field.id)
-    {:ok, uc} = UniqueConstraintActions.create(meta, [field.id])
 
-    {:ok, [meta: meta, field: field, vdf: vdf, vpf: vpf, uc: uc]}
+    {:ok, [meta: meta, field: field, vdf: vdf, vpf: vpf]}
   end
 
   describe "anonymous user" do
@@ -55,13 +53,6 @@ defmodule PlenarioAuth.Testing.AbilitiesTest do
       |> get(virtual_point_path(conn, :edit, meta.id, vpf.id))
       |> response(:forbidden)
     end
-
-    @tag :anon
-    test "are forbidden from unique constraint actions", %{conn: conn, meta: meta, uc: uc} do
-      conn
-      |> get(unique_constraint_path(conn, :edit, meta.id, uc.id))
-      |> response(:forbidden)
-    end
   end
 
   describe "authenticated user who owns the parent meta" do
@@ -92,13 +83,6 @@ defmodule PlenarioAuth.Testing.AbilitiesTest do
       |> get(virtual_point_path(conn, :edit, meta.id, vpf.id))
       |> html_response(:ok)
     end
-
-    @tag :auth
-    test "can access all unique constraint actions", %{conn: conn, meta: meta, uc: uc} do
-      conn
-      |> get(unique_constraint_path(conn, :edit, meta.id, uc.id))
-      |> html_response(:ok)
-    end
   end
 
   describe "authenticated user who doesn't own the parent meta" do
@@ -108,9 +92,8 @@ defmodule PlenarioAuth.Testing.AbilitiesTest do
       {:ok, field} = DataSetFieldActions.create(meta, "name", "text")
       {:ok, vdf} = VirtualDateFieldActions.create(meta, field.id)
       {:ok, vpf} = VirtualPointFieldActions.create(meta, field.id)
-      {:ok, uc} = UniqueConstraintActions.create(meta, [field.id])
 
-      {:ok, [new_meta: meta, new_field: field, new_vdf: vdf, new_vpf: vpf, new_uc: uc]}
+      {:ok, [new_meta: meta, new_field: field, new_vdf: vdf, new_vpf: vpf]}
     end
 
     @tag :auth
@@ -147,13 +130,6 @@ defmodule PlenarioAuth.Testing.AbilitiesTest do
       |> get(virtual_point_path(conn, :edit, meta.id, vpf.id))
       |> response(:forbidden)
     end
-
-    @tag :auth
-    test "are forbidden from unique constraint actions", %{conn: conn, new_meta: meta, new_uc: uc} do
-      conn
-      |> get(unique_constraint_path(conn, :edit, meta.id, uc.id))
-      |> response(:forbidden)
-    end
   end
 
   describe "admin users" do
@@ -182,13 +158,6 @@ defmodule PlenarioAuth.Testing.AbilitiesTest do
     test "can access all virtual point field actions", %{conn: conn, meta: meta, vpf: vpf} do
       conn
       |> get(virtual_point_path(conn, :edit, meta.id, vpf.id))
-      |> html_response(:ok)
-    end
-
-    @tag :admin
-    test "can access all unique constraint actions", %{conn: conn, meta: meta, uc: uc} do
-      conn
-      |> get(unique_constraint_path(conn, :edit, meta.id, uc.id))
       |> html_response(:ok)
     end
   end

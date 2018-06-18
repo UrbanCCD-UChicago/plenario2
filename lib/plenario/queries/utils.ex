@@ -16,7 +16,7 @@ defmodule Plenario.Queries.Utils do
     from(u in User)
     |> bool_compose(some_testable_value, UserQueries, :is_active?)
   """
-  @spec bool_compose(query :: Ecto.Query.t(), condition :: boolean, module :: Module, function :: atom) :: Ecto.Query.t()
+  @spec bool_compose(Ecto.Queryable.t, boolean, module, atom) :: Ecto.Queryable.t
   def bool_compose(query, condition, module, function) do
     if condition do
       apply(module, function, [query])
@@ -34,7 +34,7 @@ defmodule Plenario.Queries.Utils do
     from(u in User)
     |> filter_compose("test@example.com", UserQueries, :get)
   """
-  @spec filter_compose(query :: Ecto.Query.t(), value :: any, module :: Module, function :: atom) :: Ecto.Query.t()
+  @spec filter_compose(Ecto.Queryable.t, any, module, atom) :: Ecto.Queryable.t
   def filter_compose(query, value, module, function) do
     if value != :dont_use_me do
       apply(module, function, [query, value])

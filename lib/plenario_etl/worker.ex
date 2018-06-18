@@ -9,7 +9,7 @@ defmodule PlenarioEtl.Worker do
 
   alias Plenario.ModelRegistry
 
-  alias Plenario.Actions.{MetaActions, UniqueConstraintActions}
+  alias Plenario.Actions.MetaActions
 
   alias PlenarioEtl.Actions.EtlJobActions
 
@@ -51,19 +51,12 @@ defmodule PlenarioEtl.Worker do
       |> Enum.map(fn c -> String.to_atom(c) end)
     Logger.info("got columns for model -> #{inspect(columns)}")
 
-    constraints =
-      UniqueConstraintActions.list(for_meta: meta)
-      |> List.first()
-      |> UniqueConstraintActions.get_field_names()
-      |> Enum.map(fn c -> String.to_atom(c) end)
-    Logger.info("got constraints for model -> #{inspect(constraints)}")
-
     # load data
     {outcome, errors} =
       case meta.source_type do
-        "json" -> load_json!(path, model, columns, constraints)
-        "csv" -> load_csv!(path, model, columns, constraints)
-        "tsv" -> load_tsv!(path, model, columns, constraints)
+        "json" -> load_json!(path, model, columns)
+        "csv" -> load_csv!(path, model, columns)
+        "tsv" -> load_tsv!(path, model, columns)
         "shp" -> load_shp!(path, meta)
       end
 
@@ -100,28 +93,28 @@ defmodule PlenarioEtl.Worker do
     path
   end
 
-  defp load_json!(path, model, columns, constraints) do
+  defp load_json!(path, model, columns) do
     Logger.info("using json loader")
 
-    load!(model, path, columns, constraints, fn pth ->
+    load!(model, path, columns, fn pth ->
       File.read!(pth)
       |> Poison.decode!()
     end)
   end
 
-  defp load_csv!(path, model, columns, constraints) do
+  defp load_csv!(path, model, columns) do
     Logger.info("using csv loader")
 
-    load!(model, path, columns, constraints, fn pth ->
+    load!(model, path, columns, fn pth ->
       File.stream!(pth)
       |> CSV.decode!(headers: true)
     end)
   end
 
-  defp load_tsv!(path, model, columns, constraints) do
+  defp load_tsv!(path, model, columns) do
     Logger.info("using tsv loader")
 
-    load!(model, path, columns, constraints, fn _pth ->
+    load!(model, path, columns, fn _pth ->
       File.stream!(path)
       |> CSV.decode!(headers: true, separator: ?\t)
     end)
@@ -147,7 +140,7 @@ defmodule PlenarioEtl.Worker do
     end
   end
 
-  defp load!(model, path, columns, constraints, decode) do
+  defp load!(model, path, columns, decode) do
     Logger.info("ripping file")
 
     results =
@@ -157,7 +150,7 @@ defmodule PlenarioEtl.Worker do
 
         res =
           cast(model, row, columns)
-          |> Repo.insert(on_conflict: :replace_all, conflict_target: constraints)
+          |> Repo.insert()
 
         Logger.debug("#{inspect(res)}")
 
