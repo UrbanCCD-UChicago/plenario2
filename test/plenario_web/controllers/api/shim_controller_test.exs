@@ -34,7 +34,7 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
   }
 
   @aot_fixture_path "test/fixtures/aot-chicago-future.json"
-  @endpoint PlenarioWeb.Endpoint
+  # @endpoint PlenarioWeb.Endpoint
 
   # Setting up the fixure data once _greatly_ reduces the test time. The 
   # downside is that in order to make this work you must be explicit about 

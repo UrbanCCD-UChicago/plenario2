@@ -1,5 +1,5 @@
 defmodule PlenarioWeb.Api.ListControllerTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
   use Phoenix.ConnTest
 
   alias Plenario.Actions.UserActions
