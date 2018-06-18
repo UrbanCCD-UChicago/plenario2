@@ -1,5 +1,5 @@
 defmodule PlenarioWeb.Api.UtilsTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
   import PlenarioWeb.Api.Utils
 
   # todo(heyzoos) all this could be pushed up to the conn test helper when we

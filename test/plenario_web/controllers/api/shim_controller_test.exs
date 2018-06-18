@@ -1,5 +1,5 @@
 defmodule PlenarioWeb.Api.ShimControllerTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
   use Phoenix.ConnTest
 
   import PlenarioWeb.Api.Utils, only: [truncate: 1]
