@@ -43,7 +43,7 @@ defmodule Plenario.Testing.EtlCase do
     {:ok, meta} = MetaActions.create("Test Dataset", user.id, "https://www.example.com", "csv")
 
     {:ok, _} = DataSetFieldActions.create(meta.id, "pk", "integer")
-    {:ok, _} = DataSetFieldActions.create(meta.id, "datetime", "timestamptz")
+    {:ok, _} = DataSetFieldActions.create(meta.id, "datetime", "timestamp")
     {:ok, _} = DataSetFieldActions.create(meta.id, "location", "text")
     {:ok, _} = DataSetFieldActions.create(meta.id, "data", "text")
 

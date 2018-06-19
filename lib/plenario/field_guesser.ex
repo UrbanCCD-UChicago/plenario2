@@ -119,7 +119,7 @@ defmodule Plenario.FieldGuesser do
       boolean?(value) -> "boolean"
       integer?(value) -> "integer"
       float?(value) -> "float"
-      date?(value) -> "timestamptz"
+      date?(value) -> "timestamp"
       json?(value) -> "jsonb"
       true -> "text"
     end

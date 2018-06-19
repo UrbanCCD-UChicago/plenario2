@@ -88,7 +88,7 @@ defmodule Plenario.Schemas.Meta do
     field :next_import, :utc_datetime, default: nil
 
     field :bbox, Geo.Polygon, default: nil
-    field :time_range, Plenario.TsTzRange, default: nil
+    field :time_range, Plenario.TsRange, default: nil
 
     timestamps(type: :utc_datetime)
 
@@ -141,7 +141,7 @@ defmodule Plenario.Schemas.Meta do
   end
 
   def get_time_range_string(%Meta{time_range: nil}), do: "-"
-  def get_time_range_string(%Meta{time_range: [lower, upper]}) do
-    "#{lower} to #{upper}"
+  def get_time_range_string(%Meta{time_range: range}) do
+    "#{range.lower} to #{range.upper}"
   end
 end

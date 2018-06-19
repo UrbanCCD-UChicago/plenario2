@@ -1,36 +1,24 @@
 defmodule PlenarioWeb.Api.AotControllerTest do
   use PlenarioWeb.Testing.ConnCase
 
-  alias Plenario.Repo
-  alias PlenarioAot.{AotActions, AotData, AotMeta}
-
-  import PlenarioWeb.Api.Utils, only: [truncate: 1]
+  alias PlenarioAot.AotActions
 
   @fixture "test/fixtures/aot-chicago.json"
-  @total_records 1_365
 
-  # Setting up the fixure data once _greatly_ reduces the test time. Drops this particular test
-  # case from 40s to 11s as of writing. The downside is that in order to make this work you must
-  # be explicit about database connection ownership and you must also clean up the tests yourself.
-  setup_all do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
-    Ecto.Adapters.SQL.Sandbox.mode(Repo, :auto)
+  @total_records 10
+
+  setup do
+    Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
+    Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
 
     {:ok, meta} = AotActions.create_meta("Chicago", "https://example.com/")
+
     File.read!(@fixture)
     |> Poison.decode!()
-    |> Enum.map(fn obj -> AotActions.insert_data(meta, obj) end)
+    |> Enum.map(fn obj -> {:ok, _} = AotActions.insert_data(meta, obj) end)
+
     AotActions.compute_and_update_meta_bbox(meta)
     AotActions.compute_and_update_meta_time_range(meta)
-
-    # Registers a callback that runs once (because we're in setup_all) after all the tests have run. Use to clean up!
-    # If things screw up and this isn't called properly, `env MIX_ENV=test mix ecto.drop` (bash) is your friend.
-    on_exit(fn ->
-      # Check out again because this callback is run in another process.
-      :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
-      Ecto.Adapters.SQL.Sandbox.mode(Repo, :auto)
-      truncate([AotMeta, AotData])
-    end)
 
     {:ok, [meta: meta]}
   end
@@ -58,7 +46,7 @@ defmodule PlenarioWeb.Api.AotControllerTest do
     assert counts["total_records"] == @total_records
 
     assert is_list(data)
-    assert length(data) == 500
+    assert length(data) == @total_records
     first = Enum.at(data, 0)
     assert is_map(first)
     assert Map.has_key?(first, "node_id")
@@ -200,17 +188,17 @@ defmodule PlenarioWeb.Api.AotControllerTest do
     end
 
     test "node_id", %{conn: conn} do
-      conn = get(conn, "/api/v2/aot?node_id=088")
+      conn = get(conn, "/api/v2/aot?node_id=080")
       %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == 70
+      assert meta["counts"]["total_records"] == @total_records
 
       conn = get(conn, "/api/v2/aot?node_id=000")
       %{"meta" => meta, "data" => _} = json_response(conn, 200)
       assert meta["counts"]["total_records"] == 0
 
-      conn = get(conn, "/api/v2/aot?node_id=000&node_id=088")
+      conn = get(conn, "/api/v2/aot?node_id=000&node_id=080")
       %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == 70
+      assert meta["counts"]["total_records"] == @total_records
     end
 
     test "sensor", %{conn: conn} do
@@ -228,9 +216,9 @@ defmodule PlenarioWeb.Api.AotControllerTest do
     end
 
     test "network_name and node_id", %{conn: conn} do
-      conn = get(conn, "/api/v2/aot?network_name=chicago&node_id=088")
+      conn = get(conn, "/api/v2/aot?network_name=chicago&node_id=080")
       %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == 70
+      assert meta["counts"]["total_records"] == @total_records
     end
 
     # TODO: write test after implementation

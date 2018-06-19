@@ -1,10 +1,10 @@
 defmodule Plenario.Queries.Utils do
 
   @doc """
-  Creates a fragment that applied the Postgres timestamptz range interset.
+  Creates a fragment that applied the Postgres timestamp range interset.
   """
-  defmacro tstzrange_intersects(meta_tstzrange, filter_tstzrange) do
-    quote do: fragment("?::tstzrange && ?::tstzrange", unquote(meta_tstzrange), unquote(filter_tstzrange))
+  defmacro tsrange_intersects(meta_tsrange, filter_tsrange) do
+    quote do: fragment("?::tsrange && ?::tsrange", unquote(meta_tsrange), unquote(filter_tsrange))
   end
 
   @doc """

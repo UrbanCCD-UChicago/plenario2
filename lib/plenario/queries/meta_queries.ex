@@ -13,7 +13,7 @@ defmodule Plenario.Queries.MetaQueries do
 
   import Geo.PostGIS, only: [st_intersects: 2]
 
-  import Plenario.Queries.Utils, only: [tstzrange_intersects: 2]
+  import Plenario.Queries.Utils, only: [tsrange_intersects: 2]
 
   alias Plenario.Queries.{Utils, MetaQueries}
 
@@ -161,7 +161,7 @@ defmodule Plenario.Queries.MetaQueries do
   with the time range param.
   """
   @spec time_range_intersects(query :: Ecto.Query.t(), user :: User) :: Ecto.Query.t()
-  def time_range_intersects(query, time_range), do: from m in query, where: tstzrange_intersects(m.time_range, ^time_range)
+  def time_range_intersects(query, time_range), do: from m in query, where: tsrange_intersects(m.time_range, ^time_range)
 
   @doc """
   Conditionally applies boolean and filter composable queries to the given

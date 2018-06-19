@@ -18,37 +18,47 @@ defmodule PlenarioWeb.Api.UtilsTest do
     {:ok, user} = UserActions.create("API Test User", "test@example.com", "password")
     {:ok, meta} = MetaActions.create("API Test Dataset", user.id, "https://www.example.com", "csv")
     {:ok, _} = DataSetFieldActions.create(meta.id, "pk", "integer")
-    {:ok, _} = DataSetFieldActions.create(meta.id, "datetime", "timestamptz")
+    {:ok, _} = DataSetFieldActions.create(meta.id, "datetime", "timestamp")
     {:ok, _} = DataSetFieldActions.create(meta.id, "data", "text")
     {:ok, location} = DataSetFieldActions.create(meta.id, "location", "text")
     {:ok, vpf} = VirtualPointFieldActions.create(meta, location.id)
 
     DataSetActions.up!(meta)
 
-    # Insert 100 empty rows
     ModelRegistry.clear()
-    model = ModelRegistry.lookup(meta.slug())
-    (1..50) |> Enum.each(fn _ ->
-      Repo.insert(%{model.__struct__ | datetime: "2000-01-01 00:00:00"})
-    end)
 
-    (50..100) |> Enum.each(fn _ ->
-      Repo.insert(%{model.__struct__ | datetime: "2000-01-02 00:00:00"})
-    end)
+    insert = """
+    INSERT INTO "#{meta.table_name}"
+      (pk, datetime, data, location)
+    VALUES
+      (1, '2000-01-01 00:00:00', null, null),
+      (2, '2000-01-01 00:00:00', null, null),
+      (3, '2000-01-01 00:00:00', null, null),
+      (4, '2000-01-01 00:00:00', null, null),
+      (5, '2000-01-01 00:00:00', null, null),
+      (6, '2000-01-02 00:00:00', null, null),
+      (7, '2000-01-02 00:00:00', null, null),
+      (8, '2000-01-02 00:00:00', null, null),
+      (9, '2000-01-02 00:00:00', null, null),
+      (10, '2000-01-02 00:00:00', null, null),
+      (11, null, null, '(50, 50)'),
+      (12, null, null, '(50, 50)'),
+      (13, null, null, '(50, 50)'),
+      (14, null, null, '(50, 50)'),
+      (15, null, null, '(50, 50)');
+    """
+    Ecto.Adapters.SQL.query!(Repo, insert)
 
+    refresh = """
+    REFRESH MATERIALIZED VIEW "#{meta.table_name}_view";
+    """
+    Ecto.Adapters.SQL.query!(Repo, refresh)
 
-    (100..120) |> Enum.each(fn _ ->
-      Repo.insert(%{model.__struct__ | location: "(50, 50)"})
-    end)
-
-    # vpf: virtual point field
     %{slug: meta.slug(), vpf: vpf}
   end
 
   test "map_to_query/2", %{slug: slug} do
     query_map = %{
-      "inserted_at" => {"le", "2000-01-01 13:30:15"},
-      "updated_at" => {"lt", "2000-01-01 13:30:15"},
       "float_column" => {"ge", 0.0},
       "integer_column" => {"gt", 42},
       "string_column" => {"eq", "hello!"}
@@ -71,7 +81,7 @@ defmodule PlenarioWeb.Api.UtilsTest do
 
     results = Repo.all(query)
 
-    assert length(results) == 21
+    assert length(results) == 5
   end
 
   test "generates a ranged query using bounding values", %{slug: slug} do
@@ -83,6 +93,6 @@ defmodule PlenarioWeb.Api.UtilsTest do
 
     results = Repo.all(query)
 
-    assert length(results) == 50
+    assert length(results) == 5
   end
 end

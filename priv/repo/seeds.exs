@@ -49,7 +49,7 @@ defmodule Plenario.DevSeed do
     {:ok, _} = DataSetFieldActions.create(meta, "DNA Reading Mean", "float")
     {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample 1 Reading", "float")
     {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample 2 Reading", "float")
-    {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample Timestamp", "timestamptz")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample Timestamp", "timestamp")
     {:ok, loc} = DataSetFieldActions.create(meta, "Location", "text")
     {:ok, _} = VirtualPointFieldActions.create(meta, loc.id)
 

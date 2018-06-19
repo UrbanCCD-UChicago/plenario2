@@ -1,0 +1,3 @@
+COPY "<%= table_name %>"
+("<%= headers %>")
+FROM STDIN USING DELIMITERS '<%= delimiter %>' CSV HEADER;

@@ -10,41 +10,48 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     VirtualPointFieldActions
   }
 
-  alias Plenario.Schemas.{DataSetField, Meta, User, VirtualPointField}
-
-  import PlenarioWeb.Api.Utils, only: [truncate: 1]
-
-  # Setting up the fixure data once _greatly_ reduces the test time. The downside is that in order to make this work
-  # you must be explicit about database connection ownership and you must also clean up the tests yourself.
-  setup_all do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
-    Ecto.Adapters.SQL.Sandbox.mode(Repo, :auto)
+  setup do
+    Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
+    Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
 
     {:ok, user} = UserActions.create("API Test User", "test@example.com", "password")
     {:ok, meta} = MetaActions.create("API Test Dataset", user.id, "https://www.example.com", "csv")
     {:ok, _} = DataSetFieldActions.create(meta.id, "pk", "integer")
-    {:ok, _} = DataSetFieldActions.create(meta.id, "datetime", "timestamptz")
-    {:ok, location} = DataSetFieldActions.create(meta.id, "location", "text")
+    {:ok, _} = DataSetFieldActions.create(meta.id, "datetime", "timestamp")
     {:ok, _} = DataSetFieldActions.create(meta.id, "data", "text")
+    {:ok, location} = DataSetFieldActions.create(meta.id, "location", "text")
     {:ok, vpf} = VirtualPointFieldActions.create(meta, location.id)
 
     DataSetActions.up!(meta)
 
-    # Insert 100 empty rows
     ModelRegistry.clear()
-    model = ModelRegistry.lookup(meta.slug())
-    (1..100) |> Enum.each(fn _ ->
-      Repo.insert(%{model.__struct__ | datetime: "2500-01-01 00:00:00", location: "(50, 50)"})
-    end)
 
-    # Registers a callback that runs once (because we're in setup_all) after all the tests have run. Use to clean up!
-    # If things screw up and this isn't called properly, `env MIX_ENV=test mix ecto.drop` (bash) is your friend.
-    on_exit(fn ->
-      # Check out again because this callback is run in another process.
-      :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
-      Ecto.Adapters.SQL.Sandbox.mode(Repo, :auto)
-      truncate([DataSetField, Meta, User, VirtualPointField, model])
-    end)
+    insert = """
+    INSERT INTO "#{meta.table_name}"
+      (pk, datetime, data, location)
+    VALUES
+      (1, '2000-01-01 00:00:00', null, null),
+      (2, '2000-01-01 00:00:00', null, null),
+      (3, '2000-01-01 00:00:00', null, null),
+      (4, '2000-01-01 00:00:00', null, null),
+      (5, '2000-01-01 00:00:00', null, null),
+      (6, '2000-01-02 00:00:00', null, null),
+      (7, '2000-01-02 00:00:00', null, null),
+      (8, '2000-01-02 00:00:00', null, null),
+      (9, '2000-01-02 00:00:00', null, null),
+      (10, '2000-01-02 00:00:00', null, null),
+      (11, null, null, '(50, 50)'),
+      (12, null, null, '(50, 50)'),
+      (13, null, null, '(50, 50)'),
+      (14, null, null, '(50, 50)'),
+      (15, null, null, '(50, 50)');
+    """
+    Ecto.Adapters.SQL.query!(Repo, insert)
+
+    refresh = """
+    REFRESH MATERIALIZED VIEW "#{meta.table_name}_view";
+    """
+    Ecto.Adapters.SQL.query!(Repo, refresh)
 
     %{slug: meta.slug(), vpf: vpf}
   end
@@ -52,7 +59,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
   test "GET /api/v2/data-sets/:slug", %{slug: slug} do
     conn = get(build_conn(), "/api/v2/data-sets/#{slug}")
     response = json_response(conn, 200)
-    assert length(response["data"]) == 100
+    assert length(response["data"]) == 15
   end
 
   test "GET /api/v2/data-sets/:slug/@head", %{slug: slug} do
@@ -64,7 +71,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
   test "GET /api/v2/data-sets/:slug/@describe", %{slug: slug} do
     conn = get(build_conn(), "/api/v2/data-sets/#{slug}/@describe")
     response = json_response(conn, 200)
-    assert length(response["data"]) == 100
+    assert length(response["data"]) == 15
   end
 
   test "GET /api/v2/data-sets/:slug pagination page parameter", %{slug: slug} do
@@ -78,7 +85,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     conn = get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=10")
     response = json_response(conn, 200)
     assert length(response["data"]) == 10
-    assert response["meta"]["counts"]["total_pages"] == 10
+    assert response["meta"]["counts"]["total_pages"] == 2
   end
 
   test "GET /api/v2/data-sets/:slug pagination page and page_size parameters", %{slug: slug} do
@@ -142,7 +149,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
       """
     conn = get(build_conn(), "/api/v2/data-sets/#{slug}?bbox=#{geojson}")
     response = json_response(conn, 200)
-    assert length(response["data"]) == 100
+    assert length(response["data"]) == 5
   end
 
   test "GET /api/v2/data-sets/:slug bbox query no results", %{slug: slug} do
@@ -169,11 +176,11 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
   test "GET /api/v2/data-sets/:slug range query", %{slug: slug} do
     conn = get(build_conn(), "/api/v2/data-sets/#{slug}?datetime=in:{\"upper\": \"3000-01-01\", \"lower\": \"2000-01-01\"}")
     response = json_response(conn, 200)
-    assert length(response["data"]) == 100
+    assert length(response["data"]) == 15
   end
 
   test "GET /api/v2/data-sets/:slug range query no results", %{slug: slug} do
-    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?datetime=in:{\"upper\": \"2000-01-01\", \"lower\": \"3000-01-01\"}")
+    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?datetime=in:{\"upper\": \"2000-01-01 00:00:00\", \"lower\": \"3000-01-01 00:00:00\"}")
     response = json_response(conn, 200)
     assert length(response["data"]) == 0
   end
@@ -196,7 +203,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
       """
     conn = get(build_conn(), "/api/v2/data-sets/#{slug}?#{vpf.id}=in:#{geojson}")
     response = json_response(conn, 200)
-    assert length(response["data"]) == 100
+    assert length(response["data"]) == 15
   end
 
   test "GET /api/v2/data-sets/:slug location query no results", %{slug: slug, vpf: vpf} do

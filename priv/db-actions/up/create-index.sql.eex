@@ -1,0 +1,3 @@
+CREATE INDEX ON "<%= view_name %>"
+<%= if using do %>USING <%= using %><% end %>
+("<%= field %>");

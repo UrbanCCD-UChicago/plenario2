@@ -152,8 +152,19 @@ defmodule PlenarioWeb.Api.Utils do
   This function generates a ranged query for the given bounds.
   """
   def where_condition(query, {column, {"in", %{"lower" => lower, "upper" => upper}}}) do
-    where_condition(query, {column, {"ge", lower}})
-    |> where_condition({column, {"le", upper}})
+    case NaiveDateTime.from_iso8601(lower) do
+      {:ok, lower} ->
+        case NaiveDateTime.from_iso8601(upper) do
+          {:ok, upper} ->
+            where_condition(query, {column, {"ge", lower}}) |> where_condition({column, {"le", upper}})
+
+          _ ->
+            query
+        end
+
+      _ ->
+        query
+    end
   end
 
   @doc """

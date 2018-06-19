@@ -1,11 +1,7 @@
 defmodule PlenarioWeb.Api.ListControllerTest do
   use PlenarioWeb.Testing.ConnCase
 
-  alias Plenario.Actions.UserActions
-  alias Plenario.Schemas.{Meta, User}
-  alias Plenario.Repo
-
-  import PlenarioWeb.Api.Utils, only: [truncate: 1]
+  alias Plenario.Actions.{UserActions, MetaActions}
 
   @seattle_geojson """
     {
@@ -67,46 +63,28 @@ defmodule PlenarioWeb.Api.ListControllerTest do
     }
     """
 
-  setup_all do
-    Ecto.Adapters.SQL.Sandbox.checkout(Repo)
-    Ecto.Adapters.SQL.Sandbox.mode(Repo, :auto)
+  setup do
+    Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
+    Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
 
     {:ok, user} = UserActions.create("API Test User", "test@example.com", "password")
     seattle_geom = @seattle_geojson |> Poison.decode!() |> Geo.JSON.decode()
     chicago_geom = @chicago_geojson |> Poison.decode!() |> Geo.JSON.decode()
 
-    (1..3) |> Enum.each(fn i ->
-      Repo.insert(%{Meta.__struct__ |
-        user: user,
-        name: "API Test Dataset #{i}",
-        slug: "api_test_dataset_#{i}",
-        table_name: "ds_wootyhooty_#{i}",
-        source_url: "https://www.example.com/#{i}",
-        source_type: "csv",
-        bbox: %{seattle_geom | srid: 4326}
-      })
-    end)
+    {:ok, chi_1} = MetaActions.create("API Test Dataset 1", user, "https://www.example.com/1", "csv")
+    {:ok, chi_2} = MetaActions.create("API Test Dataset 2", user, "https://www.example.com/2", "csv")
+    {:ok, chi_3} = MetaActions.create("API Test Dataset 3", user, "https://www.example.com/3", "csv")
+    {:ok, sea_1} = MetaActions.create("API Test Dataset 4", user, "https://www.example.com/4", "csv")
+    {:ok, sea_2} = MetaActions.create("API Test Dataset 5", user, "https://www.example.com/5", "csv")
+    {:ok, sea_3} = MetaActions.create("API Test Dataset 6", user, "https://www.example.com/6", "csv")
 
-    (4..5) |> Enum.each(fn i ->
-      Repo.insert(%{Meta.__struct__ |
-        user: user,
-        name: "API Test Dataset #{i}",
-        slug: "api_test_dataset_#{i}",
-        table_name: "ds_wootyhooty_#{i}",
-        source_url: "https://www.example.com/#{i}",
-        source_type: "csv",
-        bbox: %{chicago_geom | srid: 4326}
-      })
-    end)
+    for meta <- [chi_1, chi_2, chi_3] do
+      {:ok, _} = MetaActions.update(meta, bbox: %{chicago_geom | srid: 4326})
+    end
 
-    # Registers a callback that runs once (because we're in setup_all) after all the tests have run. Use to clean up!
-    # If things screw up and this isn't called properly, `env MIX_ENV=test mix ecto.drop` (bash) is your friend.
-    on_exit(fn ->
-      # Check out again because this callback is run in another process.
-      :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
-      Ecto.Adapters.SQL.Sandbox.mode(Repo, :auto)
-      truncate([Meta, User])
-    end)
+    for meta <- [sea_1, sea_2, sea_3] do
+      {:ok, _} = MetaActions.update(meta, bbox: %{seattle_geom | srid: 4326})
+    end
 
     :ok
   end
@@ -114,7 +92,7 @@ defmodule PlenarioWeb.Api.ListControllerTest do
   test "GET /api/v2/data-sets", %{conn: conn} do
     conn = get(conn, "/api/v2/data-sets")
     result = json_response(conn, 200)
-    assert length(result["data"]) == 5
+    assert length(result["data"]) == 6
   end
 
   test "GET /api/v2/data-sets/@head", %{conn: conn} do
@@ -126,7 +104,7 @@ defmodule PlenarioWeb.Api.ListControllerTest do
   test "GET /api/v2/data-sets/@describe", %{conn: conn} do
     conn = get(conn, "/api/v2/data-sets/@describe")
     result = json_response(conn, 200)
-    assert length(result["data"]) == 5
+    assert length(result["data"]) == 6
   end
 
   test "OPTIONS /api/v2/data-sets status", %{conn: conn} do
@@ -181,7 +159,7 @@ defmodule PlenarioWeb.Api.ListControllerTest do
   test "GET /api/v2/data-sets/@describe with bbox arg", %{conn: conn} do
     conn = get(conn, "/api/v2/data-sets/@describe?bbox=#{@chicago_geojson}")
     result = json_response(conn, 200)
-    assert length(result["data"]) == 2
+    assert length(result["data"]) == 3
   end
 
   test "page_size param cannot exceed 5000" do

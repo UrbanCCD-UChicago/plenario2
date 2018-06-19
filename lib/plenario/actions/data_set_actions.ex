@@ -1,186 +1,136 @@
 defmodule Plenario.Actions.DataSetActions do
-
   require Logger
 
   alias Plenario.Repo
 
   alias Plenario.Actions.{
     MetaActions,
+    DataSetFieldActions,
     VirtualDateFieldActions,
     VirtualPointFieldActions
   }
 
-  @template_dir "data-set-action-sql-templates"
+  alias Plenario.Schemas.Meta
 
-  def up!(meta) when not is_integer(meta), do: up!(meta.id)
-  def up!(meta_id) when is_integer(meta_id) do
-    meta = MetaActions.get(
-      meta_id,
-      with_fields: true,
-      with_virtual_dates: true,
-      with_virtual_points: true)
+  # up!
 
-    sql = create_table_sql(meta, [])
-    execute_sql!(sql)
+  @create_table "db-actions/up/create-table.sql.eex"
+  @create_view "db-actions/up/create-view.sql.eex"
+  @create_index "db-actions/up/create-index.sql.eex"
 
-    # create timestamp parsing function and trigger
-    sql = create_parse_timestamp_function_sql()
-    execute_sql!(sql)
+  def up!(%Meta{id: meta_id}), do: up!(meta_id)
+  def up!(meta_id) do
+    meta = MetaActions.get(meta_id)
+    fields = DataSetFieldActions.list(for_meta: meta)
+    virtual_dates = VirtualDateFieldActions.list(for_meta: meta, with_fields: true)
+    virtual_points = VirtualPointFieldActions.list(for_meta: meta, with_fields: true)
 
-    vdfs = VirtualDateFieldActions.list(with_fields: true, for_meta: meta)
-    fname = "parse_timetamps_#{meta.table_name}"
-    sql = create_parse_timestamp_trigger_sql(fname, vdfs)
-    execute_sql!(sql)
+    table_name = meta.table_name
+    view_name = "#{table_name}_view"
 
-    trigger_name = "#{meta.table_name}_parse_timestamps"
-    sql = create_trigger_sql(trigger_name, meta.table_name, fname)
-    execute_sql!(sql)
+    boolean_fields = Enum.filter(fields, & &1.type == "boolean") |> Enum.map(& &1.name)
+    integer_fields = Enum.filter(fields, & &1.type == "integer") |> Enum.map(& &1.name)
+    float_fields = Enum.filter(fields, & &1.type == "float") |> Enum.map(& &1.name)
+    timestamp_fields = Enum.filter(fields, & &1.type == "timestamp") |> Enum.map(& &1.name)
 
-    # create location and lat/lon parsing functions and triggers
-    sql = create_parse_location_function_sql()
-    execute_sql!(sql)
-    sql = create_parse_lon_lat_function_sql()
-    execute_sql!(sql)
+    index_fields =
+      boolean_fields ++
+      integer_fields ++
+      float_fields ++
+      timestamp_fields ++
+      Enum.map(virtual_dates, & &1.name)
 
-    vpfs = VirtualPointFieldActions.list(with_fields: true, for_meta: meta)
-    fname = "parse_points_#{meta.table_name}"
-    sql = create_parse_points_trigger_sql(fname, vpfs)
-    execute_sql!(sql)
+    gist_index_fields = Enum.map(virtual_points, & &1.name)
 
-    trigger_name = "#{meta.table_name}_parse_points"
-    sql = create_trigger_sql(trigger_name, meta.table_name, fname)
-    execute_sql!(sql)
+    Repo.transaction fn ->
+      execute! @create_table,
+        table_name: table_name,
+        fields: fields
 
-    meta.table_name()
-    |> add_timestamps_sql()
-    |> execute_sql!()
+      execute! @create_view,
+        table_name: table_name,
+        view_name: view_name,
+        boolean_fields: boolean_fields,
+        integer_fields: integer_fields,
+        float_fields: float_fields,
+        timestamp_fields: timestamp_fields,
+        virtual_dates: virtual_dates,
+        virtual_points: virtual_points
+
+      Enum.each(index_fields, fn field ->
+        execute! @create_index,
+          view_name: view_name,
+          field: field,
+          using: false
+      end)
+
+      Enum.each(gist_index_fields, fn field ->
+        execute! @create_index,
+          view_name: view_name,
+          field: field,
+          using: "GIST"
+      end)
+    end
 
     :ok
   end
 
-  def down!(meta) when not is_integer(meta), do: down!(meta.id)
-  def down!(meta_id) when is_integer(meta_id) do
-    meta = MetaActions.get(
-      meta_id,
-      with_fields: true,
-      with_virtual_dates: true,
-      with_virtual_points: true,
-      with_constraints: true)
+  # down!
 
-    # drop point functions and triggers
-    trigger_name = "#{meta.table_name}_parse_points"
-    sql = drop_trigger_sql(trigger_name, meta.table_name)
-    execute_sql!(sql)
+  @drop_table "db-actions/down/drop-table.sql.eex"
 
-    function_name = "parse_points_#{meta.table_name}"
-    sql = drop_function_sql(function_name)
-    execute_sql!(sql)
+  def down!(%Meta{id: meta_id}), do: down!(meta_id)
+  def down!(meta_id) do
+    meta = MetaActions.get(meta_id)
+    Repo.transaction fn ->
+      execute! @drop_table, table_name: meta.table_name
+    end
 
-    # drop timestamp functions and triggers
-    trigger_name = "#{meta.table_name}_parse_timestamps"
-    sql = drop_trigger_sql(trigger_name, meta.table_name)
-    execute_sql!(sql)
-
-    function_name = "parse_timetamps_#{meta.table_name}"
-    sql = drop_function_sql(function_name)
-    execute_sql!(sql)
-
-    # drop table
-    sql = drop_table_sql(meta.table_name)
-    execute_sql!(sql)
-
-    # done!
     :ok
   end
 
-  defp create_table_sql(meta, constraints) do
-    filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/create-table.sql.eex")
-    sql = EEx.eval_file(filename, [meta: meta, constraints: constraints], trim: true)
+  # etl!
 
-    sql
+  @truncate_table "db-actions/etl/truncate-table.sql.eex"
+  @copy "db-actions/etl/copy.sql.eex"
+  @refresh_view "db-actions/etl/refresh-view.sql.eex"
+
+  def etl!(%Meta{id: meta_id}, download_path), do: etl!(meta_id, download_path)
+  def etl!(meta_id, download_path) do
+    meta = MetaActions.get(meta_id)
+
+    table_name = meta.table_name
+    view_name = "#{table_name}_view"
+
+    delimiter = if meta.source_type == "csv", do: ",", else: "\t"
+    headers =
+      File.stream!(download_path)
+      |> Enum.take(1)
+      |> List.first()
+      |> String.trim()
+      |> String.split(",")
+      |> Enum.join("\", \"")
+    path = Path.join(:code.priv_dir(:plenario), @copy)
+    cmd = EEx.eval_file(path, [table_name: table_name, headers: headers, delimiter: delimiter], trim: true)
+    sql_stream = Ecto.Adapters.SQL.stream(Repo, cmd)
+    file_stream = File.stream!(download_path)
+
+    Repo.transaction fn ->
+      execute! @truncate_table, table_name: table_name
+
+      Repo.transaction(fn -> Enum.into(file_stream, sql_stream) end)
+
+      execute! @refresh_view, view_name: view_name
+    end
+
+    :ok
   end
 
-  defp create_parse_timestamp_function_sql() do
-    filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/create-parse-timestamp-func.sql.eex")
-    sql = EEx.eval_file(filename, [], trim: true)
+  # helpers
 
-    sql
-  end
-
-  defp create_parse_timestamp_trigger_sql(function_name, fields) do
-    filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/create-parse-timestamp-trigger.sql.eex")
-    sql = EEx.eval_file(
-      filename,
-      [function_name: function_name, fields: fields],
-      trim: true)
-
-    sql
-  end
-
-  defp create_parse_location_function_sql() do
-    filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/create-parse-location-func.sql.eex")
-    sql = EEx.eval_file(filename, [], trim: true)
-
-    sql
-  end
-
-  defp create_parse_lon_lat_function_sql() do
-    filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/create-parse-lat-lon-func.sql.eex")
-    sql = EEx.eval_file(filename, [], trim: true)
-
-    sql
-  end
-
-  defp create_parse_points_trigger_sql(function_name, fields) do
-    filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/create-parse-points-trigger.sql.eex")
-    sql = EEx.eval_file(
-      filename,
-      [function_name: function_name, fields: fields],
-      trim: true)
-
-    sql
-  end
-
-  defp create_trigger_sql(trigger_name, table_name, function_name) do
-    filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/create-trigger.sql.eex")
-    sql = EEx.eval_file(
-      filename,
-      [trigger_name: trigger_name, table_name: table_name, function_name: function_name],
-      trim: true)
-
-    sql
-  end
-
-  defp drop_table_sql(table_name) do
-    filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/drop-table.sql.eex")
-    sql = EEx.eval_file(filename, [table_name: table_name], trim: true)
-
-    sql
-  end
-
-  defp drop_function_sql(function_name) do
-    filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/drop-func.sql.eex")
-    sql = EEx.eval_file(filename, [function_name: function_name], trim: true)
-
-    sql
-  end
-
-  defp drop_trigger_sql(trigger_name, table_name) do
-    filename = Path.join(:code.priv_dir(:plenario), "#{@template_dir}/drop-trigger.sql.eex")
-    sql = EEx.eval_file(
-      filename,
-      [trigger_name: trigger_name, table_name: table_name],
-      trim: true)
-
-    sql
-  end
-
-  defp add_timestamps_sql(table_name) do
-    Path.join(:code.priv_dir(:plenario), "#{@template_dir}/add-timestamps.sql.eex")
-    |> EEx.eval_file([table_name: table_name], trim: true)
-  end
-
-  defp execute_sql!(sql) do
-    Ecto.Adapters.SQL.query!(Repo, sql)
+  defp execute!(template, bindings) do
+    Path.join([:code.priv_dir(:plenario), template])
+    |> EEx.eval_file(bindings, trim: true)
+    |> Repo.query!()
   end
 end

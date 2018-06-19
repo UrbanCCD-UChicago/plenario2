@@ -11,7 +11,7 @@ defmodule PlenarioAot.AotMeta do
     field :slug, :string
     field :source_url, :string
     field :bbox, Geo.Polygon
-    field :time_range, Plenario.TsTzRange
+    field :time_range, Plenario.TsRange
     timestamps()
 
     has_many :data, AotData

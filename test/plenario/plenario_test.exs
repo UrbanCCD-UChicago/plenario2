@@ -1,5 +1,5 @@
 defmodule Plenario.Testing.PlenarioTest do
-  use Plenario.Testing.DataCase 
+  use Plenario.Testing.DataCase
 
   alias Plenario
 
@@ -12,10 +12,8 @@ defmodule Plenario.Testing.PlenarioTest do
   setup %{user: user, meta: meta} do
     # add bbox and range to original meta, make ready
     bbox = Geo.WKT.decode("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
-    {_, lower, _} = DateTime.from_iso8601("2017-01-01T00:00:00.0Z")
-    {_, upper, _} = DateTime.from_iso8601("2018-12-31T00:00:00.0Z")
     {:ok, _} = MetaActions.update_bbox(meta, bbox)
-    {:ok, _} = MetaActions.update_time_range(meta, lower, upper)
+    {:ok, _} = MetaActions.update_time_range(meta, Plenario.TsRange.new(~N[2017-01-01T00:00:00], ~N[2018-12-31T00:00:00]))
     m = MetaActions.get(meta.id)
     Meta.submit_for_approval(m) |> Repo.update()
     m = MetaActions.get(meta.id)
@@ -27,10 +25,8 @@ defmodule Plenario.Testing.PlenarioTest do
     {:ok, m} = MetaActions.create("test 2", user, "https://example.com/2", "csv")
     meta2 = MetaActions.get(m.id)
     bbox = Geo.WKT.decode("POLYGON ((-30 -10, -40 -40, -20 -40, -10 -20, -30 -10))")
-    {_, lower, _} = DateTime.from_iso8601("2015-01-01T00:00:00.0Z")
-    {_, upper, _} = DateTime.from_iso8601("2016-12-31T00:00:00.0Z")
     {:ok, _} = MetaActions.update_bbox(meta2, bbox)
-    {:ok, _} = MetaActions.update_time_range(meta2, lower, upper)
+    {:ok, _} = MetaActions.update_time_range(meta2, Plenario.TsRange.new(~N[2015-01-01T00:00:00], ~N[2016-12-31T00:00:00]))
     m = MetaActions.get(meta2.id)
     Meta.submit_for_approval(m) |> Repo.update()
     m = MetaActions.get(meta2.id)
@@ -66,9 +62,9 @@ defmodule Plenario.Testing.PlenarioTest do
       # with results
 
       bbox = Geo.WKT.decode("POLYGON ((-30 -20, -40 -50, -10 -30, -30 -20))")
-      {_, lower, _} = DateTime.from_iso8601("2014-11-01T00:00:00.0Z")
-      {_, upper, _} = DateTime.from_iso8601("2015-11-01T00:00:00.0Z")
-      {:ok, range} = Plenario.TsTzRange.dump([lower, upper])
+      lower = ~N[2014-11-01T00:00:00]
+      upper = ~N[2015-11-01T00:00:00]
+      range = Plenario.TsRange.new(lower, upper)
       results = Plenario.search_data_sets(bbox, range)
       assert length(results) == 1
 

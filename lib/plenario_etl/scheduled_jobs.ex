@@ -17,14 +17,14 @@ defmodule PlenarioEtl.ScheduledJobs do
       from m in Meta,
       where:
         fragment("? in ('ready', 'awaiting_first_import')", m.state)
-        and fragment("? <= ?::timestamptz", m.refresh_starts_on, ^now)
+        and fragment("? <= ?::timestamp", m.refresh_starts_on, ^now)
         and (
           is_nil(m.refresh_ends_on)
-          or fragment("? >= ?::timestamptz", m.refresh_ends_on, ^now)
+          or fragment("? >= ?::timestamp", m.refresh_ends_on, ^now)
         )
         and (
           is_nil(m.next_import)
-          or fragment("? between ?::timestamptz and ?::timestamptz", m.next_import, ^last_check, ^now)
+          or fragment("? between ?::timestamp and ?::timestamp", m.next_import, ^last_check, ^now)
         )
 
     metas = Repo.all(query)

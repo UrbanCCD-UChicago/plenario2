@@ -76,8 +76,8 @@ defmodule Plenario.Actions.MetaActions do
   @doc """
   Convenience function for updating a Meta's time_range attribute.
   """
-  @spec update_time_range(meta :: Meta, lower :: DateTime, upper :: DateTime) :: ok_instance
-  def update_time_range(meta, lower, upper), do: MetaActions.update(meta, time_range: [lower, upper])
+  @spec update_time_range(Meta.t, Plenario.TsRange.t) :: ok_instance
+  def update_time_range(%Meta{} = meta, %Plenario.TsRange{} = range), do: MetaActions.update(meta, time_range: range)
 
   @doc """
   Convenience function for updating a Meta's latest_import attribute.
@@ -225,89 +225,77 @@ defmodule Plenario.Actions.MetaActions do
 
   @doc """
   Selects all dates in the data set's table and finds the minimum and maximum
-  values. From those values, it creates a TsTzRange.
+  values. From those values, it creates a TsRange.
   """
-  @spec compute_time_range!(meta :: Meta) :: {DateTime, DateTime}
+  @spec compute_time_range!(Meta.t) :: Plenario.TsRange.t
   def compute_time_range!(meta) do
-    dsfs =
+    timestamp_fields =
       DataSetFieldActions.list(for_meta: meta)
-      |> Enum.filter(fn field -> field.type == "timestamptz" end)
-    vdfs = VirtualDateFieldActions.list(for_meta: meta)
-    all_timestamp_fields = dsfs ++ vdfs
+      |> Enum.filter(& &1.type == "timestamp")
+      |> Enum.map(& &1.name)
+    virtual_dates =
+      VirtualDateFieldActions.list(for_meta: meta)
+      |> Enum.map(& &1.name)
 
-    field_names = for field <- all_timestamp_fields do
-      field.name
-    end
+    fields =
+      timestamp_fields ++ virtual_dates
+      |> Enum.join("\", \"")
 
     query = """
-    SELECT "#{Enum.join(field_names, "\", \"")}"
-    FROM "#{meta.table_name}";
+    SELECT
+      MIN(l) AS lower,
+      MAX(g) AS upper
+    FROM (
+      SELECT
+        LEAST("#{fields}") AS l,
+        GREATEST("#{fields}") AS g
+      FROM
+        "#{meta.table_name}_view"
+    ) AS subq;
     """
-    {:ok, result} = Ecto.Adapters.SQL.query(Repo, query)
 
-    erl_dates = List.flatten(result.rows)
-    datetimes =
-      for {{y, m, d}, {h, mm, s, _}} <- erl_dates do
-        {:ok, ndt} = NaiveDateTime.from_erl({{y, m, d}, {h, mm, s}})
-        {:ok, dt} = DateTime.from_naive(ndt, "Etc/UTC")
-        dt
-      end
-    sorted = Enum.sort(datetimes, fn one, two -> DateTime.compare(one, two) == :gt end)
-
-    upper = List.first(sorted)
-    lower = List.last(sorted)
-
-    {lower, upper}
+    %Postgrex.Result{rows: [[lower, upper]]} = Repo.query!(query)
+    Plenario.TsRange.new(lower, upper)
   end
 
   @doc """
   Selects all points in the data set's table and finds the minimum and maximum
   values. From those values, it creates a Polygon.
   """
-  @spec compute_bbox!(meta :: Meta) :: Geo.Polygon
+  @spec compute_bbox!(Meta.t) :: Geo.Polygon.t
   def compute_bbox!(meta) do
-    dsfs =
-      DataSetFieldActions.list(for_meta: meta)
-      |> Enum.filter(fn field -> field.type == "geometry" end)
-    vpfs = VirtualPointFieldActions.list(for_meta: meta)
-    all_point_fields = dsfs ++ vpfs
+    fields =
+      VirtualPointFieldActions.list(for_meta: meta)
+      |> Enum.map(& &1.name)
 
-    field_names =
-      for field <- all_point_fields do
-        field.name
-      end
+    stx = Enum.map(fields, & "st_x(\"#{&1}\")") |> Enum.join(", ")
+    sty = Enum.map(fields, & "st_y(\"#{&1}\")") |> Enum.join(", ")
 
     query = """
-    SELECT "#{Enum.join(field_names, "\", \"")}"
-    FROM "#{meta.table_name}";
+    SELECT
+      MIN(subq.min_x) AS min_x,
+      MIN(subq.min_y) AS min_y,
+      MAX(subq.max_x) AS max_x,
+      MAX(subq.max_y) AS max_y
+    FROM (
+      SELECT
+        LEAST(#{stx}) AS min_x,
+        LEAST(#{sty}) AS min_y,
+        GREATEST(#{stx}) AS max_x,
+        GREATEST(#{sty}) AS max_y
+      FROM
+        "#{meta.table_name}_view"
+    ) AS subq
     """
-    {:ok, result} = Ecto.Adapters.SQL.query(Repo, query)
 
-    points =
-      List.flatten(result.rows)
-      |> Enum.filter(fn pt -> pt != nil end)
-    xs =
-      for pt <- points do
-        %{coordinates: {_, x}} = pt
-        x
-      end
-    ys =
-      for pt <- points do
-        %{coordinates: {y, _}} = pt
-        y
-      end
-    sorted_xs = Enum.sort(xs)
-    sorted_ys = Enum.sort(ys)
-
-    max_x = List.first(sorted_xs)
-    min_x = List.last(sorted_xs)
-    max_y = List.first(sorted_ys)
-    min_y = List.last(sorted_ys)
-
+    %Postgrex.Result{rows: [[min_x, min_y, max_x, max_y]]} = Repo.query!(query)
     %Geo.Polygon{coordinates: [[
-      {max_x, min_y}, {min_x, min_y},
-      {min_x, max_y}, {max_x, max_y},
-      {max_x, min_y}]],
+      {max_y, min_x},
+      {min_y, min_x},
+      {min_y, max_x},
+      {max_y, max_x},
+      {max_y, min_x}
+    ]],
     srid: 4326}
   end
 
@@ -336,7 +324,7 @@ defmodule Plenario.Actions.MetaActions do
 
     ts_field =
       fields
-      |> Enum.filter(fn f -> f.type == "timestamptz" end)
+      |> Enum.filter(fn f -> f.type == "timestamp" end)
       |> List.first()
     ts_field =
       case ts_field == nil do
