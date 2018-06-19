@@ -13,7 +13,7 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
   alias Plenario.Actions.{
     DataSetActions,
     DataSetFieldActions,
-    MetaActions, 
+    MetaActions,
     UniqueConstraintActions,
     UserActions,
     VirtualPointFieldActions
@@ -21,23 +21,23 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
 
   alias Plenario.Schemas.{
     DataSetField,
-    Meta, 
+    Meta,
     UniqueConstraint,
     User,
     VirtualPointField
   }
 
   alias PlenarioAot.{
-    AotActions, 
-    AotData, 
+    AotActions,
+    AotData,
     AotMeta
   }
 
   @aot_fixture_path "test/fixtures/aot-chicago-future.json"
   @endpoint PlenarioWeb.Endpoint
 
-  # Setting up the fixure data once _greatly_ reduces the test time. The 
-  # downside is that in order to make this work you must be explicit about 
+  # Setting up the fixure data once _greatly_ reduces the test time. The
+  # downside is that in order to make this work you must be explicit about
   # database connection ownership and you must also clean up tests yourself.
   setup_all do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
@@ -71,9 +71,9 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
     AotActions.compute_and_update_meta_bbox(aot_meta)
     AotActions.compute_and_update_meta_time_range(aot_meta)
 
-    # Registers a callback that runs once (because we're in setup_all) after 
-    # all the tests have run. Use to clean up! If things screw up and this 
-    # isn't called properly, `env MIX_ENV=test mix ecto.drop` (bash) is your 
+    # Registers a callback that runs once (because we're in setup_all) after
+    # all the tests have run. Use to clean up! If things screw up and this
+    # isn't called properly, `env MIX_ENV=test mix ecto.drop` (bash) is your
     # friend.
     on_exit(fn ->
       # Check out again because this callback is run in another process.
@@ -100,7 +100,7 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
     |> json_response(200)
   end
 
-  test "GET /api/v1/detail has no 'dataset_name'", %{conn: conn, meta: meta} do
+  test "GET /api/v1/detail has no 'dataset_name'", %{conn: conn} do
     get(conn, "/api/v1/detail")
     |> json_response(422)
   end
@@ -120,17 +120,26 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
     |> json_response(200)
   end
 
-  test "GET /v1/api/detail has no 'dataset_name'", %{conn: conn, meta: meta} do
+  test "GET /v1/api/detail has no 'dataset_name'", %{conn: conn} do
     get(conn, "/v1/api/detail")
     |> json_response(422)
   end
 
   test "GET /v1/api/detail __ gt", %{conn: conn, meta: meta} do
-    get(conn, "/v1/api/detail?dataset_name=#{meta.slug}")
-    |> json_response(200)
+    result =
+      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}?datetime__ge=2500:01:01T00:00:00")
+      |> json_response(200)
+
+    assert length(result[:data]) == 100
+
+    result =
+      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}?datetime__ge=2500:01:02T00:00:00")
+      |> json_response(200)
+
+    assert length(result[:data]) == 0
   end
 
-  test "GET /api/v1/data-sets __ge" do
+  test "GET /api/v1/detail __ge" do
   end
 
   test "GET /api/v1/data-sets __lt" do
@@ -186,7 +195,7 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
 
   test "GET /v1/api/data-sets/:slug __eq" do
   end
-  
+
   test "GET /api/v1/aot __gt" do
   end
 
