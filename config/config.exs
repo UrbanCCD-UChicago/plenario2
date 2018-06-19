@@ -27,8 +27,7 @@ config :plenario, PlenarioWeb.Endpoint,
 
 # Configures Elixir's Logger
 config :logger, :console,
-  format: "$time $metadata[$level] $message\n",
-  metadata: :all
+  format: "$time $metadata[$level] $message\n"
 
 
 # Configure the exporter
@@ -39,11 +38,11 @@ config :plenario, :s3_export_bucket, "plenario-exports"
 # configure quantum scheduler
 config :plenario, :refresh_offest, minutes: -1
 
-config :plenario, PlenarioEtl.Scheduler,
+config :plenario, PlenarioEtl,
   global: true,
   jobs: [
     # run the find refreshable metas every minute (offset is 1 minute above)
-    {"* * * * *", {PlenarioEtl.ScheduledJobs, :refresh_datasets, []}}
+    {"* * * * *", {PlenarioEtl, :import_data_sets, []}}
   ]
 
 config :plenario, PlenarioAot.AotScheduler,

@@ -98,18 +98,6 @@ defmodule Plenario.FieldGuesserTest do
     end
   end
 
-  test "guess_field_types!/1 of json", %{meta: meta} do
-    {:ok, meta} = Plenario.Actions.MetaActions.update(meta, source_type: "json")
-    with_mock HTTPoison, get!: &mock_json_data_request/1 do
-      assert guess_field_types!(meta) == %{
-        "pk" => "integer",
-        "datetime" => "timestamp",
-        "location" => "text",
-        "data" => "text"
-      }
-    end
-  end
-
   test "guess/1" do
     assert guess("true") == "boolean"
     assert guess("7") == "integer"

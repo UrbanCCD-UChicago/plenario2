@@ -17,7 +17,7 @@ defmodule Plenario.Application do
       # worker(Plenario.Worker, [arg1, arg2, arg3]),
 
       # Start the quantum scheduler
-      supervisor(PlenarioEtl.Scheduler, []),
+      supervisor(PlenarioEtl, []),
 
       # Start the model registry
       supervisor(Plenario.ModelRegistry, [%{}]),

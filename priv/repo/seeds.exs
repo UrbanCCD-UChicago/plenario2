@@ -44,23 +44,36 @@ defmodule Plenario.DevSeed do
     IO.puts("default user created. email: `plenario@uchicago.edu` ; password: `password`")
 
     {:ok, meta} = MetaActions.create(@beach_lab_name, user, @beach_lab_url, "csv")
+    {:ok, meta} = MetaActions.update meta,
+      refresh_starts_on: NaiveDateTime.utc_now(),
+      description: "blah blah blah this is a test data set even though it's a real data set\n\ni'm a new paragraph",
+      attribution: "City of Chicago",
+      refresh_rate: "days",
+      refresh_interval: 1
 
-    {:ok, id} = DataSetFieldActions.create(meta, "DNA Test ID", "text")
-    {:ok, _} = DataSetFieldActions.create(meta, "DNA Reading Mean", "float")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Test ID", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample Timestamp", "timestamp")
+    {:ok, _} = DataSetFieldActions.create(meta, "Beach", "text")
     {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample 1 Reading", "float")
     {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample 2 Reading", "float")
-    {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample Timestamp", "timestamp")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Reading Mean", "float")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Test ID", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 1 Timestamp", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 1 Reading", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 2 Reading", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Reading Mean", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Note", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample Interval", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 2 Timestamp", "text")
+    {:ok, lat} = DataSetFieldActions.create(meta, "Latitude", "float")
+    {:ok, lon} = DataSetFieldActions.create(meta, "Longitude", "float")
     {:ok, loc} = DataSetFieldActions.create(meta, "Location", "text")
+    {:ok, _} = VirtualPointFieldActions.create(meta, lat.id, lon.id)
     {:ok, _} = VirtualPointFieldActions.create(meta, loc.id)
 
     {:ok, meta} = MetaActions.submit_for_approval(meta)
     {:ok, meta} = MetaActions.approve(meta)
     IO.puts("data set `#{meta.name}` is up")
-
-    {_, task} = PlenarioEtl.ingest(meta)
-    Task.await(task, 300_000)
-
-    MetaActions.mark_first_import(meta)
   end
 
   alias PlenarioAot.{AotActions, AotMeta}

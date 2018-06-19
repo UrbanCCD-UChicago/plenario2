@@ -4,7 +4,7 @@ defmodule Plenario.Mixfile do
   def project do
     [
       app: :plenario,
-      version: "0.9.8",
+      version: "0.10.0",
       elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
@@ -55,6 +55,7 @@ defmodule Plenario.Mixfile do
       {:timex, "~> 3.2.1"},
       {:httpoison, "~> 0.13.0"},
       {:mock, "~> 0.3.1", only: :test},
+      {:bypass, "~> 0.8.1", only: :test},
       {:guardian, "~> 1.0"},
       {:ecto_state_machine, "~> 0.3.0"},
       {:canary, "~> 1.1"},
@@ -88,7 +89,10 @@ defmodule Plenario.Mixfile do
       # in Plug and Phoenix based applications.
       #
       # MIT
-      {:explode, "~> 1.0.0"}
+      {:explode, "~> 1.0.0"},
+
+      # job workflow
+      {:gen_stage, "~> 0.14.0"},
     ]
   end
 

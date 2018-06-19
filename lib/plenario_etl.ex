@@ -1,23 +1,37 @@
 defmodule PlenarioEtl do
+  use Quantum.Scheduler, otp_app: :plenario
+
+  require Logger
+
+  import Ecto.Query
+
+  alias Plenario.Repo
+
   alias Plenario.Schemas.Meta
 
-  alias PlenarioEtl.Actions.EtlJobActions
+  alias PlenarioEtl.EtlQueue
 
-  alias PlenarioEtl.Worker
+  def find_data_sets do
+    query =
+      from m in Meta,
+      where: fragment("? in ('ready', 'awaiting_first_import')", m.state),
+      where: fragment("? <= now()", m.refresh_starts_on),
+      where: is_nil(m.refresh_ends_on) or fragment("? >= now()", m.refresh_ends_on),
+      where: is_nil(m.next_import) or fragment("? <= now()", m.next_import)
 
-  def ingest(%Meta{} = meta) do
-    {:ok, job} =
-      EtlJobActions.create!(meta)
-      |> EtlJobActions.start()
+    Repo.all(query)
+  end
 
-    task = Task.async(fn ->
-      :poolboy.transaction(
-        :worker,
-        fn pid -> Worker.process_etl_job(pid, job) end,
-        :infinity
-      )
+  def import_data_sets do
+    metas = find_data_sets()
+    Logger.info("importing #{length(metas)} -- #{inspect(Enum.map(metas, & &1.name))}")
+
+    Enum.map(metas, fn meta ->
+      EtlQueue.push(meta)
     end)
+  end
 
-    {job, task}
+  def import_data_set_on_demand(meta) do
+    EtlQueue.push(meta)
   end
 end

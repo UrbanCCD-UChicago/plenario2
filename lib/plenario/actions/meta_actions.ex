@@ -96,23 +96,24 @@ defmodule Plenario.Actions.MetaActions do
   def update_next_import(%Meta{refresh_rate: rate, refresh_interval: interval} = meta) do
     next_import =
       case meta.next_import do
-        nil -> DateTime.utc_now()
+        nil -> NaiveDateTime.utc_now()
         _ -> meta.next_import
       end
 
-    diff = abs(Timex.diff(next_import, DateTime.utc_now(), String.to_atom(rate)))
+    diff = abs(Timex.diff(next_import, NaiveDateTime.utc_now(), String.to_atom(rate)))
     Logger.info("import diff is #{diff} #{rate}")
     next_import =
       case diff > interval do
         true ->
           Logger.info("next_import has fallen out of sync -- using `now` as the base to increment", ansi_color: "red")
-          DateTime.utc_now()
+          NaiveDateTime.utc_now()
 
         false -> next_import
       end
 
     shifted = Timex.shift(next_import, [{String.to_atom(rate), interval}])
-    MetaActions.update(meta, next_import: shifted)
+    Logger.info("updating `next_import` to #{inspect(shifted)} for meta #{inspect(meta.name)}")
+    {:ok, _} = MetaActions.update(meta, next_import: shifted)
   end
 
   @doc """
@@ -164,7 +165,7 @@ defmodule Plenario.Actions.MetaActions do
   """
   @spec mark_first_import(meta :: Meta) :: ok_instance
   def mark_first_import(meta) do
-    {:ok, _} = MetaChangesets.update(meta, %{first_import: DateTime.utc_now()})
+    {:ok, _} = MetaChangesets.update(meta, %{first_import: NaiveDateTime.utc_now()})
     |> Repo.update()
 
     meta = get(meta.id)
