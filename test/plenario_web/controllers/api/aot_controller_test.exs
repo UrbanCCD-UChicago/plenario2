@@ -169,6 +169,25 @@ defmodule PlenarioWeb.Api.AotControllerTest do
       assert meta["counts"]["total_records"] == @total_records
     end
 
+    test "bbox invalid coorddinates", %{conn: conn} do
+      min_lat = 41.95
+      max_lat = 41.97
+      min_lon = -87.65
+      max_lon = -87.67
+      bbox = %Geo.Polygon{
+        srid: 4326,
+        coordinates: [[
+          {min_lat, max_lon},
+          {min_lat, min_lon},
+          {max_lat, min_lon},
+          {max_lat, max_lon}
+          # missing closing coordinate to trigger postgrex erro
+        ]]
+      } |> Geo.JSON.encode()
+      conn = get(conn, "/api/v2/aot?bbox=#{bbox}")
+      assert conn.status == 400
+    end
+
     test "timestamp", %{conn: conn} do
       conn = get(conn, "/api/v2/aot?timestamp=2018-01-01T00:00:00Z")
       %{"meta" => meta, "data" => _} = json_response(conn, 200)
