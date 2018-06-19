@@ -34,7 +34,7 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
   }
 
   @aot_fixture_path "test/fixtures/aot-chicago-future.json"
-  # @endpoint PlenarioWeb.Endpoint
+  @endpoint PlenarioWeb.Endpoint
 
   # Setting up the fixure data once _greatly_ reduces the test time. The 
   # downside is that in order to make this work you must be explicit about 
@@ -62,14 +62,14 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
       Repo.insert(%{model.__struct__ | datetime: "2500-01-01 00:00:00", location: "(50, 50)"})
     end)
 
-    {:ok, meta} = AotActions.create_meta("Chicago", "https://example.com/")
+    {:ok, aot_meta} = AotActions.create_meta("Chicago", "https://example.com/")
 
     File.read!(@aot_fixture_path)
     |> Poison.decode!()
-    |> Enum.map(fn obj -> AotActions.insert_data(meta, obj) end)
+    |> Enum.map(fn obj -> AotActions.insert_data(aot_meta, obj) end)
 
-    AotActions.compute_and_update_meta_bbox(meta)
-    AotActions.compute_and_update_meta_time_range(meta)
+    AotActions.compute_and_update_meta_bbox(aot_meta)
+    AotActions.compute_and_update_meta_time_range(aot_meta)
 
     # Registers a callback that runs once (because we're in setup_all) after 
     # all the tests have run. Use to clean up! If things screw up and this 
@@ -83,13 +83,51 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
       truncate([AotMeta, AotData])
     end)
 
-    {:ok, %{
+    %{
       meta: meta,
-      vpf: vpf
-    }}
+      vpf: vpf,
+      conn: build_conn()
+    }
   end
 
-  test "GET /api/v1/data-sets __gt" do
+  test "GET /api/v1/datasets", %{conn: conn} do
+    get(conn, "/api/v1/datasets")
+    |> json_response(200)
+  end
+
+  test "GET /api/v1/detail", %{conn: conn, meta: meta} do
+    get(conn, "/api/v1/detail?dataset_name=#{meta.slug}")
+    |> json_response(200)
+  end
+
+  test "GET /api/v1/detail has no 'dataset_name'", %{conn: conn, meta: meta} do
+    get(conn, "/api/v1/detail")
+    |> json_response(422)
+  end
+
+  test "GET /api/v1/detail __ gt", %{conn: conn, meta: meta} do
+    get(conn, "/api/v1/detail?dataset_name=#{meta.slug}")
+    |> json_response(200)
+  end
+
+  test "GET /v1/api/datasets", %{conn: conn} do
+    get(conn, "/v1/api/datasets")
+    |> json_response(200)
+  end
+
+  test "GET /v1/api/detail", %{conn: conn, meta: meta} do
+    get(conn, "/v1/api/detail?dataset_name=#{meta.slug}")
+    |> json_response(200)
+  end
+
+  test "GET /v1/api/detail has no 'dataset_name'", %{conn: conn, meta: meta} do
+    get(conn, "/v1/api/detail")
+    |> json_response(422)
+  end
+
+  test "GET /v1/api/detail __ gt", %{conn: conn, meta: meta} do
+    get(conn, "/v1/api/detail?dataset_name=#{meta.slug}")
+    |> json_response(200)
   end
 
   test "GET /api/v1/data-sets __ge" do
