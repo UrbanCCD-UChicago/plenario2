@@ -181,7 +181,7 @@ defmodule PlenarioWeb.Api.AotControllerTest do
           {min_lat, min_lon},
           {max_lat, min_lon},
           {max_lat, max_lon}
-          # missing closing coordinate to trigger postgrex erro
+          # missing closing coordinate to trigger postgrex error
         ]]
       } |> Geo.JSON.encode()
       conn = get(conn, "/api/v2/aot?bbox=#{bbox}")
