@@ -58,8 +58,12 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
     # Insert 100 empty rows
     ModelRegistry.clear()
     model = ModelRegistry.lookup(meta.slug())
-    (1..100) |> Enum.each(fn _ ->
+    (1..75) |> Enum.each(fn _ ->
       Repo.insert(%{model.__struct__ | datetime: "2500-01-01 00:00:00", location: "(50, 50)"})
+    end)
+
+    (76..100) |> Enum.each(fn _ ->
+      Repo.insert(%{model.__struct__ | datetime: "2500-01-02 00:00:00", location: "(50, 50)"})
     end)
 
     {:ok, aot_meta} = AotActions.create_meta("Chicago", "https://example.com/")
@@ -125,30 +129,68 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
     |> json_response(422)
   end
 
-  test "GET /v1/api/detail __ gt", %{conn: conn, meta: meta} do
+  test "GET /v1/api/detail __ ge", %{conn: conn, meta: meta} do
     result =
-      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}?datetime__ge=2500:01:01T00:00:00")
+      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__ge=2500-01-01")
       |> json_response(200)
 
-    assert length(result[:data]) == 100
+    assert length(result["data"]) == 100
 
     result =
-      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}?datetime__ge=2500:01:02T00:00:00")
+      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__ge=2500-01-02")
       |> json_response(200)
 
-    assert length(result[:data]) == 0
+    assert length(result["data"]) == 25 
   end
 
-  test "GET /api/v1/detail __ge" do
+  test "GET /v1/api/detail __gt", %{conn: conn, meta: meta} do
+    result =
+      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__gt=2500-01-01")
+      |> json_response(200)
+
+    assert length(result["data"]) == 25
+
+    result =
+      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__gt=2500-01-02")
+      |> json_response(200)
+
+    assert length(result["data"]) == 0 
   end
 
-  test "GET /api/v1/data-sets __lt" do
+  test "GET /v1/api/detail __lt", %{conn: conn, meta: meta} do
+    result =
+      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__lt=2500-01-01")
+      |> json_response(200)
+
+    assert length(result["data"]) == 0
+
+    result =
+      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__lt=2500-01-02")
+      |> json_response(200)
+
+    assert length(result["data"]) == 75 
   end
 
-  test "GET /api/v1/data-sets __le" do
+  test "GET /v1/api/detail __le", %{conn: conn, meta: meta} do
+    result =
+      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__le=2500-01-01")
+      |> json_response(200)
+
+    assert length(result["data"]) == 75 
+
+    result =
+      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__le=2500-01-02")
+      |> json_response(200)
+
+    assert length(result["data"]) == 100
   end
 
-  test "GET /api/v1/data-sets __eq" do
+  test "GET /api/v1/detail __eq", %{conn: conn, meta: meta} do
+    result =
+      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__eq=2500-01-02")
+      |> json_response(200)
+
+    assert length(result["data"]) == 25
   end
 
   test "GET /v1/api/data-sets __gt" do
