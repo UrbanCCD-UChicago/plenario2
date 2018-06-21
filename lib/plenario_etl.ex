@@ -9,7 +9,7 @@ defmodule PlenarioEtl do
 
   alias Plenario.Schemas.Meta
 
-  alias PlenarioEtl.EtlQueue
+  alias PlenarioEtl.IngestQueue
 
   def find_data_sets do
     query =
@@ -27,11 +27,11 @@ defmodule PlenarioEtl do
     Logger.info("importing #{length(metas)} -- #{inspect(Enum.map(metas, & &1.name))}")
 
     Enum.map(metas, fn meta ->
-      EtlQueue.push(meta)
+      IngestQueue.push(meta)
     end)
   end
 
   def import_data_set_on_demand(meta) do
-    EtlQueue.push(meta)
+    IngestQueue.push(meta)
   end
 end

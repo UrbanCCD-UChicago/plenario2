@@ -1,14 +1,11 @@
 defmodule PlenarioEtl.Application do
   use Application
 
-  alias PlenarioEtl.{
-    FileRegistry,
-    EtlQueue,
-    Downloader,
-    Ripper
-}
+  alias PlenarioEtl.{IngestQueue, IngestWorker}
 
   @pool_size Application.get_env(:plenario, PlenarioEtl)[:pool_size]
+
+  @num_ingest_workers Application.get_env(:plenario, PlenarioEtl)[:num_ingest_workers]
 
   def start_link, do: start(nil, nil)
 
@@ -20,11 +17,11 @@ defmodule PlenarioEtl.Application do
       :poolboy.child_spec(:exporter, exporter_config()),
 
       # importer
-      worker(FileRegistry, []),
-      worker(EtlQueue, []),
-      worker(Downloader, []),
-      worker(Ripper, [])
+      worker(IngestQueue, []),
     ]
+
+    ingest_workers = Enum.map(1..@num_ingest_workers, fn i -> worker(IngestWorker, [], id: String.to_atom("worker_#{i}")) end)
+    children = children ++ ingest_workers
 
     Supervisor.start_link(children, opts())
   end
@@ -39,7 +36,7 @@ defmodule PlenarioEtl.Application do
 
   defp opts do
     [
-      strategy: :one_for_one,
+      strategy: :rest_for_one,
       name: PlenarioEtl.Supervisor
     ]
   end

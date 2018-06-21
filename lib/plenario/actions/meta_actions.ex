@@ -21,7 +21,7 @@ defmodule Plenario.Actions.MetaActions do
     MetaActions
   }
 
-  @type ok_instance :: {:ok, Meta} | {:error, Ecto.Changeset.t()}
+  @type ok_instance :: {:ok, Meta.t} | {:error, Ecto.Changeset.t()}
 
   @doc """
   This is a convenience function for generating empty changesets to more
@@ -82,7 +82,7 @@ defmodule Plenario.Actions.MetaActions do
   @doc """
   Convenience function for updating a Meta's latest_import attribute.
   """
-  @spec update_latest_import(meta :: Meta, timestamp :: DateTime) :: ok_instance
+  @spec update_latest_import(meta :: Meta.t, timestamp :: NaiveDateTime.t) :: ok_instance
   def update_latest_import(meta, timestamp) do
     Logger.info("updating meta '#{meta.name}' latest import to '#{timestamp}'")
     MetaActions.update(meta, latest_import: timestamp)
@@ -91,7 +91,7 @@ defmodule Plenario.Actions.MetaActions do
   @doc """
   Convenience function for updating a Meta's next_import attribute.
   """
-  @spec update_next_import(meta :: Meta) :: ok_instance
+  @spec update_next_import(meta :: Meta.t) :: ok_instance
   def update_next_import(%Meta{refresh_rate: nil, refresh_interval: nil} = meta), do: {:ok, meta}
   def update_next_import(%Meta{refresh_rate: rate, refresh_interval: interval} = meta) do
     next_import =
@@ -111,9 +111,10 @@ defmodule Plenario.Actions.MetaActions do
         false -> next_import
       end
 
-    shifted = Timex.shift(next_import, [{String.to_atom(rate), interval}])
+    shifted = Timex.shift(next_import, [{String.to_atom(rate), interval}]) |> Timex.to_naive_datetime()
     Logger.info("updating `next_import` to #{inspect(shifted)} for meta #{inspect(meta.name)}")
-    {:ok, _} = MetaActions.update(meta, next_import: shifted)
+
+    MetaActions.update(meta, next_import: shifted)
   end
 
   @doc """

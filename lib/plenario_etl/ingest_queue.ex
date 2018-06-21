@@ -1,4 +1,4 @@
-defmodule PlenarioEtl.EtlQueue do
+defmodule PlenarioEtl.IngestQueue do
   use GenStage
 
   require Logger
@@ -20,7 +20,7 @@ defmodule PlenarioEtl.EtlQueue do
   def push(meta_id), do: GenStage.cast(__MODULE__, {:push, meta_id})
 
   def handle_cast({:push, meta_id}, {queue, pending_demand}) do
-    Logger.info("EtlQueue: pushing #{inspect(meta_id)} onto queue")
+    Logger.info("IngestQueue: pushing #{inspect(meta_id)} onto queue")
     updated = :queue.in(meta_id, queue)
 
     meta = MetaActions.get(meta_id)
@@ -41,7 +41,7 @@ defmodule PlenarioEtl.EtlQueue do
   # server api
 
   def handle_demand(demand, {queue, pending_demand}) do
-    Logger.debug("EtlQueue: handling demand of #{demand} with #{:queue.len(queue)} metas in queue")
+    Logger.debug("IngestQueue: handling demand of #{demand} with #{:queue.len(queue)} metas in queue")
     dispatch_metas(queue, demand + pending_demand, [])
   end
 
@@ -52,7 +52,7 @@ defmodule PlenarioEtl.EtlQueue do
   defp dispatch_metas(queue, demand, meta_ids) do
     case :queue.out(queue) do
       {{:value, meta_id}, updated} ->
-        Logger.debug("EtlQueue: popped #{inspect(meta_id)} off the queue")
+        Logger.debug("IngestQueue: popped #{inspect(meta_id)} off the queue")
         dispatch_metas(updated, demand - 1, [meta_id | meta_ids])
 
       {:empty, queue} ->

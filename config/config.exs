@@ -85,6 +85,11 @@ config :ex_aws,
   secret_access_key: [{:system, "AWS_SECRET_ACCESS_KEY"}, :instance_role],
   access_key_id: [{:system, "AWS_ACCESS_KEY_ID"}, :instance_role]
 
+  # Configure worker settings
+  config :plenario, PlenarioEtl,
+    chunk_size: 100,
+    pool_size: 10,
+    num_ingest_workers: 3
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
