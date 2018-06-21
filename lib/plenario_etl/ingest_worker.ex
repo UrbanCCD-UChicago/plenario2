@@ -80,6 +80,10 @@ defmodule PlenarioEtl.IngestWorker do
     range = MetaActions.compute_time_range!(meta)
     {:ok, _} = MetaActions.update_time_range(meta, range)
 
+    # clean up files
+    File.rm(download)
+    File.rm(sentinel)
+
     {:noreply, [], state}
   end
 
