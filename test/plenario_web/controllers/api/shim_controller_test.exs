@@ -66,6 +66,11 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
       Repo.insert(%{model.__struct__ | datetime: "2500-01-02 00:00:00", location: "(50, 50)"})
     end)
 
+    (1..5) |> Enum.each(fn i ->
+      {:ok, m} = MetaActions.create("META #{i}", user.id, "https://www.example.com/#{i}", "csv")
+      MetaActions.update_latest_import(m, NaiveDateTime.from_iso8601!("2000-01-0#{i}T00:00:00"))
+    end)
+
     {:ok, aot_meta} = AotActions.create_meta("Chicago", "https://example.com/")
 
     File.read!(@aot_fixture_path)
@@ -111,11 +116,6 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
 
   test "GET /api/v1/detail __ gt", %{conn: conn, meta: meta} do
     get(conn, "/api/v1/detail?dataset_name=#{meta.slug}")
-    |> json_response(200)
-  end
-
-  test "GET /v1/api/datasets", %{conn: conn} do
-    get(conn, "/v1/api/datasets")
     |> json_response(200)
   end
 
@@ -193,78 +193,38 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
     assert length(result["data"]) == 25
   end
 
-  test "GET /v1/api/data-sets __gt" do
+  test "GET /v1/api/datasets", %{conn: conn} do
+    result = json_response(get(conn, "/api/v1/datasets"), 200)
+    assert length(result["data"]) == 6
   end
 
-  test "GET /v1/api/data-sets __ge" do
+  test "GET /api/v1/datasets has correct count", %{conn: conn} do
+    result = json_response(get(conn, "/api/v1/datasets"), 200)
+    assert result["meta"]["counts"]["total_records"] == 6
   end
 
-  test "GET /v1/api/data-sets __lt" do
+  test "GET /v1/api/datasets __ge", %{conn: conn} do
+    result = json_response(get(conn, "/api/v1/datasets?latest_import__ge=2000-01-03T00:00:00"), 200)
+    assert result["meta"]["counts"]["total_records"] == 3
   end
 
-  test "GET /v1/api/data-sets __le" do
+  test "GET /v1/api/datasets __gt", %{conn: conn} do
+    result = json_response(get(conn, "/api/v1/datasets?latest_import__gt=2000-01-03T00:00:00"), 200)
+    assert result["meta"]["counts"]["total_records"] == 2
   end
 
-  test "GET /v1/api/data-sets __eq" do
+  test "GET /v1/api/datasets __le", %{conn: conn} do
+    result = json_response(get(conn, "/api/v1/datasets?latest_import__le=2000-01-03T00:00:00"), 200)
+    assert result["meta"]["counts"]["total_records"] == 3
   end
 
-  test "GET /api/v1/data-sets/:slug __gt" do
+  test "GET /v1/api/datasets __lt", %{conn: conn} do
+    result = json_response(get(conn, "/api/v1/datasets?latest_import__lt=2000-01-03T00:00:00"), 200)
+    assert result["meta"]["counts"]["total_records"] == 2
   end
 
-  test "GET /api/v1/data-sets/:slug __ge" do
-  end
-
-  test "GET /api/v1/data-sets/:slug __lt" do
-  end
-
-  test "GET /api/v1/data-sets/:slug __le" do
-  end
-
-  test "GET /api/v1/data-sets/:slug __eq" do
-  end
-
-  test "GET /v1/api/data-sets/:slug __gt" do
-  end
-
-  test "GET /v1/api/data-sets/:slug __ge" do
-  end
-
-  test "GET /v1/api/data-sets/:slug __lt" do
-  end
-
-  test "GET /v1/api/data-sets/:slug __le" do
-  end
-
-  test "GET /v1/api/data-sets/:slug __eq" do
-  end
-
-  test "GET /api/v1/aot __gt" do
-  end
-
-  test "GET /api/v1/aot __ge" do
-  end
-
-  test "GET /api/v1/aot __lt" do
-  end
-
-  test "GET /api/v1/aot __le" do
-  end
-
-  test "GET /api/v1/aot __eq" do
-  end
-
-  test "GET /v1/api/aot __gt" do
-  end
-
-  test "GET /v1/api/aot __ge" do
-  end
-
-  test "GET /v1/api/aot __lt" do
-  end
-
-  test "GET /v1/api/aot __le" do
-  end
-
-  test "GET /v1/api/aot __eq" do
+  test "GET /v1/api/datasets __eq", %{conn: conn} do
+    result = json_response(get(conn, "/api/v1/datasets?latest_import__eq=2000-01-03T00:00:00"), 200)
+    assert result["meta"]["counts"]["total_records"] == 1
   end
 end
