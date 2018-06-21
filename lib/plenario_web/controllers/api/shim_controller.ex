@@ -71,7 +71,6 @@ defmodule PlenarioWeb.Api.ShimController do
   If the key corresponds to a V1 API keyword, convert it. Otherwise just pass
   the tuple along into the `acc`umulator.
 
-  # todo
   If the key contains a dunder `__` operator. Convert both it and and the value
   to the V2 compliant `PARAM=OPERATOR:VALUE` format.
   """
