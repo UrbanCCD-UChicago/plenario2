@@ -12,7 +12,8 @@ defmodule PlenarioWeb.Api.ShimController do
   ListController for V2.
   """
   def datasets(conn, _) do
-    PlenarioWeb.Api.ListController.call(conn, :get)
+    %{conn | params: translate(conn.params)}
+    |> PlenarioWeb.Api.ListController.call(:get)
   end
 
   @doc """
