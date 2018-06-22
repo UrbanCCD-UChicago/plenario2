@@ -97,7 +97,7 @@ defmodule Plenario.Mixfile do
       # MIT
       {:explode, "~> 1.0.0"},
 
-      # Simple, robust temporary file support for Elixir.
+      # Utility for temporary file handling and cleanup.
       #
       # Apache 2.0
       {:briefly, "~> 0.3"}
