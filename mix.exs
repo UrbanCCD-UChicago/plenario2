@@ -27,7 +27,14 @@ defmodule Plenario.Mixfile do
   def application do
     [
       mod: {Plenario.Application, []},
-      extra_applications: [:logger, :runtime_tools, :bamboo, :bamboo_smtp, :sentry]
+      extra_applications: [
+        :bamboo,
+        :bamboo_smtp,
+        :briefly,
+        :logger,
+        :runtime_tools,
+        :sentry
+      ]
     ]
   end
 
@@ -88,7 +95,12 @@ defmodule Plenario.Mixfile do
       # in Plug and Phoenix based applications.
       #
       # MIT
-      {:explode, "~> 1.0.0"}
+      {:explode, "~> 1.0.0"},
+
+      # Simple, robust temporary file support for Elixir.
+      #
+      # Apache 2.0
+      {:briefly, "~> 0.3"}
     ]
   end
 

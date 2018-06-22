@@ -7,7 +7,6 @@ defmodule PlenarioEtl.Exporter do
   alias PlenarioMailer.Emails
 
   import Plenario.Repo
-  import UUID, only: [uuid4: 0]
 
   require Logger
 
@@ -84,7 +83,7 @@ defmodule PlenarioEtl.Exporter do
   end
 
   defp stream_to_local_storage({job, stream}) do
-    path = "/tmp/#{inspect(uuid4())}"
+    {:ok, path} = Briefly.create()
     file = File.open!(path, [:write, :utf8])
 
     Logger.info("Writing to #{path}")
