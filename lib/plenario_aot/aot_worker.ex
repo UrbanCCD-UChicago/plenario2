@@ -37,6 +37,7 @@ defmodule PlenarioAot.AotWorker do
     Logger.info("Finished download for `#{meta.network_name}`")
     Logger.info("Starting to rip `#{path}` into `aot_data` table for AoT Network `#{meta.network_name}`")
 
+    # todo(heyzoos) this needs to be streamed, otherwise we're going to keep seeing heap memory errors
     File.read!(path)
     |> Poison.decode!()
     |> Enum.each(fn json_payload ->

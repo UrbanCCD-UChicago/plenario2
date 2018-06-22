@@ -1,8 +1,11 @@
 defmodule PlenarioWeb.Api.UtilsTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
   import PlenarioWeb.Api.Utils
 
+  # todo(heyzoos) all this could be pushed up to the conn test helper when we
+  # eventually reintegrate it
   alias Plenario.{ModelRegistry, Repo}
+
   alias Plenario.Actions.{
     DataSetActions,
     DataSetFieldActions,
@@ -12,7 +15,20 @@ defmodule PlenarioWeb.Api.UtilsTest do
     VirtualPointFieldActions
   }
 
-  setup do
+  alias Plenario.Schemas.{
+    DataSetField,
+    Meta, 
+    UniqueConstraint,
+    User,
+    VirtualPointField
+  }
+
+  alias PlenarioAot.{
+    AotData,
+    AotMeta
+  }
+
+  setup_all do
     Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
     Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
 
@@ -38,16 +54,29 @@ defmodule PlenarioWeb.Api.UtilsTest do
       Repo.insert(%{model.__struct__ | datetime: "2000-01-02 00:00:00"})
     end)
 
-
     (100..120) |> Enum.each(fn _ ->
       Repo.insert(%{model.__struct__ | location: "(50, 50)"})
     end)
 
-    # vpf: virtual point field
-    %{slug: meta.slug(), vpf: vpf}
+    # Registers a callback that runs once (because we're in setup_all) after 
+    # all the tests have run. Use to clean up! If things screw up and this 
+    # isn't called properly, `env MIX_ENV=test mix ecto.drop` (bash) is your 
+    # friend.
+    on_exit(fn ->
+      # Check out again because this callback is run in another process.
+      :ok = Ecto.Adapters.SQL.Sandbox.checkout(Repo)
+      Ecto.Adapters.SQL.Sandbox.mode(Repo, :auto)
+      truncate([DataSetField, Meta, UniqueConstraint, User, VirtualPointField])
+      truncate([AotMeta, AotData])
+    end)
+
+    %{
+      model: model,
+      vpf: vpf  # virtual point field
+    }
   end
 
-  test "map_to_query/2", %{slug: slug} do
+  test "map_to_query/2", %{model: model} do
     query_map = %{
       "inserted_at" => {"le", "2000-01-01 13:30:15"},
       "updated_at" => {"lt", "2000-01-01 13:30:15"},
@@ -56,14 +85,10 @@ defmodule PlenarioWeb.Api.UtilsTest do
       "string_column" => {"eq", "hello!"}
     }
 
-    ModelRegistry.lookup(slug)
-    |> map_to_query(query_map)
+    map_to_query(model, query_map)
   end
 
-  test "generates a geospatial query using a bounding box", %{slug: slug, vpf: vpf} do
-    # vpf: virtual point field
-
-    model = ModelRegistry.lookup(slug)
+  test "generates a geospatial query using a bounding box", %{model: model, vpf: vpf} do
     polygon = %Geo.Polygon{
       coordinates: [[{0, 0}, {0, 100}, {100, 100}, {100, 0}, {0, 0}]],
       srid: 4326
@@ -76,8 +101,7 @@ defmodule PlenarioWeb.Api.UtilsTest do
     assert length(results) == 21
   end
 
-  test "generates a ranged query using bounding values", %{slug: slug} do
-    model = ModelRegistry.lookup(slug)
+  test "generates a ranged query using bounding values", %{model: model} do
     query = where_condition(model, {"datetime", {"in", %{
       "lower" => "2000-01-01 00:00:00",
       "upper" => "2000-01-01 12:00:00"
