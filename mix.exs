@@ -1,10 +1,12 @@
 defmodule Plenario.Mixfile do
   use Mix.Project
 
+  @version "0.10.1"
+
   def project do
     [
       app: :plenario,
-      version: "0.10.0",
+      version: @version,
       elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
@@ -27,7 +29,14 @@ defmodule Plenario.Mixfile do
   def application do
     [
       mod: {Plenario.Application, []},
-      extra_applications: [:logger, :runtime_tools, :bamboo, :bamboo_smtp, :sentry]
+      extra_applications: [
+        :bamboo,
+        :bamboo_smtp,
+        :briefly,
+        :logger,
+        :runtime_tools,
+        :sentry
+      ]
     ]
   end
 
@@ -90,6 +99,11 @@ defmodule Plenario.Mixfile do
       #
       # MIT
       {:explode, "~> 1.0.0"},
+
+      # Utility for temporary file handling and cleanup.
+      #
+      # Apache 2.0
+      {:briefly, "~> 0.3"},
 
       # job workflow
       {:gen_stage, "~> 0.14.0"},

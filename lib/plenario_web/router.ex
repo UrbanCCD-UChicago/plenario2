@@ -129,6 +129,20 @@ defmodule PlenarioWeb.Router do
 
   end
 
+  scope "/api/v1", PlenarioWeb.Api do
+    pipe_through [:api]
+
+    get "/datasets", ShimController, :datasets
+    get "/detail", ShimController, :detail
+  end
+
+  scope "/v1/api", PlenarioWeb.Api do
+    pipe_through [:api]
+
+    get "/datasets", ShimController, :datasets
+    get "/detail", ShimController, :detail
+  end
+
   if Mix.env == :dev do
     forward "/sent-emails", Bamboo.EmailPreviewPlug
   end

@@ -1,7 +1,10 @@
 defmodule PlenarioWeb.Api.ListControllerTest do
-  use PlenarioWeb.Testing.ConnCase
+  use ExUnit.Case
+  use Phoenix.ConnTest
 
   alias Plenario.Actions.{UserActions, MetaActions}
+
+  @endpoint PlenarioWeb.Endpoint
 
   @seattle_geojson """
     {
@@ -86,7 +89,7 @@ defmodule PlenarioWeb.Api.ListControllerTest do
       {:ok, _} = MetaActions.update(meta, bbox: %{seattle_geom | srid: 4326})
     end
 
-    :ok
+    %{conn: build_conn()}
   end
 
   test "GET /api/v2/data-sets", %{conn: conn} do

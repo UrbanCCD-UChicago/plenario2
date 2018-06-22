@@ -1,8 +1,10 @@
 defmodule PlenarioWeb.Api.AotControllerTest do
-  use PlenarioWeb.Testing.ConnCase
+  use ExUnit.Case
+  use Phoenix.ConnTest
 
   alias PlenarioAot.AotActions
 
+  @endpoint PlenarioWeb.Endpoint
   @fixture "test/fixtures/aot-chicago.json"
 
   @total_records 10
@@ -20,7 +22,13 @@ defmodule PlenarioWeb.Api.AotControllerTest do
     AotActions.compute_and_update_meta_bbox(meta)
     AotActions.compute_and_update_meta_time_range(meta)
 
-    {:ok, [meta: meta]}
+    {
+      :ok,
+      [
+        conn: build_conn(),
+        meta: meta
+      ]
+    }
   end
 
   test "GET /api/v2/aot", %{conn: conn} do
@@ -188,17 +196,17 @@ defmodule PlenarioWeb.Api.AotControllerTest do
     end
 
     test "node_id", %{conn: conn} do
-      conn = get(conn, "/api/v2/aot?node_id=080")
+      conn = get(conn, "/api/v2/aot?node_id=081")
       %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == @total_records
+      assert meta["counts"]["total_records"] == 0
 
       conn = get(conn, "/api/v2/aot?node_id=000")
       %{"meta" => meta, "data" => _} = json_response(conn, 200)
       assert meta["counts"]["total_records"] == 0
 
-      conn = get(conn, "/api/v2/aot?node_id=000&node_id=080")
+      conn = get(conn, "/api/v2/aot?node_id=000&node_id=081")
       %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == @total_records
+      assert meta["counts"]["total_records"] == 0
     end
 
     test "sensor", %{conn: conn} do
@@ -216,9 +224,9 @@ defmodule PlenarioWeb.Api.AotControllerTest do
     end
 
     test "network_name and node_id", %{conn: conn} do
-      conn = get(conn, "/api/v2/aot?network_name=chicago&node_id=080")
+      conn = get(conn, "/api/v2/aot?network_name=chicago&node_id=081")
       %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == @total_records
+      assert meta["counts"]["total_records"] == 0
     end
 
     # TODO: write test after implementation

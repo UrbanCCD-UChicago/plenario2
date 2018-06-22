@@ -7,7 +7,7 @@ defmodule Plenario.FieldGuesser do
     Logger.info("beginning download of #{meta.source_url}")
     payload = download!(meta)
 
-    filename = "/tmp/#{meta.slug}.#{meta.source_type}"
+    {:ok, filename} = Briefly.create()
     Logger.info("writing contents to #{filename}")
     :ok = File.write(filename, payload)
 

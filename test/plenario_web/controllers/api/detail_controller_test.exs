@@ -1,5 +1,8 @@
 defmodule PlenarioWeb.Api.DetailControllerTest do
-  use PlenarioWeb.Testing.ConnCase
+  use ExUnit.Case
+  use Phoenix.ConnTest
+
+  @endpoint PlenarioWeb.Endpoint
 
   alias Plenario.{ModelRegistry, Repo}
   alias Plenario.Actions.{
@@ -53,7 +56,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     """
     Ecto.Adapters.SQL.query!(Repo, refresh)
 
-    %{slug: meta.slug(), vpf: vpf}
+    %{conn: build_conn(), slug: meta.slug(), vpf: vpf}
   end
 
   test "GET /api/v2/data-sets/:slug", %{slug: slug} do

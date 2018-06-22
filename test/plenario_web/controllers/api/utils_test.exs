@@ -1,8 +1,11 @@
 defmodule PlenarioWeb.Api.UtilsTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
   import PlenarioWeb.Api.Utils
 
+  # todo(heyzoos) all this could be pushed up to the conn test helper when we
+  # eventually reintegrate it
   alias Plenario.{ModelRegistry, Repo}
+
   alias Plenario.Actions.{
     DataSetActions,
     DataSetFieldActions,
@@ -58,19 +61,17 @@ defmodule PlenarioWeb.Api.UtilsTest do
   end
 
   test "map_to_query/2", %{slug: slug} do
+    model = ModelRegistry.lookup(slug)
     query_map = %{
       "float_column" => {"ge", 0.0},
       "integer_column" => {"gt", 42},
       "string_column" => {"eq", "hello!"}
     }
 
-    ModelRegistry.lookup(slug)
-    |> map_to_query(query_map)
+    map_to_query(model, query_map)
   end
 
   test "generates a geospatial query using a bounding box", %{slug: slug, vpf: vpf} do
-    # vpf: virtual point field
-
     model = ModelRegistry.lookup(slug)
     polygon = %Geo.Polygon{
       coordinates: [[{0, 0}, {0, 100}, {100, 100}, {100, 0}, {0, 0}]],
