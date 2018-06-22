@@ -28,7 +28,7 @@ defmodule PlenarioAot.AotWorker do
   # SERVER IMPLEMENTATION
 
   def handle_call({:process, meta}, _, state) do
-    path = "/tmp/#{meta.slug}.json"
+    {:ok, path} = Briefly.create()
     Logger.info("Starting download for AoT Network `#{meta.network_name}` from `#{meta.source_url}` to `#{path}`")
 
     %HTTPoison.Response{body: body} = HTTPoison.get!(meta.source_url)
