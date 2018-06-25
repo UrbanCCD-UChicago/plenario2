@@ -1,13 +1,15 @@
 defmodule PlenarioWeb.Api.AotControllerTest do
-  use PlenarioWeb.Testing.ConnCase
+  use ExUnit.Case
+  use Phoenix.ConnTest
 
   alias Plenario.Repo
   alias PlenarioAot.{AotActions, AotData, AotMeta}
 
   import PlenarioWeb.Api.Utils, only: [truncate: 1]
 
+  @endpoint PlenarioWeb.Endpoint
   @fixture "test/fixtures/aot-chicago.json"
-  @total_records 1_365
+  @total_records 50
 
   # Setting up the fixure data once _greatly_ reduces the test time. Drops this particular test
   # case from 40s to 11s as of writing. The downside is that in order to make this work you must
@@ -32,7 +34,10 @@ defmodule PlenarioWeb.Api.AotControllerTest do
       truncate([AotMeta, AotData])
     end)
 
-    {:ok, [meta: meta]}
+    %{
+      conn: build_conn(),
+      meta: meta
+    }
   end
 
   test "GET /api/v2/aot", %{conn: conn} do
@@ -58,7 +63,7 @@ defmodule PlenarioWeb.Api.AotControllerTest do
     assert counts["total_records"] == @total_records
 
     assert is_list(data)
-    assert length(data) == 500
+    assert length(data) == @total_records
     first = Enum.at(data, 0)
     assert is_map(first)
     assert Map.has_key?(first, "node_id")
@@ -219,17 +224,17 @@ defmodule PlenarioWeb.Api.AotControllerTest do
     end
 
     test "node_id", %{conn: conn} do
-      conn = get(conn, "/api/v2/aot?node_id=088")
+      conn = get(conn, "/api/v2/aot?node_id=081")
       %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == 70
+      assert meta["counts"]["total_records"] == 5
 
       conn = get(conn, "/api/v2/aot?node_id=000")
       %{"meta" => meta, "data" => _} = json_response(conn, 200)
       assert meta["counts"]["total_records"] == 0
 
-      conn = get(conn, "/api/v2/aot?node_id=000&node_id=088")
+      conn = get(conn, "/api/v2/aot?node_id=000&node_id=081")
       %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == 70
+      assert meta["counts"]["total_records"] == 5 
     end
 
     test "sensor", %{conn: conn} do
@@ -247,9 +252,9 @@ defmodule PlenarioWeb.Api.AotControllerTest do
     end
 
     test "network_name and node_id", %{conn: conn} do
-      conn = get(conn, "/api/v2/aot?network_name=chicago&node_id=088")
+      conn = get(conn, "/api/v2/aot?network_name=chicago&node_id=081")
       %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == 70
+      assert meta["counts"]["total_records"] == 5
     end
 
     # TODO: write test after implementation

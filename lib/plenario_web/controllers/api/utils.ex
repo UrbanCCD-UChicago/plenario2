@@ -1,7 +1,8 @@
 defmodule PlenarioWeb.Api.Utils do
   import Ecto.Query
-  import PlenarioWeb.Router.Helpers, only: [detail_url: 4, list_url: 3, aot_url: 3]
   import Geo.PostGIS
+  import PlenarioWeb.Router.Helpers, only: [detail_url: 4, list_url: 3, aot_url: 3]
+  import Plug.Conn, only: [put_req_header: 3]
   alias Plenario.Repo
 
   @doc """
@@ -211,5 +212,22 @@ defmodule PlenarioWeb.Api.Utils do
   def truncate(schema) do
     {nil, table} = schema.__struct__.__meta__.source
     Ecto.Adapters.SQL.query!(Repo, "truncate \"#{table}\" cascade;", [])
+  end
+
+  @doc """
+  Halts the request pipeline and returns a JSON API compliant error.
+
+  Make note of the `put_req_header` line!
+
+  Even if the request is asking for something else, we only serve json so we
+  overwrite the header of the incoming request. This will definitely have to be
+  changed later if we want to serve more than one media type. For most browsers,
+  their default accept header prefers xml, and this can lead to some weirdly
+  formatted errors.
+  """
+  def halt_with(conn, status, message) do
+    conn
+    |> put_req_header("accept", "application/vnd.api+json")
+    |> Explode.with(status, message)
   end
 end

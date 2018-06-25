@@ -85,14 +85,9 @@ defmodule PlenarioEtl.Worker do
 
   defp download!(meta) do
     Logger.info("starting source document download")
-    ext =
-      case meta.source_type == "shp" do
-        true -> "zip"
-        false -> meta.source_type
-      end
 
     %HTTPoison.Response{body: body} = HTTPoison.get!(meta.source_url)
-    path = "/tmp/#{meta.slug}.#{ext}"
+    {:ok, path} = Briefly.create()
     File.write!(path, body)
 
     Logger.info("download stored at #{path}")
@@ -130,7 +125,8 @@ defmodule PlenarioEtl.Worker do
   defp load_shp!(path, meta) do
     Logger.info("using shp loader")
 
-    {:ok, file_paths} = :zip.unzip(String.to_charlist(path), cwd: '/tmp/')
+    {:ok, tempdir} = Briefly.create(directory: true)
+    {:ok, file_paths} = :zip.unzip(String.to_charlist(path), cwd: tempdir)
 
     Logger.info("Looking for .shp file")
 

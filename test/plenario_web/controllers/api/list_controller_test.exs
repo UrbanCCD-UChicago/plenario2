@@ -1,11 +1,14 @@
 defmodule PlenarioWeb.Api.ListControllerTest do
-  use PlenarioWeb.Testing.ConnCase
+  use ExUnit.Case
+  use Phoenix.ConnTest
 
   alias Plenario.Actions.UserActions
   alias Plenario.Schemas.{Meta, User}
   alias Plenario.Repo
 
   import PlenarioWeb.Api.Utils, only: [truncate: 1]
+
+  @endpoint PlenarioWeb.Endpoint
 
   @seattle_geojson """
     {
@@ -108,7 +111,7 @@ defmodule PlenarioWeb.Api.ListControllerTest do
       truncate([Meta, User])
     end)
 
-    :ok
+    %{conn: build_conn()}
   end
 
   test "GET /api/v2/data-sets", %{conn: conn} do

@@ -1,5 +1,6 @@
 defmodule PlenarioWeb.Api.DetailControllerTest do
-  use PlenarioWeb.Testing.ConnCase
+  use ExUnit.Case
+  use Phoenix.ConnTest
 
   alias Plenario.{ModelRegistry, Repo}
   alias Plenario.Actions.{
@@ -14,6 +15,8 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
   alias Plenario.Schemas.{DataSetField, Meta, UniqueConstraint, User, VirtualPointField}
 
   import PlenarioWeb.Api.Utils, only: [truncate: 1]
+
+  @endpoint PlenarioWeb.Endpoint
 
   # Setting up the fixure data once _greatly_ reduces the test time. The downside is that in order to make this work
   # you must be explicit about database connection ownership and you must also clean up the tests yourself.
@@ -48,7 +51,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
       truncate([DataSetField, Meta, UniqueConstraint, User, VirtualPointField, model])
     end)
 
-    %{slug: meta.slug(), vpf: vpf}
+    %{conn: build_conn(), slug: meta.slug(), vpf: vpf}
   end
 
   test "GET /api/v2/data-sets/:slug", %{slug: slug} do
