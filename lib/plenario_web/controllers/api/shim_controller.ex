@@ -34,6 +34,22 @@ defmodule PlenarioWeb.Api.ShimController do
   end
 
   @doc """
+
+  """
+  def obs_date_to_first_datetime_field(conn) do
+    %{"dataset_name" => dataset_name} = conn
+    # query for first dataset field with datetime type
+  end
+
+  @doc """
+
+  """
+  def location_geom__within_to_first_geom_field(conn) do
+    %{"dataset_name" => dataset_name} = conn
+    # query for first dataset field with geom type
+  end
+
+  @doc """
   Takes a map, presumably containing keys that correspond to the V1 API, and
   converts them to keys that correspond to the V2 API.
 
@@ -42,6 +58,13 @@ defmodule PlenarioWeb.Api.ShimController do
   If a key isn't found in @translations, it is simply passed through. This is
   because the key could possibly correspond to a data set column, and will be
   validated dynamically.
+
+  ## Examples
+
+      iex> params = [{"foo__gt", "bar"}, {"baz__eq", "buzz"}]
+      iex> translate(params)
+      [{"foo", "gt:bar"}, {"baz", "eq:buzz"}]
+
   """
   def translate(params) when is_list(params) do
     translate(params, [])
@@ -49,6 +72,13 @@ defmodule PlenarioWeb.Api.ShimController do
 
   @doc """
   Our params are a map? Convert it to a list and toss it back up.
+
+  ## Examples
+
+      iex> params = %{"foo_gt" => "bar", "baz__eq" => "buzz"}
+      iex> translate(params)
+      [{"foo", "gt:bar"}, {"baz", "eq:buzz"}]
+
   """
   def translate(params) when is_map(params) do
     params
@@ -73,6 +103,17 @@ defmodule PlenarioWeb.Api.ShimController do
 
   If the key contains a dunder `__` operator. Convert both it and and the value
   to the V2 compliant `PARAM=OPERATOR:VALUE` format.
+
+  ## Examples
+
+      iex> params = [
+      ...>   {"dataset_name", "dset"},
+      ...>   {"foo__gt", "bar"},
+      ...>   {"baz__eq", "buzz"}
+      ...> ]
+      iex> translate(params)
+      [{"slug", "dset"}, {"foo", "gt:bar"}, {"baz", "eq:buzz"}]
+
   """
   def translate([{key, value} | params], acc) do
     param =
