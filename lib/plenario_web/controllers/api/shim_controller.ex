@@ -1,6 +1,8 @@
 defmodule PlenarioWeb.Api.ShimController do
   use PlenarioWeb, :api_controller
   import PlenarioWeb.Api.Utils, only: [halt_with: 3]
+  alias Plenario.Actions.MetaActions
+  alias Plenario.Repo
 
   @translations %{
     "dataset_name" => "slug"
@@ -23,6 +25,7 @@ defmodule PlenarioWeb.Api.ShimController do
   """
   def detail(conn, %{"dataset_name" => _}) do
     %{conn | params: translate(conn.params)}
+    |> obs_date_to_first_datetime_field()
     |> PlenarioWeb.Api.DetailController.call(:get)
   end
 
@@ -36,17 +39,17 @@ defmodule PlenarioWeb.Api.ShimController do
   @doc """
 
   """
-  def obs_date_to_first_datetime_field(conn) do
-    %{"dataset_name" => dataset_name} = conn
-    # query for first dataset field with datetime type
+  def get_obs_date_for_slug(slug) do
+    meta = MetaActions.get(slug, with_fields: true)
+    Enum.find(meta.fields, fn field -> field.type == "timestamptz" end)
   end
 
   @doc """
 
   """
-  def location_geom__within_to_first_geom_field(conn) do
-    %{"dataset_name" => dataset_name} = conn
-    # query for first dataset field with geom type
+  def get_geom_for_slug(conn) do
+    meta = MetaActions.get(slug, with_fields: true)
+    Enum.find(meta.fields, fn field -> field.type == "geom" end)
   end
 
   @doc """
