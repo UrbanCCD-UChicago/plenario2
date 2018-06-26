@@ -29,7 +29,7 @@ defmodule Plenario.Changesets.MetaChangesets do
     latest_import: DateTime | nil,
     next_import: DateTime | nil,
     bbox: Geo.Polygon | nil,
-    time_range: Plenario.TsTzRange | Postgrex.Range | nil
+    time_range: Plenario.TsRange | Postgrex.Range | nil
   }
 
   @required_keys [:name, :source_url, :source_type, :user_id]
@@ -164,17 +164,18 @@ defmodule Plenario.Changesets.MetaChangesets do
   defp validate_refresh_ends_on(changeset), do: changeset
 
   defp set_slug(%Ecto.Changeset{valid?: true, changes: %{name: name}} = changeset) do
-    slug = Slug.slugify(name)
+    ignore =
+      Regex.scan(~r/[^\x00-\x7F]/, name)
+      |> List.to_string()
+    slug = Slug.slugify(name, ignore: ignore)
     put_change(changeset, :slug, slug)
   end
   defp set_slug(changeset), do: changeset
 
   defp set_table_name(%Ecto.Changeset{valid?: true} = changeset) do
-    nonce =
-      :crypto.strong_rand_bytes(16)
-      |> Base.url_encode64()
-      |> binary_part(0, 16)
-    name = "ds_#{nonce}"
+    name =
+      get_field(changeset, :slug)
+      |> String.replace("-", "_")
     put_change(changeset, :table_name, name)
   end
   defp set_table_name(changeset), do: changeset

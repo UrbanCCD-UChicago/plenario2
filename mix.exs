@@ -1,10 +1,12 @@
 defmodule Plenario.Mixfile do
   use Mix.Project
 
+  @version "0.10.1"
+
   def project do
     [
       app: :plenario,
-      version: "0.10.1",
+      version: @version,
       elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
@@ -62,6 +64,7 @@ defmodule Plenario.Mixfile do
       {:timex, "~> 3.2.1"},
       {:httpoison, "~> 0.13.0"},
       {:mock, "~> 0.3.1", only: :test},
+      {:bypass, "~> 0.8.1", only: :test},
       {:guardian, "~> 1.0"},
       {:ecto_state_machine, "~> 0.3.0"},
       {:canary, "~> 1.1"},
@@ -100,7 +103,10 @@ defmodule Plenario.Mixfile do
       # Utility for temporary file handling and cleanup.
       #
       # Apache 2.0
-      {:briefly, "~> 0.3"}
+      {:briefly, "~> 0.3"},
+
+      # job workflow
+      {:gen_stage, "~> 0.14.0"},
     ]
   end
 

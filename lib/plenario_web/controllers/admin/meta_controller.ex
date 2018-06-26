@@ -4,7 +4,6 @@ defmodule PlenarioWeb.Admin.MetaController do
   alias Plenario.Actions.{
     MetaActions,
     DataSetFieldActions,
-    UniqueConstraintActions,
     VirtualDateFieldActions,
     VirtualPointFieldActions
   }
@@ -43,13 +42,11 @@ defmodule PlenarioWeb.Admin.MetaController do
   def review(conn, %{"id" => id}) do
     meta = MetaActions.get(id, with_user: true)
     fields = DataSetFieldActions.list(for_meta: meta)
-    constraints = UniqueConstraintActions.list(for_meta: meta)
     virtual_dates = VirtualDateFieldActions.list(for_meta: meta, with_fields: true)
     virtual_points = VirtualPointFieldActions.list(for_meta: meta, with_fields: true)
 
     render(conn, "review.html", meta: meta, fields: fields,
-      constraints: constraints, virtual_dates: virtual_dates,
-      virtual_points: virtual_points)
+      virtual_dates: virtual_dates, virtual_points: virtual_points)
   end
 
   def approve(conn, %{"id" => id}) do

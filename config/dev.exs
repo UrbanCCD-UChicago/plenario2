@@ -33,7 +33,7 @@ config :plenario, PlenarioWeb.Endpoint,
 
 
 # Do not include metadata nor timestamps in development logs
-config :logger, :console, level: :info
+config :logger, :console, level: :debug
 
 
 # Set a higher stacktrace during development. Avoid configuring such

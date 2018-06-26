@@ -10,7 +10,7 @@ defmodule Plenario.Schemas.DataSetField do
     "integer",
     "float",
     "boolean",
-    "timestamptz",
+    "timestamp",
     "jsonb"
   ]
 
@@ -19,7 +19,7 @@ defmodule Plenario.Schemas.DataSetField do
     Integer: "integer",
     Decimal: "float",
     "True/False": "boolean",
-    Date: "timestamptz",
+    Date: "timestamp",
     JSON: "jsonb"
   ]
 

@@ -47,7 +47,7 @@ defmodule PlenarioWeb.Api.ListController do
   plug(CaptureColumnArgs, assign: :column_fields)
   plug(CaptureBboxArg, assign: :bbox_fields)
 
-  @associations [:fields, :unique_constraints, :virtual_dates, :virtual_points, :user]
+  @associations [:fields, :virtual_dates, :virtual_points, :user]
 
   def construct_query_from_conn_assigns(conn) do
     ordering_fields = Map.get(conn.assigns, :ordering_fields)

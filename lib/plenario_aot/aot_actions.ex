@@ -82,7 +82,7 @@ defmodule PlenarioAot.AotActions do
 
     case res do
       %{min_ts: min_ts, max_ts: max_ts} ->
-        case update_meta(meta, time_range: [min_ts, max_ts]) do
+        case update_meta(meta, time_range: Plenario.TsRange.new(min_ts, max_ts)) do
           {:ok, _} ->
             :ok
 

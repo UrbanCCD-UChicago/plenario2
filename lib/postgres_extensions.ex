@@ -4,140 +4,245 @@ Postgrex.Types.define(
   json: Poison
 )
 
-defmodule Plenario.TsTzRange do
-  @behaviour Ecto.Type
+defmodule Plenario.TsRange do
+  @moduledoc """
+  """
 
-  def type(), do: :tstzrange
+  alias Plenario.TsRange
 
-  def cast(nil), do: {:ok, nil}
-  def cast([lower, upper]), do: {:ok, [lower, upper]}
-  def cast(_), do: :error
+  alias Postgrex.Range
 
-  def load(%Postgrex.Range{lower: lower, upper: upper}) do
-    lower = to_datetime(lower)
-    upper = to_datetime(upper)
+  @typedoc """
+  """
+  @type t :: %__MODULE__{
+    lower: NaiveDateTime.t,
+    upper: NaiveDateTime.t,
+    lower_inclusive: boolean,
+    upper_inclusive: boolean
+  }
 
-    case {lower, upper} do
-      {nil, nil} -> {:ok, [nil, nil]}
-      {{:ok, lower}, {:ok, upper}} -> {:ok, [lower, upper]}
-      _ -> :error
+  defstruct [
+    lower: nil,
+    upper: nil,
+    lower_inclusive: true,
+    upper_inclusive: true
+  ]
+
+  @doc """
+  """
+  @spec new(NaiveDateTime.t, NaiveDateTime.t, boolean, boolean) :: TsRange.t
+  def new(lower, upper, lower_inclusive \\ true, upper_inclusive \\ true) do
+    %TsRange{
+      lower: from_erl(lower),
+      upper: from_erl(upper),
+      lower_inclusive: lower_inclusive,
+      upper_inclusive: upper_inclusive
+    }
+  end
+
+  @doc """
+  """
+  @spec from_postgrex(Range.t) :: TsRange.t
+  def from_postgrex(range) do
+    new(
+      from_erl(range.lower),
+      from_erl(range.upper),
+      range.lower_inclusive,
+      range.upper_inclusive
+    )
+  end
+
+  @doc """
+  """
+  @spec to_postgrex(TsRange.t) :: Range.t
+  def to_postgrex(range) do
+    %Range{
+      lower: to_erl(range.lower),
+      upper: to_erl(range.upper),
+      lower_inclusive: range.lower_inclusive,
+      upper_inclusive: range.upper_inclusive
+    }
+  end
+
+  defp to_erl({{_, _, }, {_, _, _, _}} = erl), do: erl
+  defp to_erl(%NaiveDateTime{} = d) do
+    {ymd, {h, m, s}} = NaiveDateTime.to_erl(d)
+    {ymd, {h, m, s, 0}}
+  end
+
+  defp from_erl(%NaiveDateTime{} = ndt), do: ndt
+  defp from_erl({{y, m, d}, {h, i, s, u}}) do
+    {:ok, n} = NaiveDateTime.new(y, m, d, h, i, s, {u, 0})
+    n
+  end
+
+  defimpl String.Chars, for: Plenario.TsRange do
+    @spec to_string(TsRange.t) :: String.t
+    def to_string(r) do
+      lb =
+        case r.lower_inclusive do
+          true -> "["
+          false -> "("
+        end
+      ub =
+        case r.upper_inclusive do
+          true -> "]"
+          false -> ")"
+        end
+      lo =
+        case r.lower do
+          nil -> ""
+          _ -> "#{r.lower}"
+        end
+      hi =
+        case r.upper do
+          nil -> ""
+          _ -> "#{r.upper}"
+        end
+
+      "#{lb}#{lo}, #{hi}#{ub}"
     end
   end
+
+  @behaviour Ecto.Type
+
+  @doc false
+  def type, do: :tsrange
+
+  @doc false
+  def cast(nil), do: {:ok, nil}
+  def cast(%Range{} = r), do: {:ok, r}
+  def cast(%TsRange{} = r), do: {:ok, to_postgrex(r)}
+  def cast(_), do: :error
+
+  @doc false
+  def load(nil), do: {:ok, nil}
+  def load(%Range{} = r), do: {:ok, from_postgrex(r)}
+  def load(%TsRange{} = r), do: {:ok, r}
   def load(_), do: :error
 
-  def dump([lower, upper]) do
-    {
-      :ok,
-      %Postgrex.Range{
-        lower: from_datetime(lower),
-        upper: from_datetime(upper),
-        upper_inclusive: true
-      }
-    }
-  end
-  def dump(_), do: :error
-
-  defp to_datetime(nil), do: nil
-  defp to_datetime({{y, m, d}, {h, mm, s, ms}}) do
-    {status, dt, _} = DateTime.from_iso8601("#{y}-#{lp(m)}-#{lp(d)}T#{lp(h)}:#{lp(mm)}:#{lp(s)}.#{ms}Z")
-    case status do
-      :ok -> {:ok, dt}
-      _ -> :error
-    end
-  end
-
-  defp from_datetime(nil), do: nil
-  defp from_datetime(dt) do
-    {
-      {dt.year, dt.month, dt.day},
-      {dt.hour, dt.minute, dt.second, elem(dt.microsecond, 0)}
-    }
-  end
-
-  defp lp(number) do
-    if number >= 10 do
-      "#{number}"
-    else
-      "0#{number}"
-    end
-  end
-end
-
-defmodule Plenario.ForgivingDatetime do
-  @behaviour Ecto.Type
-
-  def type(), do: :timestamptz
-
-  @us_dt_string ~r/(?P<mo>\d{1,2})\/(?P<d>\d{1,2})\/(?P<y>\d{4}).?(?P<h>\d{2})?\:?(?P<mi>\d{2})?\:?(?P<s>\d{2})?/
-
-  @iso_dt_string ~r/(?P<y>\d{4})-(?P<mo>\d{2})-(?P<d>\d{2}).?(?P<h>\d{2})?\:?(?P<mi>\d{2})?\:?(?P<s>\d{2})?/
-
-  def cast(nil), do: {:ok, nil}
-  def cast(value) when is_bitstring(value) do
-    case Regex.match?(@iso_dt_string, value) do
-      true -> {:ok, value}
-      false ->
-        case Regex.match?(@us_dt_string, value) do
-          true -> {:ok, value}
-          false -> :error
-        end
-    end
-  end
-
-  def cast(_), do: :error
-
-  def load({{y, m, d}, {h, mm, s, _}}) do
-    {:ok, NaiveDateTime.from_erl!({{y, m, d}, {h, mm, s}})}
-  end
-
+  @doc false
   def dump(nil), do: {:ok, nil}
+  def dump(%Range{} = r), do: {:ok, r}
+  def dump(%TsRange{} = r), do: {:ok, to_postgrex(r)}
+  def dump(_), do: :error
+end
 
-  def dump(value) do
-    case Regex.scan(@iso_dt_string, value, capture: :all_names) do
-      [[day, hr, min, mon, sec, yr] | _] ->
-        parse_bits(day, hr, min, mon, sec, yr)
+defmodule Plenario.Extensions.TsRange do
+  @moduledoc false
 
-      _ ->
-        case Regex.scan(@us_dt_string, value, capture: :all_names) do
-          [[day, hr, min, mon, sec, yr] | _] ->
-            parse_bits(day, hr, min, mon, sec, yr)
+  use Bitwise, only_operators: true
 
-          _ ->
-            {:ok, nil}
+  import Postgrex.BinaryUtils, warn: false
+
+  @behaviour Postgrex.SuperExtension
+
+  @range_empty   0x01
+  @range_lb_inc  0x02
+  @range_ub_inc  0x04
+  @range_lb_inf  0x08
+  @range_ub_inf  0x10
+
+  def init(_), do: nil
+
+  def matching(_), do: [type: "tsrange"]
+
+  def format(_), do: :super_binary
+
+  def oids(%Postgrex.TypeInfo{base_type: oid}, _), do: [oid]
+
+  def encode(_) do
+    quote location: :keep do
+      %Plenario.TsRange{lower: lower, upper: upper} = range, [oid], [type] ->
+        # encode_value/2 defined by TypeModule
+        lower = encode_value(lower, type)
+        upper = encode_value(upper, type)
+        unquote(__MODULE__).encode(range, oid, lower, upper)
+      other, _, _ ->
+        raise ArgumentError,
+          Postgrex.Utils.encode_msg(other, Postgrex.Range)
+    end
+  end
+
+  def decode(_) do
+    quote location: :keep do
+      <<len :: int32, binary :: binary-size(len)>>, [oid], [type] ->
+        <<flags, data :: binary>> = binary
+        # decode_list/2 and @null defined by TypeModule
+        case decode_list(data, type) do
+          [upper, lower] ->
+            unquote(__MODULE__).decode(flags, oid, [lower, upper], @null)
+          empty_or_one ->
+            unquote(__MODULE__).decode(flags, oid, empty_or_one, @null)
         end
     end
   end
 
-  defp parse_bits(day, hr, min, mon, sec, yr) do
-    day = parse_int_str(day)
-    hr = parse_int_str(hr)
-    min = parse_int_str(min)
-    mon = parse_int_str(mon)
-    sec = parse_int_str(sec)
-    yr = parse_int_str(yr)
+  # helpers
 
-    case yr != 0 and mon != 0 and day != 0 do
-      true -> {:ok, {{yr, mon, day}, {hr, min, sec, 0}}}
-      false -> {:ok, nil}
-    end
+  def encode(%Plenario.TsRange{lower_inclusive: lower_inc,
+                             upper_inclusive: upper_inc}, _oid, lower, upper) do
+    flags = 0
+
+    {flags, bin} =
+      if lower == <<-1::int32>> do
+        {flags ||| @range_lb_inf, ""}
+      else
+        {flags, lower}
+      end
+
+    {flags, bin} =
+      if upper == <<-1::int32>> do
+        {flags ||| @range_ub_inf, bin}
+      else
+        {flags, [bin | upper]}
+      end
+
+    flags =
+      if lower_inc do
+        flags ||| @range_lb_inc
+      else
+        flags
+      end
+
+    flags =
+      if upper_inc do
+        flags ||| @range_ub_inc
+      else
+        flags
+      end
+
+    [<<IO.iodata_length(bin)+1::int32>>, flags | bin]
   end
 
-  defp parse_int_str(value) do
-    case Integer.parse(value) do
-      :error -> 0
-      {num, _} -> num
-    end
+  def decode(flags, _oid, [], null) when (flags &&& @range_empty) != 0 do
+    %Plenario.TsRange{lower: null, upper: null}
   end
-end
 
-defmodule Plenario.Jsonb do
-  @behaviour Ecto.Type
+  def decode(flags, _oid, elems, null) do
+    {lower, elems} =
+      if (flags &&& @range_lb_inf) != 0 do
+        {null, elems}
+      else
+        [lower | rest] = elems
+        {lower, rest}
+      end
 
-  def type(), do: :jsonb
+    {upper, []} =
+      if (flags &&& @range_ub_inf) != 0 do
+        {null, elems}
+      else
+        [upper | rest] = elems
+        {upper, rest}
+      end
 
-  def cast(value), do: {:ok, value}
-
-  def load(value), do: {:ok, value}
-
-  def dump(value), do: {:ok, value}
+    lower_inclusive = (flags &&& @range_lb_inc) != 0
+    upper_inclusive = (flags &&& @range_ub_inc) != 0
+    %Plenario.TsRange{
+      lower: lower,
+      upper: upper,
+      lower_inclusive: lower_inclusive,
+      upper_inclusive: upper_inclusive
+    }
+  end
 end

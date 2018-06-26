@@ -22,16 +22,15 @@ defmodule PlenarioEtl.Actions.ExportJobActions do
   @doc """
   Creates a new instance of ExportJob
   """
-  @spec create(meta :: Meta | integer, user :: User | integer, query :: String.t(), include_diffs :: boolean) :: ok_job
-  def create(meta, user, query, include_diffs \\ false)
-  def create(meta, user, query, include_diffs) when not is_integer(meta), do: create(meta.id, user, query, include_diffs)
-  def create(meta, user, query, include_diffs) when not is_integer(user), do: create(meta, user.id, query, include_diffs)
-  def create(meta, user, query, include_diffs) when is_integer(meta) and is_integer(user) do
+  @spec create(meta :: Meta | integer, user :: User | integer, query :: String.t()) :: ok_job
+  def create(meta, user, query)
+  def create(meta, user, query) when not is_integer(meta), do: create(meta.id, user, query)
+  def create(meta, user, query) when not is_integer(user), do: create(meta, user.id, query)
+  def create(meta, user, query) when is_integer(meta) and is_integer(user) do
     params = %{
       meta_id: meta,
       user_id: user,
-      query: query,
-      include_diffs: include_diffs
+      query: query
     }
 
     {:ok, job} = ExportJobChangesets.create(params)
@@ -82,7 +81,7 @@ defmodule PlenarioEtl.Actions.ExportJobActions do
 
   def mark_erred(job, params) do
     Logger.info("[#{inspect self()}] [mark_erred] Marking export job ##{job.id} as errored...")
-    
+
     job
     |> ExportJob.mark_erred()
     |> Changeset.cast(params, [:error_message])

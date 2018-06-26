@@ -9,6 +9,7 @@ config :plenario, env: Mix.env()
 # Configure the database and application repo
 config :plenario, Plenario.Repo,
   types: Plenario.PostGisTypes,
+  extensions: Plenario.Extensions.TsRange,
   handshake_timeout: 120000,
   pool_timeout: 120000,
   timeout: 120000
@@ -26,8 +27,7 @@ config :plenario, PlenarioWeb.Endpoint,
 
 # Configures Elixir's Logger
 config :logger, :console,
-  format: "$time $metadata[$level] $message\n",
-  metadata: :all
+  format: "$time $metadata[$level] $message\n"
 
 
 # Configure the exporter
@@ -38,11 +38,11 @@ config :plenario, :s3_export_bucket, "plenario-exports"
 # configure quantum scheduler
 config :plenario, :refresh_offest, minutes: -1
 
-config :plenario, PlenarioEtl.Scheduler,
+config :plenario, PlenarioEtl,
   global: true,
   jobs: [
     # run the find refreshable metas every minute (offset is 1 minute above)
-    {"* * * * *", {PlenarioEtl.ScheduledJobs, :refresh_datasets, []}}
+    {"* * * * *", {PlenarioEtl, :import_data_sets, []}}
   ]
 
 config :plenario, PlenarioAot.AotScheduler,
@@ -85,6 +85,11 @@ config :ex_aws,
   secret_access_key: [{:system, "AWS_SECRET_ACCESS_KEY"}, :instance_role],
   access_key_id: [{:system, "AWS_ACCESS_KEY_ID"}, :instance_role]
 
+  # Configure worker settings
+  config :plenario, PlenarioEtl,
+    chunk_size: 100,
+    pool_size: 10,
+    num_ingest_workers: 3
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

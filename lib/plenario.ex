@@ -26,12 +26,20 @@ defmodule Plenario do
               bbox_intersects: bbox)
 
         false ->
+          range =
+            case time_range do
+              %Plenario.TsRange{} ->
+                {:ok, range} = Plenario.TsRange.dump(time_range)
+                range
+              %Postgrex.Range{} ->
+                time_range
+            end
           MetaQueries.list()
           |> MetaQueries.handle_opts(
               with_user: true,
               ready_only: true,
               bbox_intersects: bbox,
-              time_range_intersects: time_range)
+              time_range_intersects: range)
       end
 
     Repo.all(query)
