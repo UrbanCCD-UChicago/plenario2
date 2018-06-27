@@ -2,7 +2,7 @@ defmodule PlenarioWeb.Api.ShimController do
   use PlenarioWeb, :api_controller
   import PlenarioWeb.Api.Utils, only: [halt_with: 3]
   alias Plenario.Actions.MetaActions
-  alias Plenario.Repo
+  alias Plug.Conn
 
   @translations %{
     "dataset_name" => "slug"
@@ -25,7 +25,8 @@ defmodule PlenarioWeb.Api.ShimController do
   """
   def detail(conn, %{"dataset_name" => _}) do
     %{conn | params: translate(conn.params)}
-    |> obs_date_to_first_datetime_field()
+    |> adapt_obs_date()
+    |> adapt_location_geom()
     |> PlenarioWeb.Api.DetailController.call(:get)
   end
 
@@ -37,19 +38,63 @@ defmodule PlenarioWeb.Api.ShimController do
   end
 
   @doc """
+  If a client specified a "obs_date" in one of their queries, take it
+  and swap it out with the name of the first timestamp field we can
+  find.
 
+  If there is no timestamp field present, then the request needs to halt
+  as the query will not be valid.
   """
-  def get_obs_date_for_slug(slug) do
-    meta = MetaActions.get(slug, with_fields: true)
-    Enum.find(meta.fields, fn field -> field.type == "timestamptz" end)
+  def adapt_obs_date(conn = %Conn{params: %{"obs_date" => datetime}}) do
+    meta = MetaActions.get(conn.params["slug"], with_fields: true)
+
+    case Enum.find(meta.fields, fn field -> field.type == "timestamp" end) do
+      nil ->
+        halt_with(conn, 422, "There are no timestamp fields for an 'obs_date' query to use.")
+      field ->
+        params =
+          conn.params
+          |> Map.delete("obs_date")
+          |> Map.put(field.name, datetime)
+        %{conn | params: params}
+    end
   end
 
   @doc """
-
+  No "obs_date"? Nothing to do then. Pass it through.
   """
-  def get_geom_for_slug(conn) do
-    meta = MetaActions.get(slug, with_fields: true)
-    Enum.find(meta.fields, fn field -> field.type == "geom" end)
+  def adapt_obs_date(conn) do
+    conn
+  end
+
+  @doc """
+  If a client specified a "location_geom" in one of their queries, take it
+  and swap it out with the name of the first virtual point field we can
+  find.
+
+  If there is no virtual point field present, then the request needs to halt
+  as the query will not be valid.
+  """
+  def adapt_location_geom(conn = %Conn{params: %{"location_geom" => geom}}) do
+    meta = MetaActions.get(conn.params["slug"], with_virtual_points: true)
+
+    case Enum.find(meta.virtual_points, fn field -> field.type == "geom" end) do
+      nil ->
+        halt_with(conn, 422, "There are no virtual point fields for a 'location_geom' query to use.")
+      field ->
+        params =
+          conn.params
+          |> Map.delete("location_geom")
+          |> Map.put(field.name, geom)
+        %{conn | params: params}
+    end
+  end
+
+  @doc """
+  No "location_geom"? Nothing to do then. Pass it through.
+  """
+  def adapt_location_geom(conn) do
+    conn
   end
 
   @doc """
