@@ -79,7 +79,7 @@ defmodule Plenario.FieldGuesserTest do
     with_mock HTTPoison, get: &mock_csv_data_request/3 do
       assert guess_field_types!(meta) == %{
         "pk" => "integer",
-        "datetime" => "timestamptz",
+        "datetime" => "timestamp",
         "location" => "text",
         "data" => "text"
       }
@@ -91,19 +91,7 @@ defmodule Plenario.FieldGuesserTest do
     with_mock HTTPoison, get: &mock_tsv_data_request/3 do
       assert guess_field_types!(meta) == %{
         "pk" => "integer",
-        "datetime" => "timestamptz",
-        "location" => "text",
-        "data" => "text"
-      }
-    end
-  end
-
-  test "guess_field_types!/1 of json", %{meta: meta} do
-    {:ok, meta} = Plenario.Actions.MetaActions.update(meta, source_type: "json")
-    with_mock HTTPoison, get!: &mock_json_data_request/1 do
-      assert guess_field_types!(meta) == %{
-        "pk" => "integer",
-        "datetime" => "timestamptz",
+        "datetime" => "timestamp",
         "location" => "text",
         "data" => "text"
       }
@@ -114,7 +102,7 @@ defmodule Plenario.FieldGuesserTest do
     assert guess("true") == "boolean"
     assert guess("7") == "integer"
     assert guess("0.0") == "float"
-    assert guess("01/01/2000") == "timestamptz"
+    assert guess("01/01/2000") == "timestamp"
     assert guess(~s/{"foo": "bar"}/) == "jsonb"
   end
 

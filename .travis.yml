@@ -22,7 +22,6 @@ env:
 
 before_script:
   - psql -U postgres -c "create extension postgis"
-  - mix do ecto.create, ecto.migrate
 
 script:
-  - mix coveralls.travis --trace
+  - mix do deps.get, deps.compile, clean, compile, ecto.drop, ecto.create, ecto.migrate, coveralls.travis --trace

@@ -6,8 +6,7 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     UserActions,
     MetaActions,
     DataSetFieldActions,
-    VirtualPointFieldActions,
-    UniqueConstraintActions
+    VirtualPointFieldActions
   }
 
   alias PlenarioAot.AotActions
@@ -39,12 +38,11 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     {:ok, meta4} = MetaActions.create("name 4", user, "https://example.com/4", "csv")
 
     for meta <- [meta1, meta2, meta3, meta4] do
-      {:ok, id} = DataSetFieldActions.create(meta, "id", "integer")
-      {:ok, _} = DataSetFieldActions.create(meta, "timestamp", "timestamptz")
+      {:ok, _} = DataSetFieldActions.create(meta, "id", "integer")
+      {:ok, _} = DataSetFieldActions.create(meta, "timestamp", "timestamp")
       {:ok, _} = DataSetFieldActions.create(meta, "observation", "float")
       {:ok, f} = DataSetFieldActions.create(meta, "location", "text")
       {:ok, _} = VirtualPointFieldActions.create(meta, f.id)
-      {:ok, _} = UniqueConstraintActions.create(meta, [id.id])
     end
 
     bbox =
@@ -54,14 +52,14 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
         ],
         srid: 4326
       }
-    {_, lower, _} = DateTime.from_iso8601("2017-01-01T00:00:00.0Z")
-    {_, upper, _} = DateTime.from_iso8601("2018-12-31T00:00:00.0Z")
+    {_, lower} = NaiveDateTime.from_iso8601("2017-01-01T00:00:00.0")
+    {_, upper} = NaiveDateTime.from_iso8601("2018-12-31T00:00:00.0")
 
     {:ok, _} = MetaActions.update_bbox(meta1, bbox)
-    {:ok, _} = MetaActions.update_time_range(meta1, lower, upper)
+    {:ok, _} = MetaActions.update_time_range(meta1, Plenario.TsRange.new(lower, upper))
 
     {:ok, _} = MetaActions.update_bbox(meta2, bbox)
-    {:ok, _} = MetaActions.update_time_range(meta2, lower, upper)
+    {:ok, _} = MetaActions.update_time_range(meta2, Plenario.TsRange.new(lower, upper))
 
     bbox =
       %Geo.Polygon{
@@ -70,14 +68,14 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
         ],
         srid: 4326
       }
-    {_, lower, _} = DateTime.from_iso8601("2015-01-01T00:00:00.0Z")
-    {_, upper, _} = DateTime.from_iso8601("2016-12-31T00:00:00.0Z")
+    {_, lower} = NaiveDateTime.from_iso8601("2015-01-01T00:00:00.0")
+    {_, upper} = NaiveDateTime.from_iso8601("2016-12-31T00:00:00.0")
 
     {:ok, _} = MetaActions.update_bbox(meta3, bbox)
-    {:ok, _} = MetaActions.update_time_range(meta3, lower, upper)
+    {:ok, _} = MetaActions.update_time_range(meta3, Plenario.TsRange.new(lower, upper))
 
     {:ok, _} = MetaActions.update_bbox(meta4, bbox)
-    {:ok, _} = MetaActions.update_time_range(meta4, lower, upper)
+    {:ok, _} = MetaActions.update_time_range(meta4, Plenario.TsRange.new(lower, upper))
 
     m = MetaActions.get(meta1.id)
     {:ok, _} = MetaActions.submit_for_approval(m)
@@ -195,12 +193,6 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
   @tag :anon
   test "explorer receives a terribly formatted datetime", %{conn: conn} do
     conn = get(conn, page_path(conn, :explorer), %{"starting_on" => "woopwoop", "ending_on" => "2000-01-01"})
-    assert get_flash(conn)["error"] =~ "Invalid date woopwoop"
+    assert get_flash(conn)["error"] =~ "Invalid date \"woopwoop\""
   end
-
-   @tag :anon
-  test "explorer receives a terribly fake date", %{conn: conn} do
-    conn = get(conn, page_path(conn, :explorer), %{"starting_on" => "2000-01-01", "ending_on" => "2000-19-11"})
-    assert get_flash(conn)["error"] =~ "date doesn't exist"
-  end 
 end

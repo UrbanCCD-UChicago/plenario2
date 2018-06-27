@@ -13,7 +13,7 @@ defmodule Plenario.Queries.MetaQueries do
 
   import Geo.PostGIS, only: [st_intersects: 2]
 
-  import Plenario.Queries.Utils, only: [tstzrange_intersects: 2]
+  import Plenario.Queries.Utils, only: [tsrange_intersects: 2]
 
   alias Plenario.Queries.{Utils, MetaQueries}
 
@@ -143,12 +143,6 @@ defmodule Plenario.Queries.MetaQueries do
   def with_virtual_points(query), do: from m in query, preload: [virtual_points: :meta]
 
   @doc """
-  A composable query that preloads the UniqueConstraints related to the returned Metas.
-  """
-  @spec with_constraints(query :: Ecto.Query.t()) :: Ecto.Query.t()
-  def with_constraints(query), do: from m in query, preload: [unique_constraints: :meta]
-
-  @doc """
   A composable query that filters returned Metas whose relation to User
   is the user passed as the filter value.
   """
@@ -167,7 +161,7 @@ defmodule Plenario.Queries.MetaQueries do
   with the time range param.
   """
   @spec time_range_intersects(query :: Ecto.Query.t(), user :: User) :: Ecto.Query.t()
-  def time_range_intersects(query, time_range), do: from m in query, where: tstzrange_intersects(m.time_range, ^time_range)
+  def time_range_intersects(query, time_range), do: from m in query, where: tsrange_intersects(m.time_range, ^time_range)
 
   @doc """
   Conditionally applies boolean and filter composable queries to the given
@@ -186,7 +180,6 @@ defmodule Plenario.Queries.MetaQueries do
   | :with_fields                | false         | doesn't apply func |
   | :with_virtual_dates         | false         | doesn't apply func |
   | :with_virtual_points        | false         | doesn't apply func |
-  | :with_constraints           | false         | doesn't apply func |
   | :for_user                   | :dont_use_me  | doesn't apply func |
   | :bbox_intersects            | :dont_use_me  | doesn't apply func |
   | :time_range_intersects      | :dont_use_me  | doesn't apply func |
@@ -212,7 +205,6 @@ defmodule Plenario.Queries.MetaQueries do
       with_fields: false,
       with_virtual_dates: false,
       with_virtual_points: false,
-      with_constraints: false,
       for_user: :dont_use_me,
       bbox_intersects: :dont_use_me,
       time_range_intersects: :dont_use_me
@@ -230,7 +222,6 @@ defmodule Plenario.Queries.MetaQueries do
     |> Utils.bool_compose(opts[:with_fields], MetaQueries, :with_fields)
     |> Utils.bool_compose(opts[:with_virtual_dates], MetaQueries, :with_virtual_dates)
     |> Utils.bool_compose(opts[:with_virtual_points], MetaQueries, :with_virtual_points)
-    |> Utils.bool_compose(opts[:with_constraints], MetaQueries, :with_constraints)
     |> Utils.filter_compose(opts[:for_user], MetaQueries, :for_user)
     |> Utils.filter_compose(opts[:bbox_intersects], MetaQueries, :bbox_intersects)
     |> Utils.filter_compose(opts[:time_range_intersects], MetaQueries, :time_range_intersects)

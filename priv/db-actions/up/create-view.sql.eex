@@ -1,0 +1,53 @@
+CREATE MATERIALIZED VIEW "<%= view_name %>" AS
+SELECT
+  row_id
+
+  -- boolean fields
+  <%= for f <- boolean_fields do %>
+  , p_boolean_from_text("<%= f %>") AS "<%= f %>"
+  <% end %>
+
+  -- integer fields
+  <%= for f <- integer_fields do %>
+  , p_integer_from_text("<%= f %>") AS "<%= f %>"
+  <% end %>
+
+  -- float fields
+  <%= for f <- float_fields do %>
+  , p_float_from_text("<%= f %>") AS "<%= f %>"
+  <% end %>
+
+  -- timestmap fields
+  <%= for f <- timestamp_fields do %>
+  , p_timestamp_from_text("<%= f %>") AS "<%= f %>"
+  <% end %>
+
+  -- virtual dates
+  <%= for f <- virtual_dates do %>
+  , p_timestamp_from_ymdhms(
+    "<%= f.year_field.name %>"
+    <%= if f.month_field do %>
+    , "<%= f.month_field.name %>"
+    <%= if f.day_field do %>
+    , "<%= f.day_field.name %>"
+    <%= if f.hour_field do %>
+    , "<%= f.hour_field.name %>"
+    <%= if f.minute_field do %>
+    , "<%= f.minute_field.name %>"
+    <%= if f.second_field do %>
+    , "<%= f.second_field.name %>"
+    <% end %><% end %><% end %><% end %><% end %>
+  ) AS "<%= f.name %>"
+  <% end %>
+
+  -- virtual points
+  <%= for f <- virtual_points do %>
+  , <%= if f.loc_field do %>
+      p_point_from_loc("<%= f.loc_field.name %>")
+    <% else %>
+      p_point_from_latlon("<%= f.lat_field.name %>", "<%= f.lon_field.name %>")
+    <% end %>
+  AS "<%= f.name %>"
+  <% end %>
+
+FROM "<%= table_name %>";

@@ -10,8 +10,7 @@ defmodule Plenario.Actions.MetaActionsTest do
     DataSetFieldActions,
     MetaActions,
     VirtualDateFieldActions,
-    VirtualPointFieldActions,
-    UniqueConstraintActions
+    VirtualPointFieldActions
   }
 
   defp mock_200(_) do
@@ -101,7 +100,7 @@ defmodule Plenario.Actions.MetaActionsTest do
     end
 
     test "source type", %{meta: meta} do
-      new_type = "json"
+      new_type = "tsv"
       {:ok, _} = MetaActions.update(meta, source_type: new_type)
 
       meta = MetaActions.get(meta.id)
@@ -191,12 +190,8 @@ defmodule Plenario.Actions.MetaActionsTest do
   end
 
   test "update_time_range", %{meta: meta} do
-    {_, lower, _} = DateTime.from_iso8601("2017-01-01T00:00:00.0Z")
-    {_, upper, _} = DateTime.from_iso8601("2018-12-31T00:00:00.0Z")
-    {:ok, _} = MetaActions.update_time_range(meta, lower, upper)
-
-    meta = MetaActions.get(meta.id)
-    assert meta.time_range == [lower, upper]
+    range = Plenario.TsRange.new(~N[2018-01-01 00:00:00], ~N[2019-01-01 00:00:00])
+    {:ok, _} = MetaActions.update_time_range(meta, range)
   end
 
   test "submit_for_approval", %{meta: meta} do
@@ -267,14 +262,12 @@ defmodule Plenario.Actions.MetaActionsTest do
       {:ok, loc} = DataSetFieldActions.create(meta, "location", "text")
       {:ok, _} = VirtualDateFieldActions.create(meta.id, yr.id)
       {:ok, _} = VirtualPointFieldActions.create(meta.id, loc.id)
-      {:ok, _} = UniqueConstraintActions.create(meta, [yr.id])
 
       meta =
         MetaActions.get(
-          meta.id, with_virtual_dates: true, with_virtual_points: true, with_constraints: true)
+          meta.id, with_virtual_dates: true, with_virtual_points: true)
       assert length(meta.virtual_dates) == 1
       assert length(meta.virtual_points) == 1
-      assert length(meta.unique_constraints) == 1
     end
   end
 
@@ -340,9 +333,9 @@ defmodule Plenario.Actions.MetaActionsTest do
   end
 
   test "compute_time_range!", %{meta: meta} do
-    {:ok, pk} = DataSetFieldActions.create(meta, "id", "integer")
+    {:ok, _} = DataSetFieldActions.create(meta, "id", "integer")
     {:ok, _} = DataSetFieldActions.create(meta, "observation", "float")
-    {:ok, _} = DataSetFieldActions.create(meta, "date", "timestamptz")
+    {:ok, _} = DataSetFieldActions.create(meta, "date", "timestamp")
     {:ok, yr} = DataSetFieldActions.create(meta, "year", "integer")
     {:ok, mo} = DataSetFieldActions.create(meta, "month", "integer")
     {:ok, day} = DataSetFieldActions.create(meta, "day", "integer")
@@ -350,29 +343,34 @@ defmodule Plenario.Actions.MetaActionsTest do
     {:ok, lon} = DataSetFieldActions.create(meta, "lon", "float")
     {:ok, _} = VirtualDateFieldActions.create(meta.id, yr.id, month_field_id: mo.id, day_field_id: day.id)
     {:ok, _} = VirtualPointFieldActions.create(meta.id, lat.id, lon.id)
-    {:ok, _} = UniqueConstraintActions.create(meta.id, [pk.id])
 
     DataSetActions.up!(meta)
 
     insert = """
-    INSERT INTO "#{meta.table_name}" VALUES
-      (1, 1.1, '2018-01-01 00:00:00 z', 2017, 1, 1, 10.9, 20.1),
-      (2, 1.1, '2018-01-01 00:00:00 z', 2017, 1, 1, 10.9, 20.1),
-      (3, 1.1, '2018-01-01 00:00:00 z', 2017, 1, 1, 10.9, 20.1),
-      (4, 1.1, '2018-01-01 00:00:00 z', 2017, 1, 1, 10.9, 20.1),
-      (5, 1.1, '2019-01-01 00:00:00 z', 2016, 1, 1, 10.9, 20.1);
+    INSERT INTO "#{meta.table_name}"
+      (id, observation, date, year, month, day, lat, lon)
+    VALUES
+      (1, 1.1, '2018-01-01 00:00:00', 2017, 1, 1, 10.9, 21.1),
+      (2, 1.1, '2018-01-01 00:00:01', 2017, 1, 1, 10.8, 22.2),
+      (3, 1.1, '2018-01-01 00:00:10', 2017, 1, 1, 10.7, 23.3),
+      (4, 1.1, '2018-01-01 00:01:00', 2017, 1, 1, 10.6, 24.4),
+      (5, 1.1, '2019-01-01 00:10:00', 2016, 1, 1, 10.5, 25.5);
     """
     {:ok, _} = Ecto.Adapters.SQL.query(Repo, insert)
 
-    {lower, upper} = MetaActions.compute_time_range!(meta)
-    assert {:ok, upper, 0} == DateTime.from_iso8601("2019-01-01T00:00:00Z")
-    assert {:ok, lower, 0} == DateTime.from_iso8601("2016-01-01T00:00:00Z")
+    refresh = """
+    REFRESH MATERIALIZED VIEW "#{meta.table_name}_view"
+    """
+    Ecto.Adapters.SQL.query!(Repo, refresh)
+
+    range = MetaActions.compute_time_range!(meta)
+    assert range == Plenario.TsRange.new(~N[2016-01-01 00:00:00], ~N[2019-01-01 00:10:00])
   end
 
   test "compute_bbox!", %{meta: meta} do
-    {:ok, pk} = DataSetFieldActions.create(meta, "id", "integer")
+    {:ok, _} = DataSetFieldActions.create(meta, "id", "integer")
     {:ok, _} = DataSetFieldActions.create(meta, "observation", "float")
-    {:ok, _} = DataSetFieldActions.create(meta, "date", "timestamptz")
+    {:ok, _} = DataSetFieldActions.create(meta, "date", "timestamp")
     {:ok, yr} = DataSetFieldActions.create(meta, "year", "integer")
     {:ok, mo} = DataSetFieldActions.create(meta, "month", "integer")
     {:ok, day} = DataSetFieldActions.create(meta, "day", "integer")
@@ -380,24 +378,30 @@ defmodule Plenario.Actions.MetaActionsTest do
     {:ok, lon} = DataSetFieldActions.create(meta, "lon", "float")
     {:ok, _} = VirtualDateFieldActions.create(meta.id, yr.id, month_field_id: mo.id, day_field_id: day.id)
     {:ok, _} = VirtualPointFieldActions.create(meta.id, lat.id, lon.id)
-    {:ok, _} = UniqueConstraintActions.create(meta.id, [pk.id])
 
     DataSetActions.up!(meta)
 
     insert = """
-    INSERT INTO "#{meta.table_name}" VALUES
-      (1, 1.1, '2018-01-01 00:00:00 z', 2017, 1, 1, 10.9, 21.1),
-      (2, 1.1, '2018-01-01 00:00:00 z', 2017, 1, 1, 10.8, 22.2),
-      (3, 1.1, '2018-01-01 00:00:00 z', 2017, 1, 1, 10.7, 23.3),
-      (4, 1.1, '2018-01-01 00:00:00 z', 2017, 1, 1, 10.6, 24.4),
-      (5, 1.1, '2019-01-01 00:00:00 z', 2016, 1, 1, 10.5, 25.5);
+    INSERT INTO "#{meta.table_name}"
+      (id, observation, date, year, month, day, lat, lon)
+    VALUES
+      (1, 1.1, '2018-01-01 00:00:00', 2017, 1, 1, 10.9, 21.1),
+      (2, 1.1, '2018-01-01 00:00:00', 2017, 1, 1, 10.8, 22.2),
+      (3, 1.1, '2018-01-01 00:00:00', 2017, 1, 1, 10.7, 23.3),
+      (4, 1.1, '2018-01-01 00:00:00', 2017, 1, 1, 10.6, 24.4),
+      (5, 1.1, '2019-01-01 00:00:00', 2016, 1, 1, 10.5, 25.5);
     """
     {:ok, _} = Ecto.Adapters.SQL.query(Repo, insert)
+
+    refresh = """
+    REFRESH MATERIALIZED VIEW "#{meta.table_name}_view"
+    """
+    Ecto.Adapters.SQL.query!(Repo, refresh)
 
     bbox = MetaActions.compute_bbox!(meta)
     assert bbox == %Geo.Polygon{
       coordinates: [
-        [{10.5, 25.5}, {10.9, 25.5}, {10.9, 21.1}, {10.5, 21.1}, {10.5, 25.5}]
+        [{10.9, 21.1}, {10.5, 21.1}, {10.5, 25.5}, {10.9, 25.5}, {10.9, 21.1}]
       ],
       srid: 4326
     }
@@ -406,7 +410,7 @@ defmodule Plenario.Actions.MetaActionsTest do
   # todo(heyzoos) If I mock up! I also have to mock down? Investigate.
   # todo(heyzoos) Add a test to make sure down! cleans up properly.
   test "approve/1 with failing call to `up!/1`", %{meta: meta} do
-    with_mock(DataSetActions, 
+    with_mock(DataSetActions,
       up!: fn _ -> raise(Postgrex.Error, message: "Intentional Postgres.Error") end,
       down!: fn _ -> :ok end
     ) do
