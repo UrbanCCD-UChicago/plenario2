@@ -43,4 +43,22 @@ defmodule PlenarioWeb.TemplateHelpers do
       data: [toggle: "tooltip", placement: "top"],
       title: message)
   end
+
+  def make_p(message) do
+    split =
+      String.split(message, "\n\n")
+      |> Enum.join("</p></p>")
+
+    Phoenix.HTML.raw("<p>#{split}</p>")
+  end
+
+  def strftime(%NaiveDateTime{} = timestamp) do
+    Timex.format!(timestamp, "%d %B %Y %I:%M:%S %p", :strftime)
+  end
+
+  def strftime(%Plenario.TsRange{lower: lower, upper: upper}) do
+    lower = strftime(lower)
+    upper = strftime(upper)
+    "#{lower} to #{upper}"
+  end
 end
