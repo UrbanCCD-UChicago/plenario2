@@ -1,7 +1,7 @@
 _build/
 .elixir_ls/
 .git/
-assests/node_modules/
+assets/node_modules/
 deps/
 priv/static/
 test/
