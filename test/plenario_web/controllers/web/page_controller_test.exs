@@ -108,7 +108,16 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     params = %{
       "starting_on" => "2014-11-01",
       "ending_on" => "2015-11-01",
-      "coords" => "[[-30, -20], [-40, -50], [-10, -30], [-30, -20]]",
+      "coords" => Poison.encode!(%{
+        _southWest: %{
+          lat: -10,
+          lng: -20
+        },
+        _northEast: %{
+          lat: -40,
+          lng: -50
+        }
+      }),
       "zoom" => 10
     }
     response =
@@ -124,7 +133,16 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     params = %{
       "starting_on" => "2016-11-01",
       "ending_on" => "2017-11-01",
-      "coords" => "[[30, 20], [40, 50], [10, 30], [30, 20]]",
+      "coords" => Poison.encode!(%{
+        _southWest: %{
+          lat: 10,
+          lng: 20
+        },
+        _northEast: %{
+          lat: 40,
+          lng: 50
+        }
+      }),
       "zoom" => 10
     }
     response =
@@ -140,7 +158,16 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     params = %{
       "starting_on" => "2014-11-01",
       "ending_on" => "2015-11-01",
-      "coords" => "[[30, 20], [40, 50], [10, 30], [30, 20]]",
+      "coords" => Poison.encode!(%{
+        _southWest: %{
+          lat: 10,
+          lng: 20
+        },
+        _northEast: %{
+          lat: 40,
+          lng: 50
+        }
+      }),
       "zoom" => 10
     }
     response =
