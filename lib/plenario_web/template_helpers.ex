@@ -29,7 +29,7 @@ defmodule PlenarioWeb.TemplateHelpers do
         "integer" => "Integer",
         "float" => "Decimal",
         "boolean" => "True/False",
-        "timestamptz" => "Date"
+        "timestamp" => "Date"
       },
       value
     )

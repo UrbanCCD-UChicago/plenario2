@@ -1,0 +1,6 @@
+CREATE TABLE "<%= table_name %>" (
+  row_id BIGSERIAL PRIMARY KEY
+  <%= for f <- fields do %>
+  , "<%= f.name %>" TEXT
+  <% end %>
+)

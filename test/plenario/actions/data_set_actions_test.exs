@@ -1,86 +1,74 @@
 defmodule Plenario.Actions.DataSetActionsTest do
   use Plenario.Testing.DataCase
 
-  alias Plenario.Repo
+  alias Plenario.{Repo, ModelRegistry}
 
   alias Plenario.Actions.{
     DataSetActions,
     DataSetFieldActions,
-    VirtualDateFieldActions,
-    VirtualPointFieldActions,
-    UniqueConstraintActions
+    VirtualPointFieldActions
   }
 
   setup %{meta: meta} do
-    {:ok, pk} = DataSetFieldActions.create(meta, "id", "integer")
-    {:ok, _} = DataSetFieldActions.create(meta, "observation", "float")
-    {:ok, yr} = DataSetFieldActions.create(meta, "year", "integer")
-    {:ok, mo} = DataSetFieldActions.create(meta, "month", "integer")
-    {:ok, day} = DataSetFieldActions.create(meta, "day", "integer")
-    {:ok, lat} = DataSetFieldActions.create(meta, "lat", "float")
-    {:ok, lon} = DataSetFieldActions.create(meta, "lon", "float")
-    {:ok, loc} = DataSetFieldActions.create(meta, "loc", "text")
+    ModelRegistry.clear()
 
-    {:ok, vdf} = VirtualDateFieldActions.create(meta.id, yr.id, month_field_id: mo.id, day_field_id: day.id)
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Test ID", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample Timestamp", "timestamp")
+    {:ok, _} = DataSetFieldActions.create(meta, "Beach", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample 1 Reading", "float")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample 2 Reading", "float")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Reading Mean", "float")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Test ID", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 1 Timestamp", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 1 Reading", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 2 Reading", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Reading Mean", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Note", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample Interval", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 2 Timestamp", "text")
+    {:ok, lat} = DataSetFieldActions.create(meta, "Latitude", "float")
+    {:ok, lon} = DataSetFieldActions.create(meta, "Longitude", "float")
+    {:ok, loc} = DataSetFieldActions.create(meta, "Location", "text")
+    {:ok, _} = VirtualPointFieldActions.create(meta, loc.id)
+    {:ok, _} = VirtualPointFieldActions.create(meta, lat.id, lon.id)
 
-    {:ok, vpf} = VirtualPointFieldActions.create(meta.id, lat.id, lon.id)
-    {:ok, vpf2} = VirtualPointFieldActions.create(meta.id, loc.id)
-
-    {:ok, uc} = UniqueConstraintActions.create(meta.id, [pk.id])
-
-    {
-      :ok,
-      [
-        pk: pk,
-        yr: yr,
-        mo: mo,
-        day: day,
-        lat: lat,
-        lon: lon,
-        vdf: vdf,
-        vpf: vpf,
-        vpf2: vpf2,
-        uc: uc
-      ]
-    }
+    :ok
   end
 
   test "up!", %{meta: meta} do
-    DataSetActions.up!(meta)
-
-    insert = """
-    INSERT INTO "#{meta.table_name}" VALUES
-      (1, 12.3, 2018, 1, 1, 10.1, 20.9, '(10.1, 20.9)'),
-      (2, 12.2, 2018, 1, 1, 10.1, 20.8, '(10.1, 20.8)'),
-      (3, 12.1, 2018, 1, 1, 10.1, 20.7, '(10.1, 20.7)');
-    """
-    {:ok, _} = Ecto.Adapters.SQL.query(Repo, insert)
-
-    query = """
-    SELECT * FROM "#{meta.table_name}"
-    """
-    {:ok, result} = Ecto.Adapters.SQL.query(Repo, query)
-
-    assert length(result.rows) == 3
-    first = List.first(result.rows)
-    assert first == [
-      1, 12.3, 2018, 1, 1, 10.1, 20.9, "(10.1, 20.9)",
-      {{2018, 1, 1}, {0, 0, 0, 0}}, # virtual date
-      %Geo.Point{coordinates: {20.9, 10.1}, srid: 4326},  # virtual point
-      %Geo.Point{coordinates: {20.9, 10.1}, srid: 4326},
-      nil, nil
-    ]
-
-    # check unique key
-    insert = """
-    INSERT INTO "#{meta.table_name}" VALUES
-      (1, 12.4, 2018, 1, 1, 10.1, 20.9, '(10.1, 20.9)');
-    """
-    {:error, _} = Ecto.Adapters.SQL.query(Repo, insert)
+    :ok = DataSetActions.up!(meta)
   end
 
   test "down!", %{meta: meta} do
-    DataSetActions.up!(meta)
-    DataSetActions.down!(meta)
+    :ok = DataSetActions.up!(meta)
+    :ok = DataSetActions.down!(meta)
+  end
+
+  test "etl!", %{meta: meta} do
+    :ok = DataSetActions.up!(meta)
+    :ok = DataSetActions.etl!(meta, "test/fixtures/beach-lab-dna.csv")
+
+    model = ModelRegistry.lookup(meta.slug)
+    res = Repo.all(model)
+    assert length(res) == 2936
+
+    first = List.first(res) |> Map.from_struct()
+    assert first[:"DNA Reading Mean"] == 79.7
+    assert first[:"DNA Sample 1 Reading"] == 39.0
+    assert first[:"DNA Sample 2 Reading"] == 163.0
+    assert first[:"DNA Sample Timestamp"] == ~N[2016-08-05 12:35:00.000000]
+    assert first[:"Latitude"] == 41.9655
+    assert first[:"Longitude"] == -87.6385
+    assert first[:"row_id"] == 1
+
+    for {key, value} <- first do
+      key = Atom.to_string(key)
+      if String.starts_with?(key, "vpf_") do
+        assert value == %Geo.Point{
+          coordinates: {-87.6385, 41.9655},
+          srid: 4326
+        }
+      end
+    end
   end
 end

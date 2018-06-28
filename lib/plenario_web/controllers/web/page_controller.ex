@@ -28,15 +28,12 @@ defmodule PlenarioWeb.Web.PageController do
   end
 
   defp parse_date(conn, date_string) do
-    case DateTime.from_iso8601("#{date_string}T00:00:00.0Z") do
-      {_, datetime, _} ->
+    case NaiveDateTime.from_iso8601("#{date_string}T00:00:00.0") do
+      {:error, _} ->
+        {nil, put_flash(conn, :error,
+        "Invalid date #{inspect(date_string)}")}
+      {_, datetime} ->
         {datetime, conn}
-      {:error, :invalid_format} ->
-        {nil, put_flash(conn, :error,
-          "Invalid date #{date_string}, must be formatted as YYYY-MM-DD")}
-      {:error, :invalid_date} ->
-        {nil, put_flash(conn, :error,
-          "Invalid date #{date_string}, date doesn't exist")}
     end
   end
 
@@ -49,12 +46,12 @@ defmodule PlenarioWeb.Web.PageController do
   end
 
   defp do_explorer(zoom, coords, startdt, enddt, conn) do
-    case DateTime.compare(startdt, enddt) do
+    case NaiveDateTime.compare(startdt, enddt) do
       :gt ->
         do_explorer(zoom, coords, startdt, enddt, put_flash(conn, :error,
           "The starting datetime #{startdt} cannot be greater than the ending datetime #{enddt}"))
       _ ->
-        {:ok, range} = Plenario.TsTzRange.dump([startdt, enddt])
+        range = Plenario.TsRange.new(startdt, enddt)
         do_explorer(zoom, coords, startdt, enddt, range, conn)
     end
   end
@@ -68,7 +65,8 @@ defmodule PlenarioWeb.Web.PageController do
       |> Enum.map(fn {lat, lon} -> [lat, lon] end)
 
     center = get_poly_center(bbox)
-    results = Plenario.search_data_sets(bbox, range)
+    {:ok, postgrex_range} = Plenario.TsRange.dump(range)
+    results = Plenario.search_data_sets(bbox, postgrex_range)
     render_explorer(conn, results, center, zoom, inspect(map_bbox), startdt, enddt)
   end
 

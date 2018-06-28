@@ -28,7 +28,7 @@ defmodule PlenarioWeb.Web.ExportController do
     query = from(m in model)
     query_string = inspect(query, structs: false)
 
-    case ExportJobActions.create(meta, user, query_string, false) do
+    case ExportJobActions.create(meta, user, query_string) do
       {:ok, job} ->
         job = Repo.preload(job, :meta)
         case Exporter.export_task(job) do

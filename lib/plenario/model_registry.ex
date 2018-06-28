@@ -8,9 +8,9 @@ defmodule Plenario.ModelRegistry do
     "float" => :float,
     "integer" => :integer,
     "text" => :string,
-    "date" => Plenario.ForgivingDatetime,
-    "timestamptz" => Plenario.ForgivingDatetime,
-    "jsonb" => Plenario.Jsonb
+    "date" => :naive_datetime,
+    "timestamp" => :naive_datetime,
+    "jsonb" => :map
   }
 
   @doc """
@@ -90,7 +90,7 @@ defmodule Plenario.ModelRegistry do
         true ->
           state
         false ->
-          meta = MetaActions.get(slug, [with_fields: true, with_virtual_points: true])
+          meta = MetaActions.get(slug, [with_fields: true, with_virtual_points: true, with_virtual_dates: true])
           Map.merge(state, register(meta))
       end
 
@@ -103,18 +103,23 @@ defmodule Plenario.ModelRegistry do
 
   defp register(meta) do
     module = "Model." <> Slug.slugify(meta.table_name)
-    table = meta.table_name
+    view = "#{meta.table_name}_view"
     fields =
-      Enum.map(meta.fields, fn field ->
-        {String.to_atom(field.name), Map.fetch!(@type_map, field.type)}
-      end)
+      meta.fields
+      |> Enum.filter(& Enum.member?(["boolean", "integer", "float", "timestamp"], &1.type))
+      |> Enum.map(& {String.to_atom(&1.name), Map.fetch!(@type_map, &1.type)})
 
-    vpfs = 
+    vpfs =
       Enum.map(meta.virtual_points, fn field ->
         {String.to_atom(field.name), Geo.Point}
       end)
 
-    create_module(module, table, fields ++ vpfs)
+    vdfs =
+      Enum.map(meta.virtual_dates, fn field ->
+        {String.to_atom(field.name), :naive_datetime}
+      end)
+
+    create_module(module, view, fields ++ vpfs ++ vdfs)
 
     %{
       meta.id => String.to_atom(module),
@@ -122,17 +127,17 @@ defmodule Plenario.ModelRegistry do
     }
   end
 
-  defp create_module(module, table, fields) do
+  defp create_module(module, view, fields) do
     Module.create(String.to_atom(module), quote do
       use Ecto.Schema
       @primary_key false
-      schema unquote(table) do
+      schema unquote(view) do
+        field :row_id, :integer
         unquote(for {name, type} <- fields do
           quote do
             field unquote(name), unquote(type)
           end
         end)
-        timestamps()
       end
     end, Macro.Env.location(__ENV__))
   end
