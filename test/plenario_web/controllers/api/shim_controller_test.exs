@@ -126,69 +126,69 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
     |> json_response(422)
   end
 
-  # test "GET /v1/api/detail __ ge", %{conn: conn, meta: meta} do
-  #   result =
-  #     get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__ge=2500-01-01")
-  #     |> json_response(200)
-  #
-  #   assert length(result["data"]) == 100
-  #
-  #   result =
-  #     get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__ge=2500-01-02")
-  #     |> json_response(200)
-  #
-  #   assert length(result["data"]) == 25
-  # end
+  test "GET /v1/api/detail __ ge", %{conn: conn, meta: meta} do
+    result =
+      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__ge=2500-01-01")
+      |> json_response(200)
+  
+    assert length(result["data"]) == 100
+  
+    result =
+      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__ge=2500-01-02")
+      |> json_response(200)
+  
+    assert length(result["data"]) == 25
+  end
 
-  # test "GET /v1/api/detail __gt", %{conn: conn, meta: meta} do
-  #   result =
-  #     get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__gt=2500-01-01")
-  #     |> json_response(200)
-  #
-  #   assert length(result["data"]) == 25
-  #
-  #   result =
-  #     get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__gt=2500-01-02")
-  #     |> json_response(200)
-  #
-  #   assert length(result["data"]) == 0
-  # end
+  test "GET /v1/api/detail __gt", %{conn: conn, meta: meta} do
+    result =
+      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__gt=2500-01-01")
+      |> json_response(200)
+  
+    assert length(result["data"]) == 25
+  
+    result =
+      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__gt=2500-01-02")
+      |> json_response(200)
+  
+    assert length(result["data"]) == 0
+  end
 
-  # test "GET /v1/api/detail __lt", %{conn: conn, meta: meta} do
-  #   result =
-  #     get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__lt=2500-01-01")
-  #     |> json_response(200)
-  #
-  #   assert length(result["data"]) == 0
-  #
-  #   result =
-  #     get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__lt=2500-01-02")
-  #     |> json_response(200)
-  #
-  #   assert length(result["data"]) == 75
-  # end
+  test "GET /v1/api/detail __lt", %{conn: conn, meta: meta} do
+    result =
+      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__lt=2500-01-01")
+      |> json_response(200)
+  
+    assert length(result["data"]) == 0
+  
+    result =
+      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__lt=2500-01-02")
+      |> json_response(200)
+  
+    assert length(result["data"]) == 75
+  end
 
-  # test "GET /v1/api/detail __le", %{conn: conn, meta: meta} do
-  #   result =
-  #     get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__le=2500-01-01")
-  #     |> json_response(200)
-  #
-  #   assert length(result["data"]) == 75
-  #
-  #   result =
-  #     get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__le=2500-01-02")
-  #     |> json_response(200)
-  #
-  #   assert length(result["data"]) == 100
-  # end
+  test "GET /v1/api/detail __le", %{conn: conn, meta: meta} do
+    result =
+      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__le=2500-01-01")
+      |> json_response(200)
+  
+    assert length(result["data"]) == 75
+  
+    result =
+      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__le=2500-01-02")
+      |> json_response(200)
+  
+    assert length(result["data"]) == 100
+  end
 
-  # test "GET /api/v1/detail __eq", %{conn: conn, meta: meta} do
-  #   result =
-  #     get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__eq=2500-01-02")
-  #     |> json_response(200)
-  #
-  #   assert length(result["data"]) == 25
-  # end
+  test "GET /api/v1/detail __eq", %{conn: conn, meta: meta} do
+    result =
+      get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__eq=2500-01-02")
+      |> json_response(200)
+  
+    assert length(result["data"]) == 25
+  end
 
   test "GET /v1/api/datasets", %{conn: conn} do
     result = json_response(get(conn, "/api/v1/datasets"), 200)
