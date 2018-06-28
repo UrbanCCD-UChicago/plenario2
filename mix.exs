@@ -49,6 +49,7 @@ defmodule Plenario.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      # phoenix deps
       {:phoenix, "~> 1.3.2"},
       {:phoenix_pubsub, "~> 1.0"},
       {:phoenix_ecto, "~> 3.2"},
@@ -57,22 +58,36 @@ defmodule Plenario.Mixfile do
       {:phoenix_live_reload, "~> 1.0", only: :dev},
       {:gettext, "~> 0.15.0"},
       {:cowboy, "~> 1.0"},
+
+      {:gen_stage, "~> 0.14.0"},
+
+      # database utils
       {:geo_postgis, "~> 1.0"},
+      {:ecto_state_machine, "~> 0.3.0"},
+      {:scrivener, "~> 2.5"},
+      {:scrivener_ecto, "~> 1.3"},
+
+      # hashing and auth utils
       {:comeonin, "~> 4.0"},
       {:bcrypt_elixir, "~> 1.0"},
-      {:excoveralls, "~> 0.7", only: :test},
-      {:timex, "~> 3.2.1"},
-      {:httpoison, "~> 0.13.0"},
-      {:mock, "~> 0.3.1", only: :test},
-      {:bypass, "~> 0.8.1", only: :test},
       {:guardian, "~> 1.0"},
-      {:ecto_state_machine, "~> 0.3.0"},
       {:canary, "~> 1.1"},
       {:canada, "~> 1.0"},
-      {:distillery, "~> 1.5"},
-      {:slugify, "~> 1.1"},
-      {:sentry, "~> 6.1.0"},
+
+      # http and api utils
       {:cors_plug, "~> 1.5"},
+      {:explode, "~> 1.0.0"},
+
+      # Parsing libraries
+      {:csv, "~> 2.0"},          # csv
+      {:poison, "~> 3.1"},       # json
+      {:sweet_xml, "~> 0.6.5"},  # xml
+
+      # etc utils
+      {:timex, "~> 3.2.1"},
+      {:httpoison, "~> 0.13.0"},
+      {:slugify, "~> 1.1"},
+      {:briefly, "~> 0.3"},
 
       # Job scheduler
       {:quantum, "~> 2.2"},
@@ -81,29 +96,17 @@ defmodule Plenario.Mixfile do
       {:bamboo, "~> 0.8"},
       {:bamboo_smtp, "~> 1.4.0"},
 
-      # Parsing libraries
-      {:csv, "~> 2.0"},          # csv
-      {:poison, "~> 3.1"},       # json
-      {:sweet_xml, "~> 0.6.5"},  # xml
-
       # Aws client libraries
       {:ex_aws, "~> 2.0"},
       {:ex_aws_s3, "~> 2.0"},
 
-      # Result pagination libraries
-      {:scrivener, "~> 2.5"},
-      {:scrivener_ecto, "~> 1.3"},
+      # testing utils
+      {:excoveralls, "~> 0.7", only: :test},
+      {:mock, "~> 0.3.1", only: :test},
+      {:bypass, "~> 0.8.1", only: :test},
 
-      # An easy utility for responding with standard HTTP/JSON error payloads
-      # in Plug and Phoenix based applications.
-      #
-      # MIT
-      {:explode, "~> 1.0.0"},
-
-      # Utility for temporary file handling and cleanup.
-      #
-      # Apache 2.0
-      {:briefly, "~> 0.3"},
+      # releases
+      {:distillery, "~> 1.5"},
 
       # job workflow
       {:gen_stage, "~> 0.14.0"},
@@ -112,7 +115,10 @@ defmodule Plenario.Mixfile do
       # Provides conveniences over web connections to allow for easy handling.
       #
       # Apache 2.0
-      {:plug, "~> 1.5.0"}
+      {:plug, "~> 1.5.0"},
+
+      # error notifications
+      {:sentry, "~> 6.3"}
     ]
   end
 

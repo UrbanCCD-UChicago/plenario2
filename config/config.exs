@@ -71,13 +71,11 @@ config :cors_plug,
   max_age: 300, # five minutes
   methods: ["GET", "HEAD", "OPTIONS"]
 
-# # configure sentry
-# config :sentry,
-#   dsn: "https://public:secret@app.getsentry.com/1",
-#   environment_name: :prod,
-#   included_environments: [:prod],
-#   enable_source_code_context: true,
-#   root_source_code_path: File.cwd!
+# configure sentry
+config :sentry,
+  dsn: "https://public_key@app.getsentry.com/1",
+  environment_name: Mix.env(),
+  included_environments: [:prod]
 
 
 # configure aws client
