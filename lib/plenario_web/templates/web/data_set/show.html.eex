@@ -42,7 +42,7 @@
         </tr>
         <tr>
           <td>Description:</td>
-          <td><span style="white-space= pre-line;"><%= res.description || "-" %></span></td>
+          <td><span style="white-space: pre-line;"><%= res.description || "-" %></span></td>
         </tr>
         <tr>
           <td>Attribution:</td>

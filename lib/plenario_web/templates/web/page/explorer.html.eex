@@ -69,7 +69,7 @@
             <strong>Source:</strong> <%= res.attribution %>
           </p>
           <p>
-            <strong>Description:</strong><span style="white-space= pre-line;"><%= res.description %></span>
+            <strong>Description:</strong><span style="white-space: pre-line;"><%= res.description %></span>
           </p>
           <p>
             <strong>Contributor:</strong> <%= res.user.name %>
