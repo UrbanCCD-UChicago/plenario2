@@ -107,6 +107,12 @@ defmodule Plenario.Mixfile do
 
       # job workflow
       {:gen_stage, "~> 0.14.0"},
+
+      # Specification for composable modules between elixir web applications.
+      # Provides conveniences over web connections to allow for easy handling.
+      #
+      # Apache 2.0
+      {:plug, "~> 1.5.0"}
     ]
   end
 
