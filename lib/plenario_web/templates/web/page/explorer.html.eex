@@ -60,10 +60,11 @@
 
     <%= if length(@results) > 0 do %>
       <%= for {res, idx} <- Enum.with_index(@results) do %>
-      <div class="row col-lg-12">
-        <h3><%= res.name %></h3>
-      </div>
+        
       <div class="row">
+        <div class="col-12">
+          <h3><%= res.name %></h3>
+        </div>
         <div class="col-lg-3">
           <p>
             <strong>Source:</strong> <%= res.attribution %>
