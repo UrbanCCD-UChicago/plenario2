@@ -21,7 +21,7 @@ defmodule PlenarioWeb.Api.AotController do
       _ ->
         conn
         |> put_req_header("accept", "application/vnd.api+json")
-        |> Explode.with(400, "Unable to parse bbox JSON syntax")
+        |> Explode.with(400, "Unable to parse bounding box JSON syntax")
     end
     Poison.decode!(value) |> Geo.JSON.decode()
   end
