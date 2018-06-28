@@ -313,87 +313,164 @@ defmodule Plenario.Actions.MetaActions do
     Repo.one(from m in model, select: fragment("count(*)"))
   end
 
-  def get_agg_data(meta, _starts, _ends) do
+  def get_agg_data(%Meta{} = meta) do
     fields = DataSetFieldActions.list(for_meta: meta)
+    points = VirtualPointFieldActions.list(for_meta: meta)
+    dates = VirtualDateFieldActions.list(for_meta: meta)
 
-    number_fields =
-      fields
-      |> Enum.filter(fn f -> f.type in ["float", "integer"] end)
-      |> Enum.filter(fn f -> not String.ends_with?(String.downcase(f.name), ["id"]) end)
-      |> Enum.filter(fn f -> not String.starts_with?(String.downcase(f.name), ["lat", "lon", "loc"]) end)
-      |> Enum.take(5)
-    len_fields = length(number_fields)
+    point_ref_ids =
+      points
+      |> Enum.map(& [&1.loc_field_id, &1.lat_field_id, &1.lon_field_id])
+      |> List.flatten()
+      |> Enum.reject(& is_nil(&1))
+      |> Enum.uniq()
 
-    ts_field =
+    date_ref_ids =
+      dates
+      |> Enum.map(& [
+        &1.year_field_id, &1.month_field_id, &1.day_field_id,
+        &1.hour_field_id, &1.minute_field_id, &1.second_field_id
+      ])
+      |> List.flatten()
+      |> Enum.reject(& is_nil(&1))
+      |> Enum.uniq()
+
+    numerical_fields =
       fields
-      |> Enum.filter(fn f -> f.type == "timestamp" end)
-      |> List.first()
-    ts_field =
-      case ts_field == nil do
-        false -> ts_field
-        true ->
-          VirtualDateFieldActions.list(for_meta: meta)
-          |> List.first()
+      |> Enum.filter(& &1.type in ["integer", "float"])
+      |> Enum.reject(& &1.id in point_ref_ids)
+      |> Enum.reject(& &1.id in date_ref_ids)
+      |> Enum.map(& String.to_atom(&1.name))
+
+    timestamp_fields =
+      fields
+      |> Enum.filter(& &1.type == "timestamp")
+      |> Enum.map(& String.to_atom(&1.name))
+
+    boolean_fields =
+      fields
+      |> Enum.filter(& &1.type == "boolean")
+      |> Enum.map(& String.to_atom(&1.name))
+
+    # if no timestamp fields, then take the first virtual date
+    timestamp_fields =
+      case timestamp_fields do
+        [] ->
+          Enum.map(dates, & String.to_atom(&1.name))
+        _ ->
+          timestamp_fields
       end
+    timestamp = List.first(timestamp_fields)
 
+    cond do
+      # if numerical fields then render a line chart
+      length(numerical_fields) > 0 ->
+        agg_numerical(meta, numerical_fields, timestamp)
+
+      # else if boolean fields, render a doughnut chart
+      length(boolean_fields) > 0 ->
+        agg_boolean(meta, boolean_fields, timestamp)
+
+      # else render a map with pins for locations
+      true ->
+        point_field = Enum.map(points, & &1.name) |> List.first()
+        agg_points(meta, point_field)
+    end
+  end
+
+  defp agg_numerical(meta, numerical_fields, timestamp) do
     query =
       """
       SELECT
-        date_trunc('month', "<%= ts_field.name %>") as Timestamp,
-        <%= for {f, idx} <- Enum.with_index(number_fields) do %>
-        avg("<%= f.name %>") as "<%= f.name %>"<%= if idx < len_fields do %>,<% end %>
+        DATE_TRUNC('month', "<%= timestamp %>") AS Timestamp
+        <%= for f <- fields do %>
+        , AVG("<%= f %>") AS "<%= f %>"
         <% end %>
       FROM
-        "<%= table_name %>"
+        "<%= view %>"
       GROUP BY
         Timestamp
       ORDER BY
-        Timestamp DESC
-      ;
+        Timestamp ASC
       """
-    sql = EEx.eval_string(
-      query,
-      [ts_field: ts_field, number_fields: number_fields,
-      len_fields: len_fields - 1, table_name: meta.table_name],
-      trim: true
-    )
-    case Ecto.Adapters.SQL.query(Repo, sql) do
-      {:ok, results} ->
-        labels =
-          for [{{y, mo, d}, {h, mi, s, _}} | _] <- results.rows do
-            case NaiveDateTime.from_erl({{y, mo, d}, {h, mi, s}}) do
-              {:ok, ndt} -> ndt
-              _ -> ""
-            end
-          end
-        [_ | cols] = results.columns
+      |> EEx.eval_string([
+        timestamp: timestamp,
+        fields: numerical_fields,
+        view: "#{meta.table_name}_view"
+      ], trim: true)
 
-        rows =
-          for [_ | row] <- results.rows do
-            row
-          end
+    %Postgrex.Result{columns: cols, rows: rows} = Repo.query!(query)
 
-        data =
-          for idx <- 0..len_fields do
-            col = Enum.at(cols, idx)
-            values =
-              for row <- rows do
-                Enum.at(row, idx)
-              end
-            {col, values}
-          end
-          |> Enum.filter(fn {c, _} -> c != nil end)
+    labels = for [{ymd, {h, m, s, _}} | _] <- rows, do: NaiveDateTime.from_erl!({ymd, {h, m, s}})
 
-        %{
-          labels: labels,
-          data: data
-        }
+    rows = for [_ | row] <- rows, do: row
+    [_ | cols] = cols
+    data =
+      Enum.with_index(cols)
+      |> Enum.map(fn {col, idx} ->
+        row_data = for row <- rows, do: Enum.at(row, idx)
+        {col, row_data}
+      end)
 
-      {:error, _} ->
-        %{
-          labels: ["Uno", "Dos", "Tres", "Quattro", "Cinco", "Sies"],
-          data: [{"Sensor 1", [1,5,4,2,5,6]}, {"Sensor 2", [2,3,1,5,6,5]}, {"Sensor 3", [4,3,4,7,8,2]}]
-        }
-    end
+    {:line, labels, data}
+  end
+
+  defp agg_boolean(meta, boolean_fields, timestamp) do
+    query =
+      """
+      SELECT
+        DATE_TRUNC('month', "<%= timestamp %>") AS Timestamp
+        <%= for f <- fields do %>
+        , SUM(CASE WHEN "<%= f %>" THEN 1 ELSE 0 END) AS "<%= f %>: Yes"
+        , SUM(CASE WHEN "<%= f %>" THEN 0 ELSE 1 END) AS "<%= f %>: No"
+        <% end %>
+      FROM
+        "<%= view %>"
+      GROUP BY
+        Timestamp
+      ORDER BY
+        Timestamp ASC;
+      """
+      |> EEx.eval_string([
+        timestamp: timestamp,
+        fields: boolean_fields,
+        view: "#{meta.table_name}_view"
+      ], trim: true)
+
+    %Postgrex.Result{columns: cols, rows: rows} = Repo.query!(query)
+
+    labels = for [{ymd, {h, m, s, _}} | _] <- rows, do: NaiveDateTime.from_erl!({ymd, {h, m, s}})
+
+    rows = for [_ | row] <- rows, do: row
+    [_ | cols] = cols
+    data =
+      Enum.with_index(cols)
+      |> Enum.map(fn {col, idx} ->
+        row_data = for row <- rows, do: Enum.at(row, idx)
+        {col, row_data}
+      end)
+
+    {:line, labels, data}
+  end
+
+  defp agg_points(meta, point_field) do
+    query =
+      """
+      SELECT DISTINCT "<%= field %>"
+      FROM "<%= view %>"
+      """
+      |> EEx.eval_string([
+        field: point_field,
+        view: "#{meta.table_name}_view"
+      ], trim: true)
+
+    %Postgrex.Result{rows: rows} = Repo.query!(query)
+
+    coords = Enum.map(rows, fn row ->
+      [%Geo.Point{coordinates: {lon, lat}}] = row
+      {lat, lon}
+    end)
+
+    {:map, "Locations", coords}
   end
 end
