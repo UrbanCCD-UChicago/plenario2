@@ -126,7 +126,6 @@ defmodule PlenarioEtl.Actions.EtlJobActions do
   end
 
   defp handle_error(error, :prod) do
-    Sentry.capture_exception(error, [stacktrace: System.stacktrace()])
     Logger.error("#{inspect(error)}")
   end
 

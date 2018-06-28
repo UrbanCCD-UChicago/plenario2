@@ -3,8 +3,6 @@ defmodule PlenarioWeb.Router do
 
   use Plug.ErrorHandler
 
-  use Sentry.Plug
-
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
