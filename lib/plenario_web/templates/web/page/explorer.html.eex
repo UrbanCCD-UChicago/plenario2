@@ -60,14 +60,17 @@
 
     <%= if length(@results) > 0 do %>
       <%= for {res, idx} <- Enum.with_index(@results) do %>
+        
       <div class="row">
-        <h3><%= res.name %></h3>
+        <div class="col-12">
+          <h3><%= res.name %></h3>
+        </div>
         <div class="col-lg-3">
           <p>
             <strong>Source:</strong> <%= res.attribution %>
           </p>
           <p>
-            <strong>Description:</strong> <%= res.description %>
+            <strong>Description:</strong><span style="white-space: pre-line;"><%= res.description %></span>
           </p>
           <p>
             <strong>Contributor:</strong> <%= res.user.name %>
@@ -76,7 +79,7 @@
             <strong>Records:</strong> <%= Plenario.Actions.MetaActions.get_record_count(res) %>
           </p>
           <p>
-            <strong>Time Range:</strong> <%= Plenario.Schemas.Meta.get_time_range_string(res) %>
+            <strong>Time Range:</strong> <%= strftime(res.time_range) %>
           </p>
           <hr>
           <p>
@@ -87,8 +90,12 @@
           </p>
         </div>
         <div class="col-lg-9">
-          <% aggs = Plenario.Actions.MetaActions.get_agg_data(res, @starts, @ends) %>
-          <%= PlenarioWeb.SharedView.render_line(aggs.labels, aggs.data, [height: 200, chart_id: "line_#{idx}"]) %>
+          <% {type, labels, data} = Plenario.Actions.MetaActions.get_agg_data(res) %>
+          <%= if type == :line do %>
+            <%= PlenarioWeb.SharedView.render_line(labels, data, [height: 200, chart_id: "line_#{idx}"]) %>
+          <% else %>
+            <%= PlenarioWeb.SharedView.render_map(draw_controls: false, map_height: "200px", map_center: @map_center, map_zoom: @map_zoom, points: data)%>
+          <% end %>
         </div>
       </div>
       <hr class="dotborder">
