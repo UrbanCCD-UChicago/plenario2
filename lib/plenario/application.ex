@@ -6,6 +6,10 @@ defmodule Plenario.Application do
   def start(_type, _args) do
     import Supervisor.Spec
 
+    # add sentry as a handler to the erlang :error_logger so that
+    # all errors are sent and notified.
+    :ok = :error_logger.add_report_handler(Sentry.Logger)
+
     # Define workers and child supervisors to be supervised
     children = [
       # Start the Ecto repository
