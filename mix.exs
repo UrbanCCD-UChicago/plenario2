@@ -59,8 +59,6 @@ defmodule Plenario.Mixfile do
       {:gettext, "~> 0.15.0"},
       {:cowboy, "~> 1.0"},
 
-      {:gen_stage, "~> 0.14.0"},
-
       # database utils
       {:geo_postgis, "~> 1.0"},
       {:ecto_state_machine, "~> 0.3.0"},
@@ -115,10 +113,19 @@ defmodule Plenario.Mixfile do
       # Provides conveniences over web connections to allow for easy handling.
       #
       # Apache 2.0
-      {:plug, "~> 1.5.0"},
+      #
+      # TODO(heyzoos) This is set to `1.5.0` because version `1.6.0` of plug
+      # has been causing this error with sentry.
+      #
+      # https://github.com/getsentry/sentry-elixir/issues/275
+      #
+      # Hopefully this will get resolved in future versions of plug or sentry.
+      {:plug, "~> 1.5.0", override: true},
 
-      # error notifications
-      {:sentry, "~> 6.3"}
+      # Real time error tracking platform.
+      #
+      # BSD 3-Clause "New" or "Revised" License
+      {:sentry, "~> 6.3.0"}
     ]
   end
 
