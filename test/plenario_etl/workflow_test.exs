@@ -96,7 +96,7 @@ defmodule PlenarioEtl.Testing.WorkflowTest do
     end)
 
     PlenarioEtl.import_data_sets()
-    Process.sleep(1000)
+    Process.sleep(2000)
 
     meta = MetaActions.get(meta.id)
     refute is_nil(meta.latest_import)
