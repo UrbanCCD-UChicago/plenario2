@@ -1,3 +1,8 @@
 COPY "<%= table_name %>"
-("<%= headers %>")
+<% len_headers = length(headers) %>
+(
+  <%= for {h, idx} <- Enum.with_index(headers, 1) do %>
+  "<%= h %>"<%= if idx < len_headers do %>,<% end %>
+  <% end %>
+)
 FROM STDIN USING DELIMITERS '<%= delimiter %>' CSV HEADER;
