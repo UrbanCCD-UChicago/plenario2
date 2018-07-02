@@ -77,15 +77,24 @@ defmodule PlenarioWeb.Api.ShimController do
   """
   def adapt_location_geom(conn = %Conn{params: %{"location_geom" => geom}}) do
     meta = MetaActions.get(conn.params["slug"], with_virtual_points: true)
+    
+    # Snips off the `within` prefix of the geometry. This is so that later on
+    # we can prepend the V2 compliant `in` keyword.
+    [_, geom] = String.split(geom, ":", parts: 2)
 
-    case Enum.find(meta.virtual_points, fn field -> field.type == "geom" end) do
+    case Enum.find(meta.virtual_points, fn field -> not is_nil(field) end) do
       nil ->
-        halt_with(conn, 422, "There are no virtual point fields for a 'location_geom' query to use.")
+        halt_with(conn, 422, "There are no virtual point fields to use with a "
+         <> "'location_geom' query. You might be looking at the wrong dataset. "
+         <> "Have a look at `/api/v2/datasets/#{meta.slug}` to see if this is "
+         <> "the data you want.")
       field ->
         params =
           conn.params
           |> Map.delete("location_geom")
-          |> Map.put(field.name, geom)
+          # Prefixing the geojson with `in:` creates a V2 API `contains` query.
+          # "Give me all the values that contained within this geometry".
+          |> Map.put(field.name, "in:" <> geom)
         %{conn | params: params}
     end
   end
