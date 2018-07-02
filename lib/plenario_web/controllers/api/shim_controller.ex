@@ -1,6 +1,8 @@
 defmodule PlenarioWeb.Api.ShimController do
   use PlenarioWeb, :api_controller
   import PlenarioWeb.Api.Utils, only: [halt_with: 3]
+  alias Plenario.Actions.MetaActions
+  alias Plug.Conn
 
   @translations %{
     "dataset_name" => "slug"
@@ -23,6 +25,8 @@ defmodule PlenarioWeb.Api.ShimController do
   """
   def detail(conn, %{"dataset_name" => _}) do
     %{conn | params: translate(conn.params)}
+    |> adapt_obs_date()
+    |> adapt_location_geom()
     |> PlenarioWeb.Api.DetailController.call(:get)
   end
 
@@ -34,6 +38,75 @@ defmodule PlenarioWeb.Api.ShimController do
   end
 
   @doc """
+  If a client specified a "obs_date" in one of their queries, take it
+  and swap it out with the name of the first timestamp field we can
+  find.
+
+  If there is no timestamp field present, then the request needs to halt
+  as the query will not be valid.
+  """
+  def adapt_obs_date(conn = %Conn{params: %{"obs_date" => datetime}}) do
+    meta = MetaActions.get(conn.params["slug"], with_fields: true)
+
+    case Enum.find(meta.fields, fn field -> field.type == "timestamp" end) do
+      nil ->
+        halt_with(conn, 422, "There are no timestamp fields for an 'obs_date' query to use.")
+      field ->
+        params =
+          conn.params
+          |> Map.delete("obs_date")
+          |> Map.put(field.name, datetime)
+        %{conn | params: params}
+    end
+  end
+
+  @doc """
+  No "obs_date"? Nothing to do then. Pass it through.
+  """
+  def adapt_obs_date(conn) do
+    conn
+  end
+
+  @doc """
+  If a client specified a "location_geom" in one of their queries, take it
+  and swap it out with the name of the first virtual point field we can
+  find.
+
+  If there is no virtual point field present, then the request needs to halt
+  as the query will not be valid.
+  """
+  def adapt_location_geom(conn = %Conn{params: %{"location_geom" => geom}}) do
+    meta = MetaActions.get(conn.params["slug"], with_virtual_points: true)
+    
+    # Snips off the `within` prefix of the geometry. This is so that later on
+    # we can prepend the V2 compliant `in` keyword.
+    [_, geom] = String.split(geom, ":", parts: 2)
+
+    case Enum.find(meta.virtual_points, fn field -> not is_nil(field) end) do
+      nil ->
+        halt_with(conn, 422, "There are no virtual point fields to use with a "
+         <> "'location_geom' query. You might be looking at the wrong dataset. "
+         <> "Have a look at `/api/v2/datasets/#{meta.slug}` to see if this is "
+         <> "the data you want.")
+      field ->
+        params =
+          conn.params
+          |> Map.delete("location_geom")
+          # Prefixing the geojson with `in:` creates a V2 API `contains` query.
+          # "Give me all the values that contained within this geometry".
+          |> Map.put(field.name, "in:" <> geom)
+        %{conn | params: params}
+    end
+  end
+
+  @doc """
+  No "location_geom"? Nothing to do then. Pass it through.
+  """
+  def adapt_location_geom(conn) do
+    conn
+  end
+
+  @doc """
   Takes a map, presumably containing keys that correspond to the V1 API, and
   converts them to keys that correspond to the V2 API.
 
@@ -42,6 +115,13 @@ defmodule PlenarioWeb.Api.ShimController do
   If a key isn't found in @translations, it is simply passed through. This is
   because the key could possibly correspond to a data set column, and will be
   validated dynamically.
+
+  ## Examples
+
+      iex> params = [{"foo__gt", "bar"}, {"baz__eq", "buzz"}]
+      iex> translate(params)
+      [{"foo", "gt:bar"}, {"baz", "eq:buzz"}]
+
   """
   def translate(params) when is_list(params) do
     translate(params, [])
@@ -49,6 +129,13 @@ defmodule PlenarioWeb.Api.ShimController do
 
   @doc """
   Our params are a map? Convert it to a list and toss it back up.
+
+  ## Examples
+
+      iex> params = %{"foo_gt" => "bar", "baz__eq" => "buzz"}
+      iex> translate(params)
+      [{"foo", "gt:bar"}, {"baz", "eq:buzz"}]
+
   """
   def translate(params) when is_map(params) do
     params
@@ -73,6 +160,17 @@ defmodule PlenarioWeb.Api.ShimController do
 
   If the key contains a dunder `__` operator. Convert both it and and the value
   to the V2 compliant `PARAM=OPERATOR:VALUE` format.
+
+  ## Examples
+
+      iex> params = [
+      ...>   {"dataset_name", "dset"},
+      ...>   {"foo__gt", "bar"},
+      ...>   {"baz__eq", "buzz"}
+      ...> ]
+      iex> translate(params)
+      [{"slug", "dset"}, {"foo", "gt:bar"}, {"baz", "eq:buzz"}]
+
   """
   def translate([{key, value} | params], acc) do
     param =

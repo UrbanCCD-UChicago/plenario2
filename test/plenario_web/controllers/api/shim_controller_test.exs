@@ -41,21 +41,21 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
     INSERT INTO "#{meta.table_name}"
       (pk, datetime, data, location)
     VALUES
-      (1, '2500-01-01 00:00:00', null, '(50, 50)'),
-      (2, '2500-01-01 00:00:00', null, '(50, 50)'),
-      (3, '2500-01-01 00:00:00', null, '(50, 50)'),
-      (4, '2500-01-01 00:00:00', null, '(50, 50)'),
-      (5, '2500-01-01 00:00:00', null, '(50, 50)'),
+      (1, '2500-01-01 00:00:00', null, '(0, 0)'),
+      (2, '2500-01-01 00:00:00', null, '(0, 0)'),
+      (3, '2500-01-01 00:00:00', null, '(0, 0)'),
+      (4, '2500-01-01 00:00:00', null, '(0, 0)'),
+      (5, '2500-01-01 00:00:00', null, '(0, 0)'),
       (6, '2500-01-02 00:00:00', null, '(50, 50)'),
       (7, '2500-01-02 00:00:00', null, '(50, 50)'),
       (8, '2500-01-02 00:00:00', null, '(50, 50)'),
       (9, '2500-01-02 00:00:00', null, '(50, 50)'),
       (10, '2500-01-02 00:00:00', null, '(50, 50)'),
-      (11, '2500-01-02 00:00:00', null, '(50, 50)'),
-      (12, '2500-01-02 00:00:00', null, '(50, 50)'),
-      (13, '2500-01-02 00:00:00', null, '(50, 50)'),
-      (14, '2500-01-02 00:00:00', null, '(50, 50)'),
-      (15, '2500-01-02 00:00:00', null, '(50, 50)');
+      (11, '2500-01-02 00:00:00', null, '(100, 50)'),
+      (12, '2500-01-02 00:00:00', null, '(100, 50)'),
+      (13, '2500-01-02 00:00:00', null, '(100, 50)'),
+      (14, '2500-01-02 00:00:00', null, '(100, 50)'),
+      (15, '2500-01-03 00:00:00', null, '(100, 50)');
     """
     Ecto.Adapters.SQL.query!(Repo, insert)
 
@@ -151,7 +151,7 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
       get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__gt=2500-01-02T00:00:00")
       |> json_response(200)
   
-    assert length(result["data"]) == 0
+    assert result["meta"]["counts"]["total_records"] == 1
   end
 
   test "GET /v1/api/detail __lt", %{conn: conn, meta: meta} do
@@ -179,7 +179,7 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
       get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__le=2500-01-02T00:00:00")
       |> json_response(200)
   
-    assert length(result["data"]) == 15
+    assert length(result["data"]) == 14
   end
 
   test "GET /api/v1/detail __eq", %{conn: conn, meta: meta} do
@@ -187,7 +187,7 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
       get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__eq=2500-01-02T00:00:00")
       |> json_response(200)
   
-    assert length(result["data"]) == 10
+    assert length(result["data"]) == 9 
   end
 
   test "GET /v1/api/datasets", %{conn: conn} do
@@ -222,6 +222,74 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
 
   test "GET /v1/api/datasets __eq", %{conn: conn} do
     result = json_response(get(conn, "/api/v1/datasets?latest_import__eq=2000-01-03T00:00:00"), 200)
+    assert result["meta"]["counts"]["total_records"] == 1
+  end
+
+  test "GET /v1/api/detail obs_date", %{conn: conn, meta: meta} do
+    result =
+      conn
+      |> get("/api/v1/detail"
+        <> "?dataset_name=#{meta.slug}"
+        <> "&obs_date__le=2500-01-01T00:00:00")
+      |> json_response(200)
+    
+    assert result["meta"]["counts"]["total_records"] == 5
+    assert length(result["data"]) == 5
+  end
+
+  test "GET /v1/api/detail location_geom__within", %{conn: conn, meta: meta} do
+    geom = 
+      """
+      {
+        "type":"Polygon",
+        "coordinates":[
+           [
+              [0.0, 0.0],
+              [0.0, 125.0],
+              [125.0, 125.0],
+              [125.0, 0.0],
+              [0.0, 0.0]
+           ]
+        ]
+      }
+      """
+
+    result =
+      conn
+      |> get("/api/v1/detail"
+        <> "?dataset_name=#{meta.slug}"
+        <> "&location_geom__within=#{geom}")
+      |> json_response(200)
+    
+    assert result["meta"]["counts"]["total_records"] == 10
+    assert length(result["data"]) == 10 
+  end
+
+  test "GET /v1/api/detail obs_date & geom", %{conn: conn, meta: meta} do
+    geom = 
+      """
+      {
+        "type":"Polygon",
+        "coordinates":[
+           [
+              [0.0, 0.0],
+              [0.0, 125.0],
+              [125.0, 125.0],
+              [125.0, 0.0],
+              [0.0, 0.0]
+           ]
+        ]
+      }
+      """
+
+    result =
+      conn
+      |> get("/api/v1/detail"
+        <> "?dataset_name=#{meta.slug}"
+        <> "&location_geom__within=#{geom}"
+        <> "&obs_date__ge=2500-01-03T00:00:00")
+      |> json_response(200)
+    
     assert result["meta"]["counts"]["total_records"] == 1
   end
 end
