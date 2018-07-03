@@ -131,13 +131,13 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
       get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__ge=2500-01-01T00:00:00")
       |> json_response(200)
   
-    assert length(result["data"]) == 15
+    assert length(result["objects"]) == 15
   
     result =
       get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__ge=2500-01-02T00:00:00")
       |> json_response(200)
   
-    assert length(result["data"]) == 10
+    assert length(result["objects"]) == 10
   end
 
   test "GET /v1/api/detail __gt", %{conn: conn, meta: meta} do
@@ -145,13 +145,13 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
       get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__gt=2500-01-01T00:00:00")
       |> json_response(200)
   
-    assert length(result["data"]) == 10
+    assert length(result["objects"]) == 10
   
     result =
       get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__gt=2500-01-02T00:00:00")
       |> json_response(200)
   
-    assert result["meta"]["counts"]["total_records"] == 1
+    assert result["meta"]["total"] == 1
   end
 
   test "GET /v1/api/detail __lt", %{conn: conn, meta: meta} do
@@ -159,13 +159,13 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
       get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__lt=2500-01-01T00:00:00")
       |> json_response(200)
   
-    assert length(result["data"]) == 0
+    assert length(result["objects"]) == 0
   
     result =
       get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__lt=2500-01-02T00:00:00")
       |> json_response(200)
   
-    assert length(result["data"]) == 5
+    assert length(result["objects"]) == 5
   end
 
   test "GET /v1/api/detail __le", %{conn: conn, meta: meta} do
@@ -173,13 +173,13 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
       get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__le=2500-01-01T00:00:00")
       |> json_response(200)
   
-    assert length(result["data"]) == 5
+    assert length(result["objects"]) == 5
   
     result =
       get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__le=2500-01-02T00:00:00")
       |> json_response(200)
   
-    assert length(result["data"]) == 14
+    assert length(result["objects"]) == 14
   end
 
   test "GET /api/v1/detail __eq", %{conn: conn, meta: meta} do
@@ -187,42 +187,42 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
       get(conn, "/v1/api/detail?dataset_name=#{meta.slug}&datetime__eq=2500-01-02T00:00:00")
       |> json_response(200)
   
-    assert length(result["data"]) == 9 
+    assert length(result["objects"]) == 9 
   end
 
   test "GET /v1/api/datasets", %{conn: conn} do
     result = json_response(get(conn, "/api/v1/datasets"), 200)
-    assert length(result["data"]) == 6
+    assert length(result["objects"]) == 6
   end
 
   test "GET /api/v1/datasets has correct count", %{conn: conn} do
     result = json_response(get(conn, "/api/v1/datasets"), 200)
-    assert result["meta"]["counts"]["total_records"] == 6
+    assert result["meta"]["total"] == 6
   end
 
   test "GET /v1/api/datasets __ge", %{conn: conn} do
     result = json_response(get(conn, "/api/v1/datasets?latest_import__ge=2000-01-03T00:00:00"), 200)
-    assert result["meta"]["counts"]["total_records"] == 4
+    assert result["meta"]["total"] == 4
   end
 
   test "GET /v1/api/datasets __gt", %{conn: conn} do
     result = json_response(get(conn, "/api/v1/datasets?latest_import__gt=2000-01-03T00:00:00"), 200)
-    assert result["meta"]["counts"]["total_records"] == 3
+    assert result["meta"]["total"] == 3
   end
 
   test "GET /v1/api/datasets __le", %{conn: conn} do
     result = json_response(get(conn, "/api/v1/datasets?latest_import__le=2000-01-03T00:00:00"), 200)
-    assert result["meta"]["counts"]["total_records"] == 3
+    assert result["meta"]["total"] == 3
   end
 
   test "GET /v1/api/datasets __lt", %{conn: conn} do
     result = json_response(get(conn, "/api/v1/datasets?latest_import__lt=2000-01-03T00:00:00"), 200)
-    assert result["meta"]["counts"]["total_records"] == 2
+    assert result["meta"]["total"] == 2
   end
 
   test "GET /v1/api/datasets __eq", %{conn: conn} do
     result = json_response(get(conn, "/api/v1/datasets?latest_import__eq=2000-01-03T00:00:00"), 200)
-    assert result["meta"]["counts"]["total_records"] == 1
+    assert result["meta"]["total"] == 1
   end
 
   test "GET /v1/api/detail obs_date", %{conn: conn, meta: meta} do
@@ -233,8 +233,8 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
         <> "&obs_date__le=2500-01-01T00:00:00")
       |> json_response(200)
     
-    assert result["meta"]["counts"]["total_records"] == 5
-    assert length(result["data"]) == 5
+    assert result["meta"]["total"] == 5
+    assert length(result["objects"]) == 5
   end
 
   test "GET /v1/api/detail location_geom__within", %{conn: conn, meta: meta} do
@@ -261,8 +261,8 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
         <> "&location_geom__within=#{geom}")
       |> json_response(200)
     
-    assert result["meta"]["counts"]["total_records"] == 10
-    assert length(result["data"]) == 10 
+    assert result["meta"]["total"] == 10
+    assert length(result["objects"]) == 10 
   end
 
   test "GET /v1/api/detail obs_date & geom", %{conn: conn, meta: meta} do
@@ -290,6 +290,6 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
         <> "&obs_date__ge=2500-01-03T00:00:00")
       |> json_response(200)
     
-    assert result["meta"]["counts"]["total_records"] == 1
+    assert result["meta"]["total"] == 1
   end
 end
