@@ -17,59 +17,9 @@
 
   <body>
 
-    <nav id="primary-nav" class="navbar navbar-light navbar-expand-md fixed-top justify-content-between bg-light shadow-sm">
-      <div class="container">
-        <a href="/" class="navbar-brand">
-          <img src="<%= static_path(@conn, "/images/logo-large.png") %>" alt="Plenario logo, a stylized red brick archway">
-        </a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible"
-          aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div id="navbar-collapsible" class="collapse navbar-collapse">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <a href="/explore" class="nav-link">Explore</a>
-            </li>
-            <li class="nav-item">
-              <a href="/explore/array-of-things" class="nav-link">Array of Things</a>
-            </li>
-            <li class="nav-item">
-              <a href="/api/v2", class="nav-link">API</a>
-            </li>
-            <li class="nav-item">
-              <a href="https://github.com/UrbanCCD-UChicago/plenario2" class="nav-link">Contribute</a>
-            </li>
-            <li class="nav-item">
-              <a href="https://github.com/UrbanCCD-UChicago/plenario2/wiki" class="nav-link">Wiki</a>
-            </li>
-            <%= if @current_user do %>
-              <li class="nav-item">
-                <%= link "#{@current_user.name}", to: me_path(@conn, :index), class: "nav-link" %>
-              </li>
-              <li class="nav-item">
-                <%= link "Sign Out", to: auth_path(@conn, :logout), method: :post, class: "nav-link" %>
-              </li>
-              <%= if @current_user.is_admin do %>
-                <li class="nav-item">
-                  <%= link "Admin", to: admin_page_path(@conn, :index), class: "nav-link text-danger" %>
-                </li>
-              <% end %>
-            <% else %>
-              <li class="nav-item">
-                <%= link "Sign In", to: auth_path(@conn, :index), class: "nav-link" %>
-              </li>
-            <% end %>
-          </ul>
-        </div>
-      </div>
-    </nav>
+    <%= render PlenarioWeb.SharedView, "navbar-main.html", conn: @conn, current_user: @current_user %>
 
-    <div class="container my-0">
-      <div class="alert alert-info my-1" role="alert"><%= get_flash(@conn, :info) %></div>
-      <div class="alert alert-success my-1" role="alert"><%= get_flash(@conn, :success) %></div>
-      <div class="alert alert-danger my-1" role="alert"><%= get_flash(@conn, :error) %></div>
-    </div>
+    <%= render PlenarioWeb.SharedView, "flashes.html", conn: @conn %>
 
     <main role="main">
       <%= render @view_module, @view_template, assigns %>

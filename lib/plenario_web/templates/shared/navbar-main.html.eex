@@ -1,0 +1,52 @@
+<nav id="main-nav" class="navbar navbar-expand-md navbar-light bg-light fixed-top">
+  
+  <div class="container">
+
+    <%= link to: page_path(@conn, :index), class: "navbar-brand" do %>
+      <img class="logo" src="./images/arch.svg" alt=""> Plenario
+    <% end %>
+    
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#main-nav-collapsible" aria-controls="main-nav-collapsible"
+      aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="main-nav-collapsible" class="collapse navbar-collapse">
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item">
+          <%= link "Explore", to: page_path(@conn, :explorer), class: "nav-link" %>
+        </li>
+        <li class="nav-item">
+          <%= link "Array of Things", to: page_path(@conn, :aot_explorer), class: "nav-link" %>
+        </li>
+        <li class="nav-item">
+          <%= link "API", to: page_path(@conn, :docs), class: "nav-link" %>
+        </li>
+        <li class="nav-item">
+          <a href="https://github.com/UrbanCCD-UChicago/plenario2" class="nav-link">
+            <i title="Contribute on GitHub" class="fab fa-github fa-lg"></i>
+            <span class="d-md-none">Contribute on GitHub</span>
+          </a>
+        </li>
+        <li class="nav-item d-md-none">
+          <a href="./login.html" class="nav-link text-success">
+            Sign Up / Log In
+          </a>
+        </li>
+      </ul>
+      <div class="inline-form d-none d-md-inline ml-md-2">
+        <%= if @current_user do %>
+          <%= link "User Dashboard", to: me_path(@conn, :index), class: "btn btn-info btn-sm" %>
+          <%# TODO: add sign out dropdown %>
+          <%= if @current_user.is_admin do %>
+            <%= link raw("<i class=\"fas fa-lock\"></i> Admin"), to: admin_page_path(@conn, :index), class: "btn btn-danger btn-sm" %>
+          <% end %>
+        <% else %>
+          <%= link "Sign Up / Log In", to: auth_path(@conn, :index), class: "btn btn-success btn-sm" %>
+        <% end %>
+      </div>
+    </div>
+    
+  </div>
+
+</nav>
