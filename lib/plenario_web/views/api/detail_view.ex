@@ -28,12 +28,7 @@ defmodule PlenarioWeb.Api.DetailView do
   end
 
   def render("get.json", params) do
-    response = construct_response(params)
-    if length(params[:data]) == 1 do
-      %{response | data: clean(List.first(params[:data]))}
-    else
-      %{response | data: clean(params[:data])}
-    end
+    %{construct_response(params) | data: clean(params[:data])}
   end
 
   @doc """
