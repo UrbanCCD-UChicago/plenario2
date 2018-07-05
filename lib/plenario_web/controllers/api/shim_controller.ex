@@ -15,7 +15,7 @@ defmodule PlenarioWeb.Api.ShimController do
   """
   def datasets(conn, _) do
     %{conn | params: translate(conn.params)}
-    |> PlenarioWeb.Api.ListController.call(:get)
+    |> PlenarioWeb.Api.ListController.call(:describe)
   end
 
   @doc """
@@ -76,11 +76,11 @@ defmodule PlenarioWeb.Api.ShimController do
   as the query will not be valid.
   """
   def adapt_location_geom(conn = %Conn{params: %{"location_geom" => geom}}) do
-    meta = MetaActions.get(conn.params["slug"], 
+    meta = MetaActions.get(conn.params["slug"],
       with_data_set_fields: true,
       with_virtual_points: true,
       with_virtual_dates: true)
-    
+
     # Snips off the `within` prefix of the geometry. This is so that later on
     # we can prepend the V2 compliant `in` keyword.
     [_, geom] = String.split(geom, ":", parts: 2)

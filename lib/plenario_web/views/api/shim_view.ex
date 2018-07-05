@@ -4,16 +4,28 @@ defmodule PlenarioWeb.Api.ShimView do
   alias Plenario.Schemas.Meta
   import PlenarioWeb.Api.DetailView, only: [clean: 1]
 
+  @doc """
+  Chooses the right view method for `render` calls coming from the V2 API
+  controllers. We can check who is calling this `render` method by inspecting
+  the `:phoenix_controller` key in the provided `Conn` struct.
+  """
+  def render("get.json", params) do
+    case params[:conn].private[:phoenix_controller] do
+      PlenarioWeb.Api.DetailController -> render("detail.json", params)
+      PlenarioWeb.Api.ListController -> render("datasets.json", params)
+    end
+  end
+
   # todo(heyzoos) refactor what gets passed in as params
   #   - Currently I just toss the whole kitchen sink at you and say:
   #     "From this pile of shit construct a meaningful response"
   #   - It would be nice if we formalized this as a struct with just
   #     the necessary information
   def render("datasets.json", params) do
-    render("detail.json", %{params | data: translate_meta(params[:data])})
+    render("detail.json", %{params | data: translate_metas(params[:data])})
   end
 
-  def render("detail.json", params) do 
+  def render("detail.json", params) do
     %{
       meta: %{
         message: "",
@@ -26,49 +38,43 @@ defmodule PlenarioWeb.Api.ShimView do
   end
 
   def translate_metas(metas) do
-    columns = meta.fields |> format_columns() |> Enum.sort()
-    location = Enum.find(meta.virtual_point_fields, fn field -> not is_nil(field) end)
-    observed_date = Enum.find(columns, fn field -> field.type == "DATE" end)
-
     Enum.map(metas, fn meta ->
+      columns =
+        meta.fields
+        |> format_columns()
+        |> Enum.sort()
+
+      location = Enum.find(meta.virtual_points, fn field -> not is_nil(field) end)
+      location_name = if location do location.name else nil end
+
+      observed_date = Enum.find(columns, fn field -> field[:field_type] == "TIMESTAMP" end)
+      observed_date_name = if observed_date do observed_date[:field_name] else nil end
+
       %{
         bbox: meta.bbox,
         columns: columns,
         latitude: nil,
         obs_from: meta.time_range["lower"],
-        observed_date: observed_date,
-        obs_to: meta.time_range["upper"]
+        observed_date: observed_date_name,
+        obs_to: meta.time_range["upper"],
         view_url: nil,
         description: meta.description,
         attribution: meta.attribution,
         longitude: nil,
         source_url: meta.source_url,
-        human_name: meta.,
+        human_name: meta.name,
         dataset_name: meta.slug,
         date_added: meta.inserted_at,
         last_update: meta.latest_import,
         update_freq: meta.refresh_rate,
-        location: location
+        location: location_name
       }
     end)
   end
 
-  #   - Need to select first location column
-  #   -   Sort and grab
-  #   - Need to select first datetime column
-  #   -   Sort and grab
-
-  def translate_meta(meta = %Meta{}) do
-    %{
-      bbox: meta.bbox,
-      latitude: meta.
-    }
-  end
-
-  # This needs to map to expected types
   def format_columns(columns) do
-    Enum.map(columns, fn column -> 
-      %{field_name: column.name, field_type: column.type}
+    Enum.map(columns, fn column ->
+      %{field_name: column.name, field_type: String.upcase(column.type)}
     end)
   end
 end
