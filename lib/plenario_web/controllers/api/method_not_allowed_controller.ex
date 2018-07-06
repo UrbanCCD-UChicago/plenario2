@@ -12,11 +12,9 @@ defmodule PlenarioWeb.Api.MethodNotAllowedController do
 
     if path_info in routes do
       conn
-      |> put_req_header("accept", "application/vnd.api+json")
       |> Explode.with(403, "Method not allowed")
     else
       conn
-      |> put_req_header("accept", "application/vnd.api+json")
       |> Explode.with(404, "Not found")
     end
   end
