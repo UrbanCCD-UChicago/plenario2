@@ -11,13 +11,16 @@ defmodule PlenarioWeb.Api.DetailController do
 
     def call(conn, opts) do
       meta = MetaActions.get(conn.params["slug"], with_virtual_points: true)
+      do_call(meta, conn, opts)
+    end
 
-      if meta == nil do
+    def do_call(nil, conn, opts) do
         conn
         |> put_req_header("accept", "application/vnd.api+json")
         |> Explode.with(404, "Data set not found")
-      end
+    end
 
+    def do_call(meta, conn, opts) do
       columns = MetaActions.get_column_names(meta)
       input_params = Map.keys(conn.params)
       allowed_params = columns ++ ["page", "page_size", "slug", "bbox"]
