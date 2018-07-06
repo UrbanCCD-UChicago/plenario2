@@ -94,7 +94,6 @@ defmodule Plenario.Actions.DataSetActions do
   @truncate_table "db-actions/etl/truncate-table.sql.eex"
   @copy "db-actions/etl/copy.sql.eex"
   @refresh_view "db-actions/etl/refresh-view.sql.eex"
-  @chunk_size 100_000_000  # stream in 100MB chunks to postgres
 
   def etl!(%Meta{id: meta_id}, download_path), do: etl!(meta_id, download_path)
   def etl!(meta_id, download_path) do
@@ -104,17 +103,18 @@ defmodule Plenario.Actions.DataSetActions do
     view_name = "#{table_name}_view"
 
     delimiter = if meta.source_type == "csv", do: ",", else: "\t"
-    headers =
-      File.stream!(download_path)
+    header_line =
+      File.stream!(download_path, [:utf8])
       |> Enum.take(1)
       |> List.first()
       |> String.trim()
-      |> String.split(",")
-      |> Enum.join("\", \"")
+    headers =
+      Regex.split(~r/,(?=(?:[^"]*"[^"]*")*[^"]*$)/, header_line)
+      |> Enum.map(& String.trim(&1, "\""))
     path = Path.join(:code.priv_dir(:plenario), @copy)
     cmd = EEx.eval_file(path, [table_name: table_name, headers: headers, delimiter: delimiter], trim: true)
     sql_stream = Ecto.Adapters.SQL.stream(Repo, cmd)
-    file_stream = File.stream!(download_path, [], @chunk_size)
+    file_stream = File.stream!(download_path, [:utf8])
 
     Repo.transaction fn ->
       execute! @truncate_table, table_name: table_name

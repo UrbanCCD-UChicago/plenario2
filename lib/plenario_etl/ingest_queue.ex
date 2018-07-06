@@ -20,10 +20,11 @@ defmodule PlenarioEtl.IngestQueue do
   def push(meta_id), do: GenStage.cast(__MODULE__, {:push, meta_id})
 
   def handle_cast({:push, meta_id}, {queue, pending_demand}) do
-    Logger.info("IngestQueue: pushing #{inspect(meta_id)} onto queue")
     updated = :queue.in(meta_id, queue)
 
     meta = MetaActions.get(meta_id)
+    Logger.info("IngestQueue: pushing #{inspect(meta.name)} onto queue")
+
     if is_nil(meta.latest_import) do
       try do
         {:ok, _} = MetaActions.mark_first_import(meta)
@@ -41,7 +42,7 @@ defmodule PlenarioEtl.IngestQueue do
   # server api
 
   def handle_demand(demand, {queue, pending_demand}) do
-    Logger.debug("IngestQueue: handling demand of #{demand} with #{:queue.len(queue)} metas in queue")
+    Logger.info("IngestQueue: handling demand of #{demand} with #{:queue.len(queue)} metas in queue")
     dispatch_metas(queue, demand + pending_demand, [])
   end
 
@@ -52,7 +53,7 @@ defmodule PlenarioEtl.IngestQueue do
   defp dispatch_metas(queue, demand, meta_ids) do
     case :queue.out(queue) do
       {{:value, meta_id}, updated} ->
-        Logger.debug("IngestQueue: popped #{inspect(meta_id)} off the queue")
+        Logger.info("IngestQueue: popped #{inspect(meta_id)} off the queue")
         dispatch_metas(updated, demand - 1, [meta_id | meta_ids])
 
       {:empty, queue} ->

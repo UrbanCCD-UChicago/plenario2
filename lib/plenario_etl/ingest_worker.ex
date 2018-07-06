@@ -1,6 +1,8 @@
 defmodule PlenarioEtl.IngestWorker do
   use GenStage
 
+  require Integer
+
   require Logger
 
   alias Plenario.Actions.MetaActions
@@ -14,11 +16,13 @@ defmodule PlenarioEtl.IngestWorker do
   # server callbacks
 
   def handle_events(meta_ids, _from, state) do
-    Logger.info("IngestWorker #{inspect(self())}: processing #{inspect(meta_ids)}")
+    str_meta_ids = Enum.map(meta_ids, &Integer.to_string/1)
+    Logger.info("IngestWorker #{inspect(self())}: processing #{inspect(str_meta_ids)}")
 
     updated =
       Enum.reduce(meta_ids, state, fn id, acc ->
         meta = MetaActions.get(id)
+        Logger.info("IngestWorker #{inspect(self())}: working on #{inspect(meta.name)}")
 
         download_path = get_download_path(meta)
         sentinel_path = get_sentinel_path(meta)
@@ -27,7 +31,7 @@ defmodule PlenarioEtl.IngestWorker do
 
         %HTTPoison.AsyncResponse{id: reqid} =
           HTTPoison.get!(meta.source_url, [], stream_to: self())
-        Logger.debug("IngestWorker #{inspect(self())}: starting download of #{inspect(meta.name)} from #{inspect(meta.source_url)} with request id #{inspect(reqid)}")
+        Logger.info("IngestWorker #{inspect(self())}: starting download of #{inspect(meta.name)} from #{inspect(meta.source_url)} with request id #{inspect(reqid)}")
 
         Map.merge(acc, %{reqid => {id, download_path, sentinel_path, download_fh}})
       end)
@@ -100,7 +104,7 @@ defmodule PlenarioEtl.IngestWorker do
 
   defp get_download_fh(d) do
     File.touch!(d)
-    File.open!(d, [:append])
+    File.open!(d, [:append, :utf8])
   end
 
   defp handle_csv(meta, download_path) do
