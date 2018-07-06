@@ -14,11 +14,14 @@ defmodule PlenarioWeb.Api.AotController do
   plug :check_page
   plug :check_page_size, default_page_size: 500, page_size_limit: 5000
 
-  defp parse_bbox(value) do
+  defp parse_bbox(value, conn) do
     try do
       Poison.decode!(value) |> Geo.JSON.decode()
     rescue
-      _ -> nil
+      _ ->
+        conn
+        |> put_req_header("accept", "application/vnd.api+json")
+        |> Explode.with(400, "Unable to parse bounding box JSON or generate Geo object")
     end
   end
 
@@ -74,9 +77,10 @@ defmodule PlenarioWeb.Api.AotController do
       case Map.get(conn.params, "bbox") do
         nil -> metas
         value ->
-          bbox = parse_bbox(value)
+          bbox = parse_bbox(value, conn)
           from m in metas, where: st_intersects(m.bbox, ^bbox)
       end
+
 
     meta_ids = Repo.all(
       from m in metas,
