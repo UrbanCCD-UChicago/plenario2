@@ -16,14 +16,13 @@ defmodule PlenarioWeb.Api.AotController do
 
   defp parse_bbox(value, conn) do
     try do
-      Poison.decode!(value)
+      Poison.decode!(value) |> Geo.JSON.decode()
     rescue
       _ ->
         conn
         |> put_req_header("accept", "application/vnd.api+json")
-        |> Explode.with(400, "Unable to parse bounding box JSON syntax")
+        |> Explode.with(400, "Unable to parse bounding box JSON or generate Geo object")
     end
-    Poison.decode!(value) |> Geo.JSON.decode()
   end
 
   defp parse_time_range(value) do
@@ -82,14 +81,6 @@ defmodule PlenarioWeb.Api.AotController do
           from m in metas, where: st_intersects(m.bbox, ^bbox)
       end
 
-    try do
-      Repo.all(metas)
-    rescue
-      _ ->
-        conn
-        |> put_req_header("accept", "application/vnd.api+json")
-        |> Explode.with(400, "Unable to create bounding box")
-    end
 
     meta_ids = Repo.all(
       from m in metas,
