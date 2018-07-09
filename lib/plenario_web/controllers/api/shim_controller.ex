@@ -109,6 +109,30 @@ defmodule PlenarioWeb.Api.ShimController do
     conn
   end
 
+  def adapt_limit(conn = %Conn{params: %{"limit" => limit}}) do
+    params =
+      conn.params
+      |> Map.delete("limit")
+      |> Map.put("page_size", limit)
+    %{conn | params: param}
+  end
+
+  def adapt_limit(conn) do
+    %{conn | param: Map.put(conn.params, "page_size", 500)}
+  end
+
+  def adapt_offset(conn = %Conn{params: %{"offset" => offset}}) do
+    params =
+      conn.params
+      |> Map.delete("offset")
+      |> Map.put("page", offset / conn.params["page_size"])
+    %{conn | params: param}
+  end
+
+  def adapt_offset(conn) do
+    conn
+  end
+
   @doc """
   Takes a map, presumably containing keys that correspond to the V1 API, and
   converts them to keys that correspond to the V2 API.
