@@ -1,7 +1,6 @@
 defmodule PlenarioWeb.Api.ShimView do
   require Logger
 
-  alias Plenario.Schemas.Meta
   import PlenarioWeb.Api.DetailView, only: [clean: 1]
 
   @doc """
