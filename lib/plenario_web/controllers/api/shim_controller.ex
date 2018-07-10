@@ -15,6 +15,8 @@ defmodule PlenarioWeb.Api.ShimController do
   """
   def datasets(conn, _) do
     %{conn | params: translate(conn.params)}
+    |> adapt_limit()
+    |> adapt_offset()
     |> PlenarioWeb.Api.ListController.call(:describe)
   end
 
@@ -27,6 +29,8 @@ defmodule PlenarioWeb.Api.ShimController do
     %{conn | params: translate(conn.params)}
     |> adapt_obs_date()
     |> adapt_location_geom()
+    |> adapt_limit()
+    |> adapt_offset()
     |> PlenarioWeb.Api.DetailController.call(:get)
   end
 
@@ -51,11 +55,13 @@ defmodule PlenarioWeb.Api.ShimController do
     case Enum.find(meta.fields, fn field -> field.type == "timestamp" end) do
       nil ->
         halt_with(conn, 422, "There are no timestamp fields for an 'obs_date' query to use.")
+
       field ->
         params =
           conn.params
           |> Map.delete("obs_date")
           |> Map.put(field.name, datetime)
+
         %{conn | params: params}
     end
   end
@@ -76,10 +82,13 @@ defmodule PlenarioWeb.Api.ShimController do
   as the query will not be valid.
   """
   def adapt_location_geom(conn = %Conn{params: %{"location_geom" => geom}}) do
-    meta = MetaActions.get(conn.params["slug"],
-      with_data_set_fields: true,
-      with_virtual_points: true,
-      with_virtual_dates: true)
+    meta =
+      MetaActions.get(
+        conn.params["slug"],
+        with_data_set_fields: true,
+        with_virtual_points: true,
+        with_virtual_dates: true
+      )
 
     # Snips off the `within` prefix of the geometry. This is so that later on
     # we can prepend the V2 compliant `in` keyword.
@@ -87,10 +96,15 @@ defmodule PlenarioWeb.Api.ShimController do
 
     case Enum.find(meta.virtual_points, fn field -> not is_nil(field) end) do
       nil ->
-        halt_with(conn, 422, "There are no virtual point fields to use with a "
-         <> "'location_geom' query. You might be looking at the wrong dataset. "
-         <> "Have a look at `/api/v2/datasets/#{meta.slug}` to see if this is "
-         <> "the data you want.")
+        halt_with(
+          conn,
+          422,
+          "There are no virtual point fields to use with a " <>
+            "'location_geom' query. You might be looking at the wrong dataset. " <>
+            "Have a look at `/api/v2/datasets/#{meta.slug}` to see if this is " <>
+            "the data you want."
+        )
+
       field ->
         params =
           conn.params
@@ -98,6 +112,7 @@ defmodule PlenarioWeb.Api.ShimController do
           # Prefixing the geojson with `in:` creates a V2 API `contains` query.
           # "Give me all the values that contained within this geometry".
           |> Map.put(field.name, "in:" <> geom)
+
         %{conn | params: params}
     end
   end
@@ -109,24 +124,47 @@ defmodule PlenarioWeb.Api.ShimController do
     conn
   end
 
+  def adapt_limit(conn = %Conn{params: %{"limit" => limit}}) when is_binary(limit) do
+    case Integer.parse(limit) do
+      {limit, _} ->
+        %{conn | params: Map.put(conn.params, "limit", limit)} |> adapt_limit()
+
+      :error ->
+        halt_with(conn, 422, "limit value #{limit} must be an integer!")
+    end
+  end
+
   def adapt_limit(conn = %Conn{params: %{"limit" => limit}}) do
     params =
       conn.params
       |> Map.delete("limit")
       |> Map.put("page_size", limit)
-    %{conn | params: param}
+
+    %{conn | params: params}
   end
 
   def adapt_limit(conn) do
-    %{conn | param: Map.put(conn.params, "page_size", 500)}
+    %{conn | params: Map.put(conn.params, "page_size", 500)}
   end
 
-  def adapt_offset(conn = %Conn{params: %{"offset" => offset}}) do
+  def adapt_offset(conn = %Conn{params: %{"offset" => offset, "page_size" => page_size}})
+      when is_integer(offset) and is_integer(page_size) do
     params =
       conn.params
       |> Map.delete("offset")
-      |> Map.put("page", offset / conn.params["page_size"])
-    %{conn | params: param}
+      |> Map.put("page", offset / page_size + 1)
+
+    %{conn | params: params}
+  end
+
+  def adapt_offset(conn = %Conn{params: %{"offset" => offset}}) when is_binary(offset) do
+    case Integer.parse(offset) do
+      {offset, _} ->
+        %{conn | params: Map.put(conn.params, "offset", offset)} |> adapt_offset()
+
+      :error ->
+        halt_with(conn, 422, "offset value #{offset} must be an integer!")
+    end
   end
 
   def adapt_offset(conn) do
@@ -204,6 +242,7 @@ defmodule PlenarioWeb.Api.ShimController do
       {key, value}
       |> format_key_value_pair()
       |> translate_key_value_pair()
+
     translate(params, [param | acc])
   end
 
