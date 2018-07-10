@@ -29,9 +29,15 @@
           </a>
         </li>
         <li class="nav-item d-md-none">
-          <a href="./login.html" class="nav-link text-success">
-            Sign Up / Log In
-          </a>
+          <%= if @current_user do %>
+            <%= link "User Dashboard", to: me_path(@conn, :index), class: "nav-link" %>
+            <%# TODO: add sign out dropdown %>
+            <%= if @current_user.is_admin do %>
+              <%= link raw("<i class=\"fas fa-lock\"></i> Admin"), to: admin_page_path(@conn, :index), class: "nav-link" %>
+            <% end %>
+          <% else %>
+            <%= link "Sign Up / Log In", to: auth_path(@conn, :index), class: "nav-link" %>
+          <% end %>
         </li>
       </ul>
       <div class="inline-form d-none d-md-inline ml-md-2">

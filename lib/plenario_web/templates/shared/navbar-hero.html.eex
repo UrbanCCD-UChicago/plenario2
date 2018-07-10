@@ -11,10 +11,16 @@
       </li>
     </ul>
 
-    <div class="inline-form ml-2">
-      <!-- <a class="btn btn-outline-success btn-sm" href="./login.html">Sign Up / Log In</a> -->
-      <a class="btn btn-outline-info btn-sm" href="./dashboard.html">User Dashboard</a>
-      <!-- <a class="btn btn-outline-danger btn-sm" href=""><i class="fas fa-lock"></i> Admin</a> -->
+    <div class="inline-form ml-md-2">
+      <%= if @current_user do %>
+        <%= link "User Dashboard", to: me_path(@conn, :index), class: "btn btn-info btn-sm" %>
+        <%# TODO: add sign out dropdown %>
+        <%= if @current_user.is_admin do %>
+          <%= link raw("<i class=\"fas fa-lock\"></i> Admin"), to: admin_page_path(@conn, :index), class: "btn btn-danger btn-sm" %>
+        <% end %>
+      <% else %>
+        <%= link "Sign Up / Log In", to: auth_path(@conn, :index), class: "btn btn-success btn-sm" %>
+      <% end %>
     </div>
 
   </div>
