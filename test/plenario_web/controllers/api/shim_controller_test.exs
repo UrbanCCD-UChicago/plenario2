@@ -306,4 +306,44 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
     assert meta["observed_date"] == "datetime"
     assert meta["location"] == vpf.name
   end
+
+  test "V1 keyword offset behaves like page for datasets" do
+    result =
+      build_conn()
+      |> get("/api/v1/datasets?limit=1&offset=2")
+      |> json_response(200)
+
+    [first_meta | _ ] = result["objects"]
+
+    assert first_meta["human_name"] == "META 2"
+  end
+
+  test "V1 keyword limit behaves like page_size for datasets" do
+    result =
+      build_conn()
+      |> get("/api/v1/datasets?limit=2")
+      |> json_response(200)
+
+    assert length(result["objects"]) == 2
+  end
+
+  test "V1 keyword offset behaves like page for detail", %{meta: meta} do
+    result =
+      build_conn()
+      |> get("/api/v1/detail?dataset_name=#{meta.slug}&offset=4&limit=1")
+      |> json_response(200)
+
+    [first_record | _ ] = result["objects"]
+
+    assert first_record["pk"] == 5
+  end
+
+  test "V1 keyword limit behaves like page_size for detail", %{meta: meta} do
+    result =
+      build_conn()
+      |> get("/api/v1/detail?dataset_name=#{meta.slug}&limit=2")
+      |> json_response(200)
+
+    assert length(result["objects"]) == 2
+  end
 end

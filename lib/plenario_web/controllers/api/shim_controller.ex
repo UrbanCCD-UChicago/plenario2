@@ -124,6 +124,9 @@ defmodule PlenarioWeb.Api.ShimController do
     conn
   end
 
+  @doc """
+  Checks that the limit parameter is able to be parsed into an integer.
+  """
   def adapt_limit(conn = %Conn{params: %{"limit" => limit}}) when is_binary(limit) do
     case Integer.parse(limit) do
       {limit, _} ->
@@ -134,6 +137,9 @@ defmodule PlenarioWeb.Api.ShimController do
     end
   end
 
+  @doc """
+  If the limit parameter is a valid integer, replace it's key with `page_size`.
+  """
   def adapt_limit(conn = %Conn{params: %{"limit" => limit}}) do
     params =
       conn.params
@@ -143,10 +149,24 @@ defmodule PlenarioWeb.Api.ShimController do
     %{conn | params: params}
   end
 
+  @doc """
+  If no limit parameter is present, drop in the default page size value.
+  """
   def adapt_limit(conn) do
     %{conn | params: Map.put(conn.params, "page_size", 500)}
   end
 
+  @doc """
+  Offset is the way V1 clients would paginate through results. The number it represents
+  is the total amount of rows to skip before returning. In this way, it is analogous
+  to the `page` number, but it takes a little bit of math.
+
+  For example, with a limit of 10 and an offset of 20, what you're really asking for
+  is page 3.
+
+  In order for us to do this little bit of math, offset and page_size have to be integer
+  values.
+  """
   def adapt_offset(conn = %Conn{params: %{"offset" => offset, "page_size" => page_size}})
       when is_integer(offset) and is_integer(page_size) do
     params =
@@ -157,6 +177,9 @@ defmodule PlenarioWeb.Api.ShimController do
     %{conn | params: params}
   end
 
+  @doc """
+  Check that the binary provided for offset can be parsed into an integer.
+  """
   def adapt_offset(conn = %Conn{params: %{"offset" => offset}}) when is_binary(offset) do
     case Integer.parse(offset) do
       {offset, _} ->
@@ -167,6 +190,9 @@ defmodule PlenarioWeb.Api.ShimController do
     end
   end
 
+  @doc """
+  If there's no offset just pass the connection struct through.
+  """
   def adapt_offset(conn) do
     conn
   end
