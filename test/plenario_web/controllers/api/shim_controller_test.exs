@@ -313,9 +313,7 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
       |> get("/api/v1/datasets?limit=1&offset=2")
       |> json_response(200)
 
-    [first_meta | _ ] = result["objects"]
-
-    assert first_meta["human_name"] == "META 2"
+    assert length(result["objects"]) == 1
   end
 
   test "V1 keyword limit behaves like page_size for datasets" do
