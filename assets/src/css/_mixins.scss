@@ -1,0 +1,35 @@
+@mixin hidpi {
+  @media only screen and (-webkit-min-device-pixel-ratio: 1.25),
+         only screen and ( min--moz-device-pixel-ratio: 1.25),
+         only screen and ( -o-min-device-pixel-ratio: 1.25/1),
+         only screen and ( min-device-pixel-ratio: 1.25),
+         only screen and ( min-resolution: 200dpi),
+         only screen and ( min-resolution: 1.25dppx) {
+    @content;
+  }
+}
+
+/** Generate appropriate media queries to serve different versions of a
+ *  background image depending on the active Bootstrap breakpoint and whether
+ *  the device has a high-DPI display. Falls back to the non-high-DPI version
+ *  and then the next smaller breakpoint if a given size is missing.
+ *
+ * @param $url-base  an image url in the form "filename-xx.ext"; the "xx" is
+ *          replaced by the breakpoint name and possibly "@2x", e.g.
+ *          "filename-md.ext", "filename-xs@2x.ext", etc.
+ * @param $overlay  optional additional background layers to overlay the image,
+ *          e.g. a transparent gradient or CSS pattern
+ */
+@mixin responsive-bg-img($url-base, $overlay) {
+  $overlay: "#{$overlay},";
+  // Fallback for improperly formatted base URLs
+  background-image: unquote($overlay) url($url-base);
+  @each $breakpoint in map-keys($grid-breakpoints) {
+    @include media-breakpoint-up($breakpoint) {
+      background-image: unquote($overlay) url(str-replace($url-base, "-xx", "-#{$breakpoint}"));
+      @include hidpi {
+        background-image: unquote($overlay) url(str-replace($url-base, "-xx", "-#{$breakpoint}@2x"));
+      }
+    }
+  }
+}

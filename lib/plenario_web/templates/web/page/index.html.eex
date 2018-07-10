@@ -1,27 +1,66 @@
-<div id="hero-jumbotron" class="jumbotron jumbotron-fluid text-light">
+<section class="jumbotron jumbotron-fluid cover cityscape mb-0">
+    
+  <%= render PlenarioWeb.SharedView, "navbar-hero.html", conn: @conn, current_user: @current_user %>
+  
   <div class="container">
-    <img class="float-left mr-2" src="<%= static_path(@conn, "/images/logo-large.png") %>" alt="Plenario logo, a stylized red brick archway">
-    <h1 class="display-4">Plenario</h1>
-    <p class="lead">The Premier Open Data Platform</p>
-    <hr class="my-3">
-    <p>Plenario is a centralized hub for open data sets from around the world, ready to search and download.</p>
-    <div class="row no-gutters">
-      <div class="col-md mr-md-1">
-        <%= link "Explore all Data Sets", to: page_path(@conn, :explorer), method: :get, class: "btn btn-primary btn-block my-1 my-md-0" %>
+    <div class="row align-items-end">
+      <div class="col-4 offset-4 offset-md-0 col-lg-2 ">
+        <img class="img-fluid" src="<%= static_path(@conn, "/images/arch.svg") %>" alt="The Plenario logo, a stylized red brick archway">
       </div>
-      <div class="col-md mx-md-1">
-        <%= link "Explore the Array of Things", to: page_path(@conn, :aot_explorer), method: :get, class: "btn btn-primary btn-block my-1 my-md-0" %>
-      </div>
-      <div class="col-md ml-md-1">
-        <%= if @current_user do %>
-          <%= link "Add a New Data Set", to: data_set_path(@conn, :new), class: "btn btn-primary btn-block my-1 my-md-0" %>
-            <% else %>
-              <%= link "Sign Up to Add Data", to: auth_path(@conn, :index, redir: data_set_path(@conn, :create)), class: "btn btn-primary btn-block my-1 my-md-0" %>
-                <% end %>
+      <div class="col-12 col-md-8 col-lg-10">
+        <h1 class="display-1 mb-0">Plenario</h1>
+        <p class="display-4 mb-0">
+          The Premier Open Data Platform<!-- prefer "Hub"? -->
+        </p>
       </div>
     </div>
+    <hr>
+    <div class="row">
+      <div class="col-12 col-md-6">
+        <p class="lead">
+          Search hundreds of open data sets from around the world with a single convenient
+          interface. Everything appears on one map and in one timeline.
+        </p>
+      </div>
+      <div class="col-12 col-md-6 order-md-3">
+        <p class="lead">
+          <a class="btn btn-primary" href="">
+            Learn More
+          </a>
+          <a class="btn btn-primary" href="">
+            Explore Data Sets
+          </a>
+        </p>
+      </div>
+      <div class="col-12 d-md-none">
+        <hr>
+      </div>
+      <div class="col-12 col-md-6">
+        <p class="lead">
+          Plenario is the official home for data from the
+          <a href="https://arrayofthings.github.io">Array&nbsp;of&nbsp;Things</a>, providing
+          block-level, real-time data in Chicago (and&nbsp;beyond).
+        </p>
+      </div>
+      <div class="col-12 col-md-6 order-md-4">
+        <p class="lead">
+          <a class="btn btn-info" href="">
+            Learn More
+          </a>
+          <a class="btn btn-info" href="">
+            Explore AoT Data
+          </a>
+        </p>
+      </div>
+    </div>
+    
   </div>
-</div>
+
+  <div class="coverskip" onclick="skipCover(this);">
+    <!-- <i class="fas fa-chevron-down fa-2x"></i> -->
+  </div>
+
+</section>
 
 <div class="container">
   <h2>One map. One timeline.</h2>

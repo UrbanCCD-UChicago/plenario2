@@ -1,26 +1,32 @@
-#hero-jumbotron {
-  background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/images/jumbotron-city-xs.jpg");
-  background-position-y: bottom;
-  background-repeat: no-repeat;
+.cover {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  position: relative; // Required to make z-index work
+  min-height: 100vh;
+  z-index: $zindex-modal - 1;
+  padding: 0;
   background-size: cover;
-  @include media-breakpoint-up(sm) {
-    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/images/jumbotron-city-sm.jpg");
-    min-height: 540px / 2;
+  background-position: center;
+  @include media-breakpoint-down(sm) {
+    text-align: center;
   }
-  @include media-breakpoint-up(md) {
-    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/images/jumbotron-city-md.jpg");
-    background-position-y: center;
-    min-height: 720px / 2;
+  // The standard Bootstrap link style (primary color, no decoration) reads very
+  // poorly over an image, so we override with bold weight (or a "pop" animation
+  // on hover, for nav links) and whatever higher contrast text color we've
+  // opted for in the rest of the text.
+  a:not(.btn) {
+    color: inherit;
+    font-weight: bolder;
+    &.nav-link {
+      font-weight: inherit;
+      // @include move-on-hover(-0.1em);
+    }
   }
-  @include media-breakpoint-up(lg) {
-    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/images/jumbotron-city-lg.jpg");
-    min-height: 960px / 2;
-  }
-  @include media-breakpoint-up(xl) {
-    background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/images/jumbotron-city-xl.jpg");
-    min-height: 1140px / 2;
-  }
-  h1, p {
-    text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
-  }
+}
+
+.cityscape {
+  @include responsive-bg-img("/images/chicago-sunset-xx.jpg", "linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4))");
+  color: $white;
 }

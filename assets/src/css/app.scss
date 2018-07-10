@@ -4,5 +4,8 @@
 @import "~leaflet-draw/dist/leaflet.draw";
 @import "~pikaday/scss/pikaday";
 
+@import "functions";
+@import "mixins";
+
 @import "navbar";
 @import "index";
