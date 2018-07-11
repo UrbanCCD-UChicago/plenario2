@@ -178,3 +178,31 @@
     </table>
   </div>
 </div>
+
+<div class="row">
+  <div class="col-lg-6">
+    <h3>
+      Charts
+      <%= tooltip "Predefined chart types to show off features of the data set." %>
+      <%= if @user_is_owner? do %>
+        <%= link "Create a New Chart", to: chart_path(@conn, :new, @meta.id), class: "btn btn-success pull-right" %>
+      <% end %>
+    </h3>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <%= for c <- @charts do %>
+        <tr>
+          <td><%= c.title %></td>
+          <td><%= link "Details", to: chart_path(@conn, :show, @meta.id, c.id), class: "float-right" %></td>
+        </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

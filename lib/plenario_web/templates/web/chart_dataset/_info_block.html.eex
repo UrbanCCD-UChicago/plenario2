@@ -1,0 +1,9 @@
+<div class="panel panel-default">
+  <div class="panel-body">
+    <p>
+      <strong>Chart Datasets</strong> are the aggregates of selected fields
+      of the parent data set. They are used to build the data of the charts
+      being displayed.
+    </p>
+  </div>
+</div>
