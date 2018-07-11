@@ -1,0 +1,3 @@
+CREATE INDEX "<%= view_name %>_<%= field %>_tsvector"
+ON "<%= view_name %>"
+USING GIN ( to_tsvector('english', "<%= field %>") )

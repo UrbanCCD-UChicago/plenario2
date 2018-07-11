@@ -19,7 +19,7 @@ defmodule Plenario.Schemas.Chart do
     has_many :datasets, Plenario.Schemas.ChartDataset
   end
 
-  @types ["line", "bar", "pie", "doughnut", "radar", "polar", "location", "heatmap"]
+  @types ["line", "bar", "pie", "doughnut", "radar", "polarArea", "location", "heatmap"]
 
   @type_choices [
     Line: "line",
@@ -27,7 +27,7 @@ defmodule Plenario.Schemas.Chart do
     Pie: "pie",
     Doughnut: "doughnut",
     Radar: "radar",
-    Polar: "polar",
+    Polar: "polarArea",
     "Locations on Map": "location",
     Heatmap: "heatmap"
   ]

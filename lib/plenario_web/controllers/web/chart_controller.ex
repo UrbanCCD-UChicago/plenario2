@@ -116,7 +116,7 @@ defmodule PlenarioWeb.Web.ChartController do
 
     conn
     |> put_flash(:success, "Deleted chart #{inspect(chart.title)}")
-    |> redirect(to: meta_path(conn, :show, meta_id))
+    |> redirect(to: data_set_path(conn, :show, meta_id))
   end
 
   def render_chart(conn, %{"id" => chart_id}) do
@@ -160,13 +160,38 @@ defmodule PlenarioWeb.Web.ChartController do
           groups
           |> Enum.map(& Keyword.get(data, &1, 0))
 
-        %{
-          label: d.label,
-          data: selected_data,
-          borderColor: "rgba(#{d.color},1)",
-          backgroundColor: "rgba(#{d.color},0.2)",
-          fill: d.fill?
-        }
+        obj =
+          %{
+            label: d.label,
+            data: selected_data
+          }
+        obj =
+          case chart.type == "polarArea" do
+            false ->
+              Map.merge(obj, %{
+                borderColor: "rgba(#{d.color},1)",
+                backgroundColor: "rgba(#{d.color},0.2)",
+                fill: d.fill?
+              })
+
+            true ->
+              borders =
+                ChartDataset.get_colors()
+                |> Enum.map(& "rgba(#{&1},1)")
+                |> Stream.cycle()
+                |> Enum.take(length(groups))
+              backgrounds =
+                ChartDataset.get_colors()
+                |> Enum.map(& "rgba(#{&1},0.2)")
+                |> Stream.cycle()
+                |> Enum.take(length(groups))
+              Map.merge(obj, %{
+                borderColor: borders,
+                backgroundColor: backgrounds
+              })
+          end
+
+        obj
       end)
 
     # make chart object
