@@ -1,3 +1,22 @@
+/* === UTILITY === */
+
+// Checks if a value is "empty". Sass considers "", 0, and () truthy so the
+// tests for truthiness you're used to from other languages don't work for this
+// purpose.
+//
+// $value - the value to check for emptiness
+@function empty($value) {
+  @if not $value or $value == "" or $value == 0 or $value == () or length($value) == 0 {
+    @return true;
+  }
+  @return false;
+}
+
+// Replaces all occurrences of a substring in a target string.
+//
+// $string  - target string to perform replacement in
+// $search  - the substring to be replaced
+// $replace - the replacement string to be inserted, default is empty string
 @function str-replace($string, $search, $replace: '') {
   $index: str-index($string, $search);
   
@@ -6,4 +25,19 @@
   }
   
   @return $string;
+}
+
+
+/* === GRAPHICS HELPERS === */
+
+// Generates a partially transparent "CSS image" for use in background-image
+// properties to dim, brighten, or otherwise modify other background-image
+// layers.
+//
+// $color   - the base color of the image, in any supported color format
+// $opacity - the final opacity of the layer, in the range 0.0 - 1.0 inclusive
+//
+// Supported in IE10+, Edge, Firefox 16+, Chrome 26+, Safari 6.1+, Opera 12.1+
+@function transparent-overlay($color, $opacity) {
+  @return linear-gradient(change_color($color, $alpha: 1 - $opacity) 0%, change_color($color, $alpha: 1 - $opacity) 100%);
 }

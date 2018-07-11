@@ -1,3 +1,7 @@
+// Shorthand for targeting HiDPI screens, including all Apple devices and most
+// flagship Android devices as well as Windows running in a HiDPI mode.
+//
+// Supported in all browsers that would be running on a HiDPI device
 @mixin hidpi {
   @media only screen and (-webkit-min-device-pixel-ratio: 1.25),
          only screen and ( min--moz-device-pixel-ratio: 1.25),
@@ -9,27 +13,126 @@
   }
 }
 
-/** Generate appropriate media queries to serve different versions of a
- *  background image depending on the active Bootstrap breakpoint and whether
- *  the device has a high-DPI display. Falls back to the non-high-DPI version
- *  and then the next smaller breakpoint if a given size is missing.
- *
- * @param $url-base  an image url in the form "filename-xx.ext"; the "xx" is
- *          replaced by the breakpoint name and possibly "@2x", e.g.
- *          "filename-md.ext", "filename-xs@2x.ext", etc.
- * @param $overlay  optional additional background layers to overlay the image,
- *          e.g. a transparent gradient or CSS pattern
- */
-@mixin responsive-bg-img($url-base, $overlay) {
-  $overlay: "#{$overlay},";
-  // Fallback for improperly formatted base URLs
-  background-image: unquote($overlay) url($url-base);
+// Generates appropriate media queries to request differently-sized versions of
+// a background image based on the active Bootstrap breakpoint and screen
+// resolution/DPI. The images should be named in the form "./filename-??.ext",
+// where "??" is one of ["xs", "sm", "md", "lg", "xl", "xs@2x", "sm@2x",
+// "md@2x", "lg@2x", "xl@2x"].
+//
+// $url-base     - an image URL in the form "path/to/filename-xx.ext"
+// $layers-above - string containing property values to appear on top of image
+// $layers-below - string containing property values to appear beneath image
+//
+// Supported in all browsers released after June 1 2009 (so all but IE8)
+@mixin responsive-bg-img($url-base, $layers-above: null, $layers-below: null) {
+  $before: if(empty($layers-above), "", "#{$layers-above}, ");
+  $after:  if(empty($layers-below), "", ", #{$layers-below}");
+
+  background-image: unquote($before)url($url-base)unquote($after);
+  
   @each $breakpoint in map-keys($grid-breakpoints) {
     @include media-breakpoint-up($breakpoint) {
-      background-image: unquote($overlay) url(str-replace($url-base, "-xx", "-#{$breakpoint}"));
+      background-image: unquote($before)url(str-replace($url-base, "-xx", "-#{$breakpoint}"))unquote($after);
       @include hidpi {
-        background-image: unquote($overlay) url(str-replace($url-base, "-xx", "-#{$breakpoint}@2x"));
+        background-image: unquote($before)url(str-replace($url-base, "-xx", "-#{$breakpoint}@2x"))unquote($after);
       }
     }
+  }
+}
+
+// Fade-out a background image toward a specified color, useful for muted or
+// stylized image backgrounds without having to regenerate image assets.
+//
+// $image - the URL of the base image
+// $color - the color to fade the image toward
+// $amt   - the effect strength, in the range 0.0 (no change) - 1.0 (pure color)
+@mixin faded-bg-img($image, $color, $amt) {
+  background-color: $color;
+  background-image: transparent-overlay($color, 1.0 - $amt), url($image), transparent-overlay($color, 0);
+}
+
+// Dim a background image toward black, useful for muted image backgrounds
+// without having to regenerate image assets.
+//
+// $image - the URL of the base image
+// $amt   - the effect strength, in the range 0.0 (no change) - 1.0 (pure black)
+@mixin darkened-bg-img($image, $amt) {
+  @include faded-bg-img($image, $black, $amt);
+}
+
+// Works exactly like faded-bg-image(), except uses responsive-bg-img() to
+// optimize which size image is loaded.
+//
+// $image - the base URL of the image (see responsive-bg-img() for syntax)
+// $color - the color to fade the image toward
+// $amt   - the effect strength, in the range 0.0 (no change) - 1.0 (pure color)
+@mixin faded-bg-img-responsive($image, $color, $amt) {
+  background-color: $color;
+  @include responsive-bg-img($image, "#{transparent-overlay($color, 1.0 - $amt)}", "#{transparent-overlay($color, 0)}");
+}
+
+// Works exactly like darkened-bg-image(), except uses responsive-bg-img() to
+// optimize which size image is loaded.
+//
+// $image - the base URL of the image (see responsive-bg-img() for syntax)
+// $amt   - the effect strength, in the range 0.0 (no change) - 1.0 (pure black)
+@mixin darkened-bg-img-responsive($image, $amt) {
+  @include faded-bg-img-responsive($image, $black, $amt);
+}
+
+// Applies several subtle effects to improve the readability of text and icons
+// placed over image backgrounds.
+//
+// $color    - the color to use for the effects, black by default (works best
+//               when set to a primary color of the image)
+// $strength - the strength of the effect, in the range 0.0 - 1.0
+@mixin text-over-image-readability-helper($color: $black, $strength: 1.0) {
+  $text-color: change_color($color, $alpha: $strength);
+  // Images have significantly more contrast already, so we use a softer effect
+  $img-color: change_color($color, $alpha: ($strength / 1.5));
+  // From experimentation, the best effect is achieved with spread set to ~3/4
+  // the font size for body copy; for headings it could actually be smaller,
+  // since the letterforms are larger and more distinct, but for simplicity we
+  // keep everything in terms of the root font size
+  $text-spread: 0.8rem;
+  // Again, a reduced effect for images since they're already more likely to pop
+  $img-spread: 0.33rem;
+
+  text-shadow: 0 0 $text-spread $text-color;
+  img, svg {
+    // CSS filters produce a somewhat stronger shadow effect than box-shadow
+    // does, and it stacks with itself, so this factor adjusts the spread down
+    // to compensate and avoid blotchy dark spots in concave parts of images
+    $filter-reduction-factor: 3;
+    filter: drop-shadow(0 0 ($img-spread/$filter-reduction-factor) $img-color);
+  }
+  .btn {
+    // Solid buttons get a drop shadow just like images, but outline buttons get
+    // the text shadow extended to their borders for a frosted-glass effect
+    box-shadow: 0 0 $img-spread $img-color;
+    text-shadow: none;
+    &[class*="btn-outline-"] {
+      box-shadow: none;
+      background-color: transparentize($text-color, 0.5);
+      &:hover {
+        border-color: inherit;
+        background-color: transparentize($text-color, 0.66);
+      }
+    }
+  }
+}
+
+// Animates the element to an offset position when being hovered.
+//
+// $dY - the vertical offset (any CSS length unit)
+// $dX - the horizontal offset (any CSS length unit)
+@mixin move-on-hover($dY: 0, $dX: 0) {
+  position: relative;
+  top: 0;  // required to make property animatable
+  left: 0; // required to make property animatable
+  transition: $transition-base;
+  &:hover {
+    top: $dY;
+    left: $dX;
   }
 }
