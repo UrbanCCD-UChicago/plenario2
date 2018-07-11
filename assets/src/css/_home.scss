@@ -3,7 +3,7 @@
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  position: relative; // Required to make z-index work
+  position: relative;
   min-height: 100vh;
   z-index: $zindex-modal - 1;
   padding: 0;
@@ -21,12 +21,34 @@
     font-weight: bolder;
     &.nav-link {
       font-weight: inherit;
-      // @include move-on-hover(-0.1em);
+      @include move-on-hover(-0.1em);
     }
+  }
+  &:first-child {
+    // Push the navbar spacing below the first cover instead of above, since the
+    // first cover is meant to cover (heh) the navbar
+    top: -$navbar-spacing;
+    margin-bottom: $navbar-spacing;
   }
 }
 
-.cityscape {
-  @include responsive-bg-img("/images/chicago-sunset-xx.jpg", "linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4))");
+.cover.cityscape {
+  @include darkened-bg-img-responsive("/images/chicago-sunset-xx.jpg", 0.6);  
+  @include text-over-image-readability-helper($strength: 0.4);
   color: $white;
+  hr {
+    border-color: transparentize($white, 0.5);
+  }
+}
+
+.coverskip {
+  @include move-on-hover(0.25rem);
+  display: inline-block;
+  font-size: 5rem;
+  line-height: 0.8em;
+  transform: scaleX(1.5);
+  cursor: pointer;
+  &::after {
+    content: "\2304";
+  }
 }

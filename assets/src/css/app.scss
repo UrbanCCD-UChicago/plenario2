@@ -1,11 +1,95 @@
-@import "variables";
-@import "~bootstrap/scss/bootstrap.scss";
+// Import our variables so they can override library defaults later
+@import "colors";
+@import "typography";
+
+// Library styles
+@import "~bootstrap/scss/bootstrap";
 @import "~leaflet/dist/leaflet";
 @import "~leaflet-draw/dist/leaflet.draw";
 @import "~pikaday/scss/pikaday";
 
+// Functionality
 @import "functions";
 @import "mixins";
 
-@import "navbar";
-@import "index";
+// Convenience constants
+$navbar-spacing: 2 * $navbar-padding-y + $nav-link-height + $spacer;
+
+// Page-specific styles
+@import "home";
+
+// General site styles
+html, body {
+  height: 100%;
+}
+
+@include media-breakpoint-down(sm) {
+  html {
+    font-size: 0.75 * $font-size-base;
+  }
+}
+
+::selection {
+  background-color: change_color($blue, $alpha: 0.5);
+  text-shadow: none;
+}
+
+.navbar-brand {
+  transition: color 200ms ease-in 10ms;
+  img.logo {
+    // This relative positioning serves to *visually* center the logo. The gap
+    // between the straight sections and curved sections is very nearly at the
+    // vertical midpoint *mathematically*, but because of quirks of human
+    // perception the rounded section looks much smaller than it actually is
+    // when compared to the straight bottom section, causing the entire arch to
+    // appear to be sitting too low.
+    position: relative;
+    top: -0.1 * $navbar-brand-height;
+    height: $navbar-brand-height;
+  }
+}
+
+.navbar.fixed-top {
+  // Prevent content from being covered by navbar
+  & + section, & + main {
+    padding-top: $navbar-spacing;
+  }
+}
+
+.flash-container {
+  z-index: $zindex-modal;
+  position: absolute;
+  top: 2 * $navbar-padding-y + $nav-link-height + ($spacer / 2);
+  left: 50%;
+  transform: translateX(-50%);
+  .alert {
+    margin-left: $spacer;
+    margin-right: $spacer;
+  }
+}
+
+.narrow-gutters {
+  margin-right: ($grid-gutter-width / -4);
+  margin-left: ($grid-gutter-width / -4);
+
+  > .col,
+  > [class*="col-"] {
+    padding-right: ($grid-gutter-width / 4);
+    padding-left: ($grid-gutter-width / 4);
+  }
+}
+
+.hairline-gutters {
+  margin-right: ($grid-gutter-width / -8);
+  margin-left: ($grid-gutter-width / -8);
+
+  > .col,
+  > [class*="col-"] {
+    padding-right: ($grid-gutter-width / 8);
+    padding-left: ($grid-gutter-width / 8);
+  }
+}
+
+.btn-xs {
+  @include button-size($btn-padding-y-sm / 2, $btn-padding-x-sm / 2, $font-size-sm, $btn-line-height-sm, $btn-border-radius-sm);
+}
