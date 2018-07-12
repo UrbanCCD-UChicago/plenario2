@@ -1,61 +1,75 @@
-// Import our variables so they can override library defaults later
+// ===== Variables (that override library settings) =====
 @import "colors";
 @import "typography";
 
-// Library styles
+
+// ===== Libraries =====
 @import "~bootstrap/scss/bootstrap";
 @import "~leaflet/dist/leaflet";
 @import "~leaflet-draw/dist/leaflet.draw";
 @import "~pikaday/scss/pikaday";
 
-// Functionality
+
+// ===== Helpers =====
 @import "functions";
 @import "mixins";
 
-// Convenience constants
-$navbar-spacing: 2 * $navbar-padding-y + $nav-link-height + $spacer;
 
-// Page-specific styles
+// ===== Variables (that depend on library settings) =====
+@import "convenience-variables";
+
+
+// ===== Page-specific styles =====
 @import "home";
 
-// General site styles
+
+// ===== Universal site styles =====
+
+// Forces even pages with small amounts of content to occupy the full height of
+// the browser window. This is necessary to be able to vertically center items
+// in the viewport in other styles.
 html, body {
   height: 100%;
 }
 
+// Reduces the overall font size of the site on mobile devices, since the
+// Bootstrap default only gives a line length of ~8 characters in headings on
+// small screens.
 @include media-breakpoint-down(sm) {
   html {
     font-size: 0.75 * $font-size-base;
   }
 }
 
+// Globally configures the user selection highlighting in supported browsers,
+// including a subtle color change but primarily removing text shadows which
+// tend to look quite bad when highlighted.
 ::selection {
   background-color: change_color($blue, $alpha: 0.5);
   text-shadow: none;
 }
 
-.navbar-brand {
-  transition: color 200ms ease-in 10ms;
-  img.logo {
-    // This relative positioning serves to *visually* center the logo. The gap
-    // between the straight sections and curved sections is very nearly at the
-    // vertical midpoint *mathematically*, but because of quirks of human
-    // perception the rounded section looks much smaller than it actually is
-    // when compared to the straight bottom section, causing the entire arch to
-    // appear to be sitting too low.
-    position: relative;
-    top: -0.1 * $navbar-brand-height;
-    height: $navbar-brand-height;
-  }
+// Visually centers the Plenario logo, which due to its shape and a quirk of
+// human perception appears to be too low when mathematically centered based on
+// its bounding box.
+.navbar-brand img.logo {
+  position: relative;
+  top: -0.1 * $navbar-brand-height;
+  height: $navbar-brand-height;
 }
 
+// Gives the first section of the primary page contents extra padding so its
+// content doesn't render behind the fixed navbar.
 .navbar.fixed-top {
-  // Prevent content from being covered by navbar
   & + section, & + main {
     padding-top: $navbar-spacing;
   }
 }
 
+// Makes Phoenix's flashes (alerts) float over the page contents below the
+// navbar, instead of pushing the page content down to accommodate them. Since
+// they can potentially cover content, all <div.alert>s used for flashes should
+// be set up as dismissable alerts as described in the Bootstrap documentation.
 .flash-container {
   z-index: $zindex-modal;
   position: absolute;
@@ -68,7 +82,9 @@ html, body {
   }
 }
 
-.narrow-gutters {
+// Halves the size of a row's gutters, for situations where a denser layout is
+// desirable.
+.row.narrow-gutters {
   margin-right: ($grid-gutter-width / -4);
   margin-left: ($grid-gutter-width / -4);
 
@@ -79,7 +95,9 @@ html, body {
   }
 }
 
-.hairline-gutters {
+// Makes a row's gutters very thin, primarily for arranging Bootstrap cards
+// using grid classes with an appropriately tiny spacing.
+.row.hairline-gutters {
   margin-right: ($grid-gutter-width / -8);
   margin-left: ($grid-gutter-width / -8);
 
@@ -90,6 +108,8 @@ html, body {
   }
 }
 
+// Makes a particularly small button, for situations where Bootstrap's
+// <a.btn-sm> is not small enough (like table rows).
 .btn-xs {
   @include button-size($btn-padding-y-sm / 2, $btn-padding-x-sm / 2, $font-size-sm, $btn-line-height-sm, $btn-border-radius-sm);
 }
