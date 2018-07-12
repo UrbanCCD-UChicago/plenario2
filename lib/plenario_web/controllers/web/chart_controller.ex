@@ -3,23 +3,19 @@ defmodule PlenarioWeb.Web.ChartController do
 
   import Ecto.Query
 
-  alias Plenario.{ModelRegistry, Repo}
+  alias Plenario.Repo
 
   alias Plenario.Actions.{
     MetaActions,
     VirtualDateFieldActions,
-    VirtualPointFieldActions
+    VirtualPointFieldActions,
+    ChartActions
   }
 
   alias Plenario.Schemas.{Chart, ChartDataset, DataSetField}
 
   def show(conn, %{"meta_id" => meta_id, "id" => chart_id}) do
-    chart =
-      Repo.one!(
-        from c in Chart,
-        where: c.id == ^chart_id,
-        preload: [datasets: :chart, meta: :charts]
-      )
+    chart = ChartActions.get(chart_id)
 
     render conn, "show.html",
       chart: chart,
@@ -27,7 +23,7 @@ defmodule PlenarioWeb.Web.ChartController do
   end
 
   def new(conn, %{"meta_id" => meta_id}) do
-    changeset = Chart.changeset()
+    changeset = ChartActions.new()
     action = chart_path(conn, :create, meta_id)
     meta = MetaActions.get(meta_id, with_fields: true)
 
@@ -40,8 +36,8 @@ defmodule PlenarioWeb.Web.ChartController do
   end
 
   def create(conn, %{"meta_id" => meta_id, "chart" => chart_params}) do
-    changeset = Chart.changeset(%Chart{}, chart_params)
-    do_create Repo.insert(changeset), conn, meta_id
+    ChartActions.create(chart_params)
+    |> do_create(conn, meta_id)
   end
 
   defp do_create({:ok, chart}, conn, meta_id) do
@@ -67,7 +63,7 @@ defmodule PlenarioWeb.Web.ChartController do
   end
 
   def edit(conn, %{"meta_id" => meta_id, "id" => chart_id}) do
-    chart = Repo.get!(Chart, chart_id)
+    chart = ChartActions.get(chart_id)
     changeset = Chart.changeset(chart)
     action = chart_path(conn, :update, meta_id, chart_id)
     meta = MetaActions.get(meta_id, with_fields: true)
@@ -82,7 +78,7 @@ defmodule PlenarioWeb.Web.ChartController do
   end
 
   def update(conn, %{"meta_id" => meta_id, "id" => chart_id, "chart" => chart_params}) do
-    chart = Repo.get!(Chart, chart_id)
+    chart = ChartActions.get(chart_id)
     changeset = Chart.changeset(chart, chart_params)
     do_update Repo.update(changeset), conn, meta_id, chart_id, chart
   end
@@ -111,7 +107,7 @@ defmodule PlenarioWeb.Web.ChartController do
   end
 
   def delete(conn, %{"meta_id" => meta_id, "id" => chart_id}) do
-    chart = Repo.get!(Chart, chart_id)
+    chart = ChartActions.get(chart_id)
     Repo.delete!(chart)
 
     conn
@@ -119,96 +115,72 @@ defmodule PlenarioWeb.Web.ChartController do
     |> redirect(to: data_set_path(conn, :show, meta_id))
   end
 
-  def render_chart(conn, %{"id" => chart_id}) do
-    chart =
-      Repo.one!(
-        from c in Chart,
-        where: c.id == ^chart_id,
-        preload: [datasets: :chart, meta: :charts]
-      )
+  def render_chart(conn, %{"id" => chart_id} = params) do
+    chart = ChartActions.get(chart_id)
+    %{labels: labels, datasets: datasets} =
+      ChartActions.get_agg_data(chart_id, params)
 
-    do_render_chart chart, conn
+    do_render_chart chart, conn, labels, datasets
   end
 
-  # TODO: add in bbox and timerange filters
+  defp do_render_chart(chart, conn, labels, datasets) do
+    datasets = apply_colors(chart.type, chart, datasets)
 
-  defp do_render_chart(%Chart{type: type} = chart, conn) when type in ["location", "heatmap"] do
-    conn
-    |> put_status(500)
-    |> render("500.html")
-  end
-
-  defp do_render_chart(chart, conn) do
-    model = ModelRegistry.lookup(chart.meta.slug)
-
-    group_by_func = get_group_by_func(chart.meta_id, chart.group_by_field)
-
-    groups =
-      select_groups(group_by_func, model, chart.group_by_field)
-      |> Repo.all()
-      |> Enum.map(& String.to_atom("#{&1}"))
-
-    datasets =
-      chart.datasets
-      |> Enum.map(fn d ->
-        data =
-          select_dataset(group_by_func, model, chart.group_by_field, d)
-          |> Repo.all()
-          |> Enum.map(fn {k, v} -> {String.to_atom("#{k}"), v} end)
-
-        selected_data =
-          groups
-          |> Enum.map(& Keyword.get(data, &1, 0))
-
-        obj =
-          %{
-            label: d.label,
-            data: selected_data
-          }
-        obj =
-          case chart.type == "polarArea" do
-            false ->
-              Map.merge(obj, %{
-                borderColor: "rgba(#{d.color},1)",
-                backgroundColor: "rgba(#{d.color},0.2)",
-                fill: d.fill?
-              })
-
-            true ->
-              borders =
-                ChartDataset.get_colors()
-                |> Enum.map(& "rgba(#{&1},1)")
-                |> Stream.cycle()
-                |> Enum.take(length(groups))
-              backgrounds =
-                ChartDataset.get_colors()
-                |> Enum.map(& "rgba(#{&1},0.2)")
-                |> Stream.cycle()
-                |> Enum.take(length(groups))
-              Map.merge(obj, %{
-                borderColor: borders,
-                backgroundColor: backgrounds
-              })
-          end
-
-        obj
-      end)
-
-    # make chart object
-    dumpable =
-      %{
+    json =
+      Poison.encode!(%{
         type: chart.type,
-        options: %{title: %{display: true, text: chart.title}},
+        options: %{
+          title: %{
+            display: true,
+            text: chart.title
+          }
+        },
         data: %{
-          labels: groups,
+          labels: labels,
           datasets: datasets
         }
-      }
-      |> Poison.encode!()
+      })
 
     render conn, "render_chart.html",
       chart_id: chart.id,
-      chart_dump: dumpable
+      chart_dump: json
+  end
+
+  defp apply_colors("polarArea", _, datasets) do
+    borders =
+      ChartDataset.get_colors()
+      |> Enum.map(& "rgba(#{&1},1)")
+      |> Stream.cycle()
+    backgrounds =
+      ChartDataset.get_colors()
+      |> Enum.map(& "rgba(#{&1},0.2)")
+      |> Stream.cycle()
+
+    datasets
+    |> Enum.map(fn d ->
+      bord_colors = borders |> Enum.take(length(d.data))
+      back_colors = backgrounds |> Enum.take(length(d.data))
+      Map.merge(d, %{
+        borderColor: bord_colors,
+        backgroundColor: back_colors
+      })
+    end)
+  end
+
+  defp apply_colors(_, chart, datasets) do
+    ds =
+      chart.datasets
+      |> Enum.map(fn d -> {String.to_atom(d.label), {d.color, d.fill?}} end)
+
+    datasets
+    |> Enum.map(fn d ->
+      {color, fill?} = Keyword.get(ds, String.to_atom(d.label))
+      Map.merge(d, %{
+        borderColor: "rgba(#{color},1)",
+        backgroundColor: "rgba(#{color},0.2)",
+        fill: fill?
+      })
+    end)
   end
 
   # helpers
@@ -222,125 +194,5 @@ defmodule PlenarioWeb.Web.ChartController do
       Enum.map(points, & {VirtualPointFieldActions.make_pretty_name(&1), &1.name})
 
     fields
-  end
-
-  defp get_group_by_func(meta_id, field_name) do
-    cond do
-      String.starts_with?(field_name, "vdf") ->
-        :date_trunc
-
-      String.starts_with?(field_name, "vpf") ->
-        :distict
-
-      true ->
-        %DataSetField{type: type} =
-          Repo.one(
-            from d in DataSetField,
-            where: d.meta_id == ^meta_id and d.name == ^field_name)
-
-        case type do
-          "timestamp" ->
-            :date_trunc
-
-          _ ->
-            :distinct
-        end
-    end
-  end
-
-  defp select_groups(:date_trunc, queryable, field_name) do
-    queryable
-    |> select([m], type(fragment("date_trunc('day', ?)", field(m, ^String.to_atom(field_name))), :naive_datetime))
-    |> distinct(true)
-    |> where([m], not is_nil(fragment("date_trunc('day', ?)", field(m, ^String.to_atom(field_name)))))
-    |> order_by([m], fragment("date_trunc('day', ?)", field(m, ^String.to_atom(field_name))))
-  end
-
-  defp select_groups(:distinct, queryable, field_name) do
-    queryable
-    |> select([m], field(m, ^String.to_atom(field_name)))
-    |> distinct(true)
-    |> where([m], not is_nil(field(m, ^String.to_atom(field_name))))
-    |> order_by([m], field(m, ^String.to_atom(field_name)))
-  end
-
-  defp select_dataset(:date_trunc, queryable, group_by_field, %ChartDataset{func: "count", field_name: field_name}) do
-    queryable
-    |> select([m], {
-      type(fragment("date_trunc('day', ?)", field(m, ^String.to_atom(group_by_field))), :naive_datetime),
-      count(field(m, ^String.to_atom(field_name)))
-    })
-    |> group_by([m], fragment("date_trunc('day', ?)", field(m, ^String.to_atom(group_by_field))))
-    |> where([m], not is_nil(fragment("date_trunc('day', ?)", field(m, ^String.to_atom(group_by_field)))))
-  end
-
-  defp select_dataset(:distinct, queryable, group_by_field, %ChartDataset{func: "count", field_name: field_name}) do
-    queryable
-    |> select([m], {
-      field(m, ^String.to_atom(group_by_field)),
-      count(field(m, ^String.to_atom(field_name)))
-    })
-    |> group_by([m], field(m, ^String.to_atom(group_by_field)))
-    |> where([m], not is_nil(field(m, ^String.to_atom(group_by_field))))
-  end
-
-  defp select_dataset(:date_trunc, queryable, group_by_field, %ChartDataset{func: "avg", field_name: field_name}) do
-    queryable
-    |> select([m], {
-      type(fragment("date_trunc('day', ?)", field(m, ^String.to_atom(group_by_field))), :naive_datetime),
-      avg(field(m, ^String.to_atom(field_name)))
-    })
-    |> group_by([m], fragment("date_trunc('day', ?)", field(m, ^String.to_atom(group_by_field))))
-    |> where([m], not is_nil(fragment("date_trunc('day', ?)", field(m, ^String.to_atom(group_by_field)))))
-  end
-
-  defp select_dataset(:distinct, queryable, group_by_field, %ChartDataset{func: "avg", field_name: field_name}) do
-    queryable
-    |> select([m], {
-      field(m, ^String.to_atom(group_by_field)),
-      avg(field(m, ^String.to_atom(field_name)))
-    })
-    |> group_by([m], field(m, ^String.to_atom(group_by_field)))
-    |> where([m], not is_nil(field(m, ^String.to_atom(group_by_field))))
-  end
-
-  defp select_dataset(:date_trunc, queryable, group_by_field, %ChartDataset{func: "min", field_name: field_name}) do
-    queryable
-    |> select([m], {
-      type(fragment("date_trunc('day', ?)", field(m, ^String.to_atom(group_by_field))), :naive_datetime),
-      min(field(m, ^String.to_atom(field_name)))
-    })
-    |> group_by([m], fragment("date_trunc('day', ?)", field(m, ^String.to_atom(group_by_field))))
-    |> where([m], not is_nil(fragment("date_trunc('day', ?)", field(m, ^String.to_atom(group_by_field)))))
-  end
-
-  defp select_dataset(:distinct, queryable, group_by_field, %ChartDataset{func: "min", field_name: field_name}) do
-    queryable
-    |> select([m], {
-      field(m, ^String.to_atom(group_by_field)),
-      min(field(m, ^String.to_atom(field_name)))
-    })
-    |> group_by([m], field(m, ^String.to_atom(group_by_field)))
-    |> where([m], not is_nil(field(m, ^String.to_atom(group_by_field))))
-  end
-
-  defp select_dataset(:date_trunc, queryable, group_by_field, %ChartDataset{func: "max", field_name: field_name}) do
-    queryable
-    |> select([m], {
-      type(fragment("date_trunc('day', ?)", field(m, ^String.to_atom(group_by_field))), :naive_datetime),
-      max(field(m, ^String.to_atom(field_name)))
-    })
-    |> group_by([m], fragment("date_trunc('day', ?)", field(m, ^String.to_atom(group_by_field))))
-    |> where([m], not is_nil(fragment("date_trunc('day', ?)", field(m, ^String.to_atom(group_by_field)))))
-  end
-
-  defp select_dataset(:distinct, queryable, group_by_field, %ChartDataset{func: "max", field_name: field_name}) do
-    queryable
-    |> select([m], {
-      field(m, ^String.to_atom(group_by_field)),
-      max(field(m, ^String.to_atom(field_name)))
-    })
-    |> group_by([m], field(m, ^String.to_atom(group_by_field)))
-    |> where([m], not is_nil(field(m, ^String.to_atom(group_by_field))))
   end
 end
