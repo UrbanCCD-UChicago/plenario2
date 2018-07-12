@@ -98,29 +98,6 @@
               link="<%= chart_path(@conn, :render_chart, res.id, chart.id) %>">
             </div>
             <% end %>
-
-            <script>
-            $.fn.isInViewport = function() {
-              let elementTop = $(this).offset().top;
-              let elementBottom = elementTop + $(this).outerHeight();
-              let viewportTop = $(window).scrollTop();
-              let viewportBottom = viewportTop + $(window).height();
-              return elementBottom > viewportTop && elementTop < viewportBottom;
-            };
-
-            $(window).on('resize scroll', function() {
-              $('.chart').each(function() {
-                if ($(this).isInViewport() && !$(this).hasClass('loaded')) {
-                  $(this).addClass('loaded');
-                  let url = $(this).attr('link');
-                  let that = $(this);
-                  $.get(url, function (data) {
-                    $(that).html(data);
-                  });
-                }
-              });
-            });
-            </script>
           </div>
         </div>
       </div>
@@ -137,3 +114,29 @@
     <% end %>
   <% end %>
 </div>
+
+<script src="https://github.com/cowboy/jquery-throttle-debounce/raw/v1.1/jquery.ba-throttle-debounce.min.js"></script>
+<script>
+$.fn.isInViewport = function () {
+  let elementTop = $(this).offset().top;
+  let elementBottom = elementTop + $(this).outerHeight();
+  let viewportTop = $(window).scrollTop();
+  let viewportBottom = viewportTop + $(window).height();
+  return elementBottom > viewportTop && elementTop < viewportBottom;
+};
+
+let charts = $('.chart').map(function () { return this; });
+
+let fetchCharts = function () {
+  $(charts).each(function () {
+    if ( $(this).isInViewport() && !$(this).hasClass('loaded') ) {
+      $(this).addClass('loaded');
+      let url = $(this).attr('link');
+      let that = $(this);
+      $.get(url, function (data) { $(that).html(data); });
+    }
+  });
+};
+
+$(window).on('resize scroll', throttle(100, fetchCharts));
+</script>
