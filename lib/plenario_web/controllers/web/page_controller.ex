@@ -21,8 +21,10 @@ defmodule PlenarioWeb.Web.PageController do
 
   @default_zoom 10
   @default_center "[41.9, -87.7]"
+  @default_granularity "week"
 
   def explorer(conn, params) do
+    granularity = parse_granularity(params)
     zoom = parse_zoom(params)
 
     starts = parse_date(params, "starting_on")
@@ -41,14 +43,26 @@ defmodule PlenarioWeb.Web.PageController do
           Plenario.search_data_sets(bbox, time_range)
       end
 
+    coords =
+      case is_nil(bbox) do
+        true ->
+          nil
+
+        false ->
+          bbox.coordinates |> Poison.encode!()
+      end
+
     render conn, "explorer.html",
       results: results,
+      granularity: granularity,
       map_center: center,
       map_zoom: zoom,
-      bbox: bbox.coordinates |> Poison.encode!(),
+      bbox: coords,
       starts: starts,
       ends: ends
   end
+
+  defp parse_granularity(params), do: Map.get(params, "granularity", @default_granularity)
 
   defp parse_zoom(params), do: Map.get(params, "zoom", @default_zoom)
 

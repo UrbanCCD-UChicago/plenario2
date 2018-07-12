@@ -32,6 +32,16 @@
                 });
               </script>
 
+              <div class="form-group">
+                <label for="granularity" class="control-label">Data Granularity:</label>
+                <select id="granularity" name="granularity" class="form-control" value="<% @granularity %>" required>
+                  <option value="day">Day</option>
+                  <option value="week">Week</option>
+                  <option value="month">Month</option>
+                  <option value="year">Year</option>
+                </select>
+              </div>
+
               <input id="coords" name="coords" hidden>
               <input id="zoom" name="zoom" hidden>
 
@@ -95,7 +105,7 @@
             <div
               id="chart-<%= chart.id %>"
               class="chart"
-              link="<%= chart_path(@conn, :render_chart, res.id, chart.id) %>">
+              link="<%= chart_path(@conn, :render_chart, res.id, chart.id, starts: "#{@starts}", ends: "#{@ends}", bbox: @bbox, granularity: @granularity) %>">
             </div>
             <% end %>
           </div>

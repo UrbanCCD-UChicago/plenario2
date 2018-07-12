@@ -1,6 +1,8 @@
 defmodule Plenario.Actions.ChartActions do
   import Ecto.Query
 
+  import Geo.PostGIS, only: [st_contains: 2]
+
   alias Plenario.{
     ModelRegistry,
     Repo
@@ -101,7 +103,7 @@ defmodule Plenario.Actions.ChartActions do
 
       false ->
         queryable
-        |> where([m], fragment("st_contains(?, ?)", ^bbox, field(m, ^String.to_atom(point_field))))
+        |> where([m], st_contains(^bbox, field(m, ^String.to_atom(point_field))))
     end
   end
 
@@ -620,10 +622,11 @@ defmodule Plenario.Actions.ChartActions do
           {:ok, json} ->
             cond do
               is_list(json) ->
-                coords = for [lat, lon] <- json, do: {lat, lon}
-                first = List.first(coords)
-                coords = coords ++ [first]
-                %Geo.Polygon{coordinates: [coords], srid: 4326}
+                coords =
+                  Enum.map(json, fn p ->
+                    Enum.map(p, fn [lat, lon] -> {lon, lat} end)
+                  end)
+                %Geo.Polygon{coordinates: coords, srid: 4326}
 
               is_map(json) ->
                 %{
@@ -631,11 +634,11 @@ defmodule Plenario.Actions.ChartActions do
                   "_southWest" => %{"lat" => min_lat, "lng" => max_lon}
                 } = json
                 %Geo.Polygon{coordinates: [[
-                  {max_lat, max_lon},
-                  {min_lat, max_lon},
-                  {min_lat, min_lon},
-                  {max_lat, min_lon},
-                  {max_lat, max_lon}
+                  {max_lon, max_lat},
+                  {min_lon, max_lat},
+                  {min_lon, min_lat},
+                  {max_lon, min_lat},
+                  {max_lon, max_lat}
                 ]], srid: 4326}
 
               true ->
@@ -661,7 +664,7 @@ defmodule Plenario.Actions.ChartActions do
 
         true ->
           starts =
-            case NaiveDateTime.from_iso8601("#{starts}T00:00:00.0") do
+            case NaiveDateTime.from_iso8601(starts) do
               {:error, _} ->
                 Timex.shift(NaiveDateTime.utc_now(), years: -1)
 
@@ -669,7 +672,7 @@ defmodule Plenario.Actions.ChartActions do
                 ndt
             end
           ends =
-            case NaiveDateTime.from_iso8601("#{ends}T00:00:00.0") do
+            case NaiveDateTime.from_iso8601(ends) do
               {:error, _} ->
                 NaiveDateTime.utc_now()
 
