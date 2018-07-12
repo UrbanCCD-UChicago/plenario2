@@ -19,9 +19,7 @@ defmodule PlenarioWeb.Api.AotController do
       Poison.decode!(value) |> Geo.JSON.decode()
     rescue
       _ ->
-        conn
-        |> put_req_header("accept", "application/vnd.api+json")
-        |> Explode.with(400, "Unable to parse bounding box JSON or generate Geo object")
+        conn |> Explode.with(400, "Unable to parse bounding box JSON or generate Geo object")
     end
   end
 
@@ -82,11 +80,17 @@ defmodule PlenarioWeb.Api.AotController do
       end
 
 
-    meta_ids = Repo.all(
-      from m in metas,
-      select: m.id,
-      distinct: m.id
-    )
+    meta_ids =
+      try do
+        Repo.all(
+          from m in metas,
+          select: m.id,
+          distinct: m.id
+        )
+      rescue
+        _ ->
+          conn |> Explode.with(400, "Unable to execute bounding box query")
+        end
 
     # handle data level filters: node_id, timestamp
     data = from d in AotData, where: d.aot_meta_id in ^meta_ids
