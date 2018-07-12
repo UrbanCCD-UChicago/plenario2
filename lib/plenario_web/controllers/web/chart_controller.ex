@@ -1,8 +1,6 @@
 defmodule PlenarioWeb.Web.ChartController do
   use PlenarioWeb, :web_controller
 
-  import Ecto.Query
-
   alias Plenario.Repo
 
   alias Plenario.Actions.{
@@ -12,7 +10,9 @@ defmodule PlenarioWeb.Web.ChartController do
     ChartActions
   }
 
-  alias Plenario.Schemas.{Chart, ChartDataset, DataSetField}
+  alias Plenario.Schemas.{Chart, ChartDataset}
+
+  plug :put_layout, false when action in [:render_chart]
 
   def show(conn, %{"meta_id" => meta_id, "id" => chart_id}) do
     chart = ChartActions.get(chart_id)
