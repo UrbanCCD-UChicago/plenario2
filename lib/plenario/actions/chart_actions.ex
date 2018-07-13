@@ -658,11 +658,11 @@ defmodule Plenario.Actions.ChartActions do
     starts = Map.get(params, "starts")
     ends = Map.get(params, "ends")
 
-    case !is_nil(starts) and !is_nil(ends) do
-      false ->
+    case is_nil(starts) and is_nil(ends) do
+      true ->
         nil
 
-      true ->
+      false ->
         starts =
           case NaiveDateTime.from_iso8601(starts) do
             {:error, _} ->
