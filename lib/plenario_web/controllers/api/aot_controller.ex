@@ -18,8 +18,7 @@ defmodule PlenarioWeb.Api.AotController do
     try do
       Poison.decode!(value) |> Geo.JSON.decode()
     rescue
-      _ ->
-        conn |> Explode.with(400, "Unable to parse bounding box JSON or generate Geo object")
+      _ -> conn |> Explode.with(400, "Unable to parse bounding box JSON or generate Geo object")
     end
   end
 
