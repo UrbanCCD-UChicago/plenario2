@@ -657,30 +657,30 @@ defmodule Plenario.Actions.ChartActions do
   defp parse_time_range(params) do
     starts = Map.get(params, "starts")
     ends = Map.get(params, "ends")
-    time_range =
-      case !is_nil(starts) and !is_nil(ends) do
-        false ->
-          nil
 
-        true ->
-          starts =
-            case NaiveDateTime.from_iso8601(starts) do
-              {:error, _} ->
-                Timex.shift(NaiveDateTime.utc_now(), years: -1)
+    case !is_nil(starts) and !is_nil(ends) do
+      false ->
+        nil
 
-              {_, ndt} ->
-                ndt
-            end
-          ends =
-            case NaiveDateTime.from_iso8601(ends) do
-              {:error, _} ->
-                NaiveDateTime.utc_now()
+      true ->
+        starts =
+          case NaiveDateTime.from_iso8601(starts) do
+            {:error, _} ->
+              Timex.shift(NaiveDateTime.utc_now(), years: -1)
 
-              {_, ndt} ->
-                ndt
-            end
+            {_, ndt} ->
+              ndt
+          end
+        ends =
+          case NaiveDateTime.from_iso8601(ends) do
+            {:error, _} ->
+              NaiveDateTime.utc_now()
 
-          Plenario.TsRange.new(starts, ends) |> Plenario.TsRange.to_postgrex()
+            {_, ndt} ->
+              ndt
+          end
+
+        Plenario.TsRange.new(starts, ends) |> Plenario.TsRange.to_postgrex()
       end
   end
 end

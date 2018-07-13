@@ -23,6 +23,21 @@ defmodule PlenarioWeb.Web.PageController do
   @default_center "[41.9, -87.7]"
   @default_granularity "week"
 
+  # first load
+
+  def explorer(conn, params) when params == %{} do
+    render conn, "explorer.html",
+      results: nil,
+      granularity: @default_granularity,
+      map_center: @default_center,
+      map_zoom: @default_zoom,
+      bbox: nil,
+      starts: nil,
+      ends: nil
+  end
+
+  # user submits form
+
   def explorer(conn, params) do
     granularity = parse_granularity(params)
     zoom = parse_zoom(params)
@@ -31,8 +46,40 @@ defmodule PlenarioWeb.Web.PageController do
     ends = parse_date(params, "ending_on")
     time_range = make_time_range(starts, ends)
 
+    conn =
+      case is_nil(time_range) do
+        true ->
+          conn
+          |> put_status(:bad_request)
+          |> put_flash(:error, "You must select a time range with a starting date less than the ending date.")
+
+        false ->
+          conn
+      end
+
     bbox = parse_coords(params)
     center = find_center(bbox)
+
+    conn =
+      case is_nil(bbox) do
+        true ->
+          existing_message =
+            case get_flash(conn)[:error] do
+              nil -> ""
+              value -> value
+            end
+
+          message =
+            existing_message <>
+            "You must select an area on the map to search data sets."
+
+          conn
+          |> put_status(:bad_request)
+          |> put_flash(:error, message)
+
+        false ->
+          conn
+      end
 
     results =
       case is_nil(bbox) do
@@ -82,16 +129,16 @@ defmodule PlenarioWeb.Web.PageController do
     end
   end
 
-  defp make_time_range(nil, nil), do: nil
-  defp make_time_range(starts, ends) do
+  defp make_time_range(%NaiveDateTime{} = starts, %NaiveDateTime{} = ends) do
     case NaiveDateTime.compare(starts, ends) do
       :gt ->
-        :error
+        nil
 
       _ ->
         Plenario.TsRange.new(starts, ends)
     end
   end
+  defp make_time_range(_, _), do: nil
 
   defp parse_coords(params) do
     bbox = Map.get(params, "coords")

@@ -14,7 +14,7 @@ defmodule PlenarioWeb.Web.ChartController do
 
   plug :put_layout, false when action in [:render_chart]
 
-  def show(conn, %{"meta_id" => meta_id, "id" => chart_id}) do
+  def show(conn, %{"id" => chart_id}) do
     chart = ChartActions.get(chart_id)
 
     render conn, "show.html",

@@ -1,8 +1,6 @@
 defmodule PlenarioWeb.Web.ChartDatasetController do
   use PlenarioWeb, :web_controller
 
-  import Ecto.Query
-
   alias Plenario.Repo
 
   alias Plenario.Actions.{

@@ -69,7 +69,7 @@
     <h2 class="mt-5">Search Results</h2>
 
     <%= if length(@results) > 0 do %>
-      <%= for {res, idx} <- Enum.with_index(@results) do %>
+      <%= for res <- @results do %>
 
       <div class="row">
         <div class="col-12">
