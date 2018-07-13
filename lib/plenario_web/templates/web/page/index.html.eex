@@ -62,71 +62,180 @@
 
 </section>
 
-<div class="container">
-  <h2>One map. One timeline.</h2>
-  <p class="lead">
-    All data in Plenario exists on a single map and a single timeline, making it incredibly easy to access multiple datasets
-    at once &mdash; especially those originally housed at different data portals.
-  </p>
-  <div class="jumbotron">
-    example image
+<section class="container">
+  
+  <div class="row mb-5">
+    <div class="col-lg-6">
+      <h2 class="display-4">One Map, One Timeline</h2>
+      <p class="lead">
+        View and search across hundreds of open data sets in one place with one interface.
+      </p>
+      <p>
+        All of the data sets available in Plenario are available elsewhere online (that's what makes
+        it <em>open data</em>), but Plenario lets you see all of the data on one unified map with
+        one unified timeline, no matter who's publishing it or the format they chose. 
+      </p>
+    </div>
+    <div class="col-lg-6">
+      <img class="img-fluid"
+        alt="A hanging map with places marked on it with pushpins and paper flags"
+        sizes="min-width(1200px) 540px,
+               min-width(992px) 450px,
+               min-width(768px) 690px,
+               min-width(576px) 510px,
+               100vw"
+        srcset="/images/map-320.jpg 320w,
+                /images/map-641.jpg 641w,
+                /images/map-898.jpg 898w,
+                /images/map-1161.jpg 1161w,
+                /images/map-1353.jpg 1353w,
+                /images/map-1518.jpg 1518w,
+                /images/map-1665.jpg 1665w,
+                /images/map-1805.jpg 1805w,
+                /images/map-1945.jpg 1945w,
+                /images/map-2064.jpg 2064w,
+                /images/map-2177.jpg 2177w,
+                /images/map-2277.jpg 2277w,
+                /images/map-2378.jpg 2378w,
+                /images/map-2468.jpg 2468w,
+                /images/map-2562.jpg 2562w,
+                /images/map-2650.jpg 2650w,
+                /images/map-2731.jpg 2731w,
+                /images/map-2809.jpg 2809w,
+                /images/map-2884.jpg 2884w,
+                /images/map-2955.jpg 2955w,
+                /images/map-3030.jpg 3030w,
+                /images/map-3096.jpg 3096w,
+                /images/map-3167.jpg 3167w,
+                /images/map-3236.jpg 3236w,
+                /images/map-3299.jpg 3299w,
+                /images/map-3361.jpg 3361w,
+                /images/map-3418.jpg 3418w,
+                /images/map-3478.jpg 3478w,
+                /images/map-3543.jpg 3543w,
+                /images/map-3595.jpg 3595w,
+                /images/map-3650.jpg 3650w,
+                /images/map-3710.jpg 3710w,
+                /images/map-3765.jpg 3765w,
+                /images/map-3816.jpg 3816w,
+                /images/map-3837.jpg 3837w,
+                /images/map-3840.jpg 3840w"
+        src="/images/map-1353.jpg">
+    </div>
   </div>
 
-  <h2>Explore the Array of Things project.</h2>
-  <p class="lead">
-    Plenario is the official public access point for Array of Things data.
-  </p>
-  <p>
-    While also available in the general
-    <%= link "explorer application", to: "/" %>, Array of Things data enjoys its own
-      <%= link "specialized application", to: "/" %>.
-  </p>
-  <div class="jumbotron">
-    example image
+  <div class="row mb-5">
+    <div class="col-lg-6">
+      <h2 class="display-4">Then and Now (<em>Right Now</em>)</h2>
+      <p class="lead">
+        Search data sets back decades, and get new data ASAP.
+      </p>
+      <p>
+        Plenario updates data sets as quickly as the source provider does, so you'll always see the
+        most recent available data in our unified interface. Plus, for data provided by the Array of
+        Things that means you get minute-by-minute readings from every active node, updated several
+        times each hour.
+      </p>
+    </div>
+    <div class="col-lg-6 order-lg-first">
+      <img class="img-fluid"
+        alt="A long exposure of a highway showing streaks from headlights, with a city skyline in the background"
+        sizes="min-width(1200px) 540px,
+               min-width(992px) 450px,
+               min-width(768px) 690px,
+               min-width(576px) 510px,
+               100vw"
+        srcset="/images/city-streaks-320.jpg 320w,
+                /images/city-streaks-630.jpg 630w,
+                /images/city-streaks-847.jpg 847w,
+                /images/city-streaks-1048.jpg 1048w,
+                /images/city-streaks-1197.jpg 1197w,
+                /images/city-streaks-1336.jpg 1336w,
+                /images/city-streaks-1460.jpg 1460w,
+                /images/city-streaks-1582.jpg 1582w,
+                /images/city-streaks-1697.jpg 1697w,
+                /images/city-streaks-1800.jpg 1800w,
+                /images/city-streaks-1900.jpg 1900w,
+                /images/city-streaks-1996.jpg 1996w,
+                /images/city-streaks-2096.jpg 2096w,
+                /images/city-streaks-2184.jpg 2184w,
+                /images/city-streaks-2265.jpg 2265w,
+                /images/city-streaks-2351.jpg 2351w,
+                /images/city-streaks-2430.jpg 2430w,
+                /images/city-streaks-2516.jpg 2516w,
+                /images/city-streaks-2600.jpg 2600w,
+                /images/city-streaks-2675.jpg 2675w,
+                /images/city-streaks-2746.jpg 2746w,
+                /images/city-streaks-2823.jpg 2823w,
+                /images/city-streaks-2900.jpg 2900w,
+                /images/city-streaks-2969.jpg 2969w,
+                /images/city-streaks-3041.jpg 3041w,
+                /images/city-streaks-3109.jpg 3109w,
+                /images/city-streaks-3183.jpg 3183w,
+                /images/city-streaks-3258.jpg 3258w,
+                /images/city-streaks-3321.jpg 3321w,
+                /images/city-streaks-3390.jpg 3390w,
+                /images/city-streaks-3460.jpg 3460w,
+                /images/city-streaks-3527.jpg 3527w,
+                /images/city-streaks-3592.jpg 3592w,
+                /images/city-streaks-3658.jpg 3658w,
+                /images/city-streaks-3725.jpg 3725w,
+                /images/city-streaks-3792.jpg 3792w,
+                /images/city-streaks-3836.jpg 3836w,
+                /images/city-streaks-3840.jpg 3840w",
+        src="/images/city-streaks-1336.jpg">
+    </div>
   </div>
 
-  <h2>Anyone can add data.</h2>
-  <p class="lead">
-    Anyone can
-    <%= link "sign up", to: auth_path(@conn, :index) %> and register new publicly available data sets. As long as it includes location and time data we can index it and make
-      it available to the world! Publicly available ESRI Shapefiles enclosed in Zip files can also be added.
-  </p>
-  <div class="jumbotron">
-    example image
+  <div class="row mb-5">
+    <div class="col-lg-6">
+      <h2 class="display-4">Share With the World</h2>
+      <p class="lead">
+        If you're already publishing an open data source it's super easy to add it to Plenario.
+      </p>
+      <p>
+        Anyone can <%= link "sign up", to: auth_path(@conn, :index) %> and register new publicly
+        available data sets. As long as it includes location and time fields we can index it and
+        make it available to the world! Static geographic data from zipped ESRI Shapefiles is also
+        supported.
+      </p>
+    </div>
+    <div class="col-lg-6">
+      <img class="img-fluid" src="https://source.unsplash.com/featured/?robot" alt="">
+    </div>
+  </div>
+  
+  <div class="row mb-5">
+    <div class="col-lg-6">
+      <h2 class="display-4">Tell the Story of Place</h2>
+      <p class="lead">
+        With all the data at your fingertips, you can watch places change over time.
+      </p>
+      <p>
+        Whether you care about climate change, demographic shifts, or driving accidents, Plenario
+        lets you easily the effects in a neighborhood, along a route, or throughout an entire city. 
+      </p>
+    </div>
+    <div class="col-lg-6 order-lg-first">
+      <img class="img-fluid" src="https://source.unsplash.com/featured/?space" alt="">
+    </div>
   </div>
 
-  <h2>Extreme ease of access to rich data sets.</h2>
-  <p class="lead">
-    No coding, no NDAs, no navigating government websites older than you are. Accessing the data is as easy as selecting dates
-    and drawing on a map.
-  </p>
-  <p>
-    City data portals, the federal government, individual datasets &dash; we have it all, whether originally housed at Socrata
-    or CKAN data portals or in CSV format.
-  </p>
-  <div class="jumbotron">
-    example image
+  <div class="row mb-5">
+    <div class="col-lg-6">
+      <h2 class="display-4">Data Should Be Transparent</h2>
+      <p class="lead">
+        We belive trust is good, but the ability to independently verify is better.
+      </p>
+      <p>
+        That's why Plenario is <a href="https://github.com/UrbanCCD-UChicago/plenario2">open
+        source</a>, and all data we serve is publicly available straight from the publisher. You
+        should always be able to trace what you see in Plenario all the way to the data source.
+      </p>
+    </div>
+    <div class="col-lg-6">
+      <img class="img-fluid" src="https://source.unsplash.com/featured/?money" alt="">
+    </div>
   </div>
 
-  <h2>Tell the story of place.</h2>
-  <p class="lead">
-    With all the data at your fingertips, you can watch places change over time.
-  </p>
-  <div class="jumbotron">
-    example image
-  </div>
-
-  <h2>Forever open.</h2>
-  <p class="lead">
-    All data sets indexed by Plenario are open &mdash; they are publicly available and their source is disclosed to users for
-    their own perusal and verification.
-  </p>
-  <p>
-    Data contributors are encouraged to provide biographical information so that users trust the information they're receiving.
-  </p>
-  <p>
-    Additionally, Plenario is built using open source tools and its source is hosted on
-    <a href="https://github.com/UrbanCCD-UChicago/plenario2">GitHub</a>.
-  </p>
-
-</div>
+</section>
