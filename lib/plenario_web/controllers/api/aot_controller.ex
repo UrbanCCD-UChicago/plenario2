@@ -88,9 +88,8 @@ defmodule PlenarioWeb.Api.AotController do
           distinct: m.id
         )
       rescue
-        _ ->
-          conn |> Explode.with(400, "Unable to execute bounding box query")
-        end
+        _ -> conn |> Explode.with(400, "Unable to execute bounding box query")
+      end
 
     # handle data level filters: node_id, timestamp
     data = from d in AotData, where: d.aot_meta_id in ^meta_ids
