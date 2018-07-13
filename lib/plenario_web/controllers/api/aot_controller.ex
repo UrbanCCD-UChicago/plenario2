@@ -77,8 +77,6 @@ defmodule PlenarioWeb.Api.AotController do
           bbox = parse_bbox(value, conn)
           from m in metas, where: st_intersects(m.bbox, ^bbox)
       end
-
-
     meta_ids =
       try do
         Repo.all(
@@ -87,8 +85,13 @@ defmodule PlenarioWeb.Api.AotController do
           distinct: m.id
         )
       rescue
-        _ -> conn |> Explode.with(400, "Unable to execute bounding box query")
+        _ -> nil
       end
+
+    case meta_ids do
+      nil -> conn |> Explode.with(400, "Unable to execute bounding box query")
+      _ -> meta_ids
+    end
 
     # handle data level filters: node_id, timestamp
     data = from d in AotData, where: d.aot_meta_id in ^meta_ids
