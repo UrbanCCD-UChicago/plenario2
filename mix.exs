@@ -1,7 +1,7 @@
 defmodule Plenario.Mixfile do
   use Mix.Project
 
-  @version "0.11.9"
+  @version "0.12.0"
 
   def project do
     [
