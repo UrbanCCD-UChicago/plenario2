@@ -14,11 +14,11 @@ defmodule PlenarioWeb.Api.AotController do
   plug :check_page
   plug :check_page_size, default_page_size: 500, page_size_limit: 5000
 
-  defp parse_bbox(value) do
+  defp parse_bbox(value, conn) do
     try do
       Poison.decode!(value) |> Geo.JSON.decode()
     rescue
-      _ -> nil
+      _ -> conn |> Explode.with(400, "Unable to parse bounding box JSON or generate Geo object")
     end
   end
 
@@ -74,15 +74,28 @@ defmodule PlenarioWeb.Api.AotController do
       case Map.get(conn.params, "bbox") do
         nil -> metas
         value ->
-          bbox = parse_bbox(value)
+          bbox = parse_bbox(value, conn)
           from m in metas, where: st_intersects(m.bbox, ^bbox)
       end
 
-    meta_ids = Repo.all(
-      from m in metas,
-      select: m.id,
-      distinct: m.id
-    )
+    # we wrap this db call in a try/rescue block because Geo is forgiving of input bbox coordinates
+    # and will generate PostGIS exceptions
+    meta_ids =
+      try do
+        Repo.all(
+          from m in metas,
+          select: m.id,
+          distinct: m.id
+        )
+      rescue
+        # set to nil to keep error logs clean and force an Ecto.SubQuery exception later in query composition
+        _ -> nil
+      end
+
+    case meta_ids do
+      nil -> conn |> Explode.with(400, "Unable to execute bounding box query")
+      _ -> meta_ids
+    end
 
     # handle data level filters: node_id, timestamp
     data = from d in AotData, where: d.aot_meta_id in ^meta_ids
