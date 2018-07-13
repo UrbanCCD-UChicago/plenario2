@@ -1,9 +1,43 @@
-<div class="panel panel-default">
-  <div class="panel-body">
-    <p>
+<div class="card">
+  <div class="card-body">
+    <h4 class="card-title">
+      More Information on Chart Datasets
+    </h4>
+    <p class="card-text">
       <strong>Chart Datasets</strong> are the aggregates of selected fields
       of the parent data set. They are used to build the data of the charts
       being displayed.
+    </p>
+    <p class="card-text">
+      The <strong>Label</strong> of the dataset should correspond to the data
+      that is being displayed -- usually the name of the field you're aggregating
+      is sufficient for this.
+    </p>
+    <p class="card-text">
+      The <strong>Field Name</strong> is the name of the field you are
+      aggregating for the display.
+    </p>
+    <p class="card-text">
+      The <strong>Aggregate Function</strong> is the algebraic function used
+      to sample and compute the values of the field.
+    </p>
+    <ul>
+      <li>
+        <em>Average</em> works for all numerical data types and is a safe
+        choice for easily communicating values to users.
+      </li>
+      <li>
+        <em>Minimum</em> and <em>Maximum</em> work with numerical data and
+        are useful for showing the bounds of the dataset.
+      </li>
+      <li>
+        <em>Count</em> is effective at showing the magnitude or volume of
+        data for a given segment. It works with any data type.
+      </li>
+    </ul>
+    <p class="card-text">
+      <strong>Color</strong> and <strong>Fill</strong> are purely stylistic
+      choices.
     </p>
   </div>
 </div>

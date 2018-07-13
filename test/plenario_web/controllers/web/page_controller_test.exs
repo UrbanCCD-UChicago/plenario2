@@ -214,7 +214,7 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     }
 
     conn = get(conn, page_path(conn, :explorer), params)
-    assert get_flash(conn)["error"] =~ "You must select a time range with a starting date less than the ending date."
+    assert get_flash(conn)["error"] =~ "You must select a time range with a starting date earlier than the ending date."
   end
 
   @tag :anon
@@ -224,6 +224,6 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
       "ending_on" => "2000-01-01",
       "coords" => "[[30, 20], [40, 50], [10, 30], [30, 20]]"
     })
-    assert get_flash(conn)["error"] =~ "You must select a time range with a starting date less than the ending date."
+    assert get_flash(conn)["error"] =~ "You must select a time range with a starting date earlier than the ending date."
   end
 end

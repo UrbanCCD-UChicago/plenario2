@@ -1,13 +1,16 @@
-<div class="panel panel-default">
-  <div class="panel-body">
-    <p>
+<div class="card">
+  <div class="card-body">
+    <h4 class="card-title">
+      More Information about Charts
+    </h4>
+    <p class="card-text">
       <strong>Charts</strong> are a great way to convey the features of
       your data set. They are used in the detail view of the data set
       and in the search results. Users can quickly ascertain the kind
       of data from looking at the charts. Be sure to pick fields and
       functions for data sets later that exemplify what this data set has.
     </p>
-    <p>
+    <p class="card-text">
       The <strong>Type</strong> of chart should correspond to the kind
       of data you want to present.
     </p>
@@ -45,17 +48,17 @@
         temperature, humidity, precipitation totals.
       </li>
     </ul>
-    <p>
+    <p class="card-text">
       The <strong>Timestamp Field</strong> is used to filter the database
       records -- the charts will be used in some cases where users
       supply a time range to limit the results.
     </p>
-    <p>
+    <p class="card-text">
       The <strong>Point Field</strong> is used to filter the database
       records -- the charts will be used in some cases where users
       supply a geographic bounding box to limit the results.
     </p>
-    <p>
+    <p class="card-text">
       The <strong>Group By Field</strong> is used to aggregate the results
       of the datasets attached to the chart. For <em>line</em> and
       <em>bar</em> charts, the best field for this is the same used for

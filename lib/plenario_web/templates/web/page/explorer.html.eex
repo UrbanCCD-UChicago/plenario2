@@ -125,7 +125,6 @@
   <% end %>
 </div>
 
-<script src="https://github.com/cowboy/jquery-throttle-debounce/raw/v1.1/jquery.ba-throttle-debounce.min.js"></script>
 <script>
 $.fn.isInViewport = function () {
   let elementTop = $(this).offset().top;

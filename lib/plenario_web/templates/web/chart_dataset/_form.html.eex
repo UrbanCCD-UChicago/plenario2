@@ -26,8 +26,10 @@
   </div>
 
   <div class="form-group">
-    <%= label f, "Fill in Area?", class: "control-label" %>
-    <%= checkbox f, :fill?, class: "form-control" %>
+    <div class="form-check">
+      <%= checkbox f, :fill?, class: "form-check-input" %>
+      <%= label f, "Fill in Area?", class: "form-check-label" %>
+    </div>
     <%= error_tag f, :fill? %>
   </div>
 

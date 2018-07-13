@@ -51,7 +51,7 @@ defmodule PlenarioWeb.Web.PageController do
         true ->
           conn
           |> put_status(:bad_request)
-          |> put_flash(:error, "You must select a time range with a starting date less than the ending date.")
+          |> put_flash(:error, "You must select a time range with a starting date earlier than the ending date.")
 
         false ->
           conn
