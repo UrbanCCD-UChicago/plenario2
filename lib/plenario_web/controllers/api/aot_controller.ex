@@ -77,6 +77,9 @@ defmodule PlenarioWeb.Api.AotController do
           bbox = parse_bbox(value, conn)
           from m in metas, where: st_intersects(m.bbox, ^bbox)
       end
+
+    # we wrap this db call in a try/rescue block because Geo is forgiving of input bbox coordinates
+    # and will generate PostGIS exceptions
     meta_ids =
       try do
         Repo.all(
@@ -85,6 +88,7 @@ defmodule PlenarioWeb.Api.AotController do
           distinct: m.id
         )
       rescue
+        # set to nil to keep error logs clean and force an Ecto.SubQuery exception later in query composition
         _ -> nil
       end
 
