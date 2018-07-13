@@ -42,13 +42,13 @@ config :plenario, PlenarioEtl,
   global: true,
   jobs: [
     # run the find refreshable metas every minute (offset is 1 minute above)
-    # {"* * * * *", {PlenarioEtl, :import_data_sets, []}}
+    {"* * * * *", {PlenarioEtl, :import_data_sets, []}}
   ]
 
 config :plenario, PlenarioAot.AotScheduler,
   global: true,
   jobs: [
-    # {"*/5 * * * *", {PlenarioAot.AotScheduler, :import_aot_data, []}}
+    {"*/5 * * * *", {PlenarioAot.AotScheduler, :import_aot_data, []}}
   ]
 
 config :plenario, PlenarioAot,
