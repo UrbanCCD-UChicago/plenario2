@@ -197,8 +197,8 @@ defmodule PlenarioWeb.Api.AotControllerTest do
           {min_lat, max_lon},
           {min_lat, min_lon},
           {max_lat, min_lon},
-          {max_lat, max_lon}
-          # missing closing coordinate
+          {max_lat, max_lon},
+          {min_lat, max_lon}
         ]]
       } |> Geo.JSON.encode()
 
