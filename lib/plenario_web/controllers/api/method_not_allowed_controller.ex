@@ -11,9 +11,9 @@ defmodule PlenarioWeb.Api.MethodNotAllowedController do
       |> Enum.drop(1)))
 
     if path_info in routes do
-      send_resp(conn, 405, "Method not allowed")
+      conn |> Explode.with(405, "Method not allowed")
     else
-      send_resp(conn, 404, "")
+      conn |> Explode.with(404, "Not found")
     end
   end
 end
