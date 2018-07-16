@@ -1,61 +1,53 @@
-<div class="row">
+<div class="container mt-2">
   <h1>Request Changes</h1>
-</div>
 
-<div class="row">
-  <h3>Select fields that require modification for data set: <%= @meta.name %></h3>
+  <p class="lead">Select fields that require modification for data set: <%= @meta.name %></p>
   <hr>
-</div>
 
-<%= form_for @conn, data_set_path(@conn, :send_change_request_email, @meta.id), [method: :post], fn f -> %>
+  <%= form_for @conn, data_set_path(@conn, :send_change_request_email, @meta.id), [method: :post], fn f -> %>
 
-<div class="row">
-  <div class="form-group">
-      <div class="col-sm-3"><p>Request Deletion?</p></div>
-      <div class="col-sm-9">
-        <p><%= checkbox(f, :request_delete) %> <strong>Delete</strong></p>
-      </div>
-  </div>
-</div>
-
-<hr>
-
-<div class="row">
-  
-  <div class="col-sm-3">
-    <h3>Field name</h3>
-    <%= for f <- @fields  do %>
-      <p> <%= f %> </p>
-    <% end %>
-  </div>
-
-  <div class="col-sm-9">
-    <h3>Select</h3>
-      <%= for f <- @fields  do %>
-         <p><input class="form-check-input" type="checkbox" name="<%= f %>" value="true" style="margin: 0"></p>
-      <% end %>
-  </div>
-</div>
-
-<hr>
-
-<div class="row">
-  <div class="form-group">
-      <div class="col-sm-3"><p>Comments</p></div>
-      <div class="col-sm-9">
-        <p><%= textarea f, :comments %></p>
-      </div>
-    <input id="meta-name" name="meta_name" value="<%= @meta.name %>" hidden>
-    <input id="user-id" name="user_id" value="<%= @meta.user_id %>" hidden>
-    <input id="user-name" name="user_name" value="<%= @meta.user.name %>" hidden>
-  </div>
-</div>
-
-<hr>
-
-<div class="form-group row">
-    <div class="col-sm-3">
-      <button type="submit" class="btn btn-primary">Submit</button>
+    <div class="form-group form-row">
+        <div class="col-sm-3">Request Deletion?</div>
+        <div class="col-sm-9 text-danger">
+          <%= checkbox(f, :request_delete) %> <strong>Delete</strong>
+        </div>
     </div>
+
+    <hr>
+
+    <div class="form-row mb-2">
+      <div class="col-sm-4"><span class="h5">Field Name</span></div>
+      <div class="col-sm-8"><span class="h5">Modify?</span></div>
+    </div>
+    <%= for f <- @fields  do %>
+    <div class="form-group form-row">
+      <div class="col-sm-4">
+        <label for="<%= f %>"><%= f %></label>
+      </div>
+      <div class="col-sm-8">
+        <input class="form-check-input ml-0" type="checkbox" name="<%= f %>" value="true">
+      </div>
+    </div>
+    <% end %>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-3"><p>Comments</p></div>
+        <div class="col-sm-9">
+          <p><%= textarea f, :comments %></p>
+        </div>
+      <input id="meta-name" name="meta_name" value="<%= @meta.name %>" hidden>
+      <input id="user-id" name="user_id" value="<%= @meta.user_id %>" hidden>
+      <input id="user-name" name="user_name" value="<%= @meta.user.name %>" hidden>
+    </div>
+
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-3">
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+    </div>
+  <% end %>
 </div>
-<% end %>

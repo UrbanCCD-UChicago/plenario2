@@ -1,17 +1,13 @@
-<div class="container">
-  <div class="row">
-    <h2>
-      Chart <em><%= @chart.title %></em> for <em><%= @meta.name %></em>
-      <%= link "Go Back to Data Set", to: data_set_path(@conn, :show, @meta.id), class: "btn btn-info float-right" %>
-    </h2>
+<div class="container mt-2">
+  <h2>
+    Chart <em><%= @chart.title %></em> for <em><%= @meta.name %></em>
+    <%= link "Go Back to Data Set", to: data_set_path(@conn, :show, @meta.id), class: "btn btn-info float-right" %>
+  </h2>
+
+  <div id="chartPlaceholder" class="p-1">
   </div>
 
-  <div class="row" id="chartPlaceholder" style="padding:30px">
-  </div>
-
-  <div class="row" style="margin-bottom:50px">
-    <%= link "Delete This Chart", to: chart_path(@conn, :delete, @meta.id, @chart.id), method: :delete, class: "btn btn-danger float-right" %>
-  </div>
+  <%= link "Delete This Chart", to: chart_path(@conn, :delete, @meta.id, @chart.id), method: :delete, class: "btn btn-danger float-right mb-3" %>
 
   <div class="row">
     <div class="col-6">

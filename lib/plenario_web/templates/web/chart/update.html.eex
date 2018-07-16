@@ -1,12 +1,8 @@
-<div class="container">
-  <div class="row">
-    <div class="col-lg-12">
-      <h2>
-        Updating chart <em><%= @chart.title %></em> for <em><%= @meta.name %></em>
-        <%= link "Go Back to Data Set", to: data_set_path(@conn, :show, @meta.id), class: "btn btn-info float-right" %>
-      </h2>
-    </div>
-  </div>
+<div class="container mt-2">
+  <h2>
+    Updating chart <em><%= @chart.title %></em> for <em><%= @meta.name %></em>
+    <%= link "Go Back to Data Set", to: data_set_path(@conn, :show, @meta.id), class: "btn btn-info float-right" %>
+  </h2>
 
   <div class="row">
     <!-- form block -->

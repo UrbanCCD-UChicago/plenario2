@@ -100,15 +100,13 @@
           </p>
         </div>
         <div class="col-lg-9">
-          <div class="container">
-            <%= for chart <- res.charts do %>
-            <div
-              id="chart-<%= chart.id %>"
-              class="chart"
-              link="<%= chart_path(@conn, :render_chart, res.id, chart.id, starts: "#{@starts}", ends: "#{@ends}", bbox: @bbox, granularity: @granularity) %>">
-            </div>
-            <% end %>
+          <%= for chart <- res.charts do %>
+          <div
+            id="chart-<%= chart.id %>"
+            class="chart"
+            link="<%= chart_path(@conn, :render_chart, res.id, chart.id, starts: "#{@starts}", ends: "#{@ends}", bbox: @bbox, granularity: @granularity) %>">
           </div>
+          <% end %>
         </div>
       </div>
       <hr class="dotborder">
