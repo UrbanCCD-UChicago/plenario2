@@ -10,7 +10,7 @@
     </p>
     <p class="card-text">
       The <strong>Label</strong> of the dataset should correspond to the data
-      that is being displayed -- usually the name of the field you're aggregating
+      that is being displayed &mdash; usually the name of the field you're aggregating
       is sufficient for this.
     </p>
     <p class="card-text">

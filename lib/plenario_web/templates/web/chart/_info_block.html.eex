@@ -17,21 +17,21 @@
     <ul>
       <li>
         <em>Line</em> charts are great for working with data that is
-        aggregated over timestamps -- as an example, observation data.
+        aggregated over timestamps &mdash; as an example, observation data.
       </li>
       <li>
         <em>Bar</em> charts are great for working with data that is
-        aggregated by larger thematic values -- as an example, demographic
+        aggregated by larger thematic values &mdash; as an example, demographic
         data organized by census year.
       </li>
       <li>
         <em>Pie</em> and <em>Doughnut</em> charts work well for showing
-        relative shares of counts of data -- as an example, election
+        relative shares of counts of data &mdash; as an example, election
         results.
       </li>
       <li>
         <em>Radar</em> charts work well for showing allocation of a shared
-        resource among multiple activities -- as an example, total time
+        resource among multiple activities &mdash; as an example, total time
         spent at various events/activities.
       </li>
       <li>
@@ -43,19 +43,20 @@
         textual information that is tied to locations.
       </li>
       <li>
-        <em>Heatmap</em> is similar to a regular map, but shows
-        concentration of events to a given point -- as an example,
-        temperature, humidity, precipitation totals.
+        <em>Heatmap</em> is similar to a regular map, but shows concentration of
+        events in an area &mdash; as an example, to visualize which
+        intersections are more prone to traffic collisions or to highlight
+        common destinations for municipal bike rental trips.
       </li>
     </ul>
     <p class="card-text">
       The <strong>Timestamp Field</strong> is used to filter the database
-      records -- the charts will be used in some cases where users
+      records &mdash; the charts will be used in some cases where users
       supply a time range to limit the results.
     </p>
     <p class="card-text">
       The <strong>Point Field</strong> is used to filter the database
-      records -- the charts will be used in some cases where users
+      records &mdash; the charts will be used in some cases where users
       supply a geographic bounding box to limit the results.
     </p>
     <p class="card-text">
@@ -63,7 +64,7 @@
       of the datasets attached to the chart. For <em>line</em> and
       <em>bar</em> charts, the best field for this is the same used for
       the <em>timestamp field</em>; for maps, use the same field as
-      <em>point field</em>; for all other charts, this can vary -- radar
+      <em>point field</em>; for all other charts, this can vary &mdash; radar
       and polar charts work really well for abstract data (like zipcodes
       and wards).
     </p>
