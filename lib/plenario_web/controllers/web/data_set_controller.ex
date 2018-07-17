@@ -34,12 +34,7 @@ defmodule PlenarioWeb.Web.DataSetController do
         _ -> user.id == meta.user_id
       end
 
-    points =
-      MetaActions.get_points(meta)
-      |> Enum.reject(& is_nil(&1))
-      |> Enum.map(fn %Geo.Point{coordinates: {lon, lat}} ->
-        "[#{lat}, #{lon}]"
-      end)
+    points = MetaActions.get_points(meta)
 
     render(conn, "show.html",
       meta: meta,

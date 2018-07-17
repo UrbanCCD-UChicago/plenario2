@@ -100,6 +100,13 @@
           </p>
         </div>
         <div class="col-lg-9">
+          <%= if length(res.charts) == 0 do %>
+            <%= PlenarioWeb.SharedView.render_map(
+              bbox: Plenario.Actions.MetaActions.dump_bbox(res),
+              ds_points: Plenario.Actions.MetaActions.get_points(res),
+              map_id: "ds_#{res.id}_map"
+            )%>
+          <% end %>
           <%= for chart <- res.charts do %>
           <div
             id="chart-<%= chart.id %>"

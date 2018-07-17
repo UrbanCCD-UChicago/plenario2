@@ -331,5 +331,9 @@ defmodule Plenario.Actions.MetaActions do
     %Postgrex.Result{rows: data} = Repo.query!(query)
 
     List.flatten(data)
+    |> Enum.reject(& is_nil(&1))
+    |> Enum.map(fn %Geo.Point{coordinates: {lon, lat}} ->
+      "[#{lat}, #{lon}]"
+    end)
   end
 end
