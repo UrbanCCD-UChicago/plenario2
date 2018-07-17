@@ -39,7 +39,8 @@ if [ $# -lt 1 ]; then
   exit 1
 fi
 
-flags="-strip -sampling-factor 4:2:0 -quality 85 -interlace JPEG -colorspace RGB"
+iflags="-strip -sampling-factor 4:2:0 -quality 85 -interlace JPEG -colorspace RGB"
+oflags="-unsharp 1.5x1+0.7+0.02 -modulate 100,105 -colorspace sRGB"
 if [ $retina -eq 1 ]; then
   max_w=$(( $max_w * 2 ))
 fi
@@ -55,57 +56,61 @@ while [ $# -gt 0 ]; do
       # The width for the XL breakpoint is arbitrarily chosen, as that
       # breakpoint has no maximum size. It might look bad if someone with a 4K
       # monitor has their browser fullscreen, but so will most sites.
-      convert $1 $flags -set option:filename:t "%t" \
-        \( +clone -resize "575>"  -write "%[filename:t]-xs.jpg"    +delete \) \
-        \( +clone -resize "767>"  -write "%[filename:t]-sm.jpg"    +delete \) \
-        \( +clone -resize "991>"  -write "%[filename:t]-md.jpg"    +delete \) \
-        \( +clone -resize "1199>" -write "%[filename:t]-lg.jpg"    +delete \) \
-                  -resize "1920>"        "%[filename:t]-xl.jpg"
+      convert $1 $iflags -set option:filename:t "%t" \
+        \( +clone -resize "575>"  $oflags -write "%[filename:t]-xs.jpg" +delete \) \
+        \( +clone -resize "767>"  $oflags -write "%[filename:t]-sm.jpg" +delete \) \
+        \( +clone -resize "991>"  $oflags -write "%[filename:t]-md.jpg" +delete \) \
+        \( +clone -resize "1199>" $oflags -write "%[filename:t]-lg.jpg" +delete \) \
+                  -resize "1920>" $oflags        "%[filename:t]-xl.jpg"
                   
       if [ $retina -gt 0 ]; then
-        convert $1 $flags -set option:filename:t "%t" \
-          \( +clone -resize "1150>" -write "%[filename:t]-xs@2x.jpg" +delete \) \
-          \( +clone -resize "1534>" -write "%[filename:t]-sm@2x.jpg" +delete \) \
-          \( +clone -resize "1982>" -write "%[filename:t]-md@2x.jpg" +delete \) \
-          \( +clone -resize "2398>" -write "%[filename:t]-lg@2x.jpg" +delete \) \
-                    -resize "3840>"        "%[filename:t]-xl@2x.jpg"
+        convert $1 $iflags -set option:filename:t "%t" \
+          \( +clone -resize "1150>" $oflags -write "%[filename:t]-xs@2x.jpg" +delete \) \
+          \( +clone -resize "1534>" $oflags -write "%[filename:t]-sm@2x.jpg" +delete \) \
+          \( +clone -resize "1982>" $oflags -write "%[filename:t]-md@2x.jpg" +delete \) \
+          \( +clone -resize "2398>" $oflags -write "%[filename:t]-lg@2x.jpg" +delete \) \
+                    -resize "3840>" $oflags        "%[filename:t]-xl@2x.jpg"
       fi
     else
       # Yes, it is strange that the XS image is larger than the small image.
       # These are the container widths directly from Bootstrap, so you'll have
       # to take it up with them.
-      convert $1 $flags -set option:filename:t "%t" \
-        \( +clone -resize "545>"  -write "%[filename:t]-xs.jpg"    +delete \) \
-        \( +clone -resize "540>"  -write "%[filename:t]-sm.jpg"    +delete \) \
-        \( +clone -resize "720>"  -write "%[filename:t]-md.jpg"    +delete \) \
-        \( +clone -resize "960>"  -write "%[filename:t]-lg.jpg"    +delete \) \
-                  -resize "1140>"        "%[filename:t]-xl.jpg"
+      convert $1 $iflags -set option:filename:t "%t" \
+        \( +clone -resize "545>"  $oflags -write "%[filename:t]-xs.jpg" +delete \) \
+        \( +clone -resize "540>"  $oflags -write "%[filename:t]-sm.jpg" +delete \) \
+        \( +clone -resize "720>"  $oflags -write "%[filename:t]-md.jpg" +delete \) \
+        \( +clone -resize "960>"  $oflags -write "%[filename:t]-lg.jpg" +delete \) \
+                  -resize "1140>" $oflags        "%[filename:t]-xl.jpg"
         
       if [ $retina -gt 0 ]; then
-        convert $1 $flags -set option:filename:t "%t" \
-          \( +clone -resize "1090>" -write "%[filename:t]-xs@2x.jpg" +delete \) \
-          \( +clone -resize "1080>" -write "%[filename:t]-sm@2x.jpg" +delete \) \
-          \( +clone -resize "1440>" -write "%[filename:t]-md@2x.jpg" +delete \) \
-          \( +clone -resize "1920>" -write "%[filename:t]-lg@2x.jpg" +delete \) \
-                    -resize "2280>"        "%[filename:t]-xl@2x.jpg"
+        convert $1 $iflags -set option:filename:t "%t" \
+          \( +clone -resize "1090>" $oflags -write "%[filename:t]-xs@2x.jpg" +delete \) \
+          \( +clone -resize "1080>" $oflags -write "%[filename:t]-sm@2x.jpg" +delete \) \
+          \( +clone -resize "1440>" $oflags -write "%[filename:t]-md@2x.jpg" +delete \) \
+          \( +clone -resize "1920>" $oflags -write "%[filename:t]-lg@2x.jpg" +delete \) \
+                    -resize "2280>" $oflags        "%[filename:t]-xl@2x.jpg"
       fi
     fi
   else
 
     bn=${1%.*}
 
-    max_fs=$(( $(convert $1 $flags -resize "$max_w>" -write "$bn-$max_w.jpg" jpeg:- | wc -c) ))
-    min_fs=$(( $(convert $1 $flags -resize "$min_w>" -write "$bn-$min_w.jpg" jpeg:- | wc -c) ))
+    max_fs=$(( $(convert $1 $iflags -resize "$max_w>" $oflags -write "$bn-$max_w.jpg" \
+      jpeg:- | wc -c) ))
+    min_fs=$(( $(convert $1 $iflags -resize "$min_w>" $oflags -write "$bn-$min_w.jpg" \
+      jpeg:- | wc -c) ))
 
     src_w=$(( $(identify -format "%w" $1) ))
     
+    # This avoids generating a breakpoint only slightly bigger than the min size
+    stop=$(( $(echo "$min_fs + (0.85 * $step) / 1" | bc) ))
     target=$(( $max_fs - $step ))
     curr=$max_fs
     pct=$(echo "scale=2; $max_w * 100 / $src_w" | bc)
 
-    while [ $target -gt $min_fs ]; do
+    while [ $target -gt $stop ]; do
       while [ $curr -gt $target ]; do
-        convert $1 $flags -resize "$pct%" "$bn-tmp.jpg"
+        convert $1 $iflags -resize "$pct%" $oflags "$bn-tmp.jpg"
         curr=$(cat "$bn-tmp.jpg" | wc -c)
         pct=$(echo "scale=2;$pct - 0.5" | bc)
       done
