@@ -64,6 +64,8 @@
 
 <section class="container">
   
+  <%# NOTE: images in this section generated using these flags: "--retina --max 690 --step 24576" %>
+  
   <div class="row mb-5">
     <div class="col-lg-6">
       <h2 class="display-4">One Map, One Timeline</h2>
@@ -84,43 +86,13 @@
                min-width(768px) 690px,
                min-width(576px) 510px,
                100vw"
-        srcset="/images/map-320.jpg 320w,
-                /images/map-641.jpg 641w,
-                /images/map-898.jpg 898w,
-                /images/map-1161.jpg 1161w,
-                /images/map-1353.jpg 1353w,
-                /images/map-1518.jpg 1518w,
-                /images/map-1665.jpg 1665w,
-                /images/map-1805.jpg 1805w,
-                /images/map-1945.jpg 1945w,
-                /images/map-2064.jpg 2064w,
-                /images/map-2177.jpg 2177w,
-                /images/map-2277.jpg 2277w,
-                /images/map-2378.jpg 2378w,
-                /images/map-2468.jpg 2468w,
-                /images/map-2562.jpg 2562w,
-                /images/map-2650.jpg 2650w,
-                /images/map-2731.jpg 2731w,
-                /images/map-2809.jpg 2809w,
-                /images/map-2884.jpg 2884w,
-                /images/map-2955.jpg 2955w,
-                /images/map-3030.jpg 3030w,
-                /images/map-3096.jpg 3096w,
-                /images/map-3167.jpg 3167w,
-                /images/map-3236.jpg 3236w,
-                /images/map-3299.jpg 3299w,
-                /images/map-3361.jpg 3361w,
-                /images/map-3418.jpg 3418w,
-                /images/map-3478.jpg 3478w,
-                /images/map-3543.jpg 3543w,
-                /images/map-3595.jpg 3595w,
-                /images/map-3650.jpg 3650w,
-                /images/map-3710.jpg 3710w,
-                /images/map-3765.jpg 3765w,
-                /images/map-3816.jpg 3816w,
-                /images/map-3837.jpg 3837w,
-                /images/map-3840.jpg 3840w"
-        src="/images/map-1353.jpg">
+        srcset="/images/map-320.jpg 320w, 
+                /images/map-622.jpg 622w, 
+                /images/map-829.jpg 829w, 
+                /images/map-1037.jpg 1037w, 
+                /images/map-1192.jpg 1192w, 
+                /images/map-1380.jpg 1380w"
+        src="/images/map-829.jpg">
     </div>
   </div>
 
@@ -139,51 +111,24 @@
     </div>
     <div class="col-lg-6 order-lg-first">
       <img class="img-fluid"
-        alt="A long exposure of a highway showing streaks from headlights, with a city skyline in the background"
+        alt="A long exposure of a highway approaching a city, showing streaks of light from passing cars"
         sizes="min-width(1200px) 540px,
                min-width(992px) 450px,
                min-width(768px) 690px,
                min-width(576px) 510px,
                100vw"
         srcset="/images/city-streaks-320.jpg 320w,
-                /images/city-streaks-630.jpg 630w,
-                /images/city-streaks-847.jpg 847w,
-                /images/city-streaks-1048.jpg 1048w,
-                /images/city-streaks-1197.jpg 1197w,
-                /images/city-streaks-1336.jpg 1336w,
-                /images/city-streaks-1460.jpg 1460w,
-                /images/city-streaks-1582.jpg 1582w,
-                /images/city-streaks-1697.jpg 1697w,
-                /images/city-streaks-1800.jpg 1800w,
-                /images/city-streaks-1900.jpg 1900w,
-                /images/city-streaks-1996.jpg 1996w,
-                /images/city-streaks-2096.jpg 2096w,
-                /images/city-streaks-2184.jpg 2184w,
-                /images/city-streaks-2265.jpg 2265w,
-                /images/city-streaks-2351.jpg 2351w,
-                /images/city-streaks-2430.jpg 2430w,
-                /images/city-streaks-2516.jpg 2516w,
-                /images/city-streaks-2600.jpg 2600w,
-                /images/city-streaks-2675.jpg 2675w,
-                /images/city-streaks-2746.jpg 2746w,
-                /images/city-streaks-2823.jpg 2823w,
-                /images/city-streaks-2900.jpg 2900w,
-                /images/city-streaks-2969.jpg 2969w,
-                /images/city-streaks-3041.jpg 3041w,
-                /images/city-streaks-3109.jpg 3109w,
-                /images/city-streaks-3183.jpg 3183w,
-                /images/city-streaks-3258.jpg 3258w,
-                /images/city-streaks-3321.jpg 3321w,
-                /images/city-streaks-3390.jpg 3390w,
-                /images/city-streaks-3460.jpg 3460w,
-                /images/city-streaks-3527.jpg 3527w,
-                /images/city-streaks-3592.jpg 3592w,
-                /images/city-streaks-3658.jpg 3658w,
-                /images/city-streaks-3725.jpg 3725w,
-                /images/city-streaks-3792.jpg 3792w,
-                /images/city-streaks-3836.jpg 3836w,
-                /images/city-streaks-3840.jpg 3840w",
-        src="/images/city-streaks-1336.jpg">
+                /images/city-streaks-547.jpg 547w,
+                /images/city-streaks-673.jpg 673w,
+                /images/city-streaks-799.jpg 799w,
+                /images/city-streaks-883.jpg 883w,
+                /images/city-streaks-967.jpg 967w,
+                /images/city-streaks-1051.jpg 1051w,
+                /images/city-streaks-1135.jpg 1135w,
+                /images/city-streaks-1219.jpg 1219w,
+                /images/city-streaks-1304.jpg 1304w,
+                /images/city-streaks-1380.jpg 1380w"
+        src="/images/city-streaks-799.jpg">
     </div>
   </div>
 
@@ -201,7 +146,24 @@
       </p>
     </div>
     <div class="col-lg-6">
-      <img class="img-fluid" src="https://source.unsplash.com/featured/?robot" alt="">
+      <img class="img-fluid"
+        alt="A NASA satellite orbiting above a view of the cloud-covered Earth"
+        sizes="min-width(1200px) 540px,
+               min-width(992px) 450px,
+               min-width(768px) 690px,
+               min-width(576px) 510px,
+               100vw"
+        srcset="/images/satellite-320.jpg 320w,
+                /images/satellite-493.jpg 493w,
+                /images/satellite-641.jpg 641w,
+                /images/satellite-739.jpg 739w,
+                /images/satellite-887.jpg 887w,
+                /images/satellite-986.jpg 986w,
+                /images/satellite-1084.jpg 1084w,
+                /images/satellite-1183.jpg 1183w,
+                /images/satellite-1281.jpg 1281w,
+                /images/satellite-1380.jpg 1380w"
+        src="/images/satellite-739.jpg">
     </div>
   </div>
   
@@ -217,7 +179,25 @@
       </p>
     </div>
     <div class="col-lg-6 order-lg-first">
-      <img class="img-fluid" src="https://source.unsplash.com/featured/?space" alt="">
+      <img class="img-fluid"
+        alt="A busy neighborhood market street on an overcast day"
+        sizes="min-width(1200px) 540px,
+               min-width(992px) 450px,
+               min-width(768px) 690px,
+               min-width(576px) 510px,
+               100vw"
+        srcset="/images/street-market-320.jpg 320w,
+                /images/street-market-518.jpg 518w,
+                /images/street-market-674.jpg 674w,
+                /images/street-market-778.jpg 778w,
+                /images/street-market-829.jpg 829w,
+                /images/street-market-933.jpg 933w,
+                /images/street-market-1037.jpg 1037w,
+                /images/street-market-1140.jpg 1140w,
+                /images/street-market-1192.jpg 1192w,
+                /images/street-market-1296.jpg 1296w,
+                /images/street-market-1380.jpg 1380w"
+        src="/images/street-market-778.jpg">
     </div>
   </div>
 
@@ -234,7 +214,27 @@
       </p>
     </div>
     <div class="col-lg-6">
-      <img class="img-fluid" src="https://source.unsplash.com/featured/?money" alt="">
+      <img class="img-fluid"
+        alt="The large reading room of a public library, with tiered shelving along the walls beneath grand windows"
+        sizes="min-width(1200px) 540px,
+               min-width(992px) 450px,
+               min-width(768px) 690px,
+               min-width(576px) 510px,
+               100vw"
+        srcset="/images/library-320.jpg 320w,
+                /images/library-472.jpg 472w,
+                /images/library-590.jpg 590w,
+                /images/library-707.jpg 707w,
+                /images/library-766.jpg 766w,
+                /images/library-884.jpg 884w,
+                /images/library-943.jpg 943w,
+                /images/library-1002.jpg 1002w,
+                /images/library-1061.jpg 1061w,
+                /images/library-1179.jpg 1179w,
+                /images/library-1238.jpg 1238w,
+                /images/library-1297.jpg 1297w,
+                /images/library-1380.jpg 1380w"
+        src="/images/library-707.jpg">
     </div>
   </div>
 
