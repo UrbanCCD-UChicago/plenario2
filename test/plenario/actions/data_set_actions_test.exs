@@ -6,6 +6,7 @@ defmodule Plenario.Actions.DataSetActionsTest do
   alias Plenario.Actions.{
     DataSetActions,
     DataSetFieldActions,
+    MetaActions,
     VirtualPointFieldActions
   }
 
@@ -70,5 +71,20 @@ defmodule Plenario.Actions.DataSetActionsTest do
         }
       end
     end
+  end
+
+  # for some data sets, the name of the data set and the names of its
+  # fields when concatenated overrun the maximum length of index names
+  # for postgres. when this happens, the name of the index is
+  # truncated and we run into naming collisions. this test ensures that
+  # each index is given a unique name, even in the event of an overflow
+  # and truncation.
+  test "up! with really long names", %{meta: meta} do
+    {:ok, meta} = MetaActions.update(meta, name: "blah blah blah blah blah blah blah blah blah blah blah blah blah")
+    {:ok, _} = DataSetFieldActions.create(meta, "derp derp derp derp derp derp derp derp derp derp derp 1", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "derp derp derp derp derp derp derp derp derp derp derp 2", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "derp derp derp derp derp derp derp derp derp derp derp 3", "text")
+
+    :ok = DataSetActions.up!(meta)
   end
 end
