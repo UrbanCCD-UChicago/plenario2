@@ -106,13 +106,13 @@ while [ $# -gt 0 ]; do
     stop=$(( $(echo "$min_fs + (0.85 * $step) / 1" | bc) ))
     target=$(( $max_fs - $step ))
     curr=$max_fs
-    pct=$(echo "scale=2; $max_w * 100 / $src_w" | bc)
+    pct=$(echo "$max_w * 100 / $src_w" | bc)
 
     while [ $target -gt $stop ]; do
       while [ $curr -gt $target ]; do
         convert $1 $iflags -resize "$pct%" $oflags "$bn-tmp.jpg"
         curr=$(cat "$bn-tmp.jpg" | wc -c)
-        pct=$(echo "scale=2;$pct - 0.5" | bc)
+        pct=$(( $pct - 1 ))
       done
       w=$(identify -format "%w" "$bn-tmp.jpg")
       mv "$bn-tmp.jpg" "$bn-$w.jpg"
