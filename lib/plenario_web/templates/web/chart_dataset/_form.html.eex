@@ -1,0 +1,40 @@
+<%= form_for @changeset, @action, fn f -> %>
+  <%= hidden_input f, :chart_id, value: @chart.id %>
+
+  <div class="form-group">
+    <%= label f, :label, class: "control-label" %>
+    <%= text_input f, :label, class: "form-control" %>
+    <%= error_tag f, :label %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, :field_name, class: "control-label" %>
+    <%= select f, :field_name, @fields, class: "form-control" %>
+    <%= error_tag f, :field_name %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, "Aggregate Function", class: "control-label" %>
+    <%= select f, :func, @funcs, class: "form-control" %>
+    <%= error_tag f, :func %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, :color, class: "control-label" %>
+    <%= select f, :color, @colors, class: "form-control" %>
+    <%= error_tag f, :color %>
+  </div>
+
+  <div class="form-group">
+    <div class="form-check">
+      <%= checkbox f, :fill?, class: "form-check-input" %>
+      <%= label f, "Fill in Area?", class: "form-check-label" %>
+    </div>
+    <%= error_tag f, :fill? %>
+  </div>
+
+  <div class="form-group">
+    <input type="submit" value="Submit" class="btn btn-success">
+    <%= link "Cancel", to: chart_path(@conn, :show, @meta_id, @chart.id), class: "btn btn-danger float-right" %>
+  </div>
+<% end %>

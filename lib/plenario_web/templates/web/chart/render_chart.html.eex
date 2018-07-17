@@ -1,0 +1,4 @@
+<canvas id="<%= @chart_id %>" width="50" height="50"></canvas>
+<script>
+new Chart(document.getElementById("<%= @chart_id %>"), <%= raw(@chart_dump) %>);
+</script>

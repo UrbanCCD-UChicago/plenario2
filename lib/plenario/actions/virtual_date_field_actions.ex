@@ -97,4 +97,39 @@ defmodule Plenario.Actions.VirtualDateFieldActions do
       _ -> {:error, "Meta is locked."}
     end
   end
+
+  def make_pretty_name(%VirtualDateField{
+    year_field: y, month_field: m, day_field: d,
+    hour_field: h, minute_field: mi, second_field: s})
+    when not is_nil(y) and not is_nil(m) and not is_nil(d)
+    and not is_nil(h) and not is_nil(mi) and not is_nil(s),
+    do: "Virtual Date {#{y.name}, #{m.name}, #{d.name}, #{h.name}, #{mi.name}, #{s.name}}"
+
+  def make_pretty_name(%VirtualDateField{
+    year_field: y, month_field: m, day_field: d,
+    hour_field: h, minute_field: mi})
+    when not is_nil(y) and not is_nil(m) and not is_nil(d)
+    and not is_nil(h) and not is_nil(mi),
+    do: "Virtual Date {#{y.name}, #{m.name}, #{d.name}, #{h.name}, #{mi.name}}"
+
+  def make_pretty_name(%VirtualDateField{
+    year_field: y, month_field: m, day_field: d,
+    hour_field: h})
+    when not is_nil(y) and not is_nil(m) and not is_nil(d)
+    and not is_nil(h),
+    do: "Virtual Date {#{y.name}, #{m.name}, #{d.name}, #{h.name}}"
+
+  def make_pretty_name(%VirtualDateField{
+    year_field: y, month_field: m, day_field: d})
+    when not is_nil(y) and not is_nil(m) and not is_nil(d),
+    do: "Virtual Date {#{y.name}, #{m.name}, #{d.name}}"
+
+  def make_pretty_name(%VirtualDateField{
+    year_field: y, month_field: m})
+    when not is_nil(y) and not is_nil(m),
+    do: "Virtual Date {#{y.name}, #{m.name}}"
+
+  def make_pretty_name(%VirtualDateField{year_field: y})
+    when not is_nil(y),
+    do: "Virtual Date {#{y.name}}"
 end

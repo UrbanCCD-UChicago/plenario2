@@ -2,6 +2,11 @@ CREATE MATERIALIZED VIEW "<%= view_name %>" AS
 SELECT
   row_id
 
+  -- text fields
+  <%= for f <- text_fields do %>
+  , "<%= f %>"
+  <% end %>
+
   -- boolean fields
   <%= for f <- boolean_fields do %>
   , p_boolean_from_text("<%= f %>") AS "<%= f %>"

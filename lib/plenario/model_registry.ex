@@ -106,7 +106,6 @@ defmodule Plenario.ModelRegistry do
     view = "#{meta.table_name}_view"
     fields =
       meta.fields
-      |> Enum.filter(& Enum.member?(["boolean", "integer", "float", "timestamp"], &1.type))
       |> Enum.map(& {String.to_atom(&1.name), Map.fetch!(@type_map, &1.type)})
 
     vpfs =

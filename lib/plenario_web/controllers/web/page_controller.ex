@@ -9,76 +9,195 @@ defmodule PlenarioWeb.Web.PageController do
 
   alias PlenarioAot.{AotData, AotMeta}
 
+  ##
+  # flat pages
+
   def index(conn, _), do: render(conn, "index.html")
 
+  def docs(conn, _), do: render(conn, "docs.html")
+
+  ##
+  # regular explorer
+
+  @default_zoom 10
+  @default_center "[41.9, -87.7]"
+  @default_granularity "week"
+
+  # first load
+
   def explorer(conn, params) when params == %{} do
-    render_explorer(conn, nil, "[41.9, -87.7]", 10, nil, "", "")
+    render conn, "explorer.html",
+      results: nil,
+      granularity: @default_granularity,
+      map_center: @default_center,
+      map_zoom: @default_zoom,
+      bbox: nil,
+      starts: nil,
+      ends: nil
   end
+
+  # user submits form
 
   def explorer(conn, params) do
-    zoom = Map.get(params, "zoom")
-    coords = Map.get(params, "coords")
-    starts = Map.get(params, "starting_on")
-    ends = Map.get(params, "ending_on")
+    granularity = parse_granularity(params)
+    zoom = parse_zoom(params)
 
-    {startdt, conn} = parse_date(conn, starts)
-    {enddt, conn} = parse_date(conn, ends)
+    starts = parse_date(params, "starting_on")
+    ends = parse_date(params, "ending_on")
+    time_range = make_time_range(starts, ends)
 
-    do_explorer(zoom, coords, startdt, enddt, conn)
-  end
+    conn =
+      case is_nil(time_range) do
+        true ->
+          conn
+          |> put_status(:bad_request)
+          |> put_flash(:error, "You must select a time range with a starting date earlier than the ending date.")
 
-  defp parse_date(conn, date_string) do
-    case NaiveDateTime.from_iso8601("#{date_string}T00:00:00.0") do
-      {:error, _} ->
-        {nil, put_flash(conn, :error,
-        "Invalid date #{inspect(date_string)}")}
-      {_, datetime} ->
-        {datetime, conn}
-    end
-  end
+        false ->
+          conn
+      end
 
-  defp do_explorer(nil, nil, nil, nil, conn) do
-    render_explorer(conn, nil, "[41.9, -87.7]", 10, nil, "", "")
-  end
+    bbox = parse_coords(params)
+    center = find_center(bbox)
 
-  defp do_explorer(_, _, _, _, conn = %Plug.Conn{private: %{:phoenix_flash => %{"error" => _}}}) do
-    render_explorer(conn, nil, "[41.9, -87.7]", 10, nil, "", "")
-  end
+    conn =
+      case is_nil(bbox) do
+        true ->
+          existing_message =
+            case get_flash(conn)[:error] do
+              nil -> ""
+              value -> value
+            end
 
-  defp do_explorer(zoom, coords, startdt, enddt, conn) do
-    case NaiveDateTime.compare(startdt, enddt) do
-      :gt ->
-        do_explorer(zoom, coords, startdt, enddt, put_flash(conn, :error,
-          "The starting datetime #{startdt} cannot be greater than the ending datetime #{enddt}"))
-      _ ->
-        range = Plenario.TsRange.new(startdt, enddt)
-        do_explorer(zoom, coords, startdt, enddt, range, conn)
-    end
-  end
+          message =
+            existing_message <>
+            "You must select an area on the map to search data sets."
 
-  defp do_explorer(zoom, coords, startdt, enddt, range, conn) do
-    coords = Poison.decode!(coords)
-    bbox = build_polygon(coords)
+          conn
+          |> put_status(:bad_request)
+          |> put_flash(:error, message)
 
-    map_bbox =
-      List.first(bbox.coordinates)
-      |> Enum.map(fn {lat, lon} -> [lat, lon] end)
+        false ->
+          conn
+      end
 
-    center = get_poly_center(bbox)
-    {:ok, postgrex_range} = Plenario.TsRange.dump(range)
-    results = Plenario.search_data_sets(bbox, postgrex_range)
-    render_explorer(conn, results, center, zoom, inspect(map_bbox), startdt, enddt)
-  end
+    results =
+      case is_nil(bbox) do
+        true ->
+          nil
 
-  defp render_explorer(conn, results, center, zoom, bbox, startdt, enddt) do
-    render(conn, "explorer.html",
+        false ->
+          Plenario.search_data_sets(bbox, time_range)
+      end
+
+    coords =
+      case is_nil(bbox) do
+        true ->
+          nil
+
+        false ->
+          bbox.coordinates |> Poison.encode!()
+      end
+
+    render conn, "explorer.html",
       results: results,
+      granularity: granularity,
       map_center: center,
       map_zoom: zoom,
-      bbox: bbox,
-      starts: startdt,
-      ends: enddt)
+      bbox: coords,
+      starts: starts,
+      ends: ends
   end
+
+  defp parse_granularity(params), do: Map.get(params, "granularity", @default_granularity)
+
+  defp parse_zoom(params), do: Map.get(params, "zoom", @default_zoom)
+
+  defp parse_date(params, key) do
+    case Map.get(params, key) do
+      nil ->
+        nil
+
+      string ->
+        case NaiveDateTime.from_iso8601("#{string}T00:00:00.0") do
+          {:error, _} ->
+            nil
+
+          {_, value} ->
+            value
+        end
+    end
+  end
+
+  defp make_time_range(%NaiveDateTime{} = starts, %NaiveDateTime{} = ends) do
+    case NaiveDateTime.compare(starts, ends) do
+      :gt ->
+        nil
+
+      _ ->
+        Plenario.TsRange.new(starts, ends)
+    end
+  end
+  defp make_time_range(_, _), do: nil
+
+  defp parse_coords(params) do
+    bbox = Map.get(params, "coords")
+    cond do
+      is_binary(bbox) ->
+        case Poison.decode(bbox) do
+          {:ok, json} ->
+            cond do
+              is_list(json) ->
+                coords = for [lat, lon] <- json, do: {lat, lon}
+                first = List.first(coords)
+                coords = coords ++ [first]
+                %Geo.Polygon{coordinates: [coords], srid: 4326}
+
+              is_map(json) ->
+                %{
+                  "_northEast" => %{"lat" => max_lat, "lng" => min_lon},
+                  "_southWest" => %{"lat" => min_lat, "lng" => max_lon}
+                } = json
+                %Geo.Polygon{coordinates: [[
+                  {max_lat, max_lon},
+                  {min_lat, max_lon},
+                  {min_lat, min_lon},
+                  {max_lat, min_lon},
+                  {max_lat, max_lon}
+                ]], srid: 4326}
+
+              true ->
+                nil
+            end
+
+          _ ->
+            nil
+        end
+
+      true ->
+        nil
+    end
+  end
+
+  defp find_center(nil), do: @default_center
+  defp find_center(bbox) do
+    coords = List.first(bbox.coordinates)
+
+    lats = for {l, _} <- coords, do: l
+    lons = for {_, l} <- coords, do: l
+
+    max_lat = Enum.max(lats)
+    min_lat = Enum.min(lats)
+    max_lon = Enum.max(lons)
+    min_lon = Enum.min(lons)
+
+    lat = (max_lat + min_lat) / 2
+    lon = (max_lon + min_lon) / 2
+    "[#{lat}, #{lon}]"
+  end
+
+  ##
+  # aot explorer
 
   def aot_explorer(conn, _params) do
     meta =
@@ -162,15 +281,15 @@ defmodule PlenarioWeb.Web.PageController do
     ])
   end
 
-  @red "255, 99, 132"
-  @blue "54, 162, 235"
-  @yellow "255, 206, 86"
-  @green "75, 192, 192"
-  @purple "153, 102, 255"
+  @red "255,99,132"
+  @blue "54,162,235"
+  @yellow "255,206,86"
+  @green "75,192,192"
+  @purple "153,102,255"
 
-  defp bgrnd_color(base), do: "rgba(#{base}, 0.2)"
+  defp bgrnd_color(base), do: "rgba(#{base},0.2)"
 
-  defp border_color(base), do: "rgba(#{base}, 1)"
+  defp border_color(base), do: "rgba(#{base},1)"
 
   defp format_line_chart(records, keys) do
     labels = Enum.map(records, fn [dt | _] -> dt end)
@@ -190,47 +309,5 @@ defmodule PlenarioWeb.Web.PageController do
       end)
 
     %{labels: labels, datasets: datasets}
-  end
-
-  defp build_polygon(coords) when is_list(coords) do
-    coords = for [lat, lon] <- coords, do: {lat, lon}
-    first = List.first(coords)
-    coords = coords ++ [first]
-    %Geo.Polygon{coordinates: [coords], srid: 4326}
-  end
-
-  defp build_polygon(coords) when is_map(coords) do
-    %{
-      "_northEast" => %{"lat" => max_lat, "lng" => min_lon},
-      "_southWest" => %{"lat" => min_lat, "lng" => max_lon}
-    } = coords
-    %Geo.Polygon{coordinates: [[
-      {max_lat, max_lon},
-      {min_lat, max_lon},
-      {min_lat, min_lon},
-      {max_lat, min_lon},
-      {max_lat, max_lon}
-    ]], srid: 4326}
-  end
-
-  defp get_poly_center(%Geo.Polygon{} = poly) do
-    coords = List.first(poly.coordinates)
-    lats = for {l, _} <- coords, do: l
-    lons = for {_, l} <- coords, do: l
-    max_lat = Enum.max(lats)
-    min_lat = Enum.min(lats)
-    max_lon = Enum.max(lons)
-    min_lon = Enum.min(lons)
-    lat = (max_lat + min_lat) / 2
-    lon = (max_lon + min_lon) / 2
-    "[#{lat}, #{lon}]"
-  end
-  defp get_poly_center(_), do: "[41.9, -87.7]"
-
-  @doc """
-  Simple action for rendering the embedded API documentation.
-  """
-  def docs(conn, _) do
-    render(conn, "docs.html")
   end
 end

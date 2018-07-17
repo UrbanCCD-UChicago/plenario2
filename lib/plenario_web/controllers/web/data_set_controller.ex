@@ -8,9 +8,11 @@ defmodule PlenarioWeb.Web.DataSetController do
     VirtualPointFieldActions
   }
 
-  alias Plenario.Schemas.Meta
-  alias PlenarioWeb.Web.ControllerUtils
+  alias Plenario.Schemas.{Chart, Meta}
+
   alias PlenarioMailer.Emails
+
+  alias PlenarioWeb.Web.ControllerUtils
 
   plug Plenario.Plugs.AssertIdIsInteger
   plug :authorize_resource, model: Meta
@@ -24,6 +26,7 @@ defmodule PlenarioWeb.Web.DataSetController do
     user = Guardian.Plug.current_resource(conn)
     virtual_dates = VirtualDateFieldActions.list(for_meta: meta, with_fields: true)
     virtual_points = VirtualPointFieldActions.list(for_meta: meta, with_fields: true)
+    charts = Chart.list_for_meta(meta.id)
     disabled? = meta.state != "new"
     user_is_owner? =
       case user do
@@ -35,6 +38,7 @@ defmodule PlenarioWeb.Web.DataSetController do
       meta: meta,
       virtual_dates: virtual_dates,
       virtual_points: virtual_points,
+      charts: charts,
       disabled?: disabled?,
       user_is_owner?: user_is_owner?
     )
