@@ -81,17 +81,33 @@
   <% end %>
 
   <%= if @points do %>
-  const markerOpts = {
-    radius: 5,
-    color: "#fff",
-    weight: 2,
-    fillColor: "#dc3545",
-    fillOpacity: 1,
-  };
-  <%= for {{pt, name, node_id}, idx} <- Enum.with_index(@points) do %>
-  let pt_<%= idx %> = L.circleMarker(<%= pt %>, markerOpts);
-  pt_<%= idx %>.bindPopup("<strong>Node <%= node_id %><br>Located at <%= name %></strong><br><%= pt %>");
-  pt_<%= idx %>.addTo(map);
+    const markerOpts = {
+      radius: 5,
+      color: "#fff",
+      weight: 2,
+      fillColor: "#dc3545",
+      fillOpacity: 1,
+    };
+
+    <%= for {{pt, name, node_id}, idx} <- Enum.with_index(@points) do %>
+      let pt_<%= idx %> = L.circleMarker(<%= pt %>, markerOpts);
+      pt_<%= idx %>.bindPopup("<strong>Node <%= node_id %><br>Located at <%= name %></strong><br><%= pt %>");
+      pt_<%= idx %>.addTo(map);
+    <% end %>
   <% end %>
+
+  <%= if @ds_points do %>
+    const markerOpts = {
+      radius: 5,
+      color: "#fff",
+      weight: 2,
+      fillColor: "#dc3545",
+      fillOpacity: 1,
+    };
+
+    <%= for {pt, idx} <- Enum.with_index(@ds_points) do %>
+      let pt_<%= idx %> = L.circleMarker(<%= pt %>, markerOpts);
+      pt_<%= idx %>.addTo(map);
+    <% end %>
   <% end %>
 </script>
