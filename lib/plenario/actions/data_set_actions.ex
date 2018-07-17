@@ -29,20 +29,20 @@ defmodule Plenario.Actions.DataSetActions do
     table_name = meta.table_name
     view_name = "#{table_name}_view"
 
-    text_fields = Enum.filter(fields, & &1.type == "text") |> Enum.map(& &1.name)
-    boolean_fields = Enum.filter(fields, & &1.type == "boolean") |> Enum.map(& &1.name)
-    integer_fields = Enum.filter(fields, & &1.type == "integer") |> Enum.map(& &1.name)
-    float_fields = Enum.filter(fields, & &1.type == "float") |> Enum.map(& &1.name)
-    timestamp_fields = Enum.filter(fields, & &1.type == "timestamp") |> Enum.map(& &1.name)
+    text_fields = Enum.filter(fields, & &1.type == "text")
+    boolean_fields = Enum.filter(fields, & &1.type == "boolean")
+    integer_fields = Enum.filter(fields, & &1.type == "integer")
+    float_fields = Enum.filter(fields, & &1.type == "float")
+    timestamp_fields = Enum.filter(fields, & &1.type == "timestamp")
 
     gin_index_fields =
       boolean_fields ++
       integer_fields ++
       float_fields ++
       timestamp_fields ++
-      Enum.map(virtual_dates, & &1.name)
+      virtual_dates
 
-    gist_index_fields = Enum.map(virtual_points, & &1.name)
+    gist_index_fields = virtual_points
 
     tsvector_index_fields = text_fields
 
