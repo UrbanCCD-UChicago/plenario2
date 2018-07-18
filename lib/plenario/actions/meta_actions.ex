@@ -316,10 +316,13 @@ defmodule Plenario.Actions.MetaActions do
   def get_points(meta, limit \\ 1_000) do
     meta = get(meta.id, with_virtual_points: true)
 
-    pt =
-      meta.virtual_points
-      |> List.first()
+    meta.virtual_points
+    |> List.first()
+    |> do_get_points(meta, limit)
+  end
 
+  defp do_get_points(nil, _, _), do: []
+  defp do_get_points(pt, meta, limit) do
     # we need to use a raw query here to harness the
     # tablesample selection in postgres.
     query =
