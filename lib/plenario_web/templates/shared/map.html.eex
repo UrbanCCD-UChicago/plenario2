@@ -34,37 +34,37 @@
 
   // handle drawing events
   map.on('draw:created', function (e) {
-    var latLongs = e.layer.getLatLngs();
+    let latLongs = e.layer.getLatLngs();
     latLongs = latLongs[0];
 
-    var coords = [];
-    for (var i = 0; i < latLongs.length; i++) {
-      var el = latLongs[i];
+    let coords = [];
+    for (let i = 0; i < latLongs.length; i++) {
+      let el = latLongs[i];
       coords.push([
         el.lat,
         el.lng
       ]);
     }
 
-    var coordInput = document.getElementById('<%= @form_input_coords %>');
+    let coordInput = document.getElementById('<%= @form_input_coords %>');
     coordInput.value = JSON.stringify(coords);
     drawnItems.addLayer(e.layer);
   });
 
-  map.on('draw:devared', function (e) {
-    var coordInput = document.getElementById('<%= @form_input_coords %>');
+  map.on('draw:deleted', function (e) {
+    let coordInput = document.getElementById('<%= @form_input_coords %>');
     coordInput.value = '';
     drawnItems.clearLayers(e.layer);
   });
 
   // setup form submit listener
   $('form:first').submit(function (e) {
-    var coordInput = document.getElementById('<%= @form_input_coords %>');
-    var zoomInput = document.getElementById('<%= @form_input_zoom %>');
+    let coordInput = document.getElementById('<%= @form_input_coords %>');
+    let zoomInput = document.getElementById('<%= @form_input_zoom %>');
 
     if (!coordInput.value.match(/^\[\[.*\]\]/)) {
       // set coords to entire map view and set zoom to 1 out
-      var bounds = map.getBounds();
+      let bounds = map.getBounds();
       coordInput.value = JSON.stringify(bounds);
       zoomInput.value = map.getBoundsZoom(bounds, true) - 1;
     } else {
@@ -81,7 +81,7 @@
   <% end %>
 
   <%= if @points do %>
-    var markerOpts = {
+    let markerOpts = {
       radius: 5,
       color: "#fff",
       weight: 2,
@@ -90,14 +90,14 @@
     };
 
     <%= for {{pt, name, node_id}, idx} <- Enum.with_index(@points) do %>
-      var pt_<%= idx %> = L.circleMarker(<%= pt %>, markerOpts);
+      let pt_<%= idx %> = L.circleMarker(<%= pt %>, markerOpts);
       pt_<%= idx %>.bindPopup("<strong>Node <%= node_id %><br>Located at <%= name %></strong><br><%= pt %>");
       pt_<%= idx %>.addTo(map);
     <% end %>
   <% end %>
 
   <%= if @ds_points do %>
-    var markerOpts = {
+    let markerOpts = {
       radius: 5,
       color: "#fff",
       weight: 2,
@@ -106,7 +106,7 @@
     };
 
     <%= for {pt, idx} <- Enum.with_index(@ds_points) do %>
-      var pt_<%= idx %> = L.circleMarker(<%= pt %>, markerOpts);
+      let pt_<%= idx %> = L.circleMarker(<%= pt %>, markerOpts);
       pt_<%= idx %>.addTo(map);
     <% end %>
   <% end %>
