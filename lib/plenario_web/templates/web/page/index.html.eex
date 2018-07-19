@@ -1,3 +1,28 @@
+<script>
+let mainNav;
+let navHeight;
+let firstCover;
+
+function showHideNavbar() {
+  const coverBottom = firstCover.getBoundingClientRect().bottom;
+  coverBottom <= (navHeight / 2) ? mainNav.slideDown(200) : mainNav.slideUp(200);
+}
+
+function skipCover(skipElement) {
+  const cover = $(skipElement).parents('.cover');
+  $('html, body').animate({
+    scrollTop: cover.position().top + cover.outerHeight()
+  }, 200);
+}
+
+$(document).ready(function() {
+  mainNav = $('#main-nav');
+  navHeight = mainNav.outerHeight();
+  firstCover = $('.cover').get(0);
+})
+$(window).on('scroll', throttle(100, showHideNavbar));
+</script>
+
 <section class="jumbotron jumbotron-fluid cover cityscape mb-0">
     
   <%= render PlenarioWeb.SharedView, "navbar-hero.html", conn: @conn, current_user: @current_user %>

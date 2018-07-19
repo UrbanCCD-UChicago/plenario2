@@ -24,7 +24,7 @@
       @include move-on-hover(-0.1em);
     }
   }
-  &:first-child {
+  &:first-of-type {
     // Push the navbar spacing below the first cover instead of above, since the
     // first cover is meant to cover (heh) the navbar
     top: -$navbar-spacing;
