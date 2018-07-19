@@ -13,6 +13,16 @@ npm-debug.log
 # Static artifacts
 node_modules/
 /assets/node_modules
+/assets/static/images/*-[0-9].jpg
+/assets/static/images/*-[0-9][0-9].jpg
+/assets/static/images/*-[0-9][0-9][0-9].jpg
+/assets/static/images/*-[0-9][0-9][0-9][0-9].jpg
+/assets/static/images/*-xs.jpg
+/assets/static/images/*-sm.jpg
+/assets/static/images/*-md.jpg
+/assets/static/images/*-lg.jpg
+/assets/static/images/*-xl.jpg
+/assets/static/images/*-??@2x.jpg
 
 # Since we are building assets from assets/,
 # we ignore priv/static. You may want to comment
