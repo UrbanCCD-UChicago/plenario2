@@ -312,4 +312,31 @@ defmodule Plenario.Actions.MetaActions do
     model = ModelRegistry.lookup(meta.slug)
     Repo.one(from m in model, select: fragment("count(*)"))
   end
+
+  def get_points(meta, limit \\ 1_000) do
+    meta = get(meta.id, with_virtual_points: true)
+
+    meta.virtual_points
+    |> List.first()
+    |> do_get_points(meta, limit)
+  end
+
+  defp do_get_points(nil, _, _), do: []
+  defp do_get_points(pt, meta, limit) do
+    # we need to use a raw query here to harness the
+    # tablesample selection in postgres.
+    query =
+      """
+      SELECT #{inspect(pt.name)}
+      FROM "#{meta.table_name}_view"
+      TABLESAMPLE SYSTEM_ROWS(#{limit});
+      """
+    %Postgrex.Result{rows: data} = Repo.query!(query)
+
+    List.flatten(data)
+    |> Enum.reject(& is_nil(&1))
+    |> Enum.map(fn %Geo.Point{coordinates: {lon, lat}} ->
+      "[#{lat}, #{lon}]"
+    end)
+  end
 end

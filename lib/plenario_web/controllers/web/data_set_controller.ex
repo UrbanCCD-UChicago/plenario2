@@ -34,13 +34,16 @@ defmodule PlenarioWeb.Web.DataSetController do
         _ -> user.id == meta.user_id
       end
 
+    points = MetaActions.get_points(meta)
+
     render(conn, "show.html",
       meta: meta,
       virtual_dates: virtual_dates,
       virtual_points: virtual_points,
       charts: charts,
       disabled?: disabled?,
-      user_is_owner?: user_is_owner?
+      user_is_owner?: user_is_owner?,
+      points: points
     )
   end
 
