@@ -4,7 +4,7 @@ about: Use this template to create a new task.
 
 ---
 
-Add a high level description here. Provide enough meaningful detail, but don't go overboard.
+_Add a high level description here. Provide enough meaningful detail, but don't go overboard._
 
 
 ## Who is this for?
@@ -16,4 +16,4 @@ Add a high level description here. Provide enough meaningful detail, but don't g
 ## Acceptance Criteria
 
 
-Story: #?
+Story: #? _tag the story issue number here_
