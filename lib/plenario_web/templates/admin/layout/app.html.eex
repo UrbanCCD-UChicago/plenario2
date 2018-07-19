@@ -17,46 +17,9 @@
 
   <body>
     
-    <nav id="primary-nav" class="navbar navbar-dark navbar-expand-md fixed-top justify-content-between bg-dark shadow-sm">
-      <div class="container">
-        <a href="/admin" class="navbar-brand">
-          <img class="d-inline-block align-top mr-1" src="<%= static_path(@conn, "/images/logo-large.png") %>" alt="Plenario logo, a stylized red brick archway">
-          Plenario Admin
-        </a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible"
-          aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div id="navbar-collapsible" class="collapse navbar-collapse">
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-              <%= link "Users", to: user_path(@conn, :index), class: "nav-link" %>
-            </li>
-            <li class="nav-item">
-              <%= link "Metas", to: meta_path(@conn, :index), class: "nav-link" %>
-            </li>
-            <li class="nav-item">
-              <%= link "AoT Metas", to: aot_path(@conn, :index), class: "nav-link" %>
-            </li>
-            <li class="nav-item">
-              <%= link "ETL Jobs", to: etl_job_path(@conn, :index), class: "nav-link" %>
-            </li>
-            <li class="nav-item">
-              <%= link "Export Jobs", to: export_job_path(@conn, :index), class: "nav-link" %>
-            </li>
-            <li class="nav-item">
-              <a href="/" class="nav-link text-danger">Exit</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
-    <div class="container my-0">
-      <div class="alert alert-info my-1" role="alert"><%= get_flash(@conn, :info) %></div>
-      <div class="alert alert-success my-1" role="alert"><%= get_flash(@conn, :success) %></div>
-      <div class="alert alert-danger my-1" role="alert"><%= get_flash(@conn, :error) %></div>
-    </div>
+    <%= render PlenarioWeb.SharedView, "flashes.html", conn: @conn %>
+    
+    <%= render PlenarioWeb.SharedView, "navbar-admin.html", conn: @conn %>
 
     <main role="main">
       <%= render @view_module, @view_template, assigns %>
