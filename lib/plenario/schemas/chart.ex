@@ -13,13 +13,13 @@ defmodule Plenario.Schemas.Chart do
     belongs_to :meta, Plenario.Schemas.Meta
     field :title, :string
     field :type, :string
-    field :timestamp_field, :string   # which field do we filter time ranges on
-    field :point_field, :string       # which field do we filter location on
-    field :group_by_field, :string    # which field do we group by / aggregate
+    field :timestamp_field, :string               # which field do we filter time ranges on
+    field :point_field, :string                   # which field do we filter location on
+    field :group_by_field, :string, default: nil  # which field do we group by / aggregate
     has_many :datasets, Plenario.Schemas.ChartDataset
   end
 
-  @types ["line", "bar", "pie", "doughnut", "radar", "polarArea", "location", "heatmap"]
+  @types ["line", "bar", "pie", "doughnut", "radar", "polarArea"]
 
   @type_choices [
     Line: "line",
@@ -28,8 +28,6 @@ defmodule Plenario.Schemas.Chart do
     Doughnut: "doughnut",
     Radar: "radar",
     Polar: "polarArea",
-    "Locations on Map": "location",
-    Heatmap: "heatmap"
   ]
 
   def get_types, do: @types
@@ -44,7 +42,7 @@ defmodule Plenario.Schemas.Chart do
     chart
     |> cast(params, @changeset_keys)
     |> foreign_key_constraint(:meta_id)
-    |> validate_required(@changeset_keys)
+    |> validate_required([:meta_id, :title, :type, :timestamp_field, :point_field])
     |> validate_inclusion(:type, Chart.get_types())
   end
 

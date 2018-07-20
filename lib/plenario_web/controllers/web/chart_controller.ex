@@ -146,7 +146,23 @@ defmodule PlenarioWeb.Web.ChartController do
       chart_dump: json
   end
 
-  defp apply_colors("polarArea", _, datasets) do
+  defp apply_colors("line", chart, datasets) do
+    ds =
+      chart.datasets
+      |> Enum.map(fn d -> {String.to_atom(d.label), {d.color, d.fill?}} end)
+
+    datasets
+    |> Enum.map(fn d ->
+      {color, fill?} = Keyword.get(ds, String.to_atom(d.label))
+      Map.merge(d, %{
+        borderColor: "rgba(#{color},1)",
+        backgroundColor: "rgba(#{color},0.2)",
+        fill: fill?
+      })
+    end)
+  end
+
+  defp apply_colors(_, _, datasets) do
     borders =
       ChartDataset.get_colors()
       |> Enum.map(& "rgba(#{&1},1)")
@@ -167,22 +183,6 @@ defmodule PlenarioWeb.Web.ChartController do
     end)
   end
 
-  defp apply_colors(_, chart, datasets) do
-    ds =
-      chart.datasets
-      |> Enum.map(fn d -> {String.to_atom(d.label), {d.color, d.fill?}} end)
-
-    datasets
-    |> Enum.map(fn d ->
-      {color, fill?} = Keyword.get(ds, String.to_atom(d.label))
-      Map.merge(d, %{
-        borderColor: "rgba(#{color},1)",
-        backgroundColor: "rgba(#{color},0.2)",
-        fill: fill?
-      })
-    end)
-  end
-
   # helpers
 
   defp get_fields(meta) do
@@ -193,6 +193,6 @@ defmodule PlenarioWeb.Web.ChartController do
       Enum.map(dates, & {VirtualDateFieldActions.make_pretty_name(&1), &1.name}) ++
       Enum.map(points, & {VirtualPointFieldActions.make_pretty_name(&1), &1.name})
 
-    fields
+    [{"", nil}] ++ fields
   end
 end

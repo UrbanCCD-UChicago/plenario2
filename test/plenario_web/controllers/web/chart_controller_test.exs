@@ -59,8 +59,7 @@ defmodule PlenarioWeb.Testing.ChartControllerTest do
       title: "whatever",
       type: "line",
       point_field: vpf.name,
-      timestamp_field: ts.name,
-      group_by_field: ts.name
+      timestamp_field: ts.name
     })
 
     {:ok, _} =

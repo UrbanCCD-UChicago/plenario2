@@ -3,31 +3,31 @@
 
   <div class="form-group">
     <%= label f, :title, class: "control-label" %>
-    <%= text_input f, :title, class: "form-control" %>
+    <%= text_input f, :title, class: "form-control", required: true %>
     <%= error_tag f, :title %>
   </div>
 
   <div class="form-group">
     <%= label f, :type, class: "control-label" %>
-    <%= select f, :type, @types, class: "form-control" %>
+    <%= select f, :type, @types, class: "form-control", id: "form-type", required: true %>
     <%= error_tag f, :type %>
   </div>
 
   <div class="form-group">
     <%= label f, :timestamp_field, class: "control-label" %>
-    <%= select f, :timestamp_field, @fields, class: "form-control" %>
+    <%= select f, :timestamp_field, @fields, class: "form-control", required: true %>
     <%= error_tag f, :timestamp_field %>
   </div>
 
   <div class="form-group">
     <%= label f, :point_field, class: "control-label" %>
-    <%= select f, :point_field, @fields, class: "form-control" %>
+    <%= select f, :point_field, @fields, class: "form-control", required: true %>
     <%= error_tag f, :point_field %>
   </div>
 
   <div class="form-group">
     <%= label f, :group_by_field, class: "control-label" %>
-    <%= select f, :group_by_field, @fields, class: "form-control" %>
+    <%= select f, :group_by_field, @fields, class: "form-control", id: "form-groupby", disabled: true %>
     <%= error_tag f, :group_by_field %>
   </div>
 
@@ -36,3 +36,13 @@
     <%= link "Cancel", to: data_set_path(@conn, :show, @meta.id), class: "btn btn-danger float-right" %>
   </div>
 <% end %>
+
+<script>
+$('#form-type').change(function () {
+  if ($(this).val() == "line") {
+    $('#form-groupby').prop('disabled', true);
+  } else {
+    $('#form-groupby').prop('disabled', false);
+  }
+});
+</script>
