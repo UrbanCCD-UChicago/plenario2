@@ -16,7 +16,7 @@
   </head>
 
   <body>
-    
+
     <nav id="primary-nav" class="navbar navbar-dark navbar-expand-md fixed-top justify-content-between bg-dark shadow-sm">
       <div class="container">
         <a href="/admin" class="navbar-brand">
@@ -37,9 +37,6 @@
             </li>
             <li class="nav-item">
               <%= link "AoT Metas", to: aot_path(@conn, :index), class: "nav-link" %>
-            </li>
-            <li class="nav-item">
-              <%= link "ETL Jobs", to: etl_job_path(@conn, :index), class: "nav-link" %>
             </li>
             <li class="nav-item">
               <%= link "Export Jobs", to: export_job_path(@conn, :index), class: "nav-link" %>
