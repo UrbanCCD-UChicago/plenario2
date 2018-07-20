@@ -22,7 +22,6 @@ defmodule PlenarioMailer.Schemas.AdminUserNote do
     belongs_to :admin, Plenario.Schemas.User, foreign_key: :admin_id
     belongs_to :user, Plenario.Schemas.User, foreign_key: :user_id
     belongs_to :meta, Plenario.Schemas.Meta
-    belongs_to :etl_job, PlenarioEtl.Schemas.EtlJob
     belongs_to :export_job, PlenarioEtl.Schemas.ExportJob
   end
 end
