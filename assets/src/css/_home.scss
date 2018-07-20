@@ -33,7 +33,7 @@
 }
 
 .cover.cityscape {
-  @include darkened-bg-img-responsive("/images/chicago-sunset-xx.jpg", 0.6);  
+  @include darkened-bg-img-responsive("https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/chicago-sunset-xx.jpg", 0.6);  
   @include text-over-image-readability-helper($strength: 0.4);
   color: $white;
   hr {

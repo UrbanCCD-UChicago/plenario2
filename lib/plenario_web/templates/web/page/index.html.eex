@@ -111,13 +111,12 @@ $(window).on('scroll', throttle(100, showHideNavbar));
                min-width(768px) 690px,
                min-width(576px) 510px,
                100vw"
-        srcset="/images/map-320.jpg 320w, 
-                /images/map-622.jpg 622w, 
-                /images/map-829.jpg 829w, 
-                /images/map-1037.jpg 1037w, 
-                /images/map-1192.jpg 1192w, 
-                /images/map-1380.jpg 1380w"
-        src="/images/map-829.jpg">
+        srcset="https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/map-320.jpg 320w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/map-622.jpg 622w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/map-881.jpg 881w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/map-1140.jpg 1140w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/map-1380.jpg 1380w"
+        src="https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/map-881.jpg">
     </div>
   </div>
 
@@ -142,18 +141,15 @@ $(window).on('scroll', throttle(100, showHideNavbar));
                min-width(768px) 690px,
                min-width(576px) 510px,
                100vw"
-        srcset="/images/city-streaks-320.jpg 320w,
-                /images/city-streaks-547.jpg 547w,
-                /images/city-streaks-673.jpg 673w,
-                /images/city-streaks-799.jpg 799w,
-                /images/city-streaks-883.jpg 883w,
-                /images/city-streaks-967.jpg 967w,
-                /images/city-streaks-1051.jpg 1051w,
-                /images/city-streaks-1135.jpg 1135w,
-                /images/city-streaks-1219.jpg 1219w,
-                /images/city-streaks-1304.jpg 1304w,
-                /images/city-streaks-1380.jpg 1380w"
-        src="/images/city-streaks-799.jpg">
+        srcset="https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/city-streaks-320.jpg 320w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/city-streaks-673.jpg 673w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/city-streaks-799.jpg 799w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/city-streaks-967.jpg 967w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/city-streaks-1051.jpg 1051w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/city-streaks-1177.jpg 1177w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/city-streaks-1262.jpg 1262w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/city-streaks-1380.jpg 1380w"
+        src="https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/city-streaks-799.jpg">
     </div>
   </div>
 
@@ -178,17 +174,14 @@ $(window).on('scroll', throttle(100, showHideNavbar));
                min-width(768px) 690px,
                min-width(576px) 510px,
                100vw"
-        srcset="/images/satellite-320.jpg 320w,
-                /images/satellite-493.jpg 493w,
-                /images/satellite-641.jpg 641w,
-                /images/satellite-739.jpg 739w,
-                /images/satellite-887.jpg 887w,
-                /images/satellite-986.jpg 986w,
-                /images/satellite-1084.jpg 1084w,
-                /images/satellite-1183.jpg 1183w,
-                /images/satellite-1281.jpg 1281w,
-                /images/satellite-1380.jpg 1380w"
-        src="/images/satellite-739.jpg">
+        srcset="https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/satellite-320.jpg 320w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/satellite-641.jpg 641w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/satellite-838.jpg 838w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/satellite-986.jpg 986w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/satellite-1133.jpg 1133w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/satellite-1232.jpg 1232w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/satellite-1380.jpg 1380w"
+        src="https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/satellite-838.jpg">
     </div>
   </div>
   
@@ -211,18 +204,16 @@ $(window).on('scroll', throttle(100, showHideNavbar));
                min-width(768px) 690px,
                min-width(576px) 510px,
                100vw"
-        srcset="/images/street-market-320.jpg 320w,
-                /images/street-market-518.jpg 518w,
-                /images/street-market-674.jpg 674w,
-                /images/street-market-778.jpg 778w,
-                /images/street-market-829.jpg 829w,
-                /images/street-market-933.jpg 933w,
-                /images/street-market-1037.jpg 1037w,
-                /images/street-market-1140.jpg 1140w,
-                /images/street-market-1192.jpg 1192w,
-                /images/street-market-1296.jpg 1296w,
-                /images/street-market-1380.jpg 1380w"
-        src="/images/street-market-778.jpg">
+        srcset="https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/street-market-320.jpg 320w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/street-market-518.jpg 518w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/street-market-674.jpg 674w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/street-market-778.jpg 778w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/street-market-933.jpg 933w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/street-market-1037.jpg 1037w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/street-market-1140.jpg 1140w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/street-market-1244.jpg 1244w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/street-market-1380.jpg 1380w"
+        src="https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/street-market-778.jpg">
     </div>
   </div>
 
@@ -246,20 +237,17 @@ $(window).on('scroll', throttle(100, showHideNavbar));
                min-width(768px) 690px,
                min-width(576px) 510px,
                100vw"
-        srcset="/images/library-320.jpg 320w,
-                /images/library-472.jpg 472w,
-                /images/library-590.jpg 590w,
-                /images/library-707.jpg 707w,
-                /images/library-766.jpg 766w,
-                /images/library-884.jpg 884w,
-                /images/library-943.jpg 943w,
-                /images/library-1002.jpg 1002w,
-                /images/library-1061.jpg 1061w,
-                /images/library-1179.jpg 1179w,
-                /images/library-1238.jpg 1238w,
-                /images/library-1297.jpg 1297w,
-                /images/library-1380.jpg 1380w"
-        src="/images/library-707.jpg">
+        srcset="https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/library-320.jpg 320w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/library-531.jpg 531w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/library-648.jpg 648w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/library-766.jpg 766w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/library-884.jpg 884w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/library-1002.jpg 1002w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/library-1061.jpg 1061w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/library-1179.jpg 1179w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/library-1238.jpg 1238w,
+                https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/library-1380.jpg 1380w"
+        src="https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/library-766.jpg">
     </div>
   </div>
 
