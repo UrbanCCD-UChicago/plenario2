@@ -3,16 +3,23 @@ let mainNav;
 let navHeight;
 let firstCover;
 
+let autoScrolling = false;
+
 function showHideNavbar() {
+  if (autoScrolling) { return }
   const coverBottom = firstCover.getBoundingClientRect().bottom;
   coverBottom <= (navHeight / 2) ? mainNav.slideDown(200) : mainNav.slideUp(200);
 }
 
 function skipCover(skipElement) {
-  const cover = $(skipElement).parents('.cover');
+  jumpTo($(skipElement).parents('.cover').next());
+}
+
+function jumpTo(target) {
+  autoScrolling = true;
   $('html, body').animate({
-    scrollTop: cover.position().top + cover.outerHeight()
-  }, 200);
+    scrollTop: $(target).offset().top - navHeight,
+  }, 200, function() { autoScrolling = false; });
 }
 
 $(document).ready(function() {
@@ -49,12 +56,10 @@ $(window).on('scroll', throttle(100, showHideNavbar));
       </div>
       <div class="col-12 col-md-6 order-md-3">
         <p class="lead">
-          <a class="btn btn-primary" href="">
+          <a class="btn btn-primary" href="#one-map-one-timeline" onclick="jumpTo('#one-map-one-timeline');">
             Learn More
           </a>
-          <a class="btn btn-primary" href="">
-            Explore Data Sets
-          </a>
+          <%= link "Explore Data Sets", to: page_path(@conn, :explorer), class: "btn btn-primary" %>
         </p>
       </div>
       <div class="col-12 d-md-none">
@@ -63,18 +68,16 @@ $(window).on('scroll', throttle(100, showHideNavbar));
       <div class="col-12 col-md-6">
         <p class="lead">
           Plenario is the official home for data from the
-          <a href="https://arrayofthings.github.io">Array&nbsp;of&nbsp;Things</a>, providing
-          block-level, real-time data in Chicago (and&nbsp;beyond).
+          Array&nbsp;of&nbsp;Things, providing block-level, real-time data in
+          Chicago (and&nbsp;beyond).
         </p>
       </div>
       <div class="col-12 col-md-6 order-md-4">
         <p class="lead">
-          <a class="btn btn-info" href="">
-            Learn More
+          <a class="btn btn-info" href="https://arrayofthings.github.io">
+            Learn More <i class="fas fa-external-link-alt" data-fa-transform="shrink-4"></i>
           </a>
-          <a class="btn btn-info" href="">
-            Explore AoT Data
-          </a>
+          <%= link "Explore AoT Data", to: page_path(@conn, :aot_explorer), class: "btn btn-info" %>
         </p>
       </div>
     </div>
@@ -93,7 +96,7 @@ $(window).on('scroll', throttle(100, showHideNavbar));
   
   <div class="row mb-5">
     <div class="col-lg-6">
-      <h2 class="display-4">One Map, One Timeline</h2>
+      <h2 id="one-map-one-timeline" class="display-4">One Map, One Timeline</h2>
       <p class="lead">
         View and search across hundreds of open data sets in one place with one interface.
       </p>
@@ -122,7 +125,7 @@ $(window).on('scroll', throttle(100, showHideNavbar));
 
   <div class="row mb-5">
     <div class="col-lg-6">
-      <h2 class="display-4">Then and Now (<em>Right Now</em>)</h2>
+      <h2 id="then-and-now" class="display-4">Then and Now (<em>Right Now</em>)</h2>
       <p class="lead">
         Search data sets back decades, and get new data ASAP.
       </p>
@@ -155,7 +158,7 @@ $(window).on('scroll', throttle(100, showHideNavbar));
 
   <div class="row mb-5">
     <div class="col-lg-6">
-      <h2 class="display-4">Share With the World</h2>
+      <h2 id="share-with-the-world" class="display-4">Share With the World</h2>
       <p class="lead">
         If you're already publishing an open data source it's super easy to add it to Plenario.
       </p>
@@ -187,7 +190,7 @@ $(window).on('scroll', throttle(100, showHideNavbar));
   
   <div class="row mb-5">
     <div class="col-lg-6">
-      <h2 class="display-4">Tell the Story of Place</h2>
+      <h2 id="tell-the-story-of-place" class="display-4">Tell the Story of Place</h2>
       <p class="lead">
         With all the data at your fingertips, you can watch places change over time.
       </p>
@@ -219,7 +222,7 @@ $(window).on('scroll', throttle(100, showHideNavbar));
 
   <div class="row mb-5">
     <div class="col-lg-6">
-      <h2 class="display-4">Data Should Be Transparent</h2>
+      <h2 id="data-should-be-transparent" class="display-4">Data Should Be Transparent</h2>
       <p class="lead">
         We belive trust is good, but the ability to independently verify is better.
       </p>
