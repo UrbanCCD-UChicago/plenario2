@@ -2,12 +2,23 @@ defmodule PlenarioWeb.Web.PageController do
   use PlenarioWeb, :web_controller
 
   import Ecto.Query
-
   import Plug.Conn
 
   alias Plenario.Repo
-
   alias PlenarioAot.{AotData, AotMeta}
+
+  def assign_env(conn, opts) do
+    assign(
+      conn,
+      :s3_asset_path,
+      %{
+        dev:  "https://s3.us-east-2.amazonaws.com/plenario2-assets-dev",
+        prod: "https://s3.us-east-2.amazonaws.com/plenario2-assets"
+      }[Application.get_env(:plenario, :env)]
+    )
+  end
+
+  plug :assign_env
 
   def index(conn, _), do: render(conn, "index.html")
 
