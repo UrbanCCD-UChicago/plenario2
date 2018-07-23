@@ -193,6 +193,6 @@ defmodule PlenarioWeb.Web.ChartController do
       Enum.map(dates, & {VirtualDateFieldActions.make_pretty_name(&1), &1.name}) ++
       Enum.map(points, & {VirtualPointFieldActions.make_pretty_name(&1), &1.name})
 
-    [{"", nil}] ++ fields
+    fields
   end
 end
