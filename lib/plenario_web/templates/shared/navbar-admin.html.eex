@@ -23,14 +23,16 @@
           <%= link "AoT Metas", to: aot_path(@conn, :index), class: "nav-link" %>
         </li>
         <li class="nav-item">
-          <%= link "ETL Jobs", to: etl_job_path(@conn, :index), class: "nav-link" %>
-        </li>
-        <li class="nav-item">
           <%= link "Export Jobs", to: export_job_path(@conn, :index), class: "nav-link" %>
+        </li>
+        <li class="nav-item d-md-none">
+          <%= link raw("<i class=\"fas fa-sign-out-alt\"></i> Exit"),
+            to: page_path(@conn, :index), class: "nav-link text-danger" %>
         </li>
       </ul>
       <div class="inline-form d-none d-md-inline ml-md-2">
-        <%= link "Exit", to: page_path(@conn, :index), class: "btn btn-danger btn-sm" %>
+        <%= link raw("Exit <i class=\"fas fa-sign-out-alt\"></i>"),
+          to: page_path(@conn, :index), class: "btn btn-danger btn-sm" %>
       </div>
     </div>
     
