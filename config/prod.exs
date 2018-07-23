@@ -20,7 +20,7 @@ config :plenario, PlenarioWeb.Endpoint,
 
 
 # Do not print debug messages in production
-config :logger, level: :info, metadata: [:request_id]
+config :logger, level: :debug, metadata: [:request_id]
 
 # ## SSL Support
 #
