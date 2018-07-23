@@ -13,8 +13,15 @@
 
     <div class="inline-form ml-md-2">
       <%= if @current_user do %>
-        <%= link "User Dashboard", to: me_path(@conn, :index), class: "btn btn-info btn-sm" %>
-        <%# TODO: add sign out dropdown %>
+        <div class="btn-group">
+          <%= link "User Dashboard", to: me_path(@conn, :index), class: "btn btn-info btn-sm" %>
+          <button type="button" class="btn btn-info btn-sm dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="sr-only">Toggle Dropdown</span>
+            <div class="dropdown-menu dropdown-menu-right">
+              <%= link raw("<i class=\"fas fa-sign-out-alt\"></i> Log Out"), to: auth_path(@conn, :logout), class: "dropdown-item" %>
+            </div>
+          </button>
+        </div>
         <%= if @current_user.is_admin do %>
           <%= link raw("<i class=\"fas fa-lock\"></i> Admin"), to: admin_page_path(@conn, :index), class: "btn btn-danger btn-sm" %>
         <% end %>

@@ -31,7 +31,7 @@
         <li class="nav-item d-md-none">
           <%= if @current_user do %>
             <%= link "User Dashboard", to: me_path(@conn, :index), class: "nav-link" %>
-            <%# TODO: add sign out dropdown %>
+            <%= link raw("<i class=\"fas fa-sign-out-alt\"></i> Log Out"), to: auth_path(@conn, :logout), class: "nav-link" %>
             <%= if @current_user.is_admin do %>
               <%= link raw("<i class=\"fas fa-lock\"></i> Admin"), to: admin_page_path(@conn, :index), class: "nav-link" %>
             <% end %>
@@ -42,7 +42,15 @@
       </ul>
       <div class="inline-form d-none d-md-inline ml-md-2">
         <%= if @current_user do %>
-          <%= link "User Dashboard", to: me_path(@conn, :index), class: "btn btn-info btn-sm" %>
+          <div class="btn-group">
+            <%= link "User Dashboard", to: me_path(@conn, :index), class: "btn btn-info btn-sm" %>
+            <button type="button" class="btn btn-info btn-sm dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <span class="sr-only">Toggle Dropdown</span>
+              <div class="dropdown-menu dropdown-menu-right">
+                <%= link raw("<i class=\"fas fa-sign-out-alt\"></i> Log Out"), to: auth_path(@conn, :logout), class: "dropdown-item" %>
+              </div>
+            </button>
+          </div>
           <%# TODO: add sign out dropdown %>
           <%= if @current_user.is_admin do %>
             <%= link raw("<i class=\"fas fa-lock\"></i> Admin"), to: admin_page_path(@conn, :index), class: "btn btn-danger btn-sm" %>
