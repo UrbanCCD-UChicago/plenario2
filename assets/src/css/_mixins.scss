@@ -113,10 +113,9 @@
     text-shadow: none;
     &[class*="btn-outline-"] {
       box-shadow: none;
-      background-color: transparentize($text-color, 0.5);
+      background-color: transparentize($text-color, 0.25);
       &:hover {
         border-color: inherit;
-        background-color: transparentize($text-color, 0.66);
       }
     }
   }

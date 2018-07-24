@@ -24,6 +24,14 @@
       @include move-on-hover(-0.1em);
     }
   }
+  // Stop the cover styles from bleeding into dropdown menus where they're
+  // unneeded (since the dropdown has a solid background)
+  .dropdown-menu {
+    text-shadow: none;
+    a {
+      font-weight: inherit;
+    }
+  }
   &:first-of-type {
     // Push the navbar spacing below the first cover instead of above, since the
     // first cover is meant to cover (heh) the navbar
