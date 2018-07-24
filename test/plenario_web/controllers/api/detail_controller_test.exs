@@ -65,10 +65,15 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     assert length(response["data"]) == 15
   end
 
+  test "GET /api/v2/data-sets/does_not_exist" do
+    conn = get(build_conn(), "/api/v2/data-sets/does_not_exist")
+    assert json_response(conn, 404)
+  end
+
   test "GET /api/v2/data-sets/:slug/@head", %{slug: slug} do
     conn = get(build_conn(), "/api/v2/data-sets/#{slug}/@head")
     response = json_response(conn, 200)
-    assert is_map(response["data"])
+    assert is_list(response["data"])
   end
 
   test "GET /api/v2/data-sets/:slug/@describe", %{slug: slug} do

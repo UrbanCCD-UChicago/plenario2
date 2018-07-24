@@ -107,6 +107,14 @@ defmodule PlenarioWeb.Api.Plugs do
   end
 
   @doc """
+  "page" is a float? Convert it to an integer and toss it back up.
+  """
+  def check_page(conn = %Conn{params: %{"page" => page}}, opts) when is_float(page) do
+    page_float = round(page)
+    check_page(%{conn | params: Map.put(conn.params, "page", page_float)}, opts)
+  end
+
+  @doc """
   "page" not an integer? Attempt to parse it to an integer and toss it back up. If parsing fails, halt the
   request pipeline and inform the user.
   """

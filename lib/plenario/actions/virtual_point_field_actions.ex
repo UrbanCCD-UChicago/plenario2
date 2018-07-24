@@ -105,4 +105,11 @@ defmodule Plenario.Actions.VirtualPointFieldActions do
       _ -> {:error, "Meta is locked."}
     end
   end
+
+  def make_pretty_name(%VirtualPointField{loc_field: loc})
+    when not is_nil(loc),
+    do: "Virtual Point {#{loc.name}}"
+  def make_pretty_name(%VirtualPointField{lat_field: lat, lon_field: lon})
+    when not is_nil(lat) and not is_nil(lon),
+    do: "Virtual Point {#{lat.name}, #{lon.name}}"
 end

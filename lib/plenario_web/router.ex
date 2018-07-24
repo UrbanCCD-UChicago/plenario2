@@ -60,6 +60,11 @@ defmodule PlenarioWeb.Router do
     resources "/data-sets/:dsid/fields", DataSetFieldController
     resources "/data-sets/:dsid/virtual-dates", VirtualDateController
     resources "/data-sets/:dsid/virtual-points", VirtualPointController
+    resources "/data-sets/:meta_id/charts", ChartController
+    get "/data-sets/:meta_id/charts/:id/render", ChartController, :render_chart
+    resources "/data-sets/:meta_id/charts/:chart_id/datasets", ChartDatasetController, only: [
+      :new, :create, :edit, :update, :delete
+    ]
 
     post "/notes/:id/acknowledge", AdminUserNoteController, :mark_acknowledged
   end

@@ -1,0 +1,20 @@
+<div class="container mt-2">
+  <h2>
+    Create a new chart for <em><%= @meta.name %></em>
+    <%= link "Go Back to Data Set", to: data_set_path(@conn, :show, @meta.id), class: "btn btn-info float-right" %>
+  </h2>
+
+  <div class="row">
+    <!-- form block -->
+    <div class="col-lg-6">
+      <%= render PlenarioWeb.Web.ChartView, "_form.html", assigns %>
+    </div>
+    <!-- /form block -->
+
+    <!-- details and information block -->
+    <div class="col-lg-6">
+      <%= render PlenarioWeb.Web.ChartView, "_info_block.html", assigns %>
+    </div>
+    <!-- /details and information block -->
+  </div>
+</div>

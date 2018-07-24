@@ -17,6 +17,7 @@ defmodule Plenario.Actions.DataSetActions do
   @create_table "db-actions/up/create-table.sql.eex"
   @create_view "db-actions/up/create-view.sql.eex"
   @create_index "db-actions/up/create-index.sql.eex"
+  @create_trgm_index "db-actions/up/create-trgm-index.sql.eex"
 
   def up!(%Meta{id: meta_id}), do: up!(meta_id)
   def up!(meta_id) do
@@ -28,19 +29,22 @@ defmodule Plenario.Actions.DataSetActions do
     table_name = meta.table_name
     view_name = "#{table_name}_view"
 
-    boolean_fields = Enum.filter(fields, & &1.type == "boolean") |> Enum.map(& &1.name)
-    integer_fields = Enum.filter(fields, & &1.type == "integer") |> Enum.map(& &1.name)
-    float_fields = Enum.filter(fields, & &1.type == "float") |> Enum.map(& &1.name)
-    timestamp_fields = Enum.filter(fields, & &1.type == "timestamp") |> Enum.map(& &1.name)
+    text_fields = Enum.filter(fields, & &1.type == "text")
+    boolean_fields = Enum.filter(fields, & &1.type == "boolean")
+    integer_fields = Enum.filter(fields, & &1.type == "integer")
+    float_fields = Enum.filter(fields, & &1.type == "float")
+    timestamp_fields = Enum.filter(fields, & &1.type == "timestamp")
 
-    index_fields =
+    gin_index_fields =
       boolean_fields ++
       integer_fields ++
       float_fields ++
       timestamp_fields ++
-      Enum.map(virtual_dates, & &1.name)
+      virtual_dates
 
-    gist_index_fields = Enum.map(virtual_points, & &1.name)
+    gist_index_fields = virtual_points
+
+    tsvector_index_fields = text_fields
 
     Repo.transaction fn ->
       execute! @create_table,
@@ -50,6 +54,7 @@ defmodule Plenario.Actions.DataSetActions do
       execute! @create_view,
         table_name: table_name,
         view_name: view_name,
+        text_fields: text_fields,
         boolean_fields: boolean_fields,
         integer_fields: integer_fields,
         float_fields: float_fields,
@@ -57,7 +62,7 @@ defmodule Plenario.Actions.DataSetActions do
         virtual_dates: virtual_dates,
         virtual_points: virtual_points
 
-      Enum.each(index_fields, fn field ->
+      Enum.each(gin_index_fields, fn field ->
         execute! @create_index,
           view_name: view_name,
           field: field,
@@ -69,6 +74,12 @@ defmodule Plenario.Actions.DataSetActions do
           view_name: view_name,
           field: field,
           using: "GIST"
+      end)
+
+      Enum.each(tsvector_index_fields, fn field ->
+        execute! @create_trgm_index,
+          view_name: view_name,
+          field: field
       end)
     end
 

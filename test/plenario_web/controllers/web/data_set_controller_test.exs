@@ -18,6 +18,40 @@ defmodule PlenarioWeb.Web.Testing.DataSetControllerTest do
     |> html_response(:ok)
   end
 
+  describe "data set show's request changes button" do
+    @tag :auth
+    test "should be available when the user owns the data set and it's not new", %{conn: conn, meta: meta} do
+      {:ok, meta} = MetaActions.submit_for_approval(meta)
+
+      resp =
+        conn
+        |> get(data_set_path(conn, :show, meta.id))
+        |> html_response(:ok)
+
+      assert resp =~ "Request Changes"
+    end
+
+    @tag :auth
+    test "should not be available when the user owns the data set and it's still new", %{conn: conn, meta: meta} do
+      resp =
+        conn
+        |> get(data_set_path(conn, :show, meta.id))
+        |> html_response(:ok)
+
+      refute resp =~ "Request Changes"
+    end
+
+    @tag :anon
+    test "should not be available when the user is not the owner", %{conn: conn, meta: meta} do
+      resp =
+        conn
+        |> get(data_set_path(conn, :show, meta.id))
+        |> html_response(:ok)
+
+      refute resp =~ "Request Changes"
+    end
+  end
+
   @tag :auth
   test "new", %{conn: conn} do
     conn
