@@ -15,6 +15,9 @@ defmodule PlenarioAuth.Testing.AbilitiesTest do
     {:ok, vdf} = VirtualDateFieldActions.create(meta, field.id)
     {:ok, vpf} = VirtualPointFieldActions.create(meta, field.id)
 
+    {:ok, meta} = MetaActions.submit_for_approval(meta)
+    {:ok, meta} = MetaActions.approve(meta)
+
     {:ok, [meta: meta, field: field, vdf: vdf, vpf: vpf]}
   end
 
@@ -92,6 +95,9 @@ defmodule PlenarioAuth.Testing.AbilitiesTest do
       {:ok, field} = DataSetFieldActions.create(meta, "name", "text")
       {:ok, vdf} = VirtualDateFieldActions.create(meta, field.id)
       {:ok, vpf} = VirtualPointFieldActions.create(meta, field.id)
+
+      {:ok, meta} = MetaActions.submit_for_approval(meta)
+      {:ok, meta} = MetaActions.approve(meta)
 
       {:ok, [new_meta: meta, new_field: field, new_vdf: vdf, new_vpf: vpf]}
     end

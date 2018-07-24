@@ -22,6 +22,7 @@ defmodule Plenario do
           MetaQueries.list()
           |> MetaQueries.handle_opts(
               with_user: true,
+              with_charts: true,
               ready_only: true,
               bbox_intersects: bbox)
 
@@ -37,6 +38,7 @@ defmodule Plenario do
           MetaQueries.list()
           |> MetaQueries.handle_opts(
               with_user: true,
+              with_charts: true,
               ready_only: true,
               bbox_intersects: bbox,
               time_range_intersects: range)

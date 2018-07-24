@@ -14,7 +14,7 @@ defmodule PlenarioWeb.Api.DetailController do
       do_call(meta, conn, opts)
     end
 
-    def do_call(nil, conn, opts) do
+    def do_call(nil, conn, _opts) do
         conn |> Explode.with(404, "Data set not found")
     end
 

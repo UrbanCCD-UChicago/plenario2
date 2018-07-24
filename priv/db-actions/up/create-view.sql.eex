@@ -2,24 +2,29 @@ CREATE MATERIALIZED VIEW "<%= view_name %>" AS
 SELECT
   row_id
 
+  -- text fields
+  <%= for f <- text_fields do %>
+  , "<%= f.name %>"
+  <% end %>
+
   -- boolean fields
   <%= for f <- boolean_fields do %>
-  , p_boolean_from_text("<%= f %>") AS "<%= f %>"
+  , p_boolean_from_text("<%= f.name %>") AS "<%= f.name %>"
   <% end %>
 
   -- integer fields
   <%= for f <- integer_fields do %>
-  , p_integer_from_text("<%= f %>") AS "<%= f %>"
+  , p_integer_from_text("<%= f.name %>") AS "<%= f.name %>"
   <% end %>
 
   -- float fields
   <%= for f <- float_fields do %>
-  , p_float_from_text("<%= f %>") AS "<%= f %>"
+  , p_float_from_text("<%= f.name %>") AS "<%= f.name %>"
   <% end %>
 
   -- timestmap fields
   <%= for f <- timestamp_fields do %>
-  , p_timestamp_from_text("<%= f %>") AS "<%= f %>"
+  , p_timestamp_from_text("<%= f.name %>") AS "<%= f.name %>"
   <% end %>
 
   -- virtual dates
