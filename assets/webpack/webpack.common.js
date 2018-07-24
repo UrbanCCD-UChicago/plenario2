@@ -101,11 +101,6 @@ module.exports = {
         ignore: ['images/responsive/*'],
         to: '.',
       },
-      {
-        context: './node_modules/font-awesome/fonts',
-        from: '*',
-        to: './fonts',
-      },
     ]),
   ],
 
