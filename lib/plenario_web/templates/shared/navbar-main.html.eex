@@ -20,10 +20,10 @@
           <%= link "Array of Things", to: page_path(@conn, :aot_explorer), class: "nav-link" %>
         </li>
         <li class="nav-item">
-          <%= link "API", to: page_path(@conn, :docs), class: "nav-link" %>
+          <a href="https://plenario.docs.apiary.io" target="_blank" class="nav-link">API</a>
         </li>
         <li class="nav-item">
-          <a href="https://github.com/UrbanCCD-UChicago/plenario2" class="nav-link">
+          <a href="https://github.com/UrbanCCD-UChicago/plenario2" target="_blank" class="nav-link">
             <i title="Contribute on GitHub" class="fab fa-github fa-lg"></i>
             <span class="d-md-none">Contribute on GitHub</span>
           </a>
