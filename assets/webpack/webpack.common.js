@@ -98,6 +98,7 @@ module.exports = {
       {
         context: './static',
         from: '**/*',
+        ignore: ['images/responsive/*'],
         to: '.',
       },
       {
