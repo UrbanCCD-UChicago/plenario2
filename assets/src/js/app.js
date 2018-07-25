@@ -20,3 +20,9 @@ window.$ = $;
 window.Pikaday = Pikaday;
 window.throttle = throttle;
 window.debounce = debounce;
+
+// Tell FontAwesome to nest SVGs inside <i> tags, instead of replacing them
+window.FontAwesome.config.autoReplaceSvg = 'nest';
+
+// Tooltips are opt-in in Bootstrap 4, so we have to activate them
+$(() => $('[data-toggle="tooltip"]').tooltip());
