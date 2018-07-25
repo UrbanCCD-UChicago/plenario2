@@ -1,0 +1,11 @@
+// Apiary's embed script isn't very smart, and assumes (among other things) that
+// quirks mode be active in the browser. These styles do what Apiary's embed
+// code fails to do for itself (despite saying it will)
+#docs {
+  iframe {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: calc(100vh - #{$navbar-spacing} + #{$spacer});
+  }
+}

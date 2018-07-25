@@ -42,7 +42,7 @@ defmodule PlenarioWeb.Router do
     get "/", PageController, :index
     get "/explore", PageController, :explorer
     get "/explore/array-of-things", PageController, :aot_explorer
-
+    
     # auth pages
     get "/login", AuthController, :index
     post "/login", AuthController, :login
@@ -102,11 +102,6 @@ defmodule PlenarioWeb.Router do
     resources "/export-jobs", ExportJobController
 
     resources "/aot", AotController
-  end
-
-  scope "/api/v2", PlenarioWeb.Web do
-    pipe_through [:browser, :maybe_authenticated]
-    get "/", PageController, :docs
   end
 
   ##

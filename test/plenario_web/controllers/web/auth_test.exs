@@ -16,8 +16,8 @@ defmodule PlenarioWeb.Web.Testing.AuthControllerTest do
         |> get(auth_path(conn, :index))
         |> html_response(:ok)
 
-      assert response =~ "Login"
-      assert response =~ "Sign In"
+      assert response =~ "<h1>Log In</h1>"
+      assert response =~ "<h1>Sign Up</h1>"
     end
   end
 

@@ -2,12 +2,27 @@ defmodule PlenarioWeb.Web.PageController do
   use PlenarioWeb, :web_controller
 
   import Ecto.Query
-
   import Plug.Conn
 
   alias Plenario.Repo
-
   alias PlenarioAot.{AotData, AotMeta}
+
+  def assign_s3_path(conn, opts) do
+    assign(
+      conn,
+      :s3_asset_path,
+      Map.get(
+        %{
+          "dev.plenar.io":  "https://s3.us-east-2.amazonaws.com/plenario2-assets-staging",
+          "plenar.io": "https://s3.us-east-2.amazonaws.com/plenario2-assets"
+        },
+        conn.host,
+        "https://s3.us-east-2.amazonaws.com/plenario2-assets-dev"
+      )
+    )
+  end
+
+  plug :assign_s3_path
 
   ##
   # flat pages
