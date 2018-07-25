@@ -25,7 +25,8 @@ module.exports = {
 
   entry: {
     polyfills: './src/js/polyfills.js',
-    app: ['./src/js/app.js'],
+    app: './src/js/app.js',
+    explorer: './src/js/explorer.js'
   },
 
   output: {
@@ -71,6 +72,10 @@ module.exports = {
         test: /\.(woff|woff2|eot|ttf|otf)$/,
         use: ['file-loader'],
       },
+      {
+        test: /\.vue$/,
+        use: ['vue-loader']
+      }
     ],
   },
 
@@ -119,6 +124,8 @@ module.exports = {
       './images/spritesheet.png$': path.resolve(__dirname, '../node_modules/leaflet-draw/dist/images/spritesheet.png'),
       './images/spritesheet-2x.png$': path.resolve(__dirname, '../node_modules/leaflet-draw/dist/images/spritesheet-2x.png'),
       './images/spritesheet.svg$': path.resolve(__dirname, '../node_modules/leaflet-draw/dist/images/spritesheet.svg'),
+
+      'vue$': 'vue/dist/vue.esm.js'
     },
   },
 };
