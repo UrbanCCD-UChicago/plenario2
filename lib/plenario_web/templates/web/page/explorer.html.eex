@@ -158,5 +158,5 @@ let fetchCharts = function () {
   });
 };
 
-$(window).on('resize scroll', _.throttle(fetchCharts, 100));
+$(window).on('resize scroll', throttle(fetchCharts, 100));
 </script>

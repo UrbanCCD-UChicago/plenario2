@@ -23,6 +23,4 @@ window.Pikaday = Pikaday;
 
 // Import just the `throttle` function from lodash so that webpack knows to
 // discard the rest of the library when bundling.
-window._ = {
-    throttle: throttle
-};
+window.throttle = throttle
