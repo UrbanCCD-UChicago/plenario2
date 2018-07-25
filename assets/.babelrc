@@ -1,11 +1,7 @@
 {
-  "plugins": ["lodash"],
   "presets": [
     [
       "env", { "modules": false }
-    ],
-    [
-      "@babel/env", { "targets": { "node": 6 } }
     ]
   ]
 }
