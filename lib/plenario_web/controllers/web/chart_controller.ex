@@ -10,16 +10,29 @@ defmodule PlenarioWeb.Web.ChartController do
     ChartActions
   }
 
-  alias Plenario.Schemas.{Chart, ChartDataset}
+  alias Plenario.Schemas.{
+    Chart,
+    ChartDataset
+  }
 
+  plug :authorize_resource, model: Chart
   plug :put_layout, false when action in [:render_chart]
 
   def show(conn, %{"id" => chart_id}) do
     chart = ChartActions.get(chart_id)
+    user_is_owner? =
+      case Guardian.Plug.current_resource(conn) do
+        nil ->
+          false
+
+        user ->
+          user.id == chart.meta.user_id or user.is_admin
+      end
 
     render conn, "show.html",
       chart: chart,
-      meta: chart.meta
+      meta: chart.meta,
+      user_is_owner?: user_is_owner?
   end
 
   def new(conn, %{"meta_id" => meta_id}) do
