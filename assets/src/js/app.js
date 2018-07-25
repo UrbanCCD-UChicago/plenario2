@@ -8,7 +8,7 @@ import 'phoenix_html';
 
 // Import just the `throttle` function from lodash so that webpack knows to
 // discard the rest of the library when bundling.
-import { throttle } from 'lodash';
+import { throttle } from 'lodash-es';
 
 /* Local imports */
 // import socket from './socket';
