@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="./assets/static/images/logo-large.png">
+  <img src="./assets/static/images/arch-md.png">
   <br>
   Plenario
 </h1>
