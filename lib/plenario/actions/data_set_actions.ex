@@ -10,7 +10,11 @@ defmodule Plenario.Actions.DataSetActions do
     VirtualPointFieldActions
   }
 
-  alias Plenario.Schemas.Meta
+  alias Plenario.Schemas.{
+    Meta,
+    DataSetField,
+    VirtualDateField
+  }
 
   # up!
 
@@ -41,10 +45,23 @@ defmodule Plenario.Actions.DataSetActions do
       float_fields ++
       timestamp_fields ++
       virtual_dates
+      |> Enum.map(fn f ->
+        case f do
+          %DataSetField{} ->
+            {"f", f.id, f.name}
 
-    gist_index_fields = virtual_points
+          %VirtualDateField{} ->
+            {"vdf", f.id, f.name}
+        end
+      end)
 
-    tsvector_index_fields = text_fields
+    gist_index_fields =
+      virtual_points
+      |> Enum.map(& {"vpf", &1.id, &1.name})
+
+    tsvector_index_fields =
+      text_fields
+      |> Enum.map(& {"f", &1.id, &1.name})
 
     Repo.transaction fn ->
       execute! @create_table,
@@ -62,24 +79,30 @@ defmodule Plenario.Actions.DataSetActions do
         virtual_dates: virtual_dates,
         virtual_points: virtual_points
 
-      Enum.each(gin_index_fields, fn field ->
+      Enum.each(gin_index_fields, fn {type, id, name} ->
         execute! @create_index,
           view_name: view_name,
-          field: field,
+          type: type,
+          id: id,
+          name: name,
           using: false
       end)
 
-      Enum.each(gist_index_fields, fn field ->
+      Enum.each(gist_index_fields, fn {type, id, name} ->
         execute! @create_index,
           view_name: view_name,
-          field: field,
+          type: type,
+          id: id,
+          name: name,
           using: "GIST"
       end)
 
-      Enum.each(tsvector_index_fields, fn field ->
+      Enum.each(tsvector_index_fields, fn {type, id, name} ->
         execute! @create_trgm_index,
           view_name: view_name,
-          field: field
+          type: type,
+          id: id,
+          name: name
       end)
     end
 
