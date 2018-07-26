@@ -1,8 +1,9 @@
 /* global $:false, Pikaday:false */
 
-/* node_modules imports */
+/* general node_modules imports */
 import 'popper.js';
 import 'bootstrap';
+import '@fortawesome/fontawesome-free/js/all';
 import 'chart.js';
 import 'phoenix_html';
 
@@ -24,3 +25,9 @@ window.Pikaday = Pikaday;
 // Import just the `throttle` function from lodash so that webpack knows to
 // discard the rest of the library when bundling.
 window.throttle = throttle
+
+// Tell FontAwesome to nest SVGs inside <i> tags, instead of replacing them
+window.FontAwesome.config.autoReplaceSvg = 'nest';
+
+// Tooltips are opt-in in Bootstrap 4, so we have to activate them
+$(() => $('[data-toggle="tooltip"]').tooltip());

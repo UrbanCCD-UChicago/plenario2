@@ -1,0 +1,4 @@
+// Convenience variable for the amount of space a standard Bootstrap navbar
+// should take up; used to offset content out from under the navbar and in
+// similar situations.
+$navbar-spacing: 2 * $navbar-padding-y + $nav-link-height + $spacer;

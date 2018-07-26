@@ -9,7 +9,12 @@ defmodule PlenarioWeb.Web.ChartDatasetController do
     VirtualPointFieldActions
   }
 
-  alias Plenario.Schemas.{Chart, ChartDataset}
+  alias Plenario.Schemas.{
+    Chart,
+    ChartDataset
+  }
+
+  plug :authorize_resource, model: ChartDataset
 
   def new(conn, %{"meta_id" => meta_id, "chart_id" => chart_id}) do
     changeset = ChartDataset.changeset()

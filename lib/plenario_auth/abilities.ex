@@ -9,19 +9,26 @@ defmodule PlenarioAuth.Abilities do
     Meta,
     DataSetField,
     VirtualDateField,
-    VirtualPointField
+    VirtualPointField,
+    Chart,
+    ChartDataset
   }
 
-  alias Plenario.Actions.MetaActions
+  alias Plenario.Actions.{
+    MetaActions,
+    ChartActions
+  }
 
   defimpl Canada.Can, for: Atom do
 
     @doc """
     Anonymous users can only access the :index and :show actions of
-    Metas and Users.
+    Metas, Users, Charts and ChartDatasets.
     """
     def can?(nil, action, %Meta{}) when action in [:index, :show], do: true
     def can?(nil, action, %User{}) when action in [:index, :show], do: true
+    def can?(nil, action, %ChartDataset{}) when action in [:show, :list], do: true
+    def can?(nil, action, %Chart{}) when action in [:show, :list, :render_chart], do: true
     def can?(nil, _, _), do: false
   end
 
@@ -67,6 +74,27 @@ defmodule PlenarioAuth.Abilities do
     def can?(%User{}, action, VirtualPointField) when action in [:new, :create], do: true
     def can?(%User{id: user_id}, _, %VirtualPointField{meta_id: meta_id}) do
       meta = MetaActions.get(meta_id)
+      meta.user_id == user_id
+    end
+
+    @doc """
+    Authenticated users who own the Chart's parent Meta are the only users
+    able to access its write/destroy actions.
+    """
+    def can?(%User{}, action, Chart) when action in [:new, :create], do: true
+    def can?(%User{id: user_id}, _, %Chart{meta_id: meta_id}) do
+      meta = MetaActions.get(meta_id)
+      meta.user_id == user_id
+    end
+
+    @doc """
+    Authenticated users who own the ChartDataset's parent Chart's parent Meta
+    are the only users able to access its write/destroy actions.
+    """
+    def can?(%User{}, action, ChartDataset) when action in [:new, :create], do: true
+    def can?(%User{id: user_id}, _, %ChartDataset{chart_id: chart_id}) do
+      chart = ChartActions.get(chart_id)
+      meta = MetaActions.get(chart.meta_id)
       meta.user_id == user_id
     end
   end

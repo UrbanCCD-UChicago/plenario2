@@ -39,8 +39,12 @@ defmodule PlenarioWeb.TemplateHelpers do
   A helper function that generates a tooltip.
   """
   def tooltip(message) do
-    content_tag(:span, "🛈",
-      data: [toggle: "tooltip", placement: "top"],
+    content_tag(:i, "",
+      class: "fas fa-question-circle",
+      data: [
+        toggle: "tooltip",
+        "fa-transform": "shrink-4"
+      ],
       title: message)
   end
 
