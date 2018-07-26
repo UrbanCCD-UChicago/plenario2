@@ -1,9 +1,12 @@
 /* eslint-disable import/no-extraneous-dependencies */
 
 const Webpack = require('webpack');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
+
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const VueLoaderPlugin = require('vue-loader').VueLoaderPlugin;
+
 const Dotenv = require('dotenv-webpack');
 const path = require('path');
 
@@ -107,6 +110,7 @@ module.exports = {
         to: '.',
       },
     ]),
+    new VueLoaderPlugin()
   ],
 
   resolve: {

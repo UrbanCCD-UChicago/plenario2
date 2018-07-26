@@ -1,3 +1,10 @@
 import Vue from 'vue';
 
-new Vue({}).$mount('#app');
+import SpaceSearch from './components/SpaceSearch.vue';
+
+
+new Vue({
+  components: {
+    SpaceSearch
+  }
+}).$mount('#app');
