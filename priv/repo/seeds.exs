@@ -1,7 +1,6 @@
-defmodule Plenario.DevSeed do
-  import Ecto.Query
+defmodule Plenario.Seed do
 
-  alias Plenario.Repo
+  require Logger
 
   alias Plenario.Actions.{
     UserActions,
@@ -10,47 +9,36 @@ defmodule Plenario.DevSeed do
     VirtualPointFieldActions
   }
 
-  alias Plenario.Schemas.Meta
+  alias PlenarioAot.AotActions
 
-  @beach_lab_name "Chicago Beach Lab - DNA Tests"
+  @user_name "Plenario Admin"
+  @user_email "plenario@uchiago.edu"
+  @user_password "password"
 
-  @beach_lab_url "https://data.cityofchicago.org/api/views/hmqm-anjq/rows.csv?accessType=DOWNLOAD"
+  @meta_name "Chicago Beach Lab - DNA Tests"
+  @meta_url "https://data.cityofchicago.org/api/views/hmqm-anjq/rows.csv?accessType=DOWNLOAD"
+  @meta_src_type "csv"
 
-  def seed_regular do
-    if Mix.env() != :dev do
-      error = "This should only be run in the dev enviornment! -- you are in #{Mix.env()}"
-      IO.puts(error)
-      raise "This should only be run in the dev enviornment! -- you are in #{Mix.env()}"
-    end
+  @aot_name "Chicago"
+  @aot_url "http://www.mcs.anl.gov/research/projects/waggle/downloads/beehive1/plenario.json"
 
-    found = Repo.one(from m in Meta, where: m.name == ^@beach_lab_name)
-    if !is_nil(found) do
-      error = "Beach lab data already seeded!"
-      IO.puts(error)
-      raise error
-    end
+  defp make_user do
+    {:ok, user} = UserActions.create(@user_name, @user_email, @user_password)
+    user
+  end
 
-    user =
-      case UserActions.get("plenario@uchicago.edu") do
-        nil ->
-          {:ok, user} = UserActions.create("Plenario Admin", "plenario@uchicago.edu", "password")
-          user
-
-        uzer ->
-          uzer
-      end
-
-    {:ok, user} = UserActions.promote_to_admin(user)
-    IO.puts("default user created. email: `plenario@uchicago.edu` ; password: `password`")
-
-    {:ok, meta} = MetaActions.create(@beach_lab_name, user, @beach_lab_url, "csv")
-    {:ok, meta} = MetaActions.update meta,
-      refresh_starts_on: NaiveDateTime.utc_now(),
-      description: "blah blah blah this is a test data set even though it's a real data set\n\ni'm a new paragraph",
-      attribution: "City of Chicago",
+  defp make_meta(user) do
+    {:ok, meta} = MetaActions.create(@meta_name, user, @meta_url, @meta_src_type)
+    {:ok, meta} = MetaActions.update(meta,
       refresh_rate: "days",
-      refresh_interval: 1
+      refresh_interval: 1,
+      description: "Lorem Ipsum\nDNA Chicago Beaches\nDolor Sit Amet",
+      attribution: "City of Chicago")
 
+    meta
+  end
+
+  defp make_fields(meta) do
     {:ok, _} = DataSetFieldActions.create(meta, "DNA Test ID", "text")
     {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample Timestamp", "timestamp")
     {:ok, _} = DataSetFieldActions.create(meta, "Beach", "text")
@@ -67,51 +55,62 @@ defmodule Plenario.DevSeed do
     {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 2 Timestamp", "text")
     {:ok, lat} = DataSetFieldActions.create(meta, "Latitude", "float")
     {:ok, lon} = DataSetFieldActions.create(meta, "Longitude", "float")
-    {:ok, loc} = DataSetFieldActions.create(meta, "Location", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Location", "text")
     {:ok, _} = VirtualPointFieldActions.create(meta, lat.id, lon.id)
-    {:ok, _} = VirtualPointFieldActions.create(meta, loc.id)
 
-    {:ok, meta} = MetaActions.submit_for_approval(meta)
-    {:ok, meta} = MetaActions.approve(meta)
-    IO.puts("data set `#{meta.name}` is up")
+    :ok
   end
 
-  alias PlenarioAot.{AotActions, AotMeta}
+  defp make_aot do
+    {:ok, aot} = AotActions.create_meta(@aot_name, @aot_url)
+    aot
+  end
 
-  @aot_name "Chicago"
-
-  @aot_url "http://www.mcs.anl.gov/research/projects/waggle/downloads/beehive1/plenario.json"
-
-  def seed_aot do
+  def seed do
     if Mix.env() != :dev do
-      error = "This should only be run in the dev enviornment -- you are in #{Mix.env()}!"
-      IO.puts(error)
-      raise error
+      System.halt(1)
     end
 
-    found = Repo.one(from m in AotMeta, where: m.network_name == ^@aot_name)
-    if !is_nil(found) do
-      error = "AoT Chicago data already seeded!"
-      IO.puts(error)
-      raise error
-    end
+    # setup the user
+    user = make_user()
 
-    {:ok, _} = AotActions.create_meta(@aot_name, @aot_url)
-    IO.puts("AoT #{@aot_name} created -- let it run for 10 minutes to pull in live data")
+    # setup a regular data set
+    meta = make_meta(user)
+    :ok = make_fields(meta)
+    {:ok, meta} = MetaActions.submit_for_approval(meta)
+    {:ok, _} = MetaActions.approve(meta)
+
+    # setup aot chicago
+    aot = make_aot()
+
+    # dump out info
+    msg = """
+
+    =============
+      USER INFO
+    =============
+    email:    #{@user_email}
+    password: #{@user_password}
+
+    =============
+      META INFO
+    =============
+    id:   #{meta.id}
+    name: #{@meta_name}
+    url:  #{@meta_url}
+
+    ============
+      AOT INFO
+    ============
+    id:   #{aot.id}
+    name: #{@aot_name}
+    url:  #{@aot_url}
+
+    """
+    Logger.info(msg)
+
+    :ok
   end
 end
 
-
-try do
-  Plenario.DevSeed.seed_regular()
-rescue
-  _ ->
-    :ok
-end
-
-try do
-  Plenario.DevSeed.seed_aot()
-rescue
-  _ ->
-    :ok
-end
+Plenario.Seed.seed()
