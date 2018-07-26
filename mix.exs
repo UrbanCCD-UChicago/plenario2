@@ -74,7 +74,6 @@ defmodule Plenario.Mixfile do
 
       # http and api utils
       {:cors_plug, "~> 1.5"},
-      {:explode, "~> 1.0.0"},
 
       # Parsing libraries
       {:csv, "~> 2.0"},          # csv
