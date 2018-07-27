@@ -27,7 +27,7 @@ $(document).ready(function() {
   navHeight = mainNav.outerHeight();
   firstCover = $('.cover').get(0);
 })
-$(window).on('scroll', throttle(100, showHideNavbar));
+$(window).on('scroll', throttle(showHideNavbar, 100));
 </script>
 
 <section class="jumbotron jumbotron-fluid cover cityscape mb-0">

@@ -6,7 +6,10 @@ import 'bootstrap';
 import '@fortawesome/fontawesome-free/js/all';
 import 'chart.js';
 import 'phoenix_html';
-import { throttle, debounce } from 'throttle-debounce';
+
+// Import just the `throttle` function from lodash so that webpack knows to
+// discard the rest of the library when bundling.
+import { throttle } from 'lodash-es';
 
 /* Local imports */
 // import socket from './socket';
@@ -18,8 +21,10 @@ import '../css/app.scss';
 // For now, just assign these to the global scope to preserve existing code
 window.$ = $;
 window.Pikaday = Pikaday;
-window.throttle = throttle;
-window.debounce = debounce;
+
+// Import just the `throttle` function from lodash so that webpack knows to
+// discard the rest of the library when bundling.
+window.throttle = throttle
 
 // Tell FontAwesome to nest SVGs inside <i> tags, instead of replacing them
 window.FontAwesome.config.autoReplaceSvg = 'nest';
