@@ -1,15 +1,27 @@
 defmodule PlenarioWeb.Api.AotController do
+
   use PlenarioWeb, :api_controller
 
+  require Logger
+
   import Ecto.Query
+
   import Geo.PostGIS, only: [st_intersects: 2]
+
   import PlenarioWeb.Api.Plugs
-  import PlenarioWeb.Api.Utils, only: [render_page: 6]
+
+  import PlenarioWeb.Api.Utils, only: [
+    render_page: 6,
+    halt_with: 3
+  ]
 
   alias Plenario.Repo
-  alias PlenarioAot.{AotData, AotMeta, AotObservation}
 
-  require Logger
+  alias PlenarioAot.{
+    AotData,
+    AotMeta,
+    AotObservation
+  }
 
   plug :check_page
   plug :check_page_size, default_page_size: 500, page_size_limit: 5000
@@ -18,7 +30,7 @@ defmodule PlenarioWeb.Api.AotController do
     try do
       Poison.decode!(value) |> Geo.JSON.decode()
     rescue
-      _ -> conn |> Explode.with(400, "Unable to parse bounding box JSON or generate Geo object")
+      _ -> conn |> halt_with(400, "Unable to parse bounding box JSON or generate Geo object")
     end
   end
 
@@ -93,7 +105,7 @@ defmodule PlenarioWeb.Api.AotController do
       end
 
     case meta_ids do
-      nil -> conn |> Explode.with(400, "Unable to execute bounding box query")
+      nil -> conn |> halt_with(400, "Unable to execute bounding box query")
       _ -> meta_ids
     end
 

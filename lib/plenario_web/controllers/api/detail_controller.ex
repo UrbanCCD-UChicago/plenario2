@@ -1,9 +1,22 @@
 defmodule PlenarioWeb.Api.DetailController do
+
   use PlenarioWeb, :api_controller
+
   import PlenarioWeb.Api.Plugs
-  import PlenarioWeb.Api.Utils, only: [render_page: 5, map_to_query: 2]
-  alias Plenario.{ModelRegistry, Repo}
+
+  import PlenarioWeb.Api.Utils, only: [
+    render_page: 5,
+    map_to_query: 2,
+    halt_with: 2
+  ]
+
+  alias Plenario.{
+    ModelRegistry,
+    Repo
+  }
+
   alias Plenario.Actions.MetaActions
+
   alias PlenarioWeb.Controllers.Api.CaptureArgs
 
   defmodule CaptureColumnArgs do
@@ -15,7 +28,7 @@ defmodule PlenarioWeb.Api.DetailController do
     end
 
     def do_call(nil, conn, _opts) do
-        conn |> Explode.with(404, "Data set not found")
+        conn |> halt_with(:not_found)
     end
 
     def do_call(meta, conn, opts) do

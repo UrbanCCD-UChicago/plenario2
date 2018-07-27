@@ -1,4 +1,4 @@
-<div class="container mt-5 text-center">
-  <img src="<%= static_path(@conn, "/images/logo-large.png") %>" alt="Plenario logo, a stylized red brick archway">
-  <p class="display-4">Welcome, admin!</p>
+<div class="container d-flex flex-column justify-content-center align-items-center text-center">
+  <img src="<%= static_path(@conn, "/images/arch.svg") %>" alt="Plenario logo, a stylized red brick archway" class="w-25 mt-5">
+  <p class="display-3">Welcome, <%= @current_user.name %>!</p>
 </div>

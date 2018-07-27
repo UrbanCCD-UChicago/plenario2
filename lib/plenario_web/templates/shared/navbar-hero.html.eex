@@ -1,0 +1,35 @@
+<div class="container">
+  
+  <div class="navbar navbar-expand px-0">
+    
+    <ul class="navbar-nav ml-auto">
+      <li class="nav-item">
+        <a href="https://plenario.docs.apiary.io" target="_blank" class="nav-link">API</a>
+      </li>
+      <li class="nav-item">
+        <a href="https://github.com/UrbanCCD-UChicago/plenario2" target="_blank" class="nav-link"><i title="Contribute on GitHub" class="fab fa-github fa-lg"></i></a>
+      </li>
+    </ul>
+
+    <div class="inline-form ml-md-2">
+      <%= if @current_user do %>
+        <div class="btn-group">
+          <%= link "User Dashboard", to: me_path(@conn, :index), class: "btn btn-outline-info btn-sm" %>
+          <button type="button" class="btn btn-outline-info btn-sm dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="sr-only">Toggle Dropdown</span>
+          </button>
+          <div class="dropdown-menu dropdown-menu-right bg-dark text-white p-1">
+            <%= link raw("<i class=\"fas fa-sign-out-alt\"></i> Log Out"), to: auth_path(@conn, :logout), method: :post, class: "dropdown-item text-center" %>
+          </div>
+        </div>
+        <%= if @current_user.is_admin do %>
+          <%= link raw("<i class=\"fas fa-lock\"></i> Admin"), to: admin_page_path(@conn, :index), class: "btn btn-outline-danger btn-sm" %>
+        <% end %>
+      <% else %>
+        <%= link "Sign Up / Log In", to: auth_path(@conn, :index), class: "btn btn-outline-success btn-sm" %>
+      <% end %>
+    </div>
+
+  </div>
+
+</div>

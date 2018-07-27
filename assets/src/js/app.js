@@ -1,8 +1,9 @@
 /* global $:false, Pikaday:false */
 
-/* node_modules imports */
+/* general node_modules imports */
 import 'popper.js';
 import 'bootstrap';
+import '@fortawesome/fontawesome-free/js/all';
 import 'chart.js';
 import 'phoenix_html';
 import { throttle, debounce } from 'throttle-debounce';
@@ -19,3 +20,9 @@ window.$ = $;
 window.Pikaday = Pikaday;
 window.throttle = throttle;
 window.debounce = debounce;
+
+// Tell FontAwesome to nest SVGs inside <i> tags, instead of replacing them
+window.FontAwesome.config.autoReplaceSvg = 'nest';
+
+// Tooltips are opt-in in Bootstrap 4, so we have to activate them
+$(() => $('[data-toggle="tooltip"]').tooltip());
