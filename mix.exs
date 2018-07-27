@@ -1,7 +1,7 @@
 defmodule Plenario.Mixfile do
   use Mix.Project
 
-  @version "0.13.0"
+  @version "0.13.2"
 
   def project do
     [
@@ -74,7 +74,6 @@ defmodule Plenario.Mixfile do
 
       # http and api utils
       {:cors_plug, "~> 1.5"},
-      {:explode, "~> 1.0.0"},
 
       # Parsing libraries
       {:csv, "~> 2.0"},          # csv
