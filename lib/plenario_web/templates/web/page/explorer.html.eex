@@ -6,10 +6,10 @@
 
     <!-- Vue.js application mount point -->
     <div class="col-lg-3" id="app">
-      <div class="row">
+      <div class="row hairline-gutters">
         <space-search></space-search>
       </div>
-      <div class="row">
+      <div class="row hairline-gutters">
         <time-card></time-search>
       </div>
     </div>

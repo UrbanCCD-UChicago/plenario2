@@ -3,7 +3,7 @@
   <div class="container">
 
     <%= link to: page_path(@conn, :index), class: "navbar-brand" do %>
-      <img class="logo" src="/images/arch.svg" alt="">
+      <img class="logo" src="/images/arch.svg" alt=""> Plenario
     <% end %>
     
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#main-nav-collapsible" aria-controls="main-nav-collapsible"
