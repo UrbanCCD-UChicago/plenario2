@@ -3,8 +3,8 @@
   <div class="col-lg-4 d-none d-lg-block float-lg-left pr-lg-1">
     <div class="card space-card">
       <div class="card-header">
-        <div class="fas fa-compass">
-        </div>
+        <i class="far fa-compass">
+        </i>
         &ensp;Space
       </div>
       <div class="card-body">
@@ -20,11 +20,8 @@
   </div>
 </template>
 
-<style>
-</style>
-
 <script>
-module.exports = {
+export default {
   name: 'SpaceSearch'
 }
 </script>
