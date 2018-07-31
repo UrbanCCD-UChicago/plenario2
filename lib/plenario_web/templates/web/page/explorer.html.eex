@@ -5,16 +5,19 @@
   <div class="row no-gutters">
 
     <!-- Vue.js application mount point -->
-    <div class="col-lg-3" id="app">
+    <div class="col-lg-4" id="app">
       <div class="row hairline-gutters">
         <space-search></space-search>
       </div>
       <div class="row hairline-gutters">
         <time-card></time-search>
       </div>
+      <div class="row hairline-gutters">
+        <action-card></action-card>
+      </div>
     </div>
 
-    <div class="col-lg-9">
+    <div class="col-lg-8">
       <div class="card ml-lg-1">
         <%= PlenarioWeb.SharedView.render_map(draw_controls: true, map_height: "75vw", map_center: @map_center, bbox: @bbox, map_zoom: @map_zoom)%>
       </div>

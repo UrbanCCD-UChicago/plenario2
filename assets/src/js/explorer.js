@@ -2,13 +2,15 @@ import Vue from 'vue';
 
 import SpaceSearch from './components/SpaceSearch.vue';
 import TimeCard from './components/TimeCard.vue';
+import ActionCard from './components/ActionCard.vue'
 
 
 
 new Vue({
   components: {
     SpaceSearch,
-    TimeCard
+    TimeCard,
+    ActionCard
   }
 }).$mount('#app');
 
