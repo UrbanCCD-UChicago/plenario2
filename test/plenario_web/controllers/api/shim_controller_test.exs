@@ -47,6 +47,7 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
     {:ok, meta} = MetaActions.submit_for_approval(meta)
     {:ok, meta} = MetaActions.approve(meta)
     :ok = DataSetActions.etl!(meta, @fixutre)
+    {:ok, meta} = MetaActions.mark_first_import(meta)
     {:ok, meta} = MetaActions.update_latest_import(meta, NaiveDateTime.utc_now())
     bbox = MetaActions.compute_bbox!(meta)
     {:ok, meta} = MetaActions.update_bbox(meta, bbox)

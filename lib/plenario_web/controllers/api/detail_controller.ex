@@ -17,6 +17,8 @@ defmodule PlenarioWeb.Api.DetailController do
 
   alias Plenario.Actions.MetaActions
 
+  alias Plenario.Schemas.Meta
+
   alias PlenarioWeb.Controllers.Api.CaptureArgs
 
   defmodule CaptureColumnArgs do
@@ -31,13 +33,15 @@ defmodule PlenarioWeb.Api.DetailController do
         conn |> halt_with(:not_found)
     end
 
-    def do_call(meta, conn, opts) do
+    def do_call(%Meta{state: "ready"} = meta, conn, opts) do
       columns = MetaActions.get_column_names(meta)
       vpfs =
         meta.virtual_points()
         |> Enum.map(fn vpf -> vpf.name() end)
       CaptureArgs.call(conn, opts ++ [fields: columns ++ vpfs])
     end
+
+    def do_call(_, conn, _), do: halt_with(conn, :not_found)
   end
 
   defmodule CaptureBboxArg do

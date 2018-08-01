@@ -1,101 +1,82 @@
 defmodule PlenarioWeb.Api.ListControllerTest do
   use ExUnit.Case
+
   use Phoenix.ConnTest
 
-  alias Plenario.Actions.{UserActions, MetaActions}
+  alias Plenario.ModelRegistry
+
+  alias Plenario.Actions.{
+    UserActions,
+    MetaActions,
+    DataSetFieldActions,
+    VirtualPointFieldActions,
+    DataSetActions
+  }
 
   @endpoint PlenarioWeb.Endpoint
 
-  @seattle_geojson """
-    {
-      "type": "Polygon",
-      "coordinates": [
-        [
-          [
-            -122.3169708251953,
-            47.601591191496844
-          ],
-          [
-            -122.3027229309082,
-            47.601591191496844
-          ],
-          [
-            -122.3027229309082,
-            47.60627878178091
-          ],
-          [
-            -122.3169708251953,
-            47.60627878178091
-          ],
-          [
-            -122.3169708251953,
-            47.601591191496844
-          ]
-        ]
-      ]
-    }
-    """
-
-  @chicago_geojson """
-    {
-      "type": "Polygon",
-      "coordinates": [
-        [
-          [
-            -87.67776489257812,
-            41.785649068644375
-          ],
-          [
-            -87.59468078613281,
-            41.785649068644375
-          ],
-          [
-            -87.59468078613281,
-            41.90585436043303
-          ],
-          [
-            -87.67776489257812,
-            41.90585436043303
-          ],
-          [
-            -87.67776489257812,
-            41.785649068644375
-          ]
-        ]
-      ]
-    }
-    """
+  @fixutre "test/fixtures/beach-lab-dna.csv"
 
   setup do
     Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
     Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
 
-    {:ok, user} = UserActions.create("API Test User", "test@example.com", "password")
-    seattle_geom = @seattle_geojson |> Poison.decode!() |> Geo.JSON.decode()
-    chicago_geom = @chicago_geojson |> Poison.decode!() |> Geo.JSON.decode()
+    ModelRegistry.clear()
 
-    {:ok, chi_1} = MetaActions.create("API Test Dataset 1", user, "https://www.example.com/1", "csv")
-    {:ok, chi_2} = MetaActions.create("API Test Dataset 2", user, "https://www.example.com/2", "csv")
-    {:ok, chi_3} = MetaActions.create("API Test Dataset 3", user, "https://www.example.com/3", "csv")
-    {:ok, sea_1} = MetaActions.create("API Test Dataset 4", user, "https://www.example.com/4", "csv")
-    {:ok, sea_2} = MetaActions.create("API Test Dataset 5", user, "https://www.example.com/5", "csv")
-    {:ok, sea_3} = MetaActions.create("API Test Dataset 6", user, "https://www.example.com/6", "csv")
+    {:ok, user} = UserActions.create("Test User", "test@example.com", "password")
+    {:ok, meta} = MetaActions.create("Chicago Beach Lab - DNA Tests", user.id, "https://example.com/", "csv")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Test ID", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample Timestamp", "timestamp")
+    {:ok, _} = DataSetFieldActions.create(meta, "Beach", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample 1 Reading", "float")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample 2 Reading", "float")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Reading Mean", "float")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Test ID", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 1 Timestamp", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 1 Reading", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 2 Reading", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Reading Mean", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Note", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample Interval", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 2 Timestamp", "text")
+    {:ok, lat} = DataSetFieldActions.create(meta, "Latitude", "float")
+    {:ok, lon} = DataSetFieldActions.create(meta, "Longitude", "float")
+    {:ok, _} = DataSetFieldActions.create(meta, "Location", "text")
+    {:ok, _} = VirtualPointFieldActions.create(meta, lat.id, lon.id)
 
-    for meta <- [chi_1, chi_2, chi_3] do
-      {:ok, _} = MetaActions.update(meta, bbox: %{chicago_geom | srid: 4326})
-    end
+    {:ok, meta} = MetaActions.submit_for_approval(meta)
+    {:ok, meta} = MetaActions.approve(meta)
+    :ok = DataSetActions.etl!(meta, @fixutre)
+    {:ok, meta} = MetaActions.mark_first_import(meta)
+    {:ok, meta} = MetaActions.update_latest_import(meta, NaiveDateTime.utc_now())
+    bbox = MetaActions.compute_bbox!(meta)
+    {:ok, meta} = MetaActions.update_bbox(meta, bbox)
+    range = MetaActions.compute_time_range!(meta)
+    {:ok, meta} = MetaActions.update_time_range(meta, range)
 
-    for meta <- [sea_1, sea_2, sea_3] do
-      {:ok, _} = MetaActions.update(meta, bbox: %{seattle_geom | srid: 4326})
-    end
-
-    %{conn: build_conn()}
+    {:ok, conn: build_conn(), user: user, meta: meta}
   end
 
-  test "GET /api/v2/data-sets", %{conn: conn} do
-    conn = get(conn, "/api/v2/data-sets")
-    result = json_response(conn, 200)
-    assert length(result["data"]) == 6
+  describe "GET /api/v2/data-sets" do
+    test "it returns a 200", %{conn: conn} do
+      result =
+        conn
+        |> get("/api/v2/data-sets")
+        |> json_response(:ok)
+
+      assert length(result["data"]) == 1
+    end
+
+    test "it only gets _ready_ data sets", %{conn: conn, user: user} do
+      {:ok, _} = MetaActions.create("not ready", user, "https://example.com/not-ready", "csv")
+
+      result =
+        conn
+        |> get("/api/v2/data-sets")
+        |> json_response(:ok)
+
+      assert length(result["data"]) == 1
+    end
   end
 
   test "GET /api/v2/data-sets/@head", %{conn: conn} do
@@ -107,7 +88,7 @@ defmodule PlenarioWeb.Api.ListControllerTest do
   test "GET /api/v2/data-sets/@describe", %{conn: conn} do
     conn = get(conn, "/api/v2/data-sets/@describe")
     result = json_response(conn, 200)
-    assert length(result["data"]) == 6
+    assert length(result["data"]) == 1
   end
 
   test "OPTIONS /api/v2/data-sets status", %{conn: conn} do
@@ -153,16 +134,26 @@ defmodule PlenarioWeb.Api.ListControllerTest do
     assert conn.status == 405
   end
 
-  test "GET /api/v2/data-sets with bbox arg", %{conn: conn} do
-    conn = get(conn, "/api/v2/data-sets?bbox=#{@seattle_geojson}")
+  test "GET /api/v2/data-sets with bbox arg", %{conn: conn, meta: meta} do
+    bbox =
+      meta.bbox
+      |> Geo.JSON.encode()
+      |> Poison.encode!()
+
+    conn = get(conn, "/api/v2/data-sets?bbox=#{bbox}")
     result = json_response(conn, 200)
-    assert length(result["data"]) == 3
+    assert length(result["data"]) == 1
   end
 
-  test "GET /api/v2/data-sets/@describe with bbox arg", %{conn: conn} do
-    conn = get(conn, "/api/v2/data-sets/@describe?bbox=#{@chicago_geojson}")
+  test "GET /api/v2/data-sets/@describe with bbox arg", %{conn: conn, meta: meta} do
+    bbox =
+      meta.bbox
+      |> Geo.JSON.encode()
+      |> Poison.encode!()
+
+    conn = get(conn, "/api/v2/data-sets/@describe?bbox=#{bbox}")
     result = json_response(conn, 200)
-    assert length(result["data"]) == 3
+    assert length(result["data"]) == 1
   end
 
   test "page_size param cannot exceed 5000" do

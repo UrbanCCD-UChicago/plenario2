@@ -57,6 +57,7 @@ defmodule PlenarioWeb.Api.ListController do
 
     query =
       Meta
+      |> where([m], m.state == "ready")
       |> map_to_query(ordering_fields)
       |> map_to_query(windowing_fields)
       |> map_to_query(column_fields)
