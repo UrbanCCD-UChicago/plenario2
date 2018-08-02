@@ -1,5 +1,5 @@
 <template>
-  <div class="action-card col-xl-4 float-xl-left pr-xl-1">
+  <div class="action-card float-xl-left pr-xl-1">
     <div class="card action-card">
       <div class="card-body">
         <div class="row align-items-center">
@@ -9,10 +9,16 @@
             </div>
           </div>
           <div class="col-6 col-md-3 col-xl-6 pr-1">
-            <button type="button" class="btn btn-danger">&esmp;Reset</button>
+            <button type="button" class="btn btn-danger">
+              <i class="fas fa-undo"></i>
+              Reset
+            </button>
           </div>
           <div class="col-6 col-md-3 col-xl-6 pl-1">
-            <button type="button" class="btn btn-primary">&esmp;Search</button>
+            <button type="button" class="btn btn-primary">
+              <i class="fas fa-search"></i>
+              Search
+            </button>
           </div>
         </div>
       </div>
