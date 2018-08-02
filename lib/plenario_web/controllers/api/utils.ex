@@ -61,23 +61,13 @@ defmodule PlenarioWeb.Api.Utils do
     # And of course
     current_page_number = page_number
 
-    # Check if there is a `inserted_at` filter present, if not - add one
-    datetime_now = NaiveDateTime.to_iso8601(NaiveDateTime.utc_now)
-
-    kwlist_params = Enum.map(non_page_params, fn {k, v} ->
+    params = Enum.map(non_page_params, fn {k, v} ->
       if is_atom(k) do
         {k, v}
       else
         {String.to_atom(k), v}
       end
     end)
-
-    inserted_at_params = case Keyword.has_key?(kwlist_params, :inserted_at) do
-      true -> []
-      false -> [inserted_at: "le:#{datetime_now}"]
-    end
-
-    params = kwlist_params ++ inserted_at_params
 
     # Construct the query strings
     previous_page_url =
