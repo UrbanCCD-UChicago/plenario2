@@ -131,6 +131,34 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     assert response["meta"]["links"]["next"] =~ "page_size=5&page=3"
   end
 
+  test "GET /api/v2/data-sets/:slug has stable pagination", %{slug: slug} do
+    res =
+      conn
+      |> get("/api/v2/data-sets/#{slug}?page_size=5")
+      |> json_response(:ok)
+
+    Enum.with_index(res["data"])
+    |> Enum.each(fn {row, idx} ->
+      assert row["row_id"] < Enum.at(res["data"], idx+1)["row_id"]
+    end)
+
+    last = List.last(res["data"])
+
+    res =
+      conn
+      |> get("/api/v2/data-sets/#{slug}?page_size=5&page=2")
+      |> json_response(:ok)
+
+    Enum.with_index(res["data"])
+    |> Enum.each(fn {row, idx} ->
+      assert row["row_id"] < Enum.at(res["data"], idx+1)["row_id"]
+    end)
+
+    first = List.first(res["data"])
+
+    assert last["row_id"] < first["row_id"]
+  end
+
   test "OPTIONS /api/v2/data-sets/:slug status", %{conn: conn} do
     conn = options(conn, "/api/v2/data-sets")
     assert conn.status == 204
