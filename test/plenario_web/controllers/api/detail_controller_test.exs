@@ -127,11 +127,8 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
 
     assert length(response["data"]) == 5
     assert response["meta"]["links"]["current"] =~ "page_size=5&page=2"
-    assert response["meta"]["links"]["current"] =~ "inserted_at"
     assert response["meta"]["links"]["previous"] =~ "page_size=5&page=1"
-    assert response["meta"]["links"]["previous"] =~ "inserted_at"
     assert response["meta"]["links"]["next"] =~ "page_size=5&page=3"
-    assert response["meta"]["links"]["next"] =~ "inserted_at"
   end
 
   test "OPTIONS /api/v2/data-sets/:slug status", %{conn: conn} do
