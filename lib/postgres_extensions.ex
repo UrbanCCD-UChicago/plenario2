@@ -64,16 +64,29 @@ defmodule Plenario.TsRange do
     }
   end
 
+  defp to_erl({ymd, {h, m, s}}), do: {ymd, {h, m, s, 0}}
+
   defp to_erl({{_, _, }, {_, _, _, _}} = erl), do: erl
+
   defp to_erl(%NaiveDateTime{} = d) do
     {ymd, {h, m, s}} = NaiveDateTime.to_erl(d)
     {ymd, {h, m, s, 0}}
   end
 
   defp from_erl(%NaiveDateTime{} = ndt), do: ndt
+
+  defp from_erl({{y, m, d}, {h, i, s}}) do
+    case NaiveDateTime.new(y, m, d, h, i, s, {0, 0}) do
+      {:ok, n} -> n
+      _ -> nil
+    end
+  end
+
   defp from_erl({{y, m, d}, {h, i, s, u}}) do
-    {:ok, n} = NaiveDateTime.new(y, m, d, h, i, s, {u, 0})
-    n
+    case NaiveDateTime.new(y, m, d, h, i, s, {u, 0}) do
+      {:ok, n} -> n
+      _ -> nil
+    end
   end
 
   defimpl String.Chars, for: Plenario.TsRange do
