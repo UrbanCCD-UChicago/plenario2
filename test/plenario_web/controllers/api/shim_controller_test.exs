@@ -54,7 +54,7 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
     range = MetaActions.compute_time_range!(meta)
     {:ok, meta} = MetaActions.update_time_range(meta, range)
 
-    {:ok, meta: meta, vpf: vpf, conn: build_conn()}
+    {:ok, meta: meta, vpf: vpf, conn: build_conn(), user: user}
   end
 
   test "GET /api/v1/datasets", %{conn: conn} do
@@ -154,6 +154,21 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
   test "GET /v1/api/datasets", %{conn: conn} do
     result = json_response(get(conn, "/api/v1/datasets"), 200)
     assert length(result["objects"]) == 1
+  end
+
+  test "GET /v1/api/datasets doesn't blow up when a ready data set doens't have a time range", %{conn: conn, user: user} do
+    {:ok, meta} = MetaActions.create("edge case", user, "https://example.com/edge-case", "csv")
+    {:ok, meta} = MetaActions.submit_for_approval(meta)
+    {:ok, meta} = MetaActions.approve(meta)
+    {:ok, meta} = MetaActions.mark_first_import(meta)
+    {:ok, _} = MetaActions.update_latest_import(meta, NaiveDateTime.utc_now())
+
+    result =
+      conn
+      |> get("/v1/api/datasets")
+      |> json_response(200)
+
+    assert length(result["objects"]) == 2
   end
 
   test "GET /api/v1/datasets has correct count", %{conn: conn} do

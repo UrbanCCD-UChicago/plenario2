@@ -3,6 +3,8 @@ defmodule PlenarioWeb.Api.ShimView do
 
   import PlenarioWeb.Api.DetailView, only: [clean: 1]
 
+  alias Plenario.TsRange
+
   @doc """
   Chooses the right view method for `render` calls coming from the V2 API
   controllers. We can check who is calling this `render` method by inspecting
@@ -49,13 +51,22 @@ defmodule PlenarioWeb.Api.ShimView do
       observed_date = Enum.find(columns, fn field -> field[:field_type] == "TIMESTAMP" end)
       observed_date_name = if observed_date do observed_date[:field_name] else nil end
 
+      {obs_from, obs_to} =
+        case meta.time_range do
+          nil ->
+            {nil, nil}
+
+          %TsRange{lower: lower, upper: upper} ->
+            {lower, upper}
+        end
+
       %{
         bbox: meta.bbox,
         columns: columns,
         latitude: nil,
-        obs_from: meta.time_range.lower,
+        obs_from: obs_from,
         observed_date: observed_date_name,
-        obs_to: meta.time_range.upper,
+        obs_to: obs_to,
         view_url: nil,
         description: meta.description,
         attribution: meta.attribution,
