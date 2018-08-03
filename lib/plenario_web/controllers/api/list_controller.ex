@@ -41,7 +41,7 @@ defmodule PlenarioWeb.Api.ListController do
   end
 
   plug(CaptureArgs, assign: :ordering_fields, fields: ["order_by"])
-  plug(CaptureArgs, assign: :windowing_fields, fields: ["inserted_at", "updated_at"])
+  plug(CaptureArgs, assign: :windowing_fields, fields: ["row_id", "updated_at"])
   plug :check_page
   plug :check_page_size, default_page_size: 500, page_size_limit: 5000
   plug(CaptureColumnArgs, assign: :column_fields)

@@ -127,11 +127,36 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
 
     assert length(response["data"]) == 5
     assert response["meta"]["links"]["current"] =~ "page_size=5&page=2"
-    assert response["meta"]["links"]["current"] =~ "inserted_at"
     assert response["meta"]["links"]["previous"] =~ "page_size=5&page=1"
-    assert response["meta"]["links"]["previous"] =~ "inserted_at"
     assert response["meta"]["links"]["next"] =~ "page_size=5&page=3"
-    assert response["meta"]["links"]["next"] =~ "inserted_at"
+  end
+
+  test "GET /api/v2/data-sets/:slug has stable pagination", %{slug: slug} do
+    res =
+      conn
+      |> get("/api/v2/data-sets/#{slug}?page_size=5")
+      |> json_response(:ok)
+
+    Enum.with_index(res["data"])
+    |> Enum.each(fn {row, idx} ->
+      assert row["row_id"] < Enum.at(res["data"], idx+1)["row_id"]
+    end)
+
+    last = List.last(res["data"])
+
+    res =
+      conn
+      |> get("/api/v2/data-sets/#{slug}?page_size=5&page=2")
+      |> json_response(:ok)
+
+    Enum.with_index(res["data"])
+    |> Enum.each(fn {row, idx} ->
+      assert row["row_id"] < Enum.at(res["data"], idx+1)["row_id"]
+    end)
+
+    first = List.first(res["data"])
+
+    assert last["row_id"] < first["row_id"]
   end
 
   test "OPTIONS /api/v2/data-sets/:slug status", %{conn: conn} do
