@@ -87,13 +87,37 @@ defmodule PlenarioWeb.Api.DetailController do
   plug(CaptureBboxArg, assign: :bbox_fields)
 
   def construct_query_from_conn_assigns(conn, %{"slug" => slug}) do
+    case Regex.match?(~r/^\d+$/, slug) do
+      true ->
+        :error
+
+      false ->
+        do_construct_query_from_conn_assigns(slug, conn)
+    end
+  end
+
+  defp do_construct_query_from_conn_assigns(slug, conn) do
+    model =
+      try do
+        ModelRegistry.lookup(slug)
+      rescue
+        KeyError ->
+          :error
+      end
+
+    make_query_params(model, conn)
+  end
+
+  defp make_query_params(:error, _), do: :error
+
+  defp make_query_params(model, conn) do
     ordering_fields = Map.get(conn.assigns, :ordering_fields)
     windowing_fields = Map.get(conn.assigns, :windowing_fields)
     column_fields = Map.get(conn.assigns, :column_fields)
     bbox_query_map = Map.get(conn.assigns, :bbox_fields)
 
     query =
-      ModelRegistry.lookup(slug)
+      model
       |> map_to_query(ordering_fields)
       |> map_to_query(windowing_fields)
       |> map_to_query(column_fields)
@@ -106,16 +130,30 @@ defmodule PlenarioWeb.Api.DetailController do
 
   def get(conn, params = %{"page" => page, "page_size" => page_size}) do
     pagination_fields = [page: page, page_size: page_size]
-    {query, params_used} = construct_query_from_conn_assigns(conn, params)
-    page = Repo.paginate(query, pagination_fields)
-    render_page(conn, "get.json", params_used ++ pagination_fields, page.entries, page)
+
+    case construct_query_from_conn_assigns(conn, params) do
+      :error ->
+        conn
+        |> halt_with(:not_found)
+
+      {query, params_used} ->
+        page = Repo.paginate(query, pagination_fields)
+        render_page(conn, "get.json", params_used ++ pagination_fields, page.entries, page)
+    end
   end
 
   def head(conn, params = %{"page" => page}) do
     pagination_fields = [page: page, page_size: 1]
-    {query, params_used} = construct_query_from_conn_assigns(conn, params)
-    page = Repo.paginate(query, pagination_fields)
-    render_page(conn, "get.json", params_used ++ pagination_fields, page.entries, page)
+
+    case construct_query_from_conn_assigns(conn, params) do
+      :error ->
+        conn
+        |> halt_with(:not_found)
+
+      {query, params_used} ->
+        page = Repo.paginate(query, pagination_fields)
+        render_page(conn, "get.json", params_used ++ pagination_fields, page.entries, page)
+    end
   end
 
   def describe(conn, params), do: get(conn, params)
