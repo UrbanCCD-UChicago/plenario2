@@ -1,19 +1,22 @@
 defmodule PlenarioWeb.Api.DetailController do
-
   use PlenarioWeb, :api_controller
 
   import PlenarioWeb.Api.Plugs
 
-  import PlenarioWeb.Api.Utils, only: [
-    render_page: 5,
-    map_to_query: 2,
-    halt_with: 2
-  ]
+  import PlenarioWeb.Api.Utils,
+    only: [
+      render_page: 5,
+      map_to_query: 2,
+      halt_with: 2,
+      halt_with: 3
+    ]
 
   alias Plenario.{
     ModelRegistry,
     Repo
   }
+
+  alias Geo.Polygon
 
   alias Plenario.Actions.MetaActions
 
@@ -30,14 +33,16 @@ defmodule PlenarioWeb.Api.DetailController do
     end
 
     def do_call(nil, conn, _opts) do
-        conn |> halt_with(:not_found)
+      conn |> halt_with(:not_found)
     end
 
     def do_call(%Meta{state: "ready"} = meta, conn, opts) do
       columns = MetaActions.get_column_names(meta)
+
       vpfs =
         meta.virtual_points()
         |> Enum.map(fn vpf -> vpf.name() end)
+
       CaptureArgs.call(conn, opts ++ [fields: columns ++ vpfs])
     end
 
@@ -47,28 +52,37 @@ defmodule PlenarioWeb.Api.DetailController do
   defmodule CaptureBboxArg do
     def init(opts), do: opts
 
-    def call(%Plug.Conn{params: %{"bbox" => geojson}} = conn, opts) do
-      meta = MetaActions.get(conn.params["slug"], with_virtual_points: true)
-      geom = Poison.decode!(geojson) |>  Geo.JSON.decode()
-      geom = %{geom | srid: 4326}
+    def call(%Plug.Conn{params: %{"bbox" => geojson}} = conn, opts),
+      do: decode_param_to_map(geojson, conn, opts)
 
-      vpf_query_map =
-        meta.virtual_points()
-        |> Stream.map(fn vpf -> vpf.name() end)
-        |> Enum.map(fn vpf_name -> {vpf_name, {"in", geom}} end)
+    def call(conn, opts), do: assign(conn, opts[:assign], [])
 
-      assign(conn, opts[:assign], vpf_query_map)
+    defp decode_param_to_map(geojson, conn, opts),
+      do: decode_map_to_polygon(Poison.decode!(geojson), conn, opts)
+
+    defp decode_map_to_polygon(%{"type" => type, "coordinates" => _} = json, conn, opts)
+         when type in ["Polygon", "polygon"] do
+      # Fix Geo.JSON.decode particular nit pick about polygon needing
+      # to start with an upper case. IMHO this is too strict.
+      json = Map.merge(json, %{"type" => "Polygon"})
+      assign_bbox(Geo.JSON.decode(json), conn, opts)
     end
 
-    def call(conn, opts) do
-      assign(conn, opts[:assign], [])
+    defp decode_map_to_polygon(_, conn, _), do: halt_with(conn, 400, "Cannot parse bbox value.")
+
+    defp assign_bbox(%Polygon{} = poly, conn, opts) do
+      poly = %Polygon{poly | srid: 4326}
+      query = Map.to_list(%{"bbox" => {"in", poly}})
+      assign(conn, opts[:assign], query)
     end
+
+    defp assign_bbox(_, conn, _), do: halt_with(conn, 400, "Cannot parse bbox value.")
   end
 
   plug(CaptureArgs, assign: :ordering_fields, fields: ["order_by"])
   plug(CaptureArgs, assign: :windowing_fields, fields: ["row_id", "updated_at"])
-  plug :check_page
-  plug :check_page_size, default_page_size: 500, page_size_limit: 5000
+  plug(:check_page)
+  plug(:check_page_size, default_page_size: 500, page_size_limit: 5000)
   plug(CaptureColumnArgs, assign: :column_fields)
   plug(CaptureBboxArg, assign: :bbox_fields)
 
