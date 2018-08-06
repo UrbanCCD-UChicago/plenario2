@@ -14,9 +14,6 @@
         <div class="row hairline-gutters">
           <time-card></time-card>
         </div>
-        <div class="row hairline-gutters">
-          <action-card></action-card>
-        </div>
       </div>
 
       <div class="col-lg-8">
@@ -32,7 +29,6 @@
 <script>
 import SpaceSearch from './SpaceSearch.vue';
 import TimeCard from './TimeCard.vue';
-import ActionCard from './ActionCard.vue'
 
 export default {
   name: 'Explorer',
@@ -45,7 +41,6 @@ export default {
   components: {
     SpaceSearch,
     TimeCard,
-    ActionCard
   }
 }
 </script>

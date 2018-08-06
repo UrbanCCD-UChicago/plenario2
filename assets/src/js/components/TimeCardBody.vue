@@ -10,19 +10,18 @@
             <em>week</em>, or aggregated over another unit of time.
         </p>
       </div>
-      <date-picker></date-picker>
+      <time-range-form></time-range-form>
     </div>
   </div>
 </template>
 
 <script>
-import DatePicker from './DatePicker.vue';
+import TimeRangeForm from './TimeRangeForm.vue';
 
 export default {
   name: 'TimeCardBody',
   components: {
-    DatePicker
+    TimeRangeForm
   }
 }
 </script>
-
