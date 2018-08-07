@@ -41,7 +41,7 @@ defmodule PlenarioWeb.Api.ListController do
   end
 
   plug(CaptureArgs, assign: :ordering_fields, fields: ["order_by"])
-  plug(CaptureArgs, assign: :windowing_fields, fields: ["inserted_at", "updated_at"])
+  plug(CaptureArgs, assign: :windowing_fields, fields: ["row_id", "updated_at"])
   plug :check_page
   plug :check_page_size, default_page_size: 500, page_size_limit: 5000
   plug(CaptureColumnArgs, assign: :column_fields)
@@ -57,6 +57,7 @@ defmodule PlenarioWeb.Api.ListController do
 
     query =
       Meta
+      |> where([m], m.state == "ready")
       |> map_to_query(ordering_fields)
       |> map_to_query(windowing_fields)
       |> map_to_query(column_fields)

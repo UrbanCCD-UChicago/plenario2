@@ -1,9 +1,24 @@
 defmodule PlenarioWeb.Api.DetailController do
+
   use PlenarioWeb, :api_controller
+
   import PlenarioWeb.Api.Plugs
-  import PlenarioWeb.Api.Utils, only: [render_page: 5, map_to_query: 2]
-  alias Plenario.{ModelRegistry, Repo}
+
+  import PlenarioWeb.Api.Utils, only: [
+    render_page: 5,
+    map_to_query: 2,
+    halt_with: 2
+  ]
+
+  alias Plenario.{
+    ModelRegistry,
+    Repo
+  }
+
   alias Plenario.Actions.MetaActions
+
+  alias Plenario.Schemas.Meta
+
   alias PlenarioWeb.Controllers.Api.CaptureArgs
 
   defmodule CaptureColumnArgs do
@@ -15,16 +30,18 @@ defmodule PlenarioWeb.Api.DetailController do
     end
 
     def do_call(nil, conn, _opts) do
-        conn |> Explode.with(404, "Data set not found")
+        conn |> halt_with(:not_found)
     end
 
-    def do_call(meta, conn, opts) do
+    def do_call(%Meta{state: "ready"} = meta, conn, opts) do
       columns = MetaActions.get_column_names(meta)
       vpfs =
         meta.virtual_points()
         |> Enum.map(fn vpf -> vpf.name() end)
       CaptureArgs.call(conn, opts ++ [fields: columns ++ vpfs])
     end
+
+    def do_call(_, conn, _), do: halt_with(conn, :not_found)
   end
 
   defmodule CaptureBboxArg do
@@ -49,7 +66,7 @@ defmodule PlenarioWeb.Api.DetailController do
   end
 
   plug(CaptureArgs, assign: :ordering_fields, fields: ["order_by"])
-  plug(CaptureArgs, assign: :windowing_fields, fields: ["inserted_at", "updated_at"])
+  plug(CaptureArgs, assign: :windowing_fields, fields: ["row_id", "updated_at"])
   plug :check_page
   plug :check_page_size, default_page_size: 500, page_size_limit: 5000
   plug(CaptureColumnArgs, assign: :column_fields)

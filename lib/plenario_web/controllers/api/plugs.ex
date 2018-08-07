@@ -1,5 +1,9 @@
 defmodule PlenarioWeb.Api.Plugs do
-  import Plug.Conn, only: [put_req_header: 3]
+
+  import PlenarioWeb.Api.Utils, only: [
+    halt_with: 3
+  ]
+
   alias Plug.Conn
 
   @doc """
@@ -34,12 +38,7 @@ defmodule PlenarioWeb.Api.Plugs do
         conn
       false ->
         conn
-        # Even if the request is asking for something else, we only serve json so we overwrite the
-        # header of the incoming request. This will definitely have to be changed later if we want
-        # to serve more than one media type. For most browsers, their default accept header prefers
-        # xml, and this can lead to some weirdly formatted errors.
-        |> put_req_header("accept", "application/vnd.api+json")
-        |> Explode.with(422, "Provided page_size '#{page_size}' must be between 0 and #{opts[:page_size_limit]}")
+        |> halt_with(422, "Provided page_size '#{page_size}' must be between 0 and #{opts[:page_size_limit]}")
     end
   end
 
@@ -53,12 +52,7 @@ defmodule PlenarioWeb.Api.Plugs do
         check_page_size(%{conn | params: Map.put(conn.params, "page_size", parsed_page_size)}, opts)
       :error ->
         conn
-        # Even if the request is asking for something else, we only serve json so we overwrite the
-        # header of the incoming request. This will definitely have to be changed later if we want
-        # to serve more than one media type. For most browsers, their default accept header prefers
-        # xml, and this can lead to some weirdly formatted errors.
-        |> put_req_header("accept", "application/vnd.api+json")
-        |> Explode.with(422, "Provided page_size '#{page_size}' must be a number.")
+        |> halt_with(422, "Provided page_size '#{page_size}' must be a number.")
     end
   end
 
@@ -97,13 +91,8 @@ defmodule PlenarioWeb.Api.Plugs do
   """
   def check_page(conn = %Conn{params: %{"page" => page}}, _) when is_integer(page) and page > 0, do: conn
   def check_page(conn = %Conn{params: %{"page" => page}}, _) when is_integer(page) and page <= 0 do
-    # Even if the request is asking for something else, we only serve json so we overwrite the
-    # header of the incoming request. This will definitely have to be changed later if we want
-    # to serve more than one media type. For most browsers, their default accept header prefers
-    # xml, and this can lead to some weirdly formatted errors.
     conn
-    |> put_req_header("accept", "application/vnd.api+json")
-    |> Explode.with(422, "Provided page '#{page}' must be positive.")
+    |> halt_with(422, "Provided page '#{page}' must be positive.")
   end
 
   @doc """
@@ -124,12 +113,7 @@ defmodule PlenarioWeb.Api.Plugs do
         check_page(%{conn | params: Map.put(conn.params, "page", parsed_page)}, opts)
       :error ->
         conn
-        # Even if the request is asking for something else, we only serve json so we overwrite the
-        # header of the incoming request. This will definitely have to be changed later if we want
-        # to serve more than one media type. For most browsers, their default accept header prefers
-        # xml, and this can lead to some weirdly formatted errors.
-        |> put_req_header("accept", "application/vnd.api+json")
-        |> Explode.with(422, "Provided page '#{page}' must be a number.")
+        |> halt_with(422, "Provided page '#{page}' must be a number.")
     end
   end
 
