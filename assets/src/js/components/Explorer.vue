@@ -15,6 +15,13 @@
           <div class="row hairline-gutters">
             <time-card></time-card>
           </div>
+          <div class="row hairline-gutters">
+            <action-card
+              v-bind:url="endpoint"
+              v-bind:query="query"
+              v-on:search="updateSearchResults">
+            </action-card>
+          </div>
         </div>
 
         <div class="col-lg-8">
@@ -33,6 +40,7 @@
 
 
 <script>
+import ActionCard from './ActionCard.vue';
 import SearchResults from './SearchResults.vue';
 import SpaceSearch from './SpaceSearch.vue';
 import TimeCard from './TimeCard.vue';
@@ -40,15 +48,44 @@ import TimeCard from './TimeCard.vue';
 export default {
   name: 'Explorer',
   props: {
+
+    /**
+     * 
+     */
     host: {
-      type: String,
-      required: true
+      required: true,
+      type: String
+    },
+
+    /**
+     * 
+     */
+    port: {
+      required: true,
+      type: Number
+    },
+
+    /**
+     * 
+     */
+    ssl: {
+      required: true,
+      type: Boolean
+    },
+
+    /**
+     * 
+     */
+    api: {
+      required: true,
+      type: Number
     }
   },
 
   data: function () {
     return {
-      searchResults: {}
+      searchResults: {},
+      query: {}
     }
   },
 
@@ -59,13 +96,33 @@ export default {
      */
     hasSearchResults: function () {
       return Object.keys(this.searchResults).length > 0;
+    },
+
+    /**
+     * 
+     */
+    endpoint: function () {
+      return this.ssl ?
+        'https://' + this.host + ':' + this.port + '/api/v' + this.api + '/data-sets/' :
+        'http://' + this.host + ':' + this.port + '/api/v' + this.api + '/data-sets/';
     }
   },
 
   components: {
+    ActionCard,
     SearchResults,
     SpaceSearch,
     TimeCard,
+  },
+
+  methods: {
+
+    /**
+     * 
+     */
+    updateSearchResults: function (event) {
+      this.searchResults = event;
+    }
   }
 }
 </script>
