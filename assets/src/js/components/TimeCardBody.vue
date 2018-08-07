@@ -10,7 +10,7 @@
             <em>week</em>, or aggregated over another unit of time.
         </p>
       </div>
-      <time-range-form></time-range-form>
+      <time-range-form v-model="something"></time-range-form>
     </div>
   </div>
 </template>
@@ -20,6 +20,11 @@ import TimeRangeForm from './TimeRangeForm.vue';
 
 export default {
   name: 'TimeCardBody',
+  data: function () {
+    return { 
+      something: {}
+    }
+  },
   components: {
     TimeRangeForm
   }

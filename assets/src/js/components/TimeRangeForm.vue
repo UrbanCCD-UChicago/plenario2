@@ -59,6 +59,21 @@ import Datepicker from 'vuejs-datepicker';
 
 export default {
   name: 'TimeRangeForm',
+
+  /**
+   * The v-model directive looks for a property called 'value' to bind to. We
+   * don't do anything with this property, it's just to play nice with the 
+   * v-model directive.
+   * 
+   * https://vuejs.org/v2/guide/components.html#Using-v-model-on-Components
+   */
+  props: {
+    value: {
+      required: true,
+      type: Object
+    }
+  },
+
   data: function () {
     return {
       startDate: '',
@@ -78,12 +93,18 @@ export default {
   methods: {
 
     /**
-     * The handler for click events on our search button. This function should
-     * take the data we currently have, formulate a query, and send us to the
-     * next stage of the search page.
+     * The handler for click events on our search button. This function takes
+     * the current state and emits it as an input event. This allows parent
+     * components to update their state using the v-model directive. 
+     * 
+     * https://vuejs.org/v2/guide/components.html#Using-v-model-on-Components
      */
     search: function (_) {
-      console.log('Hello!');
+      this.$emit('input', {
+        startDate: this.startDate,
+        endDate: this.endDate,
+        granularity: this.granularity
+      });
     },
 
     /**
