@@ -203,7 +203,9 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
       meta: meta,
       vpf: vpf
     } do
-      keys = @list_head_keys ++ vpf.name
+      keys =
+        (@list_head_keys ++ [vpf.name])
+        |> Enum.sort()
 
       res =
         conn
