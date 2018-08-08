@@ -33,10 +33,39 @@
           <h3 class="h5">Data From Open Data Providers</h3>
         </div>
       </div>
-      <div id="searchResults"></div>
+      <div id="searchResults">
+        <div class="row">
+          <div class="col-12">
+            <table class="table table-sm mb-0">
+              <thead class="thead-light">
+                <th scope="col"></th>
+                <th scope="col">Dataset Name</th>
+                <th scope="col">Source</th>
+              </thead>
+              <tbody>
+                <tr v-for="dataset in value.data" :key="dataset.slug">
+                  <td></td>
+                  <td>{{ dataset.name }}</td>
+                  <td>{{ dataset.attribution }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <form class="row no-gutters form-inline py-2 mb-4 rounded-bottom bg-light results-table-footer" onsubmit="return false;" autocomplete="off">
+          <label for="node-feature-data-search-term" class="sr-only">Filter</label>
+          <div class="input-group input-group-sm col-8 pl-2">
+            <div class="input-group-addon"><i class="fas fa-filter"></i></div>
+            <input type="search" class="form-control" id="formGroupExampleInput2" placeholder="Filter...">
+          </div>
+          <div class="col-form-label-sm col-4 pr-2 text-muted text-right">
+              {{ selected.length }}&thinsp;/&thinsp;{{ value.data.length }} selected
+          </div>
+        </form>
+      </div>
     </div>
     <div class="col-12 px-0">
-      <button id="compare-submit-button" type="primary" block=true>
+      <button id="compare-submit-button" type="button" class="btn btn-primary" @click="compare">
         Compare&emsp;<i class="fas fa-arrow-right"></i>
       </button>
     </div>
@@ -46,10 +75,47 @@
 <script>
 export default {
   name: 'SearchResults',
+  
+  data: function () {
+
+    return {
+
+      /**
+       * List of selected datasets, these values are then passed along to the
+       * comparison page.
+       */
+      selected: []
+    }
+  },
+
   props: {
     value: {
       required: true,
       type: Object
+    },
+  },
+
+  methods: {
+
+    /**
+     * Adds a dataset id to the `selected` array.
+     */
+    select: function(_) {
+
+    },
+
+    /**
+     * Removes a dataset id from the `selected` array.
+     */
+    deselect: function(_) {
+
+    },
+
+    /**
+     * Takes the slugs of datasets selected by the user and passes them along
+     * to the comparison page.
+     */
+    compare: function(_) {
     }
   }
 }

@@ -24,13 +24,15 @@
           </div>
         </div>
 
-        <div class="col-lg-8">
-          <div class="card ml-lg-1">
-            <!-- map -->
-          </div>
+        <div class="col-lg-8 card">
+          <l-map ref="map" :zoom=13 :center="[47.413220, -1.219482]">
+          </l-map>
         </div>
       </div>
     </div>
+
+    <br>
+    <br>
 
     <div v-if="hasSearchResults" class="row no-gutters">
       <search-results v-bind:value="searchResults"></search-results>
@@ -40,6 +42,8 @@
 
 
 <script>
+import { LMap } from 'vue2-leaflet';
+
 import ActionCard from './ActionCard.vue';
 import SearchResults from './SearchResults.vue';
 import SpaceSearch from './SpaceSearch.vue';
@@ -110,6 +114,7 @@ export default {
 
   components: {
     ActionCard,
+    LMap,
     SearchResults,
     SpaceSearch,
     TimeCard,
