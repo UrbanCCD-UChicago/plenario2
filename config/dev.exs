@@ -45,7 +45,7 @@ config :phoenix, :stacktrace_depth, 20
 config :plenario, Plenario.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
-  password: "postgres",
+  password: "password",
   database: "plenario_dev",
   hostname: "localhost",
   pool_size: 10
