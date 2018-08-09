@@ -86,8 +86,6 @@ defmodule PlenarioWeb.Api.Plugs do
 
   # CHECK ORDER BY
 
-  @default_order "asc:row_id"
-
   @order_error "`order_by` must follow format 'direction:field' where direction is either 'asc' or 'desc'"
 
   @spec check_order_by(Plug.Conn.t(), any()) :: Plug.Conn.t()
@@ -103,8 +101,8 @@ defmodule PlenarioWeb.Api.Plugs do
     end
   end
 
-  def check_order_by(conn, _opts) do
-    %Conn{conn | params: Map.put(conn.params, "order_by", @default_order)}
+  def check_order_by(conn, opts) do
+    %Conn{conn | params: Map.put(conn.params, "order_by", opts[:default_order])}
     |> check_order_by(nil)
   end
 

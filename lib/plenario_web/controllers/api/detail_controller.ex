@@ -27,7 +27,7 @@ defmodule PlenarioWeb.Api.DetailController do
 
   plug(:check_page_size)
   plug(:check_page)
-  plug(:check_order_by)
+  plug(:check_order_by, default_order: "asc:row_id")
   plug(:check_filters)
 
   @spec get(Plug.Conn.t(), map()) :: Plug.Conn.t()

@@ -186,6 +186,62 @@ defmodule PlenarioWeb.Api.Utils do
     )
   end
 
+  def render_list(conn, view, page) do
+    {prev_page_number, next_page_number} = get_prev_next_page_numbers(page)
+
+    prev_url =
+      case view do
+        "get.json" ->
+          make_url(:list, :get, conn, prev_page_number)
+
+        _ ->
+          nil
+      end
+
+    next_url =
+      case view do
+        "get.json" ->
+          make_url(:list, :get, conn, next_page_number)
+
+        _ ->
+          nil
+      end
+
+    curr_url =
+      case view do
+        "get.json" ->
+          make_url(:list, :get, conn, page.page_number)
+
+        "head.json" ->
+          make_url(:list, :head, conn, 1)
+      end
+
+    links = %{
+      previous: prev_url,
+      current: curr_url,
+      next: next_url
+    }
+
+    counts = %{
+      data_count: length(page.entries),
+      total_pages: page.total_pages,
+      total_records: page.total_entries
+    }
+
+    params = fmt_params(conn)
+
+    data = page.entries
+
+    Phoenix.Controller.render(
+      conn,
+      view,
+      links: links,
+      counts: counts,
+      params: params,
+      data: data
+    )
+  end
+
   defp get_prev_next_page_numbers(%Page{total_pages: last, page_number: current}) do
     previous = if current == 1, do: nil, else: current - 1
     next = if current == last, do: nil, else: current + 1
@@ -201,6 +257,13 @@ defmodule PlenarioWeb.Api.Utils do
     params = Map.merge(conn.params, %{"page" => page_number})
     slug = Map.get(conn.params, "slug")
     detail_url(conn, fun_atom, slug, params)
+  end
+
+  defp make_url(:list, _, _, nil), do: nil
+
+  defp make_url(:list, fun_atom, conn, page_number) do
+    params = Map.merge(conn.params, %{"page" => page_number})
+    list_url(conn, fun_atom, params)
   end
 
   defp fmt_params(conn) do

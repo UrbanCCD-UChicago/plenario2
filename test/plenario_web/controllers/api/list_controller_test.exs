@@ -24,28 +24,11 @@ defmodule PlenarioWeb.Api.ListControllerTest do
 
   @fixutre "test/fixtures/beach-lab-dna.csv"
 
-  @list_head_keys [
+  @record_keys [
     "attribution",
     "bbox",
     "description",
-    "first_import",
-    "latest_import",
-    "name",
-    "next_import",
-    "refresh_ends_on",
-    "refresh_interval",
-    "refresh_rate",
-    "refresh_starts_on",
-    "slug",
-    "source_url",
-    "time_range",
-    "user"
-  ]
-
-  @describe_keys [
-    "attribution",
-    "bbox",
-    "description",
+    "fields",
     "first_import",
     "latest_import",
     "name",
@@ -58,9 +41,8 @@ defmodule PlenarioWeb.Api.ListControllerTest do
     "source_url",
     "time_range",
     "user",
-    "fields",
-    "virtual_date_fields",
-    "virtual_point_fields"
+    "virtual_dates",
+    "virtual_points"
   ]
 
   @good_bbox %Polygon{
@@ -177,7 +159,7 @@ defmodule PlenarioWeb.Api.ListControllerTest do
         |> json_response(:ok)
 
       res["data"]
-      |> Enum.each(&assert Map.keys(&1) == @list_head_keys)
+      |> Enum.each(&assert Map.keys(&1) == @record_keys)
     end
   end
 
@@ -185,14 +167,14 @@ defmodule PlenarioWeb.Api.ListControllerTest do
     test "with a well formatted polygon", %{conn: conn} do
       res =
         conn
-        |> get(list_path(conn, :get, %{bbox: @good_bbox}))
+        |> get(list_path(conn, :get, %{bbox: "intersects:#{@good_bbox}"}))
         |> json_response(:ok)
 
       assert length(res["data"]) == 1
 
       res =
         conn
-        |> get(list_path(conn, :get, %{bbox: @nada_bbox}))
+        |> get(list_path(conn, :get, %{bbox: "intersects:#{@nada_bbox}"}))
         |> json_response(:ok)
 
       assert length(res["data"]) == 0
@@ -200,7 +182,7 @@ defmodule PlenarioWeb.Api.ListControllerTest do
 
     test "will 400 with a poorly formatter polygon", %{conn: conn} do
       conn
-      |> get(list_path(conn, :get, %{bbox: @bad_bbox}))
+      |> get(list_path(conn, :get, %{bbox: "intersects:#{@bad_bbox}"}))
       |> json_response(:bad_request)
     end
   end
@@ -209,14 +191,14 @@ defmodule PlenarioWeb.Api.ListControllerTest do
     test "with a well formatted time range", %{conn: conn} do
       res =
         conn
-        |> get(list_path(conn, :get, %{time_range: "in:#{@good_time_range}"}))
+        |> get(list_path(conn, :get, %{time_range: "intersects:#{@good_time_range}"}))
         |> json_response(:ok)
 
       assert length(res["data"]) == 1
 
       res =
         conn
-        |> get(list_path(conn, :get, %{time_range: "in:#{@nada_time_range}"}))
+        |> get(list_path(conn, :get, %{time_range: "intersects:#{@nada_time_range}"}))
         |> json_response(:ok)
 
       assert length(res["data"]) == 0
@@ -224,7 +206,7 @@ defmodule PlenarioWeb.Api.ListControllerTest do
 
     test "will 400 with a poorly formatted time range", %{conn: conn} do
       conn
-      |> get(list_path(conn, :get, %{time_range: "in:#{@bad_time_range}"}))
+      |> get(list_path(conn, :get, %{time_range: "intersects:#{@bad_time_range}"}))
       |> json_response(:bad_request)
     end
   end
@@ -256,33 +238,7 @@ defmodule PlenarioWeb.Api.ListControllerTest do
         |> json_response(:ok)
 
       res["data"]
-      |> Enum.each(&assert Map.keys(&1) == @list_head_keys)
-    end
-  end
-
-  describe "GET @describe endpoint" do
-    test "it returns only _ready_ data sets", %{conn: conn, user: user} do
-      # create a new data set, but don't move it along in workflow
-      {:ok, _} = MetaActions.create("not ready", user, "http://example.com/not-ready/", "csv")
-
-      res =
-        conn
-        |> get(list_path(conn, :describe))
-        |> json_response(:ok)
-
-      assert length(res["data"]) == 1
-    end
-
-    test "each object in data contains both meta information and details about fields", %{
-      conn: conn
-    } do
-      res =
-        conn
-        |> get(list_path(conn, :describe))
-        |> json_response(:ok)
-
-      res["data"]
-      |> Enum.each(&assert Map.keys(&1) == @describe_keys)
+      |> Enum.each(&assert Map.keys(&1) == @record_keys)
     end
   end
 end
