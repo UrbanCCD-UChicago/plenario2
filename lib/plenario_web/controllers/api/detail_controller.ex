@@ -13,6 +13,7 @@ defmodule PlenarioWeb.Api.DetailController do
       apply_filter: 4,
       halt_with: 2,
       halt_with: 3,
+      render_detail: 3,
       validate_data_set: 1,
       validate_data_set: 2
     ]
@@ -32,13 +33,13 @@ defmodule PlenarioWeb.Api.DetailController do
   @spec get(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def get(conn, %{"slug" => slug}) do
     validate_data_set(slug)
-    |> get_data_set(conn, "get.json")
+    |> render_data_set(conn, "get.json")
   end
 
   @spec head(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def head(conn, %{"slug" => slug}) do
     validate_data_set(slug)
-    |> get_data_set(conn, "head.json")
+    |> render_data_set(conn, "head.json")
   end
 
   def describe(conn, %{"slug" => slug}) do
@@ -51,10 +52,10 @@ defmodule PlenarioWeb.Api.DetailController do
         with_virtual_points: true
       )
 
-    render(conn, "describe.json", meta: meta)
+    render_detail(conn, "describe.json", meta)
   end
 
-  defp get_data_set(%Meta{state: "ready"} = meta, conn, view) do
+  defp render_data_set(%Meta{state: "ready"} = meta, conn, view) do
     model = ModelRegistry.lookup(meta.slug)
 
     {dir, fname} = conn.assigns[:order_by]
@@ -73,12 +74,12 @@ defmodule PlenarioWeb.Api.DetailController do
       page = conn.assigns[:page]
       page_size = conn.assigns[:page_size]
       data = Repo.paginate(query, page: page, page_size: page_size)
-      render(conn, view, data)
+      render_detail(conn, view, data)
     rescue
       e in [Ecto.QueryError, Ecto.SubQueryError, Postgrex.Error] ->
         halt_with(conn, :bad_request, e.message)
     end
   end
 
-  defp get_data_set(_, conn, _), do: halt_with(conn, :not_found)
+  defp render_data_set(_, conn, _), do: halt_with(conn, :not_found)
 end

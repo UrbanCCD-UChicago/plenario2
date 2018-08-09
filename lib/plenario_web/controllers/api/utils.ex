@@ -44,6 +44,34 @@ defmodule PlenarioWeb.Api.Utils do
 
   alias Plenario.Actions.MetaActions
 
+  alias Scrivener.Page
+
+  @spec halt_with(Plug.Conn.t(), atom() | integer()) :: Plug.Conn.t()
+  def halt_with(conn, status) do
+    status_code = code(status)
+    message = reason_phrase(status_code)
+
+    do_halt_with(conn, status_code, message)
+  end
+
+  @spec halt_with(Plug.Conn.t(), atom() | integer(), String.t()) :: Plug.Conn.t()
+  def halt_with(conn, status, message) do
+    status_code = code(status)
+    do_halt_with(conn, status_code, message)
+  end
+
+  defp do_halt_with(conn, code, message) do
+    body =
+      %{error: message}
+      |> Poison.encode!()
+
+    conn
+    |> put_resp_header("content-type", "application/json")
+    |> resp(code, body)
+    |> halt()
+  end
+
+  @spec validate_data_set(String.t(), Keyword.t()) :: Plenario.Schemas.Meta.t() | :error | nil
   def validate_data_set(slug, opts \\ []) when is_bitstring(slug) do
     case Regex.match?(~r/^\d+$/, slug) do
       true ->
@@ -56,6 +84,7 @@ defmodule PlenarioWeb.Api.Utils do
 
   def validate_data_set(_, _), do: :error
 
+  @spec apply_filter(Ecto.Queryable.t(), String.t(), String.t(), any()) :: Ecto.Queryable.t()
   def apply_filter(query, fname, "lt", value), do: where(query, [q], field(q, ^fname) < ^value)
 
   def apply_filter(query, fname, "le", value), do: where(query, [q], field(q, ^fname) <= ^value)
@@ -77,6 +106,130 @@ defmodule PlenarioWeb.Api.Utils do
 
   def apply_filter(query, fname, "intersects", %Polygon{} = value),
     do: where(query, [q], st_intersects(field(q, ^fname), ^value))
+
+  @spec render_detail(Plug.Conn.t(), String.t(), Scrivener.Page.t() | Plenario.Schemas.Meta.t()) ::
+          Plug.Conn.t()
+  def render_detail(conn, view, page) do
+    {prev_page_number, next_page_number} = get_prev_next_page_numbers(page)
+
+    prev_url =
+      case view do
+        "get.json" ->
+          make_url(:detail, :get, conn, prev_page_number)
+
+        _ ->
+          nil
+      end
+
+    next_url =
+      case view do
+        "get.json" ->
+          make_url(:detail, :get, conn, next_page_number)
+
+        _ ->
+          nil
+      end
+
+    curr_url =
+      case view do
+        "get.json" ->
+          make_url(:detail, :get, conn, page.page_number)
+
+        "head.json" ->
+          make_url(:detail, :head, conn, 1)
+
+        "describe.json" ->
+          make_url(:detail, :describe, conn, 1)
+      end
+
+    links = %{
+      previous: prev_url,
+      current: curr_url,
+      next: next_url
+    }
+
+    counts =
+      case view do
+        "describe.json" ->
+          %{
+            data_count: 1,
+            total_pages: 1,
+            total_records: 1
+          }
+
+        _ ->
+          %{
+            data_count: length(page.entries),
+            total_pages: page.total_pages,
+            total_records: page.total_entries
+          }
+      end
+
+    params = fmt_params(conn)
+
+    data =
+      case view do
+        "describe.json" ->
+          page
+
+        _ ->
+          page.entries
+      end
+
+    Phoenix.Controller.render(
+      conn,
+      view,
+      links: links,
+      counts: counts,
+      params: params,
+      data: data
+    )
+  end
+
+  defp get_prev_next_page_numbers(%Page{total_pages: last, page_number: current}) do
+    previous = if current == 1, do: nil, else: current - 1
+    next = if current == last, do: nil, else: current + 1
+
+    {previous, next}
+  end
+
+  defp get_prev_next_page_numbers(_), do: {nil, nil}
+
+  defp make_url(:detail, _, _, nil), do: nil
+
+  defp make_url(:detail, fun_atom, conn, page_number) do
+    params = Map.merge(conn.params, %{"page" => page_number})
+    slug = Map.get(conn.params, "slug")
+    detail_url(conn, fun_atom, slug, params)
+  end
+
+  defp fmt_params(conn) do
+    page = conn.assigns[:page]
+    size = conn.assigns[:page_size]
+    {dir, field} = conn.assigns[:order_by]
+
+    params = %{
+      page: page,
+      page_size: size,
+      order_by: %{
+        dir => field
+      }
+    }
+
+    fields =
+      case conn.assigns[:filters] do
+        nil ->
+          %{}
+
+        _ ->
+          conn.assigns[:filters]
+      end
+
+    fields
+    |> Enum.reduce(params, fn {field, op, value}, params ->
+      Map.put(params, field, %{op => value})
+    end)
+  end
 
   # TODO: delete or refactor everything below this
 
@@ -311,28 +464,5 @@ defmodule PlenarioWeb.Api.Utils do
   def truncate(schema) do
     {nil, table} = schema.__struct__.__meta__.source
     Ecto.Adapters.SQL.query!(Repo, "truncate \"#{table}\" cascade;", [])
-  end
-
-  def halt_with(conn, status) do
-    status_code = code(status)
-    message = reason_phrase(status_code)
-
-    do_halt_with(conn, status_code, message)
-  end
-
-  def halt_with(conn, status, message) do
-    status_code = code(status)
-    do_halt_with(conn, status_code, message)
-  end
-
-  defp do_halt_with(conn, code, message) do
-    body =
-      %{error: message}
-      |> Poison.encode!()
-
-    conn
-    |> put_resp_header("content-type", "application/json")
-    |> resp(code, body)
-    |> halt()
   end
 end
