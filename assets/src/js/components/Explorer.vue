@@ -10,10 +10,10 @@
       <div class="row">
         <div class="col-lg-4">
           <div class="row hairline-gutters">
-            <space-search></space-search>
+            <space-search :v-model="spaceParams"></space-search>
           </div>
           <div class="row hairline-gutters">
-            <time-card></time-card>
+            <time-card :v-model="timeParams"></time-card>
           </div>
           <div class="row hairline-gutters">
             <action-card
@@ -89,7 +89,8 @@ export default {
   data: function () {
     return {
       searchResults: {},
-      query: {}
+      timeParams: {},
+      spaceParams: {}
     }
   },
 
@@ -109,6 +110,13 @@ export default {
       return this.ssl ?
         'https://' + this.host + ':' + this.port + '/api/v' + this.api + '/data-sets/' :
         'http://' + this.host + ':' + this.port + '/api/v' + this.api + '/data-sets/';
+    },
+
+    /**
+     * 
+     */
+    query: function () {
+      return Object.assign(this.spaceParams, this.timeParams);
     }
   },
 

@@ -40,14 +40,11 @@ export default {
     url: {
       required: true,
       type: String
-    },
+    }
+  },
 
-    /**
-     * Used to generate a query for the backend.
-     */
-    query: {
-      required: true,
-      type: Object
+  computed: {
+    query () {
     }
   },
 
@@ -60,6 +57,8 @@ export default {
     /**
      * The handler for click events on our search button. This function emits
      * search results as its state.
+     * 
+     * - Needs error handling!
      */
     search: async function (_) {
       var json = await fetch(this.url).then(function(response) {
