@@ -10,6 +10,20 @@ defmodule PlenarioWeb.Api.DetailView do
     }
   end
 
+  def render("head.json", data) do
+    %{
+      data: data.entries |> clean() |> Enum.take(1)
+    }
+  end
+
+  def render("describe.json", opts) do
+    %{
+      data: opts[:meta] |> clean()
+    }
+  end
+
+  # TODO: shouldn't all these be private? i think there's one external call somewhere though.
+
   def clean(records) when is_list(records) do
     clean(records, [])
   end
@@ -30,7 +44,22 @@ defmodule PlenarioWeb.Api.DetailView do
   end
 
   defp is_clean(_, %Ecto.Association.NotLoaded{}), do: false
-  defp is_clean(key, _) when key == :__meta__, do: false
+  defp is_clean(_, %Plug.Conn{}), do: false
+
+  defp is_clean(key, _)
+       when key in [
+              :__meta__,
+              :__struct__,
+              :id,
+              :inserted_at,
+              :updated_at,
+              :source_type,
+              :table_name,
+              :state,
+              :user_id
+            ],
+       do: false
+
   defp is_clean(_, _), do: true
 end
 

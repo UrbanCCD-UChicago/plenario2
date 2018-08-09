@@ -3,24 +3,82 @@ defmodule PlenarioWeb.Api.Utils do
 
   import Geo.PostGIS
 
-  import PlenarioWeb.Router.Helpers, only: [
-    detail_url: 4,
-    list_url: 3,
-    aot_url: 3
-  ]
+  import Geo.PostGIS,
+    only: [
+      st_intersects: 2,
+      st_within: 2
+    ]
 
-  import Plug.Conn, only: [
-    put_resp_header: 3,
-    resp: 3,
-    halt: 1
-  ]
+  import Plenario.Queries.Utils,
+    only: [
+      timestamp_within: 2,
+      tsrange_intersects: 2
+    ]
 
-  import Plug.Conn.Status, only: [
-    code: 1,
-    reason_phrase: 1
-  ]
+  import PlenarioWeb.Router.Helpers,
+    only: [
+      detail_url: 4,
+      list_url: 3,
+      aot_url: 3
+    ]
 
-  alias Plenario.Repo
+  import Plug.Conn,
+    only: [
+      put_resp_header: 3,
+      resp: 3,
+      halt: 1
+    ]
+
+  import Plug.Conn.Status,
+    only: [
+      code: 1,
+      reason_phrase: 1
+    ]
+
+  alias Geo.Polygon
+
+  alias Plenario.{
+    Repo,
+    TsRange
+  }
+
+  alias Plenario.Actions.MetaActions
+
+  def validate_data_set(slug, opts \\ []) when is_bitstring(slug) do
+    case Regex.match?(~r/^\d+$/, slug) do
+      true ->
+        nil
+
+      false ->
+        MetaActions.get(slug, opts)
+    end
+  end
+
+  def validate_data_set(_, _), do: :error
+
+  def apply_filter(query, fname, "lt", value), do: where(query, [q], field(q, ^fname) < ^value)
+
+  def apply_filter(query, fname, "le", value), do: where(query, [q], field(q, ^fname) <= ^value)
+
+  def apply_filter(query, fname, "eq", value), do: where(query, [q], field(q, ^fname) == ^value)
+
+  def apply_filter(query, fname, "ge", value), do: where(query, [q], field(q, ^fname) >= ^value)
+
+  def apply_filter(query, fname, "gt", value), do: where(query, [q], field(q, ^fname) > ^value)
+
+  def apply_filter(query, fname, "within", %TsRange{} = value),
+    do: where(query, [q], timestamp_within(field(q, ^fname), ^TsRange.to_postgrex(value)))
+
+  def apply_filter(query, fname, "within", %Polygon{} = value),
+    do: where(query, [q], st_within(field(q, ^fname), ^value))
+
+  def apply_filter(query, fname, "intersects", %TsRange{} = value),
+    do: where(query, [q], tsrange_intersects(field(q, ^fname), ^TsRange.to_postgrex(value)))
+
+  def apply_filter(query, fname, "intersects", %Polygon{} = value),
+    do: where(query, [q], st_intersects(field(q, ^fname), ^value))
+
+  # TODO: delete or refactor everything below this
 
   @doc """
   Utility function for rendering a `Scrivener.Page` of results. Even if the
@@ -34,7 +92,8 @@ defmodule PlenarioWeb.Api.Utils do
       data_count: length(entries),
       total_pages: page.total_pages,
       total_records: page.total_entries,
-      data: entries})
+      data: entries
+    })
   end
 
   @doc """
@@ -48,9 +107,10 @@ defmodule PlenarioWeb.Api.Utils do
 
     # Remove the pagination parameters so when we reconstruct the query string,
     # we don't repeat them unnecessarily.
-    non_page_params = Enum.filter(conn.params, fn {key, _} ->
-      key not in ["page", "page_size"]
-    end)
+    non_page_params =
+      Enum.filter(conn.params, fn {key, _} ->
+        key not in ["page", "page_size"]
+      end)
 
     # If we're on page one, then there is no previous link
     previous_page_number = if page_number == 1, do: nil, else: page_number - 1
@@ -61,13 +121,14 @@ defmodule PlenarioWeb.Api.Utils do
     # And of course
     current_page_number = page_number
 
-    params = Enum.map(non_page_params, fn {k, v} ->
-      if is_atom(k) do
-        {k, v}
-      else
-        {String.to_atom(k), v}
-      end
-    end)
+    params =
+      Enum.map(non_page_params, fn {k, v} ->
+        if is_atom(k) do
+          {k, v}
+        else
+          {String.to_atom(k), v}
+        end
+      end)
 
     # Construct the query strings
     previous_page_url =
@@ -75,11 +136,13 @@ defmodule PlenarioWeb.Api.Utils do
         false -> construct_url(conn, params, page_size, previous_page_number)
         true -> construct_aot_url(conn, params, page_size, previous_page_number)
       end
+
     next_page_url =
       case aot do
         false -> construct_url(conn, params, page_size, next_page_number)
         true -> construct_aot_url(conn, params, page_size, next_page_number)
       end
+
     current_page_url =
       case aot do
         false -> construct_url(conn, params, page_size, current_page_number)
@@ -136,13 +199,26 @@ defmodule PlenarioWeb.Api.Utils do
       ...>   |> where_condition({"column", {"lt", 20000}})
 
   """
-  def where_condition(query, {column, {"gt", value}}), do: from(q in query, where: field(q, ^column) > ^value)
-  def where_condition(query, {column, {"ge", value}}), do: from(q in query, where: field(q, ^column) >= ^value)
-  def where_condition(query, {column, {"lt", value}}), do: from(q in query, where: field(q, ^column) < ^value)
-  def where_condition(query, {column, {"le", value}}), do: from(q in query, where: field(q, ^column) <= ^value)
-  def where_condition(query, {column, {"eq", value}}), do: from(q in query, where: field(q, ^column) == ^value)
-  def where_condition(query, {:order_by, {"desc", column}}), do: from(q in query, order_by: [desc: field(q, ^String.to_atom(column))])
-  def where_condition(query, {:order_by, {"asc", column}}), do: from(q in query, order_by: [asc: field(q, ^String.to_atom(column))])
+  def where_condition(query, {column, {"gt", value}}),
+    do: from(q in query, where: field(q, ^column) > ^value)
+
+  def where_condition(query, {column, {"ge", value}}),
+    do: from(q in query, where: field(q, ^column) >= ^value)
+
+  def where_condition(query, {column, {"lt", value}}),
+    do: from(q in query, where: field(q, ^column) < ^value)
+
+  def where_condition(query, {column, {"le", value}}),
+    do: from(q in query, where: field(q, ^column) <= ^value)
+
+  def where_condition(query, {column, {"eq", value}}),
+    do: from(q in query, where: field(q, ^column) == ^value)
+
+  def where_condition(query, {:order_by, {"desc", column}}),
+    do: from(q in query, order_by: [desc: field(q, ^String.to_atom(column))])
+
+  def where_condition(query, {:order_by, {"asc", column}}),
+    do: from(q in query, order_by: [asc: field(q, ^String.to_atom(column))])
 
   @doc """
   where_condition(query, {column, {operator, operand}})
@@ -164,7 +240,8 @@ defmodule PlenarioWeb.Api.Utils do
       {:ok, lower} ->
         case NaiveDateTime.from_iso8601(upper) do
           {:ok, upper} ->
-            where_condition(query, {column, {"ge", lower}}) |> where_condition({column, {"le", upper}})
+            where_condition(query, {column, {"ge", lower}})
+            |> where_condition({column, {"le", upper}})
 
           _ ->
             query
@@ -208,7 +285,10 @@ defmodule PlenarioWeb.Api.Utils do
 
   """
   def map_to_query(query, []), do: query
-  def map_to_query(query, params) when is_map(params), do: map_to_query(query, Map.to_list(params))
+
+  def map_to_query(query, params) when is_map(params),
+    do: map_to_query(query, Map.to_list(params))
+
   def map_to_query(query, [condition_tuple | params]) do
     map_to_query(query |> where_condition(condition_tuple), params)
   end
@@ -222,6 +302,7 @@ defmodule PlenarioWeb.Api.Utils do
 
   """
   def truncate([]), do: :ok
+
   def truncate([schema | tail]) do
     truncate(schema)
     truncate(tail)
@@ -236,12 +317,12 @@ defmodule PlenarioWeb.Api.Utils do
     status_code = code(status)
     message = reason_phrase(status_code)
 
-    do_halt_with conn, status_code, message
+    do_halt_with(conn, status_code, message)
   end
 
   def halt_with(conn, status, message) do
     status_code = code(status)
-    do_halt_with conn, status_code, message
+    do_halt_with(conn, status_code, message)
   end
 
   defp do_halt_with(conn, code, message) do

@@ -177,7 +177,7 @@ defmodule PlenarioWeb.Api.Plugs do
                     Poison.decode!(value)
                     |> Geo.JSON.decode()
                   rescue
-                    Geo.JSON.DecodeError ->
+                    _ ->
                       :error
                   end
               end

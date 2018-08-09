@@ -49,6 +49,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     "attribution",
     "bbox",
     "description",
+    "fields",
     "first_import",
     "latest_import",
     "name",
@@ -61,25 +62,26 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     "source_url",
     "time_range",
     "user",
-    "fields",
-    "virtual_date_fields",
-    "virtual_point_fields"
+    "virtual_dates",
+    "virtual_points"
   ]
 
   @good_bbox %Polygon{
                coordinates: [
                  [
-                   {42.5, -87.8},
-                   {41.5, -87.8},
-                   {41.5, -87.4},
-                   {42.5, -87.4},
-                   {42.5, -87.8}
+                   {-87.65449, 41.9878},
+                   {-87.65451, 41.9878},
+                   {-87.65451, 41.9876},
+                   {-87.65449, 41.9876},
+                   {-87.65449, 41.9878}
                  ]
                ],
                srid: 4326
              }
              |> Geo.JSON.encode()
              |> Poison.encode!()
+
+  @good_bbox_count 102
 
   @nada_bbox %Polygon{
                coordinates: [
@@ -99,11 +101,13 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
   @bad_bbox "the-moon"
 
   @good_time_range %TsRange{
-                     lower: ~N[2016-05-26 00:00:00],
-                     upper: ~N[2017-05-26 00:00:00],
+                     lower: ~N[2017-05-01 00:00:00],
+                     upper: ~N[2017-06-01 00:00:00],
                      upper_inclusive: false
                    }
                    |> Poison.encode!()
+
+  @good_time_range_count 113
 
   @nada_time_range %TsRange{
                      lower: ~N[2011-05-26 00:00:00],
@@ -218,10 +222,26 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
   end
 
   describe "filter results by bbox" do
-    test "with a well formatted polygon", %{conn: conn, meta: meta} do
+    test "with a well formatted polygon", %{conn: conn, meta: meta, vpf: vpf} do
+      res =
+        conn
+        |> get(detail_path(conn, :get, meta.slug, %{vpf.name => "within:#{@good_bbox}"}))
+        |> json_response(:ok)
+
+      assert length(res["data"]) == @good_bbox_count
+
+      res =
+        conn
+        |> get(detail_path(conn, :get, meta.slug, %{vpf.name => "within:#{@nada_bbox}"}))
+        |> json_response(:ok)
+
+      assert length(res["data"]) == 0
     end
 
-    test "will 400 with a poorly formatted polygon", %{conn: conn, meta: meta} do
+    test "will 400 with a poorly formatted polygon", %{conn: conn, meta: meta, vpf: vpf} do
+      conn
+      |> get(detail_path(conn, :get, meta.slug, %{vpf.name => "within:#{@bad_bbox}"}))
+      |> json_response(:bad_request)
     end
   end
 
@@ -236,7 +256,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
         )
         |> json_response(:ok)
 
-      assert length(res["data"]) == 200
+      assert length(res["data"]) == @good_time_range_count
 
       res =
         conn
@@ -259,63 +279,104 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     end
   end
 
-  # describe "GET @head endpoint" do
-  #   test "it only returns the first record of the data set", %{conn: conn, meta: meta} do
-  #     res =
-  #       conn
-  #       |> get(detail_path(conn, :head, meta.slug, %{order_by: "asc:DNA Sample Timestamp"}))
-  #       |> json_response(:ok)
+  describe "GET @head endpoint" do
+    test "it only returns the first record of the data set", %{conn: conn, meta: meta} do
+      res =
+        conn
+        |> get(detail_path(conn, :head, meta.slug, %{order_by: "asc:DNA Sample Timestamp"}))
+        |> json_response(:ok)
 
-  #     assert length(res["data"]) == 1
+      assert length(res["data"]) == 1
 
-  #     asc =
-  #       res["data"]
-  #       |> List.first()
+      asc =
+        res["data"]
+        |> List.first()
 
-  #     res =
-  #       conn
-  #       |> get(detail_path(conn, :head, meta.slug, %{order_by: "desc:DNA Sample Timestamp"}))
-  #       |> json_response(:ok)
+      res =
+        conn
+        |> get(detail_path(conn, :head, meta.slug, %{order_by: "desc:DNA Sample Timestamp"}))
+        |> json_response(:ok)
 
-  #     assert length(res["data"]) == 1
+      assert length(res["data"]) == 1
 
-  #     desc =
-  #       res["data"]
-  #       |> List.first()
+      desc =
+        res["data"]
+        |> List.first()
 
-  #     assert asc != desc
-  #     assert asc["DNA Sample Timestamp"] < desc["DNA Sample Timestamp"]
-  #   end
+      assert asc != desc
+      assert asc["DNA Sample Timestamp"] < desc["DNA Sample Timestamp"]
+    end
 
-  #   test "the response record exactly contains its `row_id`, columns, and virtual fields", %{
-  #     conn: conn,
-  #     meta: meta,
-  #     vpf: vpf
-  #   } do
-  #     keys = @list_head_keys ++ vpf.name
+    test "will 404 when it can't find the slug", %{conn: conn} do
+      conn
+      |> get(detail_path(conn, :get, "i-dont-exist"))
+      |> json_response(:not_found)
+    end
 
-  #     res =
-  #       conn
-  #       |> get(detail_path(conn, :head, meta.slug))
-  #       |> json_response(:ok)
+    test "will 404 when given the id, even if it's for a valid, ready data set", %{
+      conn: conn,
+      meta: meta
+    } do
+      conn
+      |> get(detail_path(conn, :get, meta.id))
+      |> json_response(:not_found)
+    end
 
-  #     res["data"]
-  #     |> Enum.each(&assert Map.keys(&1) == keys)
-  #   end
-  # end
+    test "will 404 for a not-ready data set", %{conn: conn, user: user} do
+      {:ok, meta} = MetaActions.create("not readu", user, "https://example.com/not-ready", "csv")
 
-  # describe "GET @describe endpoint" do
-  #   test "the response object exactly contains meta information and field information", %{
-  #     conn: conn,
-  #     meta: meta
-  #   } do
-  #     res =
-  #       conn
-  #       |> get(detail_path(conn, :describe, meta.slug))
-  #       |> json_response(:ok)
+      conn
+      |> get(detail_path(conn, :get, meta.id))
+      |> json_response(:not_found)
+    end
 
-  #     res["data"]
-  #     |> Enum.each(&assert Map.keys(&1) == @describe_keys)
-  #   end
-  # end
+    test "each object contains the same keys", %{conn: conn, meta: meta} do
+      res =
+        conn
+        |> get(detail_path(conn, :get, meta.slug))
+        |> json_response(:ok)
+
+      res["data"]
+      |> Enum.with_index()
+      |> Enum.each(fn {el, idx} ->
+        next = Enum.at(res["data"], idx + 1)
+
+        if next != nil do
+          assert Map.keys(el) == Map.keys(next)
+        end
+      end)
+    end
+
+    test "each record exactly contains its `row_id`, columns, and virtual fields", %{
+      conn: conn,
+      meta: meta,
+      vpf: vpf
+    } do
+      keys =
+        (@list_head_keys ++ [vpf.name])
+        |> Enum.sort()
+
+      res =
+        conn
+        |> get(detail_path(conn, :get, meta.slug))
+        |> json_response(:ok)
+
+      res["data"]
+      |> Enum.each(&assert Map.keys(&1) == keys)
+    end
+  end
+
+  describe "GET @describe endpoint" do
+    test "the response object exactly contains meta information and field information", %{
+      conn: conn,
+      meta: meta
+    } do
+      res =
+        conn
+        |> get(detail_path(conn, :describe, meta.slug))
+        |> json_response(:ok)
+
+      assert Map.keys(res["data"]) == @describe_keys
+    end
+  end
 end
