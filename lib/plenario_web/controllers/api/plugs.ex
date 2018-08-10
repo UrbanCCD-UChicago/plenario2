@@ -110,7 +110,7 @@ defmodule PlenarioWeb.Api.Plugs do
 
   @excluded_keys ["page", "page_size", "order_by", "slug"]
 
-  @acceptable_ops ["lt", "le", "eq", "ge", "gt", "within", "intersects"]
+  @acceptable_ops ["lt", "le", "eq", "ge", "gt", "in", "within", "intersects"]
 
   @tsrange_geom_ops ["within", "intersects"]
 
@@ -124,11 +124,18 @@ defmodule PlenarioWeb.Api.Plugs do
       params
       |> Enum.reduce({[], []}, fn {field, filter}, {params, errors} ->
         [op, value] =
-          try do
-            String.split(filter, ":", parts: 2)
-          rescue
-            MatchError ->
-              ["eq", filter]
+          case is_list(filter) do
+            true ->
+              ["in", filter]
+
+            false ->
+              try do
+                [o, v] = String.split(filter, ":", parts: 2)
+                [o, v]
+              rescue
+                MatchError ->
+                  ["eq", filter]
+              end
           end
 
         case op in @acceptable_ops do
@@ -205,4 +212,26 @@ defmodule PlenarioWeb.Api.Plugs do
   end
 
   defp check_tsrange_geoms({params, _}, conn), do: assign(conn, :filters, params)
+
+  # APPLY WINDOW
+
+  @spec apply_window(Plug.Conn.t(), any()) :: Plug.Conn.t()
+  def apply_window(%Conn{params: %{"window" => window}} = conn, _opts) when is_bitstring(window) do
+    case Timex.parse(window, "%Y-%m-%dT%H:%M:%S", :strftime) do
+      {:ok, window} ->
+        assign(conn, :window, window)
+
+      _ ->
+        halt_with(conn, :bad_request, "Could not parse value for `window`")
+    end
+  end
+
+  def apply_window(conn, _opts) do
+    now =
+      NaiveDateTime.utc_now()
+      |> Timex.format!("%Y-%m-%dT%H:%M:%S", :strftime)
+
+    %Conn{conn | params: Map.put(conn.params, "window", now)}
+    |> apply_window(nil)
+  end
 end

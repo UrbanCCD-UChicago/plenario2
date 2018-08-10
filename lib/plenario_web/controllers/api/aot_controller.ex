@@ -1,236 +1,106 @@
 defmodule PlenarioWeb.Api.AotController do
+  @moduledoc """
+  """
 
   use PlenarioWeb, :api_controller
 
-  require Logger
-
   import Ecto.Query
-
-  import Geo.PostGIS, only: [st_intersects: 2]
 
   import PlenarioWeb.Api.Plugs
 
-  import PlenarioWeb.Api.Utils, only: [
-    render_page: 6,
-    halt_with: 3
-  ]
+  import PlenarioWeb.Api.Utils,
+    only: [
+      apply_filter: 4,
+      halt_with: 3,
+      render_aot: 3
+    ]
 
   alias Plenario.Repo
 
   alias PlenarioAot.{
     AotData,
-    AotMeta,
-    AotObservation
+    AotMeta
   }
 
-  plug :check_page
-  plug :check_page_size, default_page_size: 500, page_size_limit: 5000
+  plug(:check_page)
+  plug(:check_page_size)
+  plug(:check_order_by, default_order: "desc:timestamp")
+  plug(:check_filters)
+  plug(:apply_window)
 
-  defp parse_bbox(value, conn) do
+  @meta_keys [:network_name, :bbox, :time_rage]
+
+  @spec get(Plug.Conn.t(), any()) :: Plug.Conn.t()
+  def get(conn, _params) do
+    get_meta_ids(conn)
+    |> get_data(conn)
+    |> render_data(conn, "get.json")
+  end
+
+  @spec head(Plug.Conn.t(), any()) :: Plug.Conn.t()
+  def head(conn, _params) do
+    get_meta_ids(conn)
+    |> get_data(conn)
+    |> render_data(conn, "head.json")
+  end
+
+  @spec describe(Plug.Conn.t(), any()) :: Plug.Conn.t()
+  def describe(conn, _params) do
+    page = conn.assigns[:page]
+    page_size = conn.assigns[:page_size]
+
+    conn.assigns[:filters]
+    |> Enum.filter(fn {fname, _, _} -> fname in @meta_keys end)
+    |> Enum.reduce(AotMeta, fn {fname, op, value}, query ->
+      apply_filter(query, fname, op, value)
+    end)
+    |> Repo.paginate(page: page, page_size: page_size)
+    |> render_aot(conn, "describe.json")
+  end
+
+  defp get_meta_ids(conn) do
+    query =
+      conn.assigns[:filters]
+      |> Enum.filter(fn {fname, _, _} -> fname in @meta_keys end)
+      |> Enum.reduce(AotMeta, fn {fname, op, value}, query ->
+        apply_filter(query, fname, op, value)
+      end)
+      |> select([q], q.id)
+      |> distinct([q], q.id)
+
     try do
-      Poison.decode!(value) |> Geo.JSON.decode()
+      ids = Repo.all(query)
+      {:ok, ids}
     rescue
-      _ -> conn |> halt_with(400, "Unable to parse bounding box JSON or generate Geo object")
+      e in [Ecto.QueryError, Ecto.SubQueryError, Postgrex.Error] ->
+        {:error, e.message}
     end
   end
 
-  defp parse_time_range(value) do
+  defp get_data({:error, message}, _), do: {:error, message}
+
+  defp get_data({:ok, meta_ids}, conn) do
+    query =
+      conn.assigns[:filters]
+      |> Enum.reject(fn {fname, _, _} -> fname in @meta_keys end)
+      |> Enum.reduce(AotData, fn {fname, op, value}, query ->
+        apply_filter(query, fname, op, value)
+      end)
+      |> where([q], q.aot_meta_id in ^meta_ids)
+      |> where([q], q.updated_at <= ^conn.assigns[:window])
+
     try do
-      json = Poison.decode!(value)
-
-      lower = parse_datetime(json["lower"]) |> Timex.to_erl()
-      {ymd, {h, m, s}} = lower
-      lower = {ymd, {h, m, s, 0}}
-
-      upper = parse_datetime(json["upper"]) |> Timex.to_erl()
-      {ymd, {h, m, s}} = upper
-      upper = {ymd, {h, m, s, 0}}
-
-      %Postgrex.Range{lower: lower, upper: upper}
+      page = conn.assigns[:page]
+      page_size = conn.assigns[:page_size]
+      data = Repo.paginate(query, page: page, page_size: page_size)
+      {:ok, data}
     rescue
-      _ -> nil
+      e in [Ecto.QueryError, Ecto.SubQueryError, Postgrex.Error] ->
+        {:error, e.message}
     end
   end
 
-  defp parse_datetime(value) do
-    try do
-      Timex.parse!(value, "{ISO:Extended:Z}")
-    rescue
-      _ ->
-        try do
-          Timex.parse!(value, "{ISO:Extended}")
-        rescue
-          _ ->
-            try do
-              Timex.parse!(value, "{ISOdate} {ISOtime}")
-            rescue
-              _ -> nil
-            end
-        end
-    end
-  end
+  defp render_data({:error, message}, conn, _), do: halt_with(conn, :bad_request, message)
 
-  defp handle_conn_params(conn) do
-    # handle meta level filters: network_name, bbox
-    metas = from m in AotMeta
-    metas =
-      case Map.get(conn.params, "network_name") do
-        nil -> metas
-        value ->
-          case is_list(value) do
-            true -> from m in metas, where: m.network_name in ^value or m.slug in ^value
-            false -> from m in metas, where: m.network_name == ^value or m.slug == ^value
-          end
-      end
-    metas =
-      case Map.get(conn.params, "bbox") do
-        nil -> metas
-        value ->
-          bbox = parse_bbox(value, conn)
-          from m in metas, where: st_intersects(m.bbox, ^bbox)
-      end
-
-    # we wrap this db call in a try/rescue block because Geo is forgiving of input bbox coordinates
-    # and will generate PostGIS exceptions
-    meta_ids =
-      try do
-        Repo.all(
-          from m in metas,
-          select: m.id,
-          distinct: m.id
-        )
-      rescue
-        # set to nil to keep error logs clean and force an Ecto.SubQuery exception later in query composition
-        _ -> nil
-      end
-
-    case meta_ids do
-      nil -> conn |> halt_with(400, "Unable to execute bounding box query")
-      _ -> meta_ids
-    end
-
-    # handle data level filters: node_id, timestamp
-    data = from d in AotData, where: d.aot_meta_id in ^meta_ids
-    data =
-      case Map.get(conn.params, "node_id") do
-        nil -> data
-        value ->
-          case is_list(value) do
-            true -> from d in data, where: d.node_id in ^value
-            false -> from d in data, where: d.node_id == ^value
-          end
-      end
-    data =
-      case Map.get(conn.params, "timestamp") do
-        nil -> data
-        value ->
-          [op, term] =
-            case Regex.match?(~r/^in|eq|gt|ge|lt|le\:.*$/, value) do
-              true ->  String.split(value, ":", parts: 2)
-              false -> ["eq", value]
-            end
-
-          term = case op do
-            "in" -> parse_time_range(term)
-            _ -> parse_datetime(term)
-          end
-          case term do
-            nil -> data
-            term ->
-              case op do
-                "eq" -> from d in data, where: fragment("? = ?::timestamp", d.timestamp, ^term)
-                "gt" -> from d in data, where: fragment("? > ?::timestamp", d.timestamp, ^term)
-                "ge" -> from d in data, where: fragment("? >= ?::timestamp", d.timestamp, ^term)
-                "lt" -> from d in data, where: fragment("? < ?::timestamp", d.timestamp, ^term)
-                "le" -> from d in data, where: fragment("? <= ?::timestamp", d.timestamp, ^term)
-                "in" -> from d in data, where: fragment("? <@ ?::tsrange", d.timestamp, ^term)
-                _ -> data
-              end
-          end
-      end
-
-    # TODO: handle observations
-    # handle observation level filters: sensor, {observation}
-    obs_data_ids =
-      case Map.get(conn.params, "sensor") do
-        nil ->
-          nil
-
-        value ->
-          data_ids = Repo.all(
-            from d in data,
-            select: d.id,
-            distinct: d.id
-          )
-          case is_list(value) do
-            true ->
-              Repo.all(
-                from o in AotObservation,
-                where: o.aot_data_id in ^data_ids,
-                where: o.sensor in ^value,
-                select: o.aot_data_id,
-                distinct: o.aot_data_id
-              )
-            false ->
-              Repo.all(
-                from o in AotObservation,
-                where: o.aot_data_id in ^data_ids,
-                where: o.sensor == ^value,
-                select: o.aot_data_id,
-                distinct: o.aot_data_id
-              )
-          end
-      end
-
-    # if observation limited query, apply to data query
-    data =
-      case obs_data_ids do
-        nil -> data
-        value -> from d in data, where: d.id in ^value
-      end
-
-    # finally apply the windowing `inserted_at` filter
-    window =
-      case Map.get(conn.params, "inserted_at") do
-        nil -> DateTime.utc_now()
-        value ->
-          [_, term] = String.split(value, ":", parts: 2)
-          parse_datetime(term)
-      end
-    data = from d in data, where: d.inserted_at <= ^window
-
-    # return meta and data queries
-    [meta_query: metas, data_query: data]
-  end
-
-  def get(conn, _) do
-    [meta_query: _, data_query: query] = handle_conn_params(conn)
-
-    pagination = [
-      page: Map.get(conn.params, "page", 1),
-      page_size: Map.get(conn.params, "page_size", 500)
-    ]
-
-    page = Repo.paginate(query, pagination)
-    render_page(conn, "get.json", conn.params, page.entries, page, true)
-  end
-
-  def head(conn, _) do
-    [meta_query: _, data_query: query] = handle_conn_params(conn)
-
-    page = Repo.paginate(query, page: 1, page_size: 1)
-    render_page(conn, "get.json", conn.params, page.entries, page, true)
-  end
-
-  def describe(conn, _) do
-    [meta_query: query, data_query: _] = handle_conn_params(conn)
-
-    pagination = [
-      page: Map.get(conn.params, "page", 1),
-      page_size: Map.get(conn.params, "page_size", 500)
-    ]
-
-    page = Repo.paginate(query, pagination)
-    render_page(conn, "get.json", conn.params, page.entries, page, true)
-  end
+  defp render_data({:ok, data}, conn, view), do: render_aot(data, conn, view)
 end

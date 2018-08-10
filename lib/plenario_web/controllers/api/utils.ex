@@ -95,6 +95,8 @@ defmodule PlenarioWeb.Api.Utils do
 
   def apply_filter(query, fname, "gt", value), do: where(query, [q], field(q, ^fname) > ^value)
 
+  def apply_filter(query, fname, "in", value), do: where(query, [q], field(q, ^fname) in ^value)
+
   def apply_filter(query, fname, "within", %TsRange{} = value),
     do: where(query, [q], timestamp_within(field(q, ^fname), ^TsRange.to_postgrex(value)))
 
@@ -242,6 +244,83 @@ defmodule PlenarioWeb.Api.Utils do
     )
   end
 
+  def render_aot(page, conn, view) do
+    {prev_page_number, next_page_number} = get_prev_next_page_numbers(page)
+
+    prev_url =
+      case view do
+        "get.json" ->
+          make_url(:aot, :get, conn, prev_page_number)
+
+        _ ->
+          nil
+      end
+
+    next_url =
+      case view do
+        "get.json" ->
+          make_url(:aot, :get, conn, next_page_number)
+
+        _ ->
+          nil
+      end
+
+    curr_url =
+      case view do
+        "get.json" ->
+          make_url(:aot, :get, conn, page.page_number)
+
+        "head.json" ->
+          make_url(:aot, :head, conn, 1)
+
+        "describe.json" ->
+          make_url(:aot, :describe, conn, 1)
+      end
+
+    links = %{
+      previous: prev_url,
+      current: curr_url,
+      next: next_url
+    }
+
+    counts =
+      case view do
+        "describe.json" ->
+          %{
+            data_count: 1,
+            total_pages: 1,
+            total_records: 1
+          }
+
+        _ ->
+          %{
+            data_count: length(page.entries),
+            total_pages: page.total_pages,
+            total_records: page.total_entries
+          }
+      end
+
+    params = fmt_params(conn)
+
+    data =
+      case view do
+        "describe.json" ->
+          page
+
+        _ ->
+          page.entries
+      end
+
+    Phoenix.Controller.render(
+      conn,
+      view,
+      links: links,
+      counts: counts,
+      params: params,
+      data: data
+    )
+  end
+
   defp get_prev_next_page_numbers(%Page{total_pages: last, page_number: current}) do
     previous = if current == 1, do: nil, else: current - 1
     next = if current == last, do: nil, else: current + 1
@@ -266,6 +345,13 @@ defmodule PlenarioWeb.Api.Utils do
     list_url(conn, fun_atom, params)
   end
 
+  defp make_url(:aot, _, _, nil), do: nil
+
+  defp make_url(:aot, fun_atom, conn, page_number) do
+    params = Map.merge(conn.params, %{"page" => page_number})
+    aot_url(conn, fun_atom, params)
+  end
+
   defp fmt_params(conn) do
     page = conn.assigns[:page]
     size = conn.assigns[:page_size]
@@ -279,19 +365,22 @@ defmodule PlenarioWeb.Api.Utils do
       }
     }
 
-    fields =
-      case conn.assigns[:filters] do
-        nil ->
-          %{}
+    params =
+      conn.assigns[:filters]
+      |> Enum.reduce(params, fn {field, op, value}, params ->
+        Map.put(params, field, %{op => value})
+      end)
 
-        _ ->
-          conn.assigns[:filters]
+    params =
+      case conn.assigns[:window] do
+        nil ->
+          params
+
+        w ->
+          Map.put(params, :window, w)
       end
 
-    fields
-    |> Enum.reduce(params, fn {field, op, value}, params ->
-      Map.put(params, field, %{op => value})
-    end)
+    params
   end
 
   # TODO: delete or refactor everything below this
