@@ -15,7 +15,10 @@ defmodule PlenarioWeb.Api.ShimController do
       halt_with: 3
     ]
 
-  alias Plenario.Repo
+  alias Plenario.{
+    ModelRegistry,
+    Repo
+  }
 
   alias Plenario.Actions.MetaActions
 
@@ -117,6 +120,7 @@ defmodule PlenarioWeb.Api.ShimController do
     end
   end
 
+  @spec fields(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def fields(conn, %{"slug" => slug}) do
     slug =
       slug
@@ -129,6 +133,37 @@ defmodule PlenarioWeb.Api.ShimController do
   defp do_fields(%Meta{state: "ready"} = meta, conn), do: render(conn, "fields.json", meta: meta)
 
   defp do_fields(_, conn), do: halt_with(conn, :not_found)
+
+  @spec detail(Plug.Conn.t(), any()) :: Plug.Conn.t()
+  def detail(conn, %{"dataset_name" => _}) do
+    {_, _, slug} = conn.assigns[:slug]
+
+    MetaActions.get(slug)
+    |> render_data_set(conn)
+  end
+
+  def detail(conn, _params), do: halt_with(conn, :not_found)
+
+  defp render_data_set(%Meta{state: "ready"} = meta, conn) do
+    model = ModelRegistry.lookup(meta.slug)
+
+    query =
+      model
+      |> order_by([q], asc: q.row_id)
+
+    try do
+      page = conn.assigns[:page]
+      page_size = conn.assigns[:page_size]
+      data = Repo.paginate(query, page: page, page_size: page_size)
+      render(conn, "detail.json", data: data.entries)
+    rescue
+      e in [Ecto.QueryError, Ecto.SubQueryError, Postgrex.Error] ->
+        IO.inspect(e)
+        halt_with(conn, :bad_request, e.message)
+    end
+  end
+
+  defp render_data_set(_, conn), do: halt_with(conn, :not_found)
 end
 
 # defmodule PlenarioWeb.Api.ShimController do

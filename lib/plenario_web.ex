@@ -117,6 +117,7 @@ defmodule PlenarioWeb do
       import Phoenix.Controller, only: [view_module: 1]
       import PlenarioWeb.Router.Helpers
       import PlenarioWeb.ErrorHelpers
+      import PlenarioWeb.Api.ViewUtils
     end
   end
 

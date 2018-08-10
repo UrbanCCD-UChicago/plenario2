@@ -108,7 +108,7 @@ defmodule PlenarioWeb.Api.Plugs do
 
   # CHECK FILTERS
 
-  @excluded_keys ["page", "page_size", "order_by", "slug"]
+  @excluded_keys ["page", "page_size", "order_by", "slug", "dataset_name"]
 
   @acceptable_ops ["lt", "le", "eq", "ge", "gt", "in", "within", "intersects"]
 
