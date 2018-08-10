@@ -44,40 +44,45 @@ defmodule Plenario.Actions.MetaActionsTest do
 
     test "with a 200 response on the options request", %{user: user} do
       with_mock HTTPoison, options!: &mock_200/1 do
-        {:ok, _} = MetaActions.create("a new meta", user.id, "https://example.com/new-meta", "csv")
+        {:ok, _} =
+          MetaActions.create("a new meta", user.id, "https://example.com/new-meta", "csv")
       end
     end
 
     test "with a 204 response on the options request", %{user: user} do
       with_mock HTTPoison, options!: &mock_204/1 do
-        {:ok, _} = MetaActions.create("a new meta", user.id, "https://example.com/new-meta", "csv")
+        {:ok, _} =
+          MetaActions.create("a new meta", user.id, "https://example.com/new-meta", "csv")
       end
     end
 
     test "with a 200 response on the head request", %{user: user} do
-      with_mocks([
+      with_mocks [
         {HTTPoison, [], head!: &mock_non_200/1},
         {HTTPoison, [], options!: &mock_200/1}
-      ]) do
-        {:ok, _} = MetaActions.create("a new meta", user.id, "https://example.com/new-meta", "csv")
+      ] do
+        {:ok, _} =
+          MetaActions.create("a new meta", user.id, "https://example.com/new-meta", "csv")
       end
     end
 
     test "with a 204 response on the head request", %{user: user} do
-      with_mocks([
+      with_mocks [
         {HTTPoison, [], head!: &mock_non_200/1},
         {HTTPoison, [], options!: &mock_204/1}
-      ]) do
-        {:ok, _} = MetaActions.create("a new meta", user.id, "https://example.com/new-meta", "csv")
+      ] do
+        {:ok, _} =
+          MetaActions.create("a new meta", user.id, "https://example.com/new-meta", "csv")
       end
     end
 
     test "with a non-200 response on either of the requests", %{user: user} do
-      with_mocks([
+      with_mocks [
         {HTTPoison, [], head!: &mock_non_200/1},
         {HTTPoison, [], options!: &mock_non_200/1}
-      ]) do
-        {:error, _} = MetaActions.create("a new meta", user.id, "https://example.com/new-meta", "csv")
+      ] do
+        {:error, _} =
+          MetaActions.create("a new meta", user.id, "https://example.com/new-meta", "csv")
       end
     end
   end
@@ -249,7 +254,7 @@ defmodule Plenario.Actions.MetaActionsTest do
   end
 
   describe "get" do
-    test "with an id", %{meta: meta}  do
+    test "with an id", %{meta: meta} do
       assert MetaActions.get(meta.id)
     end
 
@@ -263,9 +268,7 @@ defmodule Plenario.Actions.MetaActionsTest do
       {:ok, _} = VirtualDateFieldActions.create(meta.id, yr.id)
       {:ok, _} = VirtualPointFieldActions.create(meta.id, loc.id)
 
-      meta =
-        MetaActions.get(
-          meta.id, with_virtual_dates: true, with_virtual_points: true)
+      meta = MetaActions.get(meta.id, with_virtual_dates: true, with_virtual_points: true)
       assert length(meta.virtual_dates) == 1
       assert length(meta.virtual_points) == 1
     end
@@ -341,7 +344,10 @@ defmodule Plenario.Actions.MetaActionsTest do
     {:ok, day} = DataSetFieldActions.create(meta, "day", "integer")
     {:ok, lat} = DataSetFieldActions.create(meta, "lat", "float")
     {:ok, lon} = DataSetFieldActions.create(meta, "lon", "float")
-    {:ok, _} = VirtualDateFieldActions.create(meta.id, yr.id, month_field_id: mo.id, day_field_id: day.id)
+
+    {:ok, _} =
+      VirtualDateFieldActions.create(meta.id, yr.id, month_field_id: mo.id, day_field_id: day.id)
+
     {:ok, _} = VirtualPointFieldActions.create(meta.id, lat.id, lon.id)
 
     DataSetActions.up!(meta)
@@ -356,11 +362,13 @@ defmodule Plenario.Actions.MetaActionsTest do
       (4, 1.1, '2018-01-01 00:01:00', 2017, 1, 1, 10.6, 24.4),
       (5, 1.1, '2019-01-01 00:10:00', 2016, 1, 1, 10.5, 25.5);
     """
+
     {:ok, _} = Ecto.Adapters.SQL.query(Repo, insert)
 
     refresh = """
     REFRESH MATERIALIZED VIEW "#{meta.table_name}_view"
     """
+
     Ecto.Adapters.SQL.query!(Repo, refresh)
 
     range = MetaActions.compute_time_range!(meta)
@@ -376,7 +384,10 @@ defmodule Plenario.Actions.MetaActionsTest do
     {:ok, day} = DataSetFieldActions.create(meta, "day", "integer")
     {:ok, lat} = DataSetFieldActions.create(meta, "lat", "float")
     {:ok, lon} = DataSetFieldActions.create(meta, "lon", "float")
-    {:ok, _} = VirtualDateFieldActions.create(meta.id, yr.id, month_field_id: mo.id, day_field_id: day.id)
+
+    {:ok, _} =
+      VirtualDateFieldActions.create(meta.id, yr.id, month_field_id: mo.id, day_field_id: day.id)
+
     {:ok, _} = VirtualPointFieldActions.create(meta.id, lat.id, lon.id)
 
     DataSetActions.up!(meta)
@@ -391,29 +402,31 @@ defmodule Plenario.Actions.MetaActionsTest do
       (4, 1.1, '2018-01-01 00:00:00', 2017, 1, 1, 10.6, 24.4),
       (5, 1.1, '2019-01-01 00:00:00', 2016, 1, 1, 10.5, 25.5);
     """
+
     {:ok, _} = Ecto.Adapters.SQL.query(Repo, insert)
 
     refresh = """
     REFRESH MATERIALIZED VIEW "#{meta.table_name}_view"
     """
+
     Ecto.Adapters.SQL.query!(Repo, refresh)
 
     bbox = MetaActions.compute_bbox!(meta)
+
     assert bbox == %Geo.Polygon{
-      coordinates: [
-        [[{25.5, 10.5}, {21.1, 10.5}, {21.1, 10.9}, {25.5, 10.9}, {25.5, 10.5}]]}
-      ],
-      srid: 4326
-    }
+             coordinates: [
+               [[{25.5, 10.5}, {21.1, 10.5}, {21.1, 10.9}, {25.5, 10.9}, {25.5, 10.5}]]
+             ],
+             srid: 4326
+           }
   end
 
   # todo(heyzoos) If I mock up! I also have to mock down? Investigate.
   # todo(heyzoos) Add a test to make sure down! cleans up properly.
   test "approve/1 with failing call to `up!/1`", %{meta: meta} do
-    with_mock(DataSetActions,
+    with_mock DataSetActions,
       up!: fn _ -> raise(Postgrex.Error, message: "Intentional Postgres.Error") end,
-      down!: fn _ -> :ok end
-    ) do
+      down!: fn _ -> :ok end do
       MetaActions.submit_for_approval(meta)
       meta = MetaActions.get(meta.id())
       MetaActions.approve(meta)
