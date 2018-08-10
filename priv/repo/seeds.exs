@@ -12,7 +12,7 @@ defmodule Plenario.Seed do
   alias PlenarioAot.AotActions
 
   @user_name "Plenario Admin"
-  @user_email "plenario@uchiago.edu"
+  @user_email "plenario@uchicago.edu"
   @user_password "password"
 
   @meta_name "Chicago Beach Lab - DNA Tests"
