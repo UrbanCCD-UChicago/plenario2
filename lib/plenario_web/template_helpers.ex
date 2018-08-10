@@ -48,6 +48,8 @@ defmodule PlenarioWeb.TemplateHelpers do
       title: message)
   end
 
+  def strftime(nil), do: "-"
+
   def strftime(%NaiveDateTime{} = timestamp) do
     Timex.format!(timestamp, "%d %B %Y %I:%M:%S %p", :strftime)
   end
