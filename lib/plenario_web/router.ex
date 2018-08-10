@@ -139,18 +139,16 @@ defmodule PlenarioWeb.Router do
     |> Enum.each(fn verb -> verb.("/*path", MethodNotAllowedController, :match) end)
   end
 
-  scope "/api/v1", PlenarioWeb.Api do
-    pipe_through([:api])
-
-    get("/datasets", ShimController, :datasets)
-    get("/detail", ShimController, :detail)
-  end
-
   scope "/v1/api", PlenarioWeb.Api do
     pipe_through([:api])
 
     get("/datasets", ShimController, :datasets)
-    get("/detail", ShimController, :detail)
+    # get("/:slug/fields", ShimController, :fields)
+    # get("/:slug/detail", ShimController, :detail)
+
+    # Method not allowed
+    [&post/3, &put/3, &patch/3, &delete/3, &connect/3, &trace/3]
+    |> Enum.each(fn verb -> verb.("/*path", MethodNotAllowedController, :match) end)
   end
 
   if Mix.env() == :dev do

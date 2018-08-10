@@ -10,6 +10,10 @@ defmodule Plenario.Queries.Utils do
     quote do: fragment("?::timestamp <@ ?::tsrange", unquote(field), unquote(range))
   end
 
+  defmacro tsrange_contains_timestamp(field, date) do
+    quote do: fragment("?::tsrange @> ?::timestamp", unquote(field), unquote(date))
+  end
+
   @doc """
   Conditionally composes an Ecto Query when the given condition is truthy
   applying the function available at module/function.
