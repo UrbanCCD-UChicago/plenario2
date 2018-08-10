@@ -1,5 +1,5 @@
 defmodule PlenarioWeb.Api.DetailControllerTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   use Phoenix.ConnTest
 
@@ -118,7 +118,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
 
   @bad_time_range "whenever"
 
-  setup do
+  setup_all do
     Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
     Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
 
@@ -178,7 +178,8 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     end
 
     test "will 404 for a not-ready data set", %{conn: conn, user: user} do
-      {:ok, meta} = MetaActions.create("not readu", user, "https://example.com/not-ready", "csv")
+      {:ok, meta} =
+        MetaActions.create("not ready 2", user, "https://example.com/not-ready-2", "csv")
 
       conn
       |> get(detail_path(conn, :get, meta.id))

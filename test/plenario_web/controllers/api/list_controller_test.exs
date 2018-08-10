@@ -1,5 +1,5 @@
 defmodule PlenarioWeb.Api.ListControllerTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   use Phoenix.ConnTest
 
@@ -93,7 +93,7 @@ defmodule PlenarioWeb.Api.ListControllerTest do
 
   @bad_time_range "whenever"
 
-  setup do
+  setup_all do
     Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
     Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
 
@@ -221,7 +221,7 @@ defmodule PlenarioWeb.Api.ListControllerTest do
       assert length(res["data"]) == 1
 
       # create a new data set, but don't move it along in workflow
-      {:ok, _} = MetaActions.create("not ready", user, "http://example.com/not-ready/", "csv")
+      {:ok, _} = MetaActions.create("not ready 2", user, "http://example.com/not-ready-2/", "csv")
 
       res =
         conn

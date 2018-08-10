@@ -1,5 +1,5 @@
 defmodule PlenarioWeb.Api.AotControllerTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   use Phoenix.ConnTest
 
@@ -15,7 +15,7 @@ defmodule PlenarioWeb.Api.AotControllerTest do
 
   @total_records 10
 
-  setup do
+  setup_all do
     Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
     Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
 
