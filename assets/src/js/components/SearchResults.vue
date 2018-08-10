@@ -43,8 +43,9 @@
                 <th scope="col">Source</th>
               </thead>
               <tbody>
-                <tr v-for="dataset in value.data" :key="dataset.slug">
-                  <td></td>
+                <tr v-for="dataset in value.data" :key="dataset.slug" @click="toggle(dataset)">
+                  <i v-if="selected.includes(dataset.name)" class="far fa-check-square"></i>
+                  <i v-else class="far fa-square"></i>
                   <td>{{ dataset.name }}</td>
                   <td>{{ dataset.attribution }}</td>
                 </tr>
@@ -77,13 +78,7 @@ export default {
   name: 'SearchResults',
   
   data: function () {
-
     return {
-
-      /**
-       * List of selected datasets, these values are then passed along to the
-       * comparison page.
-       */
       selected: []
     }
   },
@@ -98,17 +93,18 @@ export default {
   methods: {
 
     /**
-     * Adds a dataset id to the `selected` array.
+     * Adds a dataset id to the `selected` array. If the id is already in the
+     * array, remove it.
      */
-    select: function(_) {
+    toggle: function(dataset) {
+      if (this.selected.includes(dataset.name)) {
+        let index = this.selected.indexOf(dataset.name);
+        this.selected.splice(index, 1);
+      } 
 
-    },
-
-    /**
-     * Removes a dataset id from the `selected` array.
-     */
-    deselect: function(_) {
-
+      else {
+        this.selected = this.selected.concat([dataset.name]);
+      }
     },
 
     /**
