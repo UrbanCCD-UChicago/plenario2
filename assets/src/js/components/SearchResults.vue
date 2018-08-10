@@ -43,9 +43,11 @@
                 <th scope="col">Source</th>
               </thead>
               <tbody>
-                <tr v-for="dataset in value.data" :key="dataset.slug" @click="toggle(dataset)">
-                  <i v-if="selected.includes(dataset.name)" class="far fa-check-square"></i>
-                  <i v-else class="far fa-square"></i>
+                <tr v-for="dataset in filteredDatasets" :key="dataset.slug" @click="toggle(dataset)">
+                  <td>
+                    <i v-if="selected.includes(dataset.slug)" class="far fa-check-square"></i>
+                    <i v-else class="far fa-square"></i>
+                  </td>
                   <td>{{ dataset.name }}</td>
                   <td>{{ dataset.attribution }}</td>
                 </tr>
@@ -57,7 +59,11 @@
           <label for="node-feature-data-search-term" class="sr-only">Filter</label>
           <div class="input-group input-group-sm col-8 pl-2">
             <div class="input-group-addon"><i class="fas fa-filter"></i></div>
-            <input type="search" class="form-control" id="formGroupExampleInput2" placeholder="Filter...">
+            <input type="search" 
+              v-model="filterString" 
+              class="form-control" 
+              id="formGroupExampleInput2" 
+              placeholder="">
           </div>
           <div class="col-form-label-sm col-4 pr-2 text-muted text-right">
               {{ selected.length }}&thinsp;/&thinsp;{{ value.data.length }} selected
@@ -79,7 +85,16 @@ export default {
   
   data: function () {
     return {
-      selected: []
+      selected: [],
+      filterString: ''
+    }
+  },
+
+  computed: {
+    filteredDatasets: function () {
+      return this.value.data.filter((dataset) => {
+        return dataset.name.includes(this.filterString);
+      });
     }
   },
 
@@ -97,13 +112,13 @@ export default {
      * array, remove it.
      */
     toggle: function(dataset) {
-      if (this.selected.includes(dataset.name)) {
-        let index = this.selected.indexOf(dataset.name);
+      if (this.selected.includes(dataset.slug)) {
+        let index = this.selected.indexOf(dataset.slug);
         this.selected.splice(index, 1);
       } 
 
       else {
-        this.selected = this.selected.concat([dataset.name]);
+        this.selected = this.selected.concat([dataset.slug]);
       }
     },
 
