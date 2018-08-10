@@ -59,6 +59,8 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
 
   @bad_date "whenever"
 
+  @num_fields 18
+
   setup do
     Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
     Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
@@ -174,6 +176,23 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
       conn
       |> get(shim_path(conn, :datasets, %{obs_date__ge: @bad_date}))
       |> json_response(:bad_request)
+    end
+  end
+
+  describe "GET /fields" do
+    test "with a known data set will be ok", %{conn: conn, meta: meta} do
+      res =
+        conn
+        |> get(shim_path(conn, :fields, meta.slug))
+        |> json_response(:ok)
+
+      assert length(res["objects"]) == @num_fields
+    end
+
+    test "with an unknown slug will 404", %{conn: conn} do
+      conn
+      |> get(shim_path(conn, :fields, "garbage"))
+      |> json_response(:not_found)
     end
   end
 end

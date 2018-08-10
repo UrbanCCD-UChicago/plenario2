@@ -11,10 +11,13 @@ defmodule PlenarioWeb.Api.ShimController do
   import PlenarioWeb.Api.Utils,
     only: [
       apply_filter: 4,
+      halt_with: 2,
       halt_with: 3
     ]
 
   alias Plenario.Repo
+
+  alias Plenario.Actions.MetaActions
 
   alias Plenario.Schemas.Meta
 
@@ -113,6 +116,19 @@ defmodule PlenarioWeb.Api.ShimController do
         halt_with(conn, :bad_request, e.message)
     end
   end
+
+  def fields(conn, %{"slug" => slug}) do
+    slug =
+      slug
+      |> String.replace("_", "-")
+
+    MetaActions.get(slug, with_fields: true, with_virtual_dates: true, with_virtual_points: true)
+    |> do_fields(conn)
+  end
+
+  defp do_fields(%Meta{state: "ready"} = meta, conn), do: render(conn, "fields.json", meta: meta)
+
+  defp do_fields(_, conn), do: halt_with(conn, :not_found)
 end
 
 # defmodule PlenarioWeb.Api.ShimController do

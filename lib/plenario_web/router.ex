@@ -143,7 +143,7 @@ defmodule PlenarioWeb.Router do
     pipe_through([:api])
 
     get("/datasets", ShimController, :datasets)
-    # get("/:slug/fields", ShimController, :fields)
+    get("/:slug/fields", ShimController, :fields)
     # get("/:slug/detail", ShimController, :detail)
 
     # Method not allowed

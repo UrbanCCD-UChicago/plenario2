@@ -10,23 +10,11 @@ defmodule PlenarioWeb.Api.ShimView do
     data =
       opts[:data]
       |> Enum.map(fn meta ->
-        fields =
-          meta.fields
-          |> Enum.map(fn f -> %{field_type: f.type, field_name: f.name} end)
-
-        dates =
-          meta.virtual_dates
-          |> Enum.map(fn d -> %{field_type: "timestamp", field_name: d.name} end)
-
-        points =
-          meta.virtual_points
-          |> Enum.map(fn p -> %{field_type: "geometry(point, 4326)", field_name: p.name} end)
-
         %{
           attribution: meta.attribution,
           description: meta.description,
           view_url: "",
-          columns: fields ++ dates ++ points,
+          columns: render_fields(meta),
           obs_from: "#{meta.time_range.lower}",
           bbox: meta.bbox,
           human_name: meta.name,
@@ -46,6 +34,39 @@ defmodule PlenarioWeb.Api.ShimView do
       },
       objects: data
     }
+  end
+
+  def render("fields.json", opts) do
+    meta = opts[:meta]
+    fields = render_fields(meta)
+
+    %{
+      meta: %{
+        status: "ok",
+        query: %{},
+        message: [],
+        total: length(fields)
+      },
+      objects: fields
+    }
+  end
+
+  # HELPERS
+
+  defp render_fields(meta) do
+    fields =
+      meta.fields
+      |> Enum.map(fn f -> %{field_type: f.type, field_name: f.name} end)
+
+    dates =
+      meta.virtual_dates
+      |> Enum.map(fn d -> %{field_type: "timestamp", field_name: d.name} end)
+
+    points =
+      meta.virtual_points
+      |> Enum.map(fn p -> %{field_type: "geometry(point, 4326)", field_name: p.name} end)
+
+    fields ++ dates ++ points
   end
 end
 
