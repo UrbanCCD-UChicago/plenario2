@@ -110,9 +110,9 @@ defmodule PlenarioWeb.Api.Plugs do
 
   @excluded_keys ["page", "page_size", "order_by", "slug", "dataset_name"]
 
-  @acceptable_ops ["lt", "le", "eq", "ge", "gt", "in", "within", "intersects"]
+  @acceptable_ops ["lt", "le", "eq", "ge", "gt", "in", "contains", "within", "intersects"]
 
-  @tsrange_geom_ops ["within", "intersects"]
+  @tsrange_geom_ops ["contains", "within", "intersects"]
 
   @spec check_filters(Plug.Conn.t(), any()) :: Plug.Conn.t()
   def check_filters(%Conn{params: params} = conn, _opts) when is_map(params) do

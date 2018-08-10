@@ -1,5 +1,5 @@
 defmodule PlenarioWeb.Api.ShimControllerTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
   use Phoenix.ConnTest
 
@@ -24,11 +24,11 @@ defmodule PlenarioWeb.Api.ShimControllerTest do
   @good_bbox %Polygon{
                coordinates: [
                  [
-                   {42.5, -87.8},
-                   {41.5, -87.8},
-                   {41.5, -87.4},
-                   {42.5, -87.4},
-                   {42.5, -87.8}
+                   {-87.8, 42.5},
+                   {-87.8, 41.5},
+                   {-87.4, 41.5},
+                   {-87.4, 42.5},
+                   {-87.8, 42.5}
                  ]
                ],
                srid: 4326
