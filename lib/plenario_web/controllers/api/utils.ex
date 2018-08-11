@@ -86,7 +86,47 @@ defmodule PlenarioWeb.Api.Utils do
     links = make_links(:aot, view, conn, page)
     counts = make_counts(view, page)
     params = fmt_params(conn)
-    data = get_data(view, page)
+
+    data =
+      case view do
+        "describe.json" ->
+          get_data(view, page.entries)
+          |> Enum.map(
+            &Map.put(&1, :fields, [
+              %{
+                name: "node_id",
+                type: "text"
+              },
+              %{
+                name: "human_address",
+                type: "text"
+              },
+              %{
+                name: "latitude",
+                type: "float"
+              },
+              %{
+                name: "longitude",
+                type: "float"
+              },
+              %{
+                name: "timestamp",
+                type: "timestamp"
+              },
+              %{
+                name: "observations",
+                type: "object"
+              },
+              %{
+                name: "location",
+                type: "geometry(point, 4326)"
+              }
+            ])
+          )
+
+        _ ->
+          get_data(view, page)
+      end
 
     Phoenix.Controller.render(
       conn,

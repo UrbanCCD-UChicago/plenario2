@@ -31,7 +31,9 @@ defmodule PlenarioWeb.Api.ViewUtils do
               :source_type,
               :table_name,
               :state,
-              :user_id
+              :user_id,
+              :meta_id,
+              :aot_meta_id
             ],
        do: false
 

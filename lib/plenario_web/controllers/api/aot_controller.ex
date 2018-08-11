@@ -88,6 +88,8 @@ defmodule PlenarioWeb.Api.AotController do
       end)
       |> where([q], q.aot_meta_id in ^meta_ids)
       |> where([q], q.updated_at <= ^conn.assigns[:window])
+      |> join(:left, [d], m in assoc(d, :aot_meta))
+      |> select([d, m], %{d | aot_meta: %{network_name: m.network_name, slug: m.slug}})
 
     try do
       page = conn.assigns[:page]
