@@ -46,6 +46,13 @@ defmodule PlenarioWeb.Api.Utils do
 
   # RENDERING UTILS
 
+  @doc """
+  This function slims down the logic that needs to be directly called in the controller. It takes
+  the Plug connection, the view name, and the Scrivener results and computes the metadata that
+  is attached to the response.
+
+  It then calls the view module function to put these pieces together in a response.
+  """
   @spec render_detail(Plug.Conn.t(), String.t(), Scrivener.Page.t() | Plenario.Schemas.Meta.t()) ::
           Plug.Conn.t()
   def render_detail(conn, view, page) do
@@ -64,6 +71,13 @@ defmodule PlenarioWeb.Api.Utils do
     )
   end
 
+  @doc """
+  This function slims down the logic that needs to be directly called in the controller. It takes
+  the Plug connection, the view name, and the Scrivener results and computes the metadata that
+  is attached to the response.
+
+  It then calls the view module function to put these pieces together in a response.
+  """
   @spec render_list(Plug.Conn.t(), String.t(), Scrivener.Page.t()) :: Plug.Conn.t()
   def render_list(conn, view, page) do
     links = make_links(:list, view, conn, page)
@@ -81,6 +95,13 @@ defmodule PlenarioWeb.Api.Utils do
     )
   end
 
+  @doc """
+  This function slims down the logic that needs to be directly called in the controller. It takes
+  the Plug connection, the view name, and the Scrivener results and computes the metadata that
+  is attached to the response.
+
+  It then calls the view module function to put these pieces together in a response.
+  """
   @spec render_aot(Scrivener.Page.t(), Plug.Conn.t(), String.t()) :: Plug.Conn.t()
   def render_aot(page, conn, view) do
     links = make_links(:aot, view, conn, page)
@@ -270,6 +291,22 @@ defmodule PlenarioWeb.Api.Utils do
 
   # HALT
 
+  @doc """
+  This function applies a status and message, then stops processing a request. This cannot be
+  inlined in a function, rather it needs to be used as the sole action of a function that
+  pattern matches a result.
+
+  ## Example
+
+      def stuff(conn, params) do
+        some_database_call(params)
+        |> do_handle_stuff(conn)
+      end
+
+      defp do_handle_stuff({:error, message}, conn), do: halt_with(conn, :bad_request, message)
+
+      defp do_handle_stuff({:ok, items}, conn), do: whatever
+  """
   @spec halt_with(Plug.Conn.t(), atom() | integer()) :: Plug.Conn.t()
   def halt_with(conn, status) do
     status_code = code(status)
@@ -297,11 +334,31 @@ defmodule PlenarioWeb.Api.Utils do
 
   # CONTROLLER HELPERS -- FETCHING, VALIDATING, QUERYING
 
-  @spec validate_data_set(String.t()) :: Plenario.Schemas.Meta.t() | :error | nil
-  def validate_data_set(slug), do: validate_data_set(slug, [])
+  @doc """
+  This function validates that the slug is an integer and then attempts to get the Meta record
+  associated to it. This will bounce requests that provide an ID or some other value that is
+  not a slug.
 
-  @spec validate_data_set(String.t(), Keyword.t()) :: Plenario.Schemas.Meta.t() | :error | nil
-  def validate_data_set(slug, opts) when is_bitstring(slug) do
+  ## Example
+
+      iex> validate_slug_get_meta(1)
+      :error
+
+      iex> validate_slug_get_meta("1")
+      :error
+
+      iex> validate_slug_get_meta("i-dont-exist")
+      nil
+
+      iex> validate_slug_get_meta("i-do-exist")
+      %Meta{ ... }
+  """
+  @spec validate_slug_get_meta(String.t()) :: Plenario.Schemas.Meta.t() | :error | nil
+  def validate_slug_get_meta(slug), do: validate_slug_get_meta(slug, [])
+
+  @spec validate_slug_get_meta(String.t(), Keyword.t()) ::
+          Plenario.Schemas.Meta.t() | :error | nil
+  def validate_slug_get_meta(slug, opts) when is_bitstring(slug) do
     case Regex.match?(~r/^\d+$/, slug) do
       true ->
         nil
@@ -311,8 +368,35 @@ defmodule PlenarioWeb.Api.Utils do
     end
   end
 
-  def validate_data_set(_, _), do: :error
+  def validate_slug_get_meta(_, _), do: :error
 
+  @doc """
+  This function matches operators in the `conn.assigns[:whatever]` value tuple to an implementation
+  where the operator and value are used to filter the field.
+
+  Say we have a plug that plucks query parameters from the connection params, parses and validates
+  them, and then assigns them to :filters. In the processing of the request we build an initial
+  query and then iterate through the assigned filters and apply them to the query.
+
+  What the signatures of this function do is match operators, and in select cases value types,
+  to the proper application of the filter, rather than having to build the case by case logic into
+  each time you need to dynamically apply conditions to a query.
+
+  ## Example
+
+      # Request comes in as /api/v2/aot?network_name=chicago&latitude=lt:42
+
+      conn.assigns[:filters] = [
+        {network_name, "eq", "chicago"},
+        {latitude, "lt", "42"}
+      ]
+
+      query =
+        conn.assigns[:filters]
+        |> Enum.reduce(AotData, {fname, op, value}, query -> apply_filter(query, fname, op, value) end)
+
+      Repo.all(query)
+  """
   @spec apply_filter(Ecto.Queryable.t(), String.t(), String.t(), any()) :: Ecto.Queryable.t()
   def apply_filter(query, fname, "lt", value), do: where(query, [q], field(q, ^fname) < ^value)
 
