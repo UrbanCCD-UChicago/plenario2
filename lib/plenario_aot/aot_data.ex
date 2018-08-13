@@ -7,14 +7,14 @@ defmodule PlenarioAot.AotData do
 
   @derive [Poison.Encoder]
   schema "aot_data" do
-    field :aot_meta_id, :id
-    field :node_id, :string
-    field :human_address, :string
-    field :latitude, :float
-    field :longitude, :float
-    field :timestamp, :naive_datetime
-    field :observations, :map
-    field :location, Geo.Point
+    belongs_to(:aot_meta, PlenarioAot.AotMeta)
+    field(:node_id, :string)
+    field(:human_address, :string)
+    field(:latitude, :float)
+    field(:longitude, :float)
+    field(:timestamp, :naive_datetime)
+    field(:observations, :map)
+    field(:location, Geo.Point)
     timestamps()
   end
 
@@ -27,8 +27,24 @@ defmodule PlenarioAot.AotData do
 
   defp do_changeset(params) do
     %AotData{}
-    |> cast(params, [:aot_meta_id, :node_id, :human_address, :latitude, :longitude, :timestamp, :observations])
-    |> validate_required([:aot_meta_id, :node_id, :human_address, :latitude, :longitude, :timestamp, :observations])
+    |> cast(params, [
+      :aot_meta_id,
+      :node_id,
+      :human_address,
+      :latitude,
+      :longitude,
+      :timestamp,
+      :observations
+    ])
+    |> validate_required([
+      :aot_meta_id,
+      :node_id,
+      :human_address,
+      :latitude,
+      :longitude,
+      :timestamp,
+      :observations
+    ])
     |> put_location()
   end
 
@@ -38,5 +54,6 @@ defmodule PlenarioAot.AotData do
     point = %Geo.Point{coordinates: {lon, lat}, srid: 4326}
     put_change(changeset, :location, point)
   end
+
   defp put_location(changeset), do: changeset
 end

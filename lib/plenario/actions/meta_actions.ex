@@ -21,7 +21,7 @@ defmodule Plenario.Actions.MetaActions do
     MetaActions
   }
 
-  @type ok_instance :: {:ok, Meta.t} | {:error, Ecto.Changeset.t()}
+  @type ok_instance :: {:ok, Meta.t()} | {:error, Ecto.Changeset.t()}
 
   @doc """
   This is a convenience function for generating empty changesets to more
@@ -33,9 +33,15 @@ defmodule Plenario.Actions.MetaActions do
   @doc """
   Create a new instance of Meta in the database.
   """
-  @spec create(name :: String.t(), user :: User | integer, source_url :: String.t(), source_type :: String.t()) :: ok_instance
+  @spec create(
+          name :: String.t(),
+          user :: User | integer,
+          source_url :: String.t(),
+          source_type :: String.t()
+        ) :: ok_instance
   def create(name, %User{} = user, source_url, source_type),
     do: create(name, user.id, source_url, source_type)
+
   def create(name, user, source_url, source_type) do
     params = %{
       name: name,
@@ -43,6 +49,7 @@ defmodule Plenario.Actions.MetaActions do
       source_url: source_url,
       source_type: source_type
     }
+
     MetaChangesets.create(params)
     |> Repo.insert()
   end
@@ -63,6 +70,7 @@ defmodule Plenario.Actions.MetaActions do
   @spec update(instance :: Meta, opts :: Keyword.t()) :: ok_instance
   def update(instance, opts \\ []) do
     params = Enum.into(opts, %{})
+
     MetaChangesets.update(instance, params)
     |> Repo.update()
   end
@@ -76,13 +84,14 @@ defmodule Plenario.Actions.MetaActions do
   @doc """
   Convenience function for updating a Meta's time_range attribute.
   """
-  @spec update_time_range(Meta.t, Plenario.TsRange.t) :: ok_instance
-  def update_time_range(%Meta{} = meta, %Plenario.TsRange{} = range), do: MetaActions.update(meta, time_range: range)
+  @spec update_time_range(Meta.t(), Plenario.TsRange.t()) :: ok_instance
+  def update_time_range(%Meta{} = meta, %Plenario.TsRange{} = range),
+    do: MetaActions.update(meta, time_range: range)
 
   @doc """
   Convenience function for updating a Meta's latest_import attribute.
   """
-  @spec update_latest_import(meta :: Meta.t, timestamp :: NaiveDateTime.t) :: ok_instance
+  @spec update_latest_import(meta :: Meta.t(), timestamp :: NaiveDateTime.t()) :: ok_instance
   def update_latest_import(meta, timestamp) do
     Logger.info("updating meta '#{meta.name}' latest import to '#{timestamp}'")
     MetaActions.update(meta, latest_import: timestamp)
@@ -91,8 +100,9 @@ defmodule Plenario.Actions.MetaActions do
   @doc """
   Convenience function for updating a Meta's next_import attribute.
   """
-  @spec update_next_import(meta :: Meta.t) :: ok_instance
+  @spec update_next_import(meta :: Meta.t()) :: ok_instance
   def update_next_import(%Meta{refresh_rate: nil, refresh_interval: nil} = meta), do: {:ok, meta}
+
   def update_next_import(%Meta{refresh_rate: rate, refresh_interval: interval} = meta) do
     next_import =
       case meta.next_import do
@@ -102,16 +112,24 @@ defmodule Plenario.Actions.MetaActions do
 
     diff = abs(Timex.diff(next_import, NaiveDateTime.utc_now(), String.to_atom(rate)))
     Logger.info("import diff is #{diff} #{rate}")
+
     next_import =
       case diff > interval do
         true ->
-          Logger.info("next_import has fallen out of sync -- using `now` as the base to increment", ansi_color: "red")
+          Logger.info(
+            "next_import has fallen out of sync -- using `now` as the base to increment",
+            ansi_color: "red"
+          )
+
           NaiveDateTime.utc_now()
 
-        false -> next_import
+        false ->
+          next_import
       end
 
-    shifted = Timex.shift(next_import, [{String.to_atom(rate), interval}]) |> Timex.to_naive_datetime()
+    shifted =
+      Timex.shift(next_import, [{String.to_atom(rate), interval}]) |> Timex.to_naive_datetime()
+
     Logger.info("updating `next_import` to #{inspect(shifted)} for meta #{inspect(meta.name)}")
 
     MetaActions.update(meta, next_import: shifted)
@@ -166,10 +184,12 @@ defmodule Plenario.Actions.MetaActions do
   """
   @spec mark_first_import(meta :: Meta) :: ok_instance
   def mark_first_import(meta) do
-    {:ok, _} = MetaChangesets.update(meta, %{first_import: NaiveDateTime.utc_now()})
-    |> Repo.update()
+    {:ok, _} =
+      MetaChangesets.update(meta, %{first_import: NaiveDateTime.utc_now()})
+      |> Repo.update()
 
     meta = get(meta.id)
+
     Meta.mark_first_import(meta)
     |> Repo.update()
   end
@@ -229,18 +249,19 @@ defmodule Plenario.Actions.MetaActions do
   Selects all dates in the data set's table and finds the minimum and maximum
   values. From those values, it creates a TsRange.
   """
-  @spec compute_time_range!(Meta.t) :: Plenario.TsRange.t
+  @spec compute_time_range!(Meta.t()) :: Plenario.TsRange.t()
   def compute_time_range!(meta) do
     timestamp_fields =
       DataSetFieldActions.list(for_meta: meta)
-      |> Enum.filter(& &1.type == "timestamp")
+      |> Enum.filter(&(&1.type == "timestamp"))
       |> Enum.map(& &1.name)
+
     virtual_dates =
       VirtualDateFieldActions.list(for_meta: meta)
       |> Enum.map(& &1.name)
 
     fields =
-      timestamp_fields ++ virtual_dates
+      (timestamp_fields ++ virtual_dates)
       |> Enum.join("\", \"")
 
     query = """
@@ -264,14 +285,14 @@ defmodule Plenario.Actions.MetaActions do
   Selects all points in the data set's table and finds the minimum and maximum
   values. From those values, it creates a Polygon.
   """
-  @spec compute_bbox!(Meta.t) :: Geo.Polygon.t
+  @spec compute_bbox!(Meta.t()) :: Geo.Polygon.t()
   def compute_bbox!(meta) do
     fields =
       VirtualPointFieldActions.list(for_meta: meta)
       |> Enum.map(& &1.name)
 
-    stx = Enum.map(fields, & "st_x(\"#{&1}\")") |> Enum.join(", ")
-    sty = Enum.map(fields, & "st_y(\"#{&1}\")") |> Enum.join(", ")
+    stx = Enum.map(fields, &"st_x(\"#{&1}\")") |> Enum.join(", ")
+    sty = Enum.map(fields, &"st_y(\"#{&1}\")") |> Enum.join(", ")
 
     query = """
     SELECT
@@ -291,17 +312,23 @@ defmodule Plenario.Actions.MetaActions do
     """
 
     %Postgrex.Result{rows: [[min_x, min_y, max_x, max_y]]} = Repo.query!(query)
-    %Geo.Polygon{coordinates: [[
-      {max_y, min_x},
-      {min_y, min_x},
-      {min_y, max_x},
-      {max_y, max_x},
-      {max_y, min_x}
-    ]],
-    srid: 4326}
+
+    %Geo.Polygon{
+      coordinates: [
+        [
+          {max_x, min_y},
+          {min_x, min_y},
+          {min_x, max_y},
+          {max_x, max_y},
+          {max_x, min_y}
+        ]
+      ],
+      srid: 4326
+    }
   end
 
   def dump_bbox(%Meta{bbox: nil}), do: nil
+
   def dump_bbox(%Meta{bbox: %Geo.Polygon{} = bbox}) do
     coords = List.first(bbox.coordinates)
     coord_strings = for {lat, lon} <- coords, do: "[#{lat},#{lon}]"
@@ -310,7 +337,7 @@ defmodule Plenario.Actions.MetaActions do
 
   def get_record_count(meta) do
     model = ModelRegistry.lookup(meta.slug)
-    Repo.one(from m in model, select: fragment("count(*)"))
+    Repo.one(from(m in model, select: fragment("count(*)")))
   end
 
   def get_points(meta, limit \\ 1_000) do
@@ -322,19 +349,20 @@ defmodule Plenario.Actions.MetaActions do
   end
 
   defp do_get_points(nil, _, _), do: []
+
   defp do_get_points(pt, meta, limit) do
     # we need to use a raw query here to harness the
     # tablesample selection in postgres.
-    query =
-      """
-      SELECT #{inspect(pt.name)}
-      FROM "#{meta.table_name}_view"
-      TABLESAMPLE SYSTEM_ROWS(#{limit});
-      """
+    query = """
+    SELECT #{inspect(pt.name)}
+    FROM "#{meta.table_name}_view"
+    TABLESAMPLE SYSTEM_ROWS(#{limit});
+    """
+
     %Postgrex.Result{rows: data} = Repo.query!(query)
 
     List.flatten(data)
-    |> Enum.reject(& is_nil(&1))
+    |> Enum.reject(&is_nil(&1))
     |> Enum.map(fn %Geo.Point{coordinates: {lon, lat}} ->
       "[#{lat}, #{lon}]"
     end)

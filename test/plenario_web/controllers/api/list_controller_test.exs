@@ -3,7 +3,14 @@ defmodule PlenarioWeb.Api.ListControllerTest do
 
   use Phoenix.ConnTest
 
-  alias Plenario.ModelRegistry
+  import PlenarioWeb.Router.Helpers
+
+  alias Geo.Polygon
+
+  alias Plenario.{
+    ModelRegistry,
+    TsRange
+  }
 
   alias Plenario.Actions.{
     UserActions,
@@ -17,14 +24,86 @@ defmodule PlenarioWeb.Api.ListControllerTest do
 
   @fixutre "test/fixtures/beach-lab-dna.csv"
 
-  setup do
+  @record_keys [
+    "attribution",
+    "bbox",
+    "description",
+    "fields",
+    "first_import",
+    "latest_import",
+    "name",
+    "next_import",
+    "refresh_ends_on",
+    "refresh_interval",
+    "refresh_rate",
+    "refresh_starts_on",
+    "slug",
+    "source_url",
+    "time_range",
+    "user",
+    "virtual_dates",
+    "virtual_points"
+  ]
+
+  @good_bbox %Polygon{
+               coordinates: [
+                 [
+                   {-87.8, 42.5},
+                   {-87.8, 41.5},
+                   {-87.4, 41.5},
+                   {-87.4, 42.5},
+                   {-87.8, 42.5}
+                 ]
+               ],
+               srid: 4326
+             }
+             |> Geo.JSON.encode()
+             |> Poison.encode!()
+
+  @nada_bbox %Polygon{
+               coordinates: [
+                 [
+                   {1, 1},
+                   {1, -1},
+                   {-1, -1},
+                   {-1, 1},
+                   {1, 1}
+                 ]
+               ],
+               srid: 4326
+             }
+             |> Geo.JSON.encode()
+             |> Poison.encode!()
+
+  @bad_bbox "the-moon"
+
+  @good_time_range %TsRange{
+                     lower: ~N[2016-05-26 00:00:00],
+                     upper: ~N[2017-05-26 00:00:00],
+                     upper_inclusive: false
+                   }
+                   |> Poison.encode!()
+
+  @nada_time_range %TsRange{
+                     lower: ~N[2011-05-26 00:00:00],
+                     upper: ~N[2012-05-26 00:00:00],
+                     upper_inclusive: false
+                   }
+                   |> Poison.encode!()
+
+  @bad_time_range "whenever"
+
+  setup_all do
     Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
     Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
 
     ModelRegistry.clear()
 
     {:ok, user} = UserActions.create("Test User", "test@example.com", "password")
-    {:ok, meta} = MetaActions.create("Chicago Beach Lab - DNA Tests", user.id, "https://example.com/", "csv")
+
+    {:ok, meta} =
+      MetaActions.create("Chicago Beach Lab - DNA Tests", user.id, "https://example.com/", "csv")
+
     {:ok, _} = DataSetFieldActions.create(meta, "DNA Test ID", "text")
     {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample Timestamp", "timestamp")
     {:ok, _} = DataSetFieldActions.create(meta, "Beach", "text")
@@ -57,147 +136,109 @@ defmodule PlenarioWeb.Api.ListControllerTest do
     {:ok, conn: build_conn(), user: user, meta: meta}
   end
 
-  describe "GET /api/v2/data-sets" do
-    test "it returns a 200", %{conn: conn} do
-      result =
+  describe "GET list endpoint" do
+    test "it returns only _ready_ data sets", %{conn: conn, user: user} do
+      # create a new data set, but don't move it along in workflow
+      {:ok, _} = MetaActions.create("not ready", user, "http://example.com/not-ready/", "csv")
+
+      res =
         conn
-        |> get("/api/v2/data-sets")
+        |> get(list_path(conn, :get))
         |> json_response(:ok)
 
-      assert length(result["data"]) == 1
+      assert length(res["data"]) == 1
+
+      res["data"]
+      |> Enum.each(&(&1["state"] == "ready"))
     end
 
-    test "it only gets _ready_ data sets", %{conn: conn, user: user} do
-      {:ok, _} = MetaActions.create("not ready", user, "https://example.com/not-ready", "csv")
-
-      result =
+    test "each object in data only contains meta information", %{conn: conn} do
+      res =
         conn
-        |> get("/api/v2/data-sets")
+        |> get(list_path(conn, :get))
         |> json_response(:ok)
 
-      assert length(result["data"]) == 1
+      res["data"]
+      |> Enum.each(&assert Map.keys(&1) == @record_keys)
     end
   end
 
-  test "GET /api/v2/data-sets/@head", %{conn: conn} do
-    conn = get(conn, "/api/v2/data-sets/@head")
-    result = json_response(conn, 200)
-    assert is_list(result["data"])
+  describe "filter list endpoint by bbox" do
+    test "with a well formatted polygon", %{conn: conn} do
+      res =
+        conn
+        |> get(list_path(conn, :get, %{bbox: "intersects:#{@good_bbox}"}))
+        |> json_response(:ok)
+
+      assert length(res["data"]) == 1
+
+      res =
+        conn
+        |> get(list_path(conn, :get, %{bbox: "intersects:#{@nada_bbox}"}))
+        |> json_response(:ok)
+
+      assert length(res["data"]) == 0
+    end
+
+    test "will 400 with a poorly formatter polygon", %{conn: conn} do
+      conn
+      |> get(list_path(conn, :get, %{bbox: "intersects:#{@bad_bbox}"}))
+      |> json_response(:bad_request)
+    end
   end
 
-  test "GET /api/v2/data-sets/@describe", %{conn: conn} do
-    conn = get(conn, "/api/v2/data-sets/@describe")
-    result = json_response(conn, 200)
-    assert length(result["data"]) == 1
+  describe "filter list endpoint by time range" do
+    test "with a well formatted time range", %{conn: conn} do
+      res =
+        conn
+        |> get(list_path(conn, :get, %{time_range: "intersects:#{@good_time_range}"}))
+        |> json_response(:ok)
+
+      assert length(res["data"]) == 1
+
+      res =
+        conn
+        |> get(list_path(conn, :get, %{time_range: "intersects:#{@nada_time_range}"}))
+        |> json_response(:ok)
+
+      assert length(res["data"]) == 0
+    end
+
+    test "will 400 with a poorly formatted time range", %{conn: conn} do
+      conn
+      |> get(list_path(conn, :get, %{time_range: "intersects:#{@bad_time_range}"}))
+      |> json_response(:bad_request)
+    end
   end
 
-  test "OPTIONS /api/v2/data-sets status", %{conn: conn} do
-    conn = options(conn, "/api/v2/data-sets")
-    assert conn.status == 204
-  end
+  describe "GET @head endpoint" do
+    test "it returns only the first ready data set", %{conn: conn, user: user} do
+      res =
+        conn
+        |> get(list_path(conn, :head))
+        |> json_response(:ok)
 
-  test "OPTIONS /api/v2/data-sets headers", %{conn: conn} do
-    conn = options(conn, "/api/v2/data-sets")
-    headers = Enum.into(conn.resp_headers, %{})
-    assert headers["access-control-allow-methods"] == "GET,HEAD,OPTIONS"
-    assert headers["access-control-allow-origin"] == "*"
-    assert headers["access-control-max-age"] == "300"
-  end
+      assert length(res["data"]) == 1
 
-  test "POST api/v2/data-sets status", %{conn: conn} do
-    conn = post(conn, "/api/v2/data-sets")
-    assert conn.status == 405
-  end
+      # create a new data set, but don't move it along in workflow
+      {:ok, _} = MetaActions.create("not ready 2", user, "http://example.com/not-ready-2/", "csv")
 
-  test "PUT /api/v2/data-sets status", %{conn: conn} do
-    conn = put(conn, "/api/v2/data-sets")
-    assert conn.status == 405
-  end
+      res =
+        conn
+        |> get(list_path(conn, :head))
+        |> json_response(:ok)
 
-  test "PATCH /api/v2/data-sets status", %{conn: conn} do
-    conn = patch(conn, "/api/v2/data-sets")
-    assert conn.status == 405
-  end
+      assert length(res["data"]) == 1
+    end
 
-  test "DELETE /api/v2/data-sets status", %{conn: conn} do
-    conn = delete(conn, "/api/v2/data-sets")
-    assert conn.status == 405
-  end
+    test "each object in data only contains meta information", %{conn: conn} do
+      res =
+        conn
+        |> get(list_path(conn, :head))
+        |> json_response(:ok)
 
-  test "TRACE /api/v2/data-sets status", %{conn: conn} do
-    conn = trace(conn, "/api/v2/data-sets")
-    assert conn.status == 405
-  end
-
-  test "CONNECT /api/v2/data-sets status", %{conn: conn} do
-    conn = connect(conn, "/api/v2/data-sets")
-    assert conn.status == 405
-  end
-
-  test "GET /api/v2/data-sets with bbox arg", %{conn: conn, meta: meta} do
-    bbox =
-      meta.bbox
-      |> Geo.JSON.encode()
-      |> Poison.encode!()
-
-    conn = get(conn, "/api/v2/data-sets?bbox=#{bbox}")
-    result = json_response(conn, 200)
-    assert length(result["data"]) == 1
-  end
-
-  test "GET /api/v2/data-sets/@describe with bbox arg", %{conn: conn, meta: meta} do
-    bbox =
-      meta.bbox
-      |> Geo.JSON.encode()
-      |> Poison.encode!()
-
-    conn = get(conn, "/api/v2/data-sets/@describe?bbox=#{bbox}")
-    result = json_response(conn, 200)
-    assert length(result["data"]) == 1
-  end
-
-  test "page_size param cannot exceed 5000" do
-    get(build_conn(), "/api/v2/data-sets?page_size=5001")
-    |> json_response(422)
-  end
-
-  test "page_size param cannot be less than 1" do
-    get(build_conn(), "/api/v2/data-sets?page_size=0")
-    |> json_response(422)
-  end
-
-  test "page_size param cannot be negative" do
-    get(build_conn(), "/api/v2/data-sets?page_size=-1")
-    |> json_response(422)
-  end
-
-  test "page_size cannot be a string" do
-    get(build_conn(), "/api/v2/data-sets?page_size=string")
-    |> json_response(422)
-  end
-
-  test "valid page_size param" do
-    get(build_conn(), "/api/v2/data-sets?page_size=501")
-    |> json_response(200)
-  end
-
-  test "valid page param" do
-    get(build_conn(), "/api/v2/data-sets?page=1")
-    |> json_response(200)
-  end
-
-  test "page param can't be zero" do
-    get(build_conn(), "/api/v2/data-sets?page=0")
-    |> json_response(422)
-  end
-
-  test "page param can't be negative" do
-    get(build_conn(), "/api/v2/data-sets?page=-1")
-    |> json_response(422)
-  end
-
-  test "page param can't be a word" do
-    get(build_conn(), "/api/v2/data-sets?page=wrong")
-    |> json_response(422)
+      res["data"]
+      |> Enum.each(&assert Map.keys(&1) == @record_keys)
+    end
   end
 end

@@ -1,98 +1,58 @@
 defmodule PlenarioWeb.Api.ListController do
+  @moduledoc """
+  """
+
   use PlenarioWeb, :api_controller
+
   import Ecto.Query
+
   import PlenarioWeb.Api.Plugs
-  import PlenarioWeb.Api.Utils, only: [render_page: 5, map_to_query: 2]
+
+  import PlenarioWeb.Api.Utils,
+    only: [
+      apply_filter: 4,
+      halt_with: 3,
+      render_list: 3
+    ]
+
   alias Plenario.Repo
+
   alias Plenario.Schemas.Meta
-  alias PlenarioWeb.Controllers.Api.CaptureArgs
 
-  defmodule CaptureColumnArgs do
-    def init(opts), do: opts
+  plug(:check_page_size)
+  plug(:check_page)
+  plug(:check_order_by, default_order: "asc:name")
+  plug(:check_filters)
 
-    def call(conn, opts) do
-      columns =
-        Map.keys(Meta.__struct__)
-        |> Stream.map(&to_string/1)
-        # todo(heyzoos) hardcoded removal of bbox so that it doesn't clash
-        # todo(heyzoos) there has to be a more elegant way of doing this
-        |> Enum.filter(& &1 != "bbox")
-      CaptureArgs.call(conn, opts ++ [fields: columns])
-    end
-  end
+  @spec get(Plug.Conn.t(), map()) :: Plug.Conn.t()
+  def get(conn, _params), do: render_metas(conn, "get.json")
 
-  defmodule CaptureBboxArg do
-    def init(opts), do: opts
+  @spec head(Plug.Conn.t(), map()) :: Plug.Conn.t()
+  def head(conn, _params), do: render_metas(conn, "head.json")
 
-    def call(%Plug.Conn{params: %{"bbox" => geojson}} = conn, opts) do
-      json = Poison.decode!(geojson)
-      geom = Geo.JSON.decode(json)
-      geom = %{geom | srid: 4326}
-      query = Map.to_list(%{
-        "bbox" => {"intersects", geom}
-      })
-
-      assign(conn, opts[:assign], query)
-    end
-
-    def call(conn, opts) do
-      assign(conn, opts[:assign], [])
-    end
-  end
-
-  plug(CaptureArgs, assign: :ordering_fields, fields: ["order_by"])
-  plug(CaptureArgs, assign: :windowing_fields, fields: ["row_id", "updated_at"])
-  plug :check_page
-  plug :check_page_size, default_page_size: 500, page_size_limit: 5000
-  plug(CaptureColumnArgs, assign: :column_fields)
-  plug(CaptureBboxArg, assign: :bbox_fields)
-
-  @associations [:fields, :virtual_dates, :virtual_points, :user]
-
-  def construct_query_from_conn_assigns(conn) do
-    ordering_fields = Map.get(conn.assigns, :ordering_fields)
-    windowing_fields = Map.get(conn.assigns, :windowing_fields)
-    column_fields = Map.get(conn.assigns, :column_fields)
-    bbox_query_map = Map.get(conn.assigns, :bbox_fields)
+  defp render_metas(conn, view) do
+    {dir, fname} = conn.assigns[:order_by]
 
     query =
       Meta
-      |> where([m], m.state == "ready")
-      |> map_to_query(ordering_fields)
-      |> map_to_query(windowing_fields)
-      |> map_to_query(column_fields)
-      |> map_to_query(bbox_query_map)
+      |> where([q], q.state == ^"ready")
+      |> order_by([q], {^dir, ^fname})
+      |> preload(user: :metas, fields: :meta, virtual_dates: :meta, virtual_points: :meta)
 
-    params = windowing_fields ++ ordering_fields ++ column_fields ++ bbox_query_map
+    query =
+      conn.assigns[:filters]
+      |> Enum.reduce(query, fn {fname, op, value}, query ->
+        apply_filter(query, fname, op, value)
+      end)
 
-    {query, params}
-  end
-
-  @doc """
-  Lists all metadata objects satisfying the provided query.
-  """
-  def get(conn, %{"page" => page, "page_size" => page_size}) do
-    pagination_fields = [page: page, page_size: page_size]
-    {query, params_used} = construct_query_from_conn_assigns(conn)
-    page = Repo.paginate(query, pagination_fields)
-    render_page(conn, "get.json", params_used ++ pagination_fields, page.entries, page)
-  end
-
-  def head(conn, %{"page" => page, "page_size" => _}) do
-    pagination_fields = [page: page, page_size: 1]
-    {query, params_used} = construct_query_from_conn_assigns(conn)
-    page = Repo.paginate(query, pagination_fields)
-    render_page(conn, "get.json", params_used ++ pagination_fields, page.entries, page)
-  end
-
-  @doc """
-  Lists all single metadata objects satisfying the provided query. The metadata
-  objects have all associations preloaded.
-  """
-  def describe(conn, %{"page" => page, "page_size" => page_size}) do
-    pagination_fields = [page: page, page_size: page_size]
-    {query, params_used} = construct_query_from_conn_assigns(conn)
-    page = Repo.paginate(preload(query, ^@associations), pagination_fields)
-    render_page(conn, "get.json", params_used ++ pagination_fields, page.entries, page)
+    try do
+      page = conn.assigns[:page]
+      page_size = conn.assigns[:page_size]
+      data = Repo.paginate(query, page: page, page_size: page_size)
+      render_list(conn, view, data)
+    rescue
+      e in [Ecto.QueryError, Ecto.SubQueryError, Postgrex.Error] ->
+        halt_with(conn, :bad_request, e.message)
+    end
   end
 end
