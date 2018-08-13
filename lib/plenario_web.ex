@@ -48,6 +48,7 @@ defmodule PlenarioWeb do
     quote do
       use Phoenix.Controller, namespace: PlenarioWeb.Api
       import Plug.Conn
+      import PlenarioWeb.Router.Helpers
       import Canary.Plugs
     end
   end
@@ -112,9 +113,11 @@ defmodule PlenarioWeb do
       use Phoenix.View,
         root: "lib/plenario_web/templates/api",
         namespace: PlenarioWeb.Api
+
       import Phoenix.Controller, only: [view_module: 1]
       import PlenarioWeb.Router.Helpers
       import PlenarioWeb.ErrorHelpers
+      import PlenarioWeb.Api.ViewUtils
     end
   end
 

@@ -1,202 +1,202 @@
 [
- {
-  "node_id": "080",
-  "timestamp": "2018-03-07 15:54:04",
-  "latitude": 41.9691029,
-  "longitude": -87.6601463,
-  "observations": {
-   "TSYS01": {
-    "temperature": -1.06
-   },
-   "HTU21D": {
-    "humidity": 52.72,
-    "temperature": -1.36
-   },
-   "BMP180": {
-    "pressure": 1019.96,
-    "temperature": 5.9
-   }
+  {
+    "node_id": "080",
+    "timestamp": "2018-03-07 15:54:04",
+    "latitude": 41.9691029,
+    "longitude": -87.6601463,
+    "observations": {
+      "TSYS01": {
+        "temperature": -1.06
+      },
+      "HTU21D": {
+        "humidity": 52.72,
+        "temperature": -1.36
+      },
+      "BMP180": {
+        "pressure": 1019.96,
+        "temperature": 5.9
+      }
+    },
+    "human_address": "Broadway Ave - Lawrence Ave [NEC]"
   },
-  "human_address": "Broadway Ave - Lawrence Ave [NEC]"
- },
- {
-  "node_id": "080",
-  "timestamp": "2018-03-07 15:54:30",
-  "latitude": 41.9691029,
-  "longitude": -87.6601463,
-  "observations": {
-   "TSYS01": {
-    "temperature": -0.92
-   },
-   "HTU21D": {
-    "humidity": 53.1,
-    "temperature": -1.39
-   },
-   "BMP180": {
-    "pressure": 1020.02,
-    "temperature": 6.0
-   }
+  {
+    "node_id": "080",
+    "timestamp": "2018-03-07 15:54:30",
+    "latitude": 41.9691029,
+    "longitude": -87.6601463,
+    "observations": {
+      "TSYS01": {
+        "temperature": -0.92
+      },
+      "HTU21D": {
+        "humidity": 53.1,
+        "temperature": -1.39
+      },
+      "BMP180": {
+        "pressure": 1020.02,
+        "temperature": 6.0
+      }
+    },
+    "human_address": "Broadway Ave - Lawrence Ave [NEC]"
   },
-  "human_address": "Broadway Ave - Lawrence Ave [NEC]"
- },
- {
-  "node_id": "080",
-  "timestamp": "2018-03-07 15:54:56",
-  "latitude": 41.9691029,
-  "longitude": -87.6601463,
-  "observations": {
-   "TSYS01": {
-    "temperature": -0.78
-   },
-   "HTU21D": {
-    "humidity": 53.68,
-    "temperature": -1.24
-   },
-   "BMP180": {
-    "pressure": 1019.97,
-    "temperature": 6.1
-   }
+  {
+    "node_id": "080",
+    "timestamp": "2018-03-07 15:54:56",
+    "latitude": 41.9691029,
+    "longitude": -87.6601463,
+    "observations": {
+      "TSYS01": {
+        "temperature": -0.78
+      },
+      "HTU21D": {
+        "humidity": 53.68,
+        "temperature": -1.24
+      },
+      "BMP180": {
+        "pressure": 1019.97,
+        "temperature": 6.1
+      }
+    },
+    "human_address": "Broadway Ave - Lawrence Ave [NEC]"
   },
-  "human_address": "Broadway Ave - Lawrence Ave [NEC]"
- },
- {
-  "node_id": "080",
-  "timestamp": "2018-03-07 15:55:22",
-  "latitude": 41.9691029,
-  "longitude": -87.6601463,
-  "observations": {
-   "TSYS01": {
-    "temperature": -0.88
-   },
-   "HTU21D": {
-    "humidity": 52.65,
-    "temperature": -1.17
-   },
-   "BMP180": {
-    "pressure": 1019.94,
-    "temperature": 6.1
-   }
+  {
+    "node_id": "080",
+    "timestamp": "2018-03-07 15:55:22",
+    "latitude": 41.9691029,
+    "longitude": -87.6601463,
+    "observations": {
+      "TSYS01": {
+        "temperature": -0.88
+      },
+      "HTU21D": {
+        "humidity": 52.65,
+        "temperature": -1.17
+      },
+      "BMP180": {
+        "pressure": 1019.94,
+        "temperature": 6.1
+      }
+    },
+    "human_address": "Broadway Ave - Lawrence Ave [NEC]"
   },
-  "human_address": "Broadway Ave - Lawrence Ave [NEC]"
- },
- {
-  "node_id": "080",
-  "timestamp": "2018-03-07 15:55:48",
-  "latitude": 41.9691029,
-  "longitude": -87.6601463,
-  "observations": {
-   "TSYS01": {
-    "temperature": -0.81
-   },
-   "HTU21D": {
-    "humidity": 51.92,
-    "temperature": -1.29
-   },
-   "BMP180": {
-    "pressure": 1020.06,
-    "temperature": 6.1
-   }
+  {
+    "node_id": "080",
+    "timestamp": "2018-03-07 15:55:48",
+    "latitude": 41.9691029,
+    "longitude": -87.6601463,
+    "observations": {
+      "TSYS01": {
+        "temperature": -0.81
+      },
+      "HTU21D": {
+        "humidity": 51.92,
+        "temperature": -1.29
+      },
+      "BMP180": {
+        "pressure": 1020.06,
+        "temperature": 6.1
+      }
+    },
+    "human_address": "Broadway Ave - Lawrence Ave [NEC]"
   },
-  "human_address": "Broadway Ave - Lawrence Ave [NEC]"
- },
- {
-  "node_id": "080",
-  "timestamp": "2018-03-07 15:56:14",
-  "latitude": 41.9691029,
-  "longitude": -87.6601463,
-  "observations": {
-   "TSYS01": {
-    "temperature": -0.73
-   },
-   "HTU21D": {
-    "humidity": 50.39,
-    "temperature": -1.24
-   },
-   "BMP180": {
-    "pressure": 1020.06,
-    "temperature": 6.1
-   }
+  {
+    "node_id": "080",
+    "timestamp": "2018-03-07 15:56:14",
+    "latitude": 41.9691029,
+    "longitude": -87.6601463,
+    "observations": {
+      "TSYS01": {
+        "temperature": -0.73
+      },
+      "HTU21D": {
+        "humidity": 50.39,
+        "temperature": -1.24
+      },
+      "BMP180": {
+        "pressure": 1020.06,
+        "temperature": 6.1
+      }
+    },
+    "human_address": "Broadway Ave - Lawrence Ave [NEC]"
   },
-  "human_address": "Broadway Ave - Lawrence Ave [NEC]"
- },
- {
-  "node_id": "080",
-  "timestamp": "2018-03-07 15:56:40",
-  "latitude": 41.9691029,
-  "longitude": -87.6601463,
-  "observations": {
-   "TSYS01": {
-    "temperature": -0.64
-   },
-   "HTU21D": {
-    "humidity": 49.54,
-    "temperature": -1.14
-   },
-   "BMP180": {
-    "pressure": 1020.02,
-    "temperature": 6.2
-   }
+  {
+    "node_id": "080",
+    "timestamp": "2018-03-07 15:56:40",
+    "latitude": 41.9691029,
+    "longitude": -87.6601463,
+    "observations": {
+      "TSYS01": {
+        "temperature": -0.64
+      },
+      "HTU21D": {
+        "humidity": 49.54,
+        "temperature": -1.14
+      },
+      "BMP180": {
+        "pressure": 1020.02,
+        "temperature": 6.2
+      }
+    },
+    "human_address": "Broadway Ave - Lawrence Ave [NEC]"
   },
-  "human_address": "Broadway Ave - Lawrence Ave [NEC]"
- },
- {
-  "node_id": "080",
-  "timestamp": "2018-03-07 15:57:06",
-  "latitude": 41.9691029,
-  "longitude": -87.6601463,
-  "observations": {
-   "TSYS01": {
-    "temperature": -0.57
-   },
-   "HTU21D": {
-    "humidity": 50.08,
-    "temperature": -1.08
-   },
-   "BMP180": {
-    "pressure": 1019.96,
-    "temperature": 6.3
-   }
+  {
+    "node_id": "080",
+    "timestamp": "2018-03-07 15:57:06",
+    "latitude": 41.9691029,
+    "longitude": -87.6601463,
+    "observations": {
+      "TSYS01": {
+        "temperature": -0.57
+      },
+      "HTU21D": {
+        "humidity": 50.08,
+        "temperature": -1.08
+      },
+      "BMP180": {
+        "pressure": 1019.96,
+        "temperature": 6.3
+      }
+    },
+    "human_address": "Broadway Ave - Lawrence Ave [NEC]"
   },
-  "human_address": "Broadway Ave - Lawrence Ave [NEC]"
- },
- {
-  "node_id": "080",
-  "timestamp": "2018-03-07 15:57:31",
-  "latitude": 41.9691029,
-  "longitude": -87.6601463,
-  "observations": {
-   "TSYS01": {
-    "temperature": -0.43
-   },
-   "HTU21D": {
-    "humidity": 50.59,
-    "temperature": -1.02
-   },
-   "BMP180": {
-    "pressure": 1019.98,
-    "temperature": 6.4
-   }
+  {
+    "node_id": "081",
+    "timestamp": "2018-03-07 15:57:31",
+    "latitude": 41.94,
+    "longitude": -87.6601463,
+    "observations": {
+      "TSYS01": {
+        "temperature": -0.43
+      },
+      "HTU21D": {
+        "humidity": 50.59,
+        "temperature": -1.02
+      },
+      "BMP180": {
+        "pressure": 1019.98,
+        "temperature": 6.4
+      }
+    },
+    "human_address": "Broadway Ave - Lawrence Ave [NEC]"
   },
-  "human_address": "Broadway Ave - Lawrence Ave [NEC]"
- },
- {
-  "node_id": "080",
-  "timestamp": "2018-03-07 15:57:57",
-  "latitude": 41.9691029,
-  "longitude": -87.6601463,
-  "observations": {
-   "TSYS01": {
-    "temperature": -0.34
-   },
-   "HTU21D": {
-    "humidity": 50.58,
-    "temperature": -0.91
-   },
-   "BMP180": {
-    "pressure": 1019.93,
-    "temperature": 6.5
-   }
-  },
-  "human_address": "Broadway Ave - Lawrence Ave [NEC]"
- }
+  {
+    "node_id": "082",
+    "timestamp": "2018-03-07 15:57:57",
+    "latitude": 41.95,
+    "longitude": -87.6601463,
+    "observations": {
+      "TSYS01": {
+        "temperature": -0.34
+      },
+      "HTU21D": {
+        "humidity": 50.58,
+        "temperature": -0.91
+      },
+      "BMP180": {
+        "pressure": 1019.93,
+        "temperature": 6.5
+      }
+    },
+    "human_address": "Broadway Ave - Lawrence Ave [NEC]"
+  }
 ]

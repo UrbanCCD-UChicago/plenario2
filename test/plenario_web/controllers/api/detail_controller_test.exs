@@ -1,10 +1,17 @@
 defmodule PlenarioWeb.Api.DetailControllerTest do
   use ExUnit.Case
+
   use Phoenix.ConnTest
 
-  @endpoint PlenarioWeb.Endpoint
+  import PlenarioWeb.Router.Helpers
 
-  alias Plenario.{ModelRegistry, Repo}
+  alias Geo.Polygon
+
+  alias Plenario.{
+    ModelRegistry,
+    TsRange
+  }
+
   alias Plenario.Actions.{
     DataSetActions,
     DataSetFieldActions,
@@ -13,270 +20,364 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     VirtualPointFieldActions
   }
 
-  setup do
+  @endpoint PlenarioWeb.Endpoint
+
+  @fixutre "test/fixtures/beach-lab-dna.csv"
+
+  @list_head_keys [
+    "row_id",
+    "DNA Test ID",
+    "DNA Sample Timestamp",
+    "Beach",
+    "DNA Sample 1 Reading",
+    "DNA Sample 2 Reading",
+    "DNA Reading Mean",
+    "Culture Test ID",
+    "Culture Sample 1 Timestamp",
+    "Culture Sample 1 Reading",
+    "Culture Sample 2 Reading",
+    "Culture Reading Mean",
+    "Culture Note",
+    "Culture Sample Interval",
+    "Culture Sample 2 Timestamp",
+    "Latitude",
+    "Longitude",
+    "Location"
+  ]
+
+  @describe_keys [
+    "attribution",
+    "bbox",
+    "description",
+    "fields",
+    "first_import",
+    "latest_import",
+    "name",
+    "next_import",
+    "refresh_ends_on",
+    "refresh_interval",
+    "refresh_rate",
+    "refresh_starts_on",
+    "slug",
+    "source_url",
+    "time_range",
+    "user",
+    "virtual_dates",
+    "virtual_points"
+  ]
+
+  @good_bbox %Polygon{
+               coordinates: [
+                 [
+                   {-87.65449, 41.9878},
+                   {-87.65451, 41.9878},
+                   {-87.65451, 41.9876},
+                   {-87.65449, 41.9876},
+                   {-87.65449, 41.9878}
+                 ]
+               ],
+               srid: 4326
+             }
+             |> Geo.JSON.encode()
+             |> Poison.encode!()
+
+  @good_bbox_count 102
+
+  @nada_bbox %Polygon{
+               coordinates: [
+                 [
+                   {1, 1},
+                   {1, -1},
+                   {-1, -1},
+                   {-1, 1},
+                   {1, 1}
+                 ]
+               ],
+               srid: 4326
+             }
+             |> Geo.JSON.encode()
+             |> Poison.encode!()
+
+  @bad_bbox "the-moon"
+
+  @good_time_range %TsRange{
+                     lower: ~N[2017-05-01 00:00:00],
+                     upper: ~N[2017-06-01 00:00:00],
+                     upper_inclusive: false
+                   }
+                   |> Poison.encode!()
+
+  @good_time_range_count 113
+
+  @nada_time_range %TsRange{
+                     lower: ~N[2011-05-26 00:00:00],
+                     upper: ~N[2012-05-26 00:00:00],
+                     upper_inclusive: false
+                   }
+                   |> Poison.encode!()
+
+  @bad_time_range "whenever"
+
+  setup_all do
     Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
     Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
 
-    {:ok, user} = UserActions.create("API Test User", "test@example.com", "password")
-    {:ok, meta} = MetaActions.create("API Test Dataset", user.id, "https://www.example.com", "csv")
-    {:ok, _} = DataSetFieldActions.create(meta.id, "pk", "integer")
-    {:ok, _} = DataSetFieldActions.create(meta.id, "datetime", "timestamp")
-    {:ok, _} = DataSetFieldActions.create(meta.id, "data", "text")
-    {:ok, location} = DataSetFieldActions.create(meta.id, "location", "text")
-    {:ok, vpf} = VirtualPointFieldActions.create(meta, location.id)
-
-    DataSetActions.up!(meta)
-
     ModelRegistry.clear()
 
-    insert = """
-    INSERT INTO "#{meta.table_name}"
-      (pk, datetime, data, location)
-    VALUES
-      (1, '2000-01-01 00:00:00', null, null),
-      (2, '2000-01-01 00:00:00', null, null),
-      (3, '2000-01-01 00:00:00', null, null),
-      (4, '2000-01-01 00:00:00', null, null),
-      (5, '2000-01-01 00:00:00', null, null),
-      (6, '2000-01-02 00:00:00', null, null),
-      (7, '2000-01-02 00:00:00', null, null),
-      (8, '2000-01-02 00:00:00', null, null),
-      (9, '2000-01-02 00:00:00', null, null),
-      (10, '2000-01-02 00:00:00', null, null),
-      (11, null, null, '(50, 50)'),
-      (12, null, null, '(50, 50)'),
-      (13, null, null, '(50, 50)'),
-      (14, null, null, '(50, 50)'),
-      (15, null, null, '(50, 50)');
-    """
-    Ecto.Adapters.SQL.query!(Repo, insert)
+    {:ok, user} = UserActions.create("Test User", "test@example.com", "password")
 
-    refresh = """
-    REFRESH MATERIALIZED VIEW "#{meta.table_name}_view";
-    """
-    Ecto.Adapters.SQL.query!(Repo, refresh)
+    {:ok, meta} =
+      MetaActions.create("Chicago Beach Lab - DNA Tests", user.id, "https://example.com/", "csv")
 
-    %{conn: build_conn(), slug: meta.slug(), vpf: vpf}
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Test ID", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample Timestamp", "timestamp")
+    {:ok, _} = DataSetFieldActions.create(meta, "Beach", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample 1 Reading", "float")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Sample 2 Reading", "float")
+    {:ok, _} = DataSetFieldActions.create(meta, "DNA Reading Mean", "float")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Test ID", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 1 Timestamp", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 1 Reading", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 2 Reading", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Reading Mean", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Note", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample Interval", "text")
+    {:ok, _} = DataSetFieldActions.create(meta, "Culture Sample 2 Timestamp", "text")
+    {:ok, lat} = DataSetFieldActions.create(meta, "Latitude", "float")
+    {:ok, lon} = DataSetFieldActions.create(meta, "Longitude", "float")
+    {:ok, _} = DataSetFieldActions.create(meta, "Location", "text")
+    {:ok, vpf} = VirtualPointFieldActions.create(meta, lat.id, lon.id)
+
+    {:ok, meta} = MetaActions.submit_for_approval(meta)
+    {:ok, meta} = MetaActions.approve(meta)
+    :ok = DataSetActions.etl!(meta, @fixutre)
+    {:ok, meta} = MetaActions.mark_first_import(meta)
+    {:ok, meta} = MetaActions.update_latest_import(meta, NaiveDateTime.utc_now())
+    bbox = MetaActions.compute_bbox!(meta)
+    {:ok, meta} = MetaActions.update_bbox(meta, bbox)
+    range = MetaActions.compute_time_range!(meta)
+    {:ok, meta} = MetaActions.update_time_range(meta, range)
+
+    {:ok, conn: build_conn(), user: user, meta: meta, vpf: vpf}
   end
 
-  test "GET /api/v2/data-sets/:slug", %{slug: slug} do
-    conn = get(build_conn(), "/api/v2/data-sets/#{slug}")
-    response = json_response(conn, 200)
-    assert length(response["data"]) == 15
+  describe "GET detail endpoint" do
+    test "will 404 when it can't find the slug", %{conn: conn} do
+      conn
+      |> get(detail_path(conn, :get, "i-dont-exist"))
+      |> json_response(:not_found)
+    end
+
+    test "will 404 when given the id, even if it's for a valid, ready data set", %{
+      conn: conn,
+      meta: meta
+    } do
+      conn
+      |> get(detail_path(conn, :get, meta.id))
+      |> json_response(:not_found)
+    end
+
+    test "will 404 for a not-ready data set", %{conn: conn, user: user} do
+      {:ok, meta} =
+        MetaActions.create("not ready 2", user, "https://example.com/not-ready-2", "csv")
+
+      conn
+      |> get(detail_path(conn, :get, meta.id))
+      |> json_response(:not_found)
+    end
+
+    test "each object contains the same keys", %{conn: conn, meta: meta} do
+      res =
+        conn
+        |> get(detail_path(conn, :get, meta.slug))
+        |> json_response(:ok)
+
+      res["data"]
+      |> Enum.with_index()
+      |> Enum.each(fn {el, idx} ->
+        next = Enum.at(res["data"], idx + 1)
+
+        if next != nil do
+          assert Map.keys(el) == Map.keys(next)
+        end
+      end)
+    end
+
+    test "each record exactly contains its `row_id`, columns, and virtual fields", %{
+      conn: conn,
+      meta: meta,
+      vpf: vpf
+    } do
+      keys =
+        (@list_head_keys ++ [vpf.name])
+        |> Enum.sort()
+
+      res =
+        conn
+        |> get(detail_path(conn, :get, meta.slug))
+        |> json_response(:ok)
+
+      res["data"]
+      |> Enum.each(&assert Map.keys(&1) == keys)
+    end
   end
 
-  test "GET /api/v2/data-sets/does_not_exist" do
-    conn = get(build_conn(), "/api/v2/data-sets/does_not_exist")
-    assert json_response(conn, 404)
+  describe "filter results by bbox" do
+    test "with a well formatted polygon", %{conn: conn, meta: meta, vpf: vpf} do
+      res =
+        conn
+        |> get(detail_path(conn, :get, meta.slug, %{vpf.name => "within:#{@good_bbox}"}))
+        |> json_response(:ok)
+
+      assert length(res["data"]) == @good_bbox_count
+
+      res =
+        conn
+        |> get(detail_path(conn, :get, meta.slug, %{vpf.name => "within:#{@nada_bbox}"}))
+        |> json_response(:ok)
+
+      assert length(res["data"]) == 0
+    end
+
+    test "will 400 with a poorly formatted polygon", %{conn: conn, meta: meta, vpf: vpf} do
+      conn
+      |> get(detail_path(conn, :get, meta.slug, %{vpf.name => "within:#{@bad_bbox}"}))
+      |> json_response(:bad_request)
+    end
   end
 
-  test "GET /api/v2/data-sets/:slug/@head", %{slug: slug} do
-    conn = get(build_conn(), "/api/v2/data-sets/#{slug}/@head")
-    response = json_response(conn, 200)
-    assert is_list(response["data"])
+  describe "filter results by time range" do
+    test "with a well formatted time range", %{conn: conn, meta: meta} do
+      res =
+        conn
+        |> get(
+          detail_path(conn, :get, meta.slug, %{
+            "DNA Sample Timestamp": "within:#{@good_time_range}"
+          })
+        )
+        |> json_response(:ok)
+
+      assert length(res["data"]) == @good_time_range_count
+
+      res =
+        conn
+        |> get(
+          detail_path(conn, :get, meta.slug, %{
+            "DNA Sample Timestamp": "within:#{@nada_time_range}"
+          })
+        )
+        |> json_response(:ok)
+
+      assert length(res["data"]) == 0
+    end
+
+    test "will 400 with a poorly formatted time range", %{conn: conn, meta: meta} do
+      conn
+      |> get(
+        detail_path(conn, :get, meta.slug, %{"DNA Sample Timestamp": "in:#{@bad_time_range}"})
+      )
+      |> json_response(:bad_request)
+    end
   end
 
-  test "GET /api/v2/data-sets/:slug/@describe", %{slug: slug} do
-    conn = get(build_conn(), "/api/v2/data-sets/#{slug}/@describe")
-    response = json_response(conn, 200)
-    assert length(response["data"]) == 15
+  describe "GET @head endpoint" do
+    test "it only returns the first record of the data set", %{conn: conn, meta: meta} do
+      res =
+        conn
+        |> get(detail_path(conn, :head, meta.slug, %{order_by: "asc:DNA Sample Timestamp"}))
+        |> json_response(:ok)
+
+      assert length(res["data"]) == 1
+
+      asc =
+        res["data"]
+        |> List.first()
+
+      res =
+        conn
+        |> get(detail_path(conn, :head, meta.slug, %{order_by: "desc:DNA Sample Timestamp"}))
+        |> json_response(:ok)
+
+      assert length(res["data"]) == 1
+
+      desc =
+        res["data"]
+        |> List.first()
+
+      assert asc != desc
+      assert asc["DNA Sample Timestamp"] < desc["DNA Sample Timestamp"]
+    end
+
+    test "will 404 when it can't find the slug", %{conn: conn} do
+      conn
+      |> get(detail_path(conn, :get, "i-dont-exist"))
+      |> json_response(:not_found)
+    end
+
+    test "will 404 when given the id, even if it's for a valid, ready data set", %{
+      conn: conn,
+      meta: meta
+    } do
+      conn
+      |> get(detail_path(conn, :get, meta.id))
+      |> json_response(:not_found)
+    end
+
+    test "will 404 for a not-ready data set", %{conn: conn, user: user} do
+      {:ok, meta} = MetaActions.create("not readu", user, "https://example.com/not-ready", "csv")
+
+      conn
+      |> get(detail_path(conn, :get, meta.id))
+      |> json_response(:not_found)
+    end
+
+    test "each object contains the same keys", %{conn: conn, meta: meta} do
+      res =
+        conn
+        |> get(detail_path(conn, :get, meta.slug))
+        |> json_response(:ok)
+
+      res["data"]
+      |> Enum.with_index()
+      |> Enum.each(fn {el, idx} ->
+        next = Enum.at(res["data"], idx + 1)
+
+        if next != nil do
+          assert Map.keys(el) == Map.keys(next)
+        end
+      end)
+    end
+
+    test "each record exactly contains its `row_id`, columns, and virtual fields", %{
+      conn: conn,
+      meta: meta,
+      vpf: vpf
+    } do
+      keys =
+        (@list_head_keys ++ [vpf.name])
+        |> Enum.sort()
+
+      res =
+        conn
+        |> get(detail_path(conn, :get, meta.slug))
+        |> json_response(:ok)
+
+      res["data"]
+      |> Enum.each(&assert Map.keys(&1) == keys)
+    end
   end
 
-  test "GET /api/v2/data-sets/:slug pagination page parameter", %{slug: slug} do
-    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?page=2")
-    response = json_response(conn, 200)
-    assert length(response["data"]) == 0
-    assert response["meta"]["counts"]["total_pages"] == 1
-  end
+  describe "GET @describe endpoint" do
+    test "the response object exactly contains meta information and field information", %{
+      conn: conn,
+      meta: meta
+    } do
+      res =
+        conn
+        |> get(detail_path(conn, :describe, meta.slug))
+        |> json_response(:ok)
 
-  test "GET /api/v2/data-sets/:slug pagination page_size parameter", %{slug: slug} do
-    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=10")
-    response = json_response(conn, 200)
-    assert length(response["data"]) == 10
-    assert response["meta"]["counts"]["total_pages"] == 2
-  end
-
-  test "GET /api/v2/data-sets/:slug pagination page and page_size parameters", %{slug: slug} do
-    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=5&page=2")
-    response = json_response(conn, 200)
-    assert length(response["data"]) == 5
-    assert response["meta"]["params"]["page"] == 2
-    assert response["meta"]["params"]["page_size"] == 5
-  end
-
-  test "GET /api/v2/data-sets/:slug pagination is stable with backfills", %{slug: slug} do
-    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=5&page=2")
-    response = json_response(conn, 200)
-
-    assert length(response["data"]) == 5
-    assert response["meta"]["params"]["page"] == 2
-    assert response["meta"]["params"]["page_size"] == 5
-  end
-
-  test "GET /api/v2/data-sets/:slug populates pagination links", %{slug: slug} do
-    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=5&page=2")
-    response = json_response(conn, 200)
-
-    assert length(response["data"]) == 5
-    assert response["meta"]["links"]["current"] =~ "page_size=5&page=2"
-    assert response["meta"]["links"]["current"] =~ "inserted_at"
-    assert response["meta"]["links"]["previous"] =~ "page_size=5&page=1"
-    assert response["meta"]["links"]["previous"] =~ "inserted_at"
-    assert response["meta"]["links"]["next"] =~ "page_size=5&page=3"
-    assert response["meta"]["links"]["next"] =~ "inserted_at"
-  end
-
-  test "OPTIONS /api/v2/data-sets/:slug status", %{conn: conn} do
-    conn = options(conn, "/api/v2/data-sets")
-    assert conn.status == 204
-  end
-
-  test "OPTIONS /api/v2/data-sets/:slug headers", %{conn: conn} do
-    conn = options(conn, "/api/v2/data-sets")
-    headers = Enum.into(conn.resp_headers, %{})
-    assert headers["access-control-allow-methods"] == "GET,HEAD,OPTIONS"
-    assert headers["access-control-allow-origin"] == "*"
-    assert headers["access-control-max-age"] == "300"
-  end
-
-  test "GET /api/v2/data-sets/:slug bbox query", %{slug: slug} do
-    geojson =
-      """
-      {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [0, 0],
-            [0, 100],
-            [100, 100],
-            [100, 0],
-            [0, 0]
-          ]
-        ]
-      }
-      """
-    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?bbox=#{geojson}")
-    response = json_response(conn, 200)
-    assert length(response["data"]) == 5
-  end
-
-  test "GET /api/v2/data-sets/:slug bbox query no results", %{slug: slug} do
-    geojson =
-      """
-      {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [0, 0],
-            [0, 1],
-            [1, 1],
-            [1, 0],
-            [0, 0]
-          ]
-        ]
-      }
-      """
-    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?bbox=#{geojson}")
-    response = json_response(conn, 200)
-    assert length(response["data"]) == 0
-  end
-
-  test "GET /api/v2/data-sets/:slug range query", %{slug: slug} do
-    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?datetime=in:{\"upper\": \"3000-01-01\", \"lower\": \"2000-01-01\"}")
-    response = json_response(conn, 200)
-    assert length(response["data"]) == 15
-  end
-
-  test "GET /api/v2/data-sets/:slug range query no results", %{slug: slug} do
-    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?datetime=in:{\"upper\": \"2000-01-01 00:00:00\", \"lower\": \"3000-01-01 00:00:00\"}")
-    response = json_response(conn, 200)
-    assert length(response["data"]) == 0
-  end
-
-  test "GET /api/v2/data-sets/:slug location query", %{slug: slug, vpf: vpf} do
-    geojson =
-      """
-      {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [0, 0],
-            [0, 100],
-            [100, 100],
-            [100, 0],
-            [0, 0]
-          ]
-        ]
-      }
-      """
-    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?#{vpf.id}=in:#{geojson}")
-    response = json_response(conn, 200)
-    assert length(response["data"]) == 15
-  end
-
-  test "GET /api/v2/data-sets/:slug location query no results", %{slug: slug, vpf: vpf} do
-    geojson =
-      """
-      {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [0, 0],
-            [0, 1],
-            [1, 1],
-            [1, 0],
-            [0, 0]
-          ]
-        ]
-      }
-      """
-    conn = get(build_conn(), "/api/v2/data-sets/#{slug}?#{vpf.name}=in:#{geojson}")
-    response = json_response(conn, 200)
-    assert length(response["data"]) == 0
-  end
-
-  test "page_size param cannot exceed 5000", %{slug: slug} do
-    get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=5001")
-    |> json_response(422)
-  end
-
-  test "page_size param cannot be less than 1", %{slug: slug} do
-    get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=0")
-    |> json_response(422)
-  end
-
-  test "page_size param cannot be negative", %{slug: slug} do
-    get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=-1")
-    |> json_response(422)
-  end
-
-  test "page_size cannot be a string", %{slug: slug} do
-    get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=string")
-    |> json_response(422)
-  end
-
-  test "valid page_size param", %{slug: slug} do
-    get(build_conn(), "/api/v2/data-sets/#{slug}?page_size=501")
-    |> json_response(200)
-  end
-
-  test "valid page param", %{slug: slug} do
-    get(build_conn(), "/api/v2/data-sets/#{slug}?page=1")
-    |> json_response(200)
-  end
-
-  test "page param can't be zero", %{slug: slug} do
-    get(build_conn(), "/api/v2/data-sets/#{slug}?page=0")
-    |> json_response(422)
-  end
-
-  test "page param can't be negative", %{slug: slug} do
-    get(build_conn(), "/api/v2/data-sets/#{slug}?page=-1")
-    |> json_response(422)
-  end
-
-  test "page param can't be a word", %{slug: slug} do
-    get(build_conn(), "/api/v2/data-sets/#{slug}?page=wrong")
-    |> json_response(422)
+      assert Map.keys(res["data"]) == @describe_keys
+    end
   end
 end

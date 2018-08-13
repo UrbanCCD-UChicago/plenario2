@@ -7,7 +7,7 @@ defmodule PlenarioWeb.Web.PageController do
   alias Plenario.Repo
   alias PlenarioAot.{AotData, AotMeta}
 
-  def assign_s3_path(conn, opts) do
+  def assign_s3_path(conn, _opts) do
     assign(
       conn,
       :s3_asset_path,

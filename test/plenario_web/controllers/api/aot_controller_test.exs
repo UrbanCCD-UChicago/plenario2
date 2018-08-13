@@ -1,323 +1,122 @@
 defmodule PlenarioWeb.Api.AotControllerTest do
   use ExUnit.Case
+
   use Phoenix.ConnTest
+
+  import PlenarioWeb.Router.Helpers
+
+  alias Plenario.Repo
 
   alias PlenarioAot.AotActions
 
   @endpoint PlenarioWeb.Endpoint
+
   @fixture "test/fixtures/aot-chicago.json"
 
   @total_records 10
 
-  setup do
+  setup_all do
     Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
     Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
 
     {:ok, meta} = AotActions.create_meta("Chicago", "https://example.com/")
 
-    File.read!(@fixture)
-    |> Poison.decode!()
-    |> Enum.map(fn obj -> {:ok, _} = AotActions.insert_data(meta, obj) end)
+    Repo.transaction(fn ->
+      File.read!(@fixture)
+      |> Poison.decode!()
+      |> Enum.map(fn obj -> {:ok, _} = AotActions.insert_data(meta, obj) end)
+    end)
 
     AotActions.compute_and_update_meta_bbox(meta)
     AotActions.compute_and_update_meta_time_range(meta)
 
-    {
-      :ok,
-      [
-        conn: build_conn(),
-        meta: meta
-      ]
-    }
+    {:ok, conn: build_conn(), meta: meta}
   end
 
-  test "GET /api/v2/aot", %{conn: conn} do
-    conn = get(conn, "/api/v2/aot")
-    %{"meta" => meta, "data" => data} = json_response(conn, 200)
+  describe "GET :get naive" do
+    test "applies page", %{conn: conn} do
+      res =
+        conn
+        |> get(aot_path(conn, :get))
+        |> json_response(:ok)
 
-    assert is_map(meta)
-    assert Map.has_key?(meta, "links")
-    links = meta["links"]
-    assert is_map(links)
-    assert Map.has_key?(links, "current")
-    assert Map.has_key?(links, "previous")
-    assert Map.has_key?(links, "next")
-    assert Map.has_key?(meta, "params")
-    params = meta["params"]
-    assert is_map(params)
-    assert Map.has_key?(meta, "counts")
-    counts = meta["counts"]
-    assert Map.has_key?(counts, "data")
-    assert Map.has_key?(counts, "errors")
-    assert Map.has_key?(counts, "total_pages")
-    assert Map.has_key?(counts, "total_records")
-    assert counts["total_records"] == @total_records
-
-    assert is_list(data)
-    assert length(data) == @total_records
-    first = Enum.at(data, 0)
-    assert is_map(first)
-    assert Map.has_key?(first, "node_id")
-    assert Map.has_key?(first, "human_address")
-    assert Map.has_key?(first, "timestamp")
-    assert Map.has_key?(first, "latitude")
-    assert Map.has_key?(first, "longitude")
-    assert Map.has_key?(first, "observations")
-  end
-
-  test "GET /api/v2/aot/@head", %{conn: conn} do
-    conn = get(conn, "/api/v2/aot/@head")
-    %{"meta" => meta, "data" => data} = json_response(conn, 200)
-
-    assert is_map(meta)
-    assert Map.has_key?(meta, "links")
-    links = meta["links"]
-    assert is_map(links)
-    assert Map.has_key?(links, "current")
-    assert Map.has_key?(links, "previous")
-    assert Map.has_key?(links, "next")
-    assert Map.has_key?(meta, "params")
-    params = meta["params"]
-    assert is_map(params)
-    assert Map.has_key?(meta, "counts")
-    counts = meta["counts"]
-    assert Map.has_key?(counts, "data")
-    assert Map.has_key?(counts, "errors")
-    assert Map.has_key?(counts, "total_pages")
-    assert Map.has_key?(counts, "total_records")
-
-    assert is_list(data)
-    assert length(data) == 1
-    first = Enum.at(data, 0)
-    assert is_map(first)
-    assert Map.has_key?(first, "node_id")
-    assert Map.has_key?(first, "human_address")
-    assert Map.has_key?(first, "timestamp")
-    assert Map.has_key?(first, "latitude")
-    assert Map.has_key?(first, "longitude")
-    assert Map.has_key?(first, "observations")
-  end
-
-  test "GET /api/v2/aot/@describe", %{conn: conn} do
-    conn = get(conn, "/api/v2/aot/@describe")
-    %{"meta" => meta, "data" => data} = json_response(conn, 200)
-
-    assert is_map(meta)
-    assert Map.has_key?(meta, "links")
-    links = meta["links"]
-    assert is_map(links)
-    assert Map.has_key?(links, "current")
-    assert Map.has_key?(links, "previous")
-    assert Map.has_key?(links, "next")
-    assert Map.has_key?(meta, "params")
-    params = meta["params"]
-    assert is_map(params)
-    assert Map.has_key?(meta, "counts")
-    counts = meta["counts"]
-    assert Map.has_key?(counts, "data")
-    assert Map.has_key?(counts, "errors")
-    assert Map.has_key?(counts, "total_pages")
-    assert Map.has_key?(counts, "total_records")
-
-    assert is_list(data)
-    assert length(data) == 1
-    first = Enum.at(data, 0)
-    assert is_map(first)
-    assert Map.has_key?(first, "network_name")
-    assert Map.has_key?(first, "slug")
-    assert Map.has_key?(first, "source_url")
-    assert Map.has_key?(first, "bbox")
-    assert Map.has_key?(first, "time_range")
-  end
-
-  describe "GET with filter" do
-    test "network_name", %{conn: conn} do
-      conn = get(conn, "/api/v2/aot?network_name=chicago")
-      %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == @total_records
-
-      conn = get(conn, "/api/v2/aot?network_name=outer-space")
-      %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == 0
-
-      conn = get(conn, "/api/v2/aot?network_name=outer-space&network_name=chicago")
-      %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == @total_records
+      assert res["meta"]["params"]["page"] == 1
     end
 
-    test "bbox", %{conn: conn} do
-      min_lat = 41.95
-      max_lat = 41.97
-      min_lon = -87.65
-      max_lon = -87.67
-      bbox = %Geo.Polygon{
-        srid: 4326,
-        coordinates: [[
-          {min_lat, max_lon},
-          {min_lat, min_lon},
-          {max_lat, min_lon},
-          {max_lat, max_lon},
-          {min_lat, max_lon}
-        ]]
-      } |> Geo.JSON.encode()
-      conn = get(conn, "/api/v2/aot?bbox=#{bbox}")
-      %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == @total_records
+    test "applies page size", %{conn: conn} do
+      res =
+        conn
+        |> get(aot_path(conn, :get))
+        |> json_response(:ok)
+
+      assert res["meta"]["params"]["page_size"] == 200
     end
 
-    test "invalid bbox with missing coordinate", %{conn: conn} do
-      min_lat = 41.95
-      max_lat = 41.97
-      min_lon = -87.65
-      max_lon = -87.67
-      bbox = %Geo.Polygon{
-        srid: 4326,
-        coordinates: [[
-          {min_lat, max_lon},
-          {min_lat, min_lon},
-          {max_lat, min_lon},
-          {max_lat, max_lon}
-          # missing closing coordinate
-        ]]
-      } |> Geo.JSON.encode()
+    test "applies order", %{conn: conn} do
+      res =
+        conn
+        |> get(aot_path(conn, :get))
+        |> json_response(:ok)
 
-      assert_raise Ecto.SubQueryError, fn ->
-        get(conn, "/api/v2/aot?bbox=#{bbox}")
-      end
+      assert res["meta"]["params"]["order_by"] == %{"desc" => "timestamp"}
     end
 
-    test "invalid bbox with unacceptable coordinates", %{conn: conn} do
-      min_lat = -10000000
-      max_lat = "bounding"
-      min_lon = "box"
-      max_lon = -10000000
-      bbox = %Geo.Polygon{
-        srid: 4326,
-        coordinates: [[
-          {min_lat, max_lon},
-          {min_lat, min_lon},
-          {max_lat, min_lon},
-          {max_lat, max_lon},
-          {min_lat, max_lon}
-        ]]
-      } |> Geo.JSON.encode()
+    test "applies window", %{conn: conn} do
+      res =
+        conn
+        |> get(aot_path(conn, :get))
+        |> json_response(:ok)
 
-      assert_raise Ecto.SubQueryError, fn ->
-        get(conn, "/api/v2/aot?bbox=#{bbox}")
-      end
+      window = res["meta"]["params"]["window"]
+      {:ok, _} = Timex.parse(window, "%Y-%m-%dT%H:%M:%S", :strftime)
+    end
+  end
+
+  describe "GET :get" do
+    test "filter with a known `network_name` will yield results", %{conn: conn, meta: meta} do
+      # flaky test, requires sleep to let db settle
+      Process.sleep(1000)
+
+      res =
+        conn
+        |> get(aot_path(conn, :get, %{network_name: meta.network_name}))
+        |> json_response(:ok)
+
+      assert length(res["data"]) == @total_records
     end
 
-    test "timestamp", %{conn: conn} do
-      conn = get(conn, "/api/v2/aot?timestamp=2018-01-01T00:00:00Z")
-      %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == 0
+    test "filter with an unknown `network_name` will yield 0 results", %{conn: conn} do
+      res =
+        conn
+        |> get(aot_path(conn, :get, %{network_name: "nada"}))
+        |> json_response(:ok)
 
-      conn = get(conn, "/api/v2/aot?timestamp=eq:2018-01-01T00:00:00Z")
-      %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == 0
-
-      conn = get(conn, "/api/v2/aot?timestamp=gt:2018-01-01T00:00:00Z")
-      %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == @total_records
-
-      conn = get(conn, "/api/v2/aot?timestamp=ge:2018-01-01T00:00:00Z")
-      %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == @total_records
-
-      conn = get(conn, "/api/v2/aot?timestamp=lt:2018-01-01T00:00:00Z")
-      %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == 0
-
-      conn = get(conn, "/api/v2/aot?timestamp=le:2018-01-01T00:00:00Z")
-      %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == 0
-
-      conn = get(conn, "/api/v2/aot?timestamp=in:{\"lower\":\"2018-01-01T00:00:00Z\",\"upper\":\"2019-01-01T00:00:00Z\"}")
-      %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == @total_records
+      assert length(res["data"]) == 0
     end
 
-    test "node_id", %{conn: conn} do
-      conn = get(conn, "/api/v2/aot?node_id=081")
-      %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == 0
+    test "filter with a known `network_name` and an unknown `node_id` will yield 0 results", %{
+      conn: conn,
+      meta: meta
+    } do
+      res =
+        conn
+        |> get(aot_path(conn, :get, %{network_name: meta.network_name, node_id: "nope"}))
+        |> json_response(:ok)
 
-      conn = get(conn, "/api/v2/aot?node_id=000")
-      %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == 0
-
-      conn = get(conn, "/api/v2/aot?node_id=000&node_id=081")
-      %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == 0
+      assert length(res["data"]) == 0
     end
 
-    test "sensor", %{conn: conn} do
-      conn = get(conn, "/api/v2/aot?sensor=BMP180")
-      %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == @total_records
+    test "filter with multiple `good node_id`s will yield results", %{conn: conn} do
+      # flaky test, requires sleep to let db settle
+      Process.sleep(1000)
 
-      conn = get(conn, "/api/v2/aot?sensor=eyes")
-      %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == 0
+      # path = "/api/v2/aot?node_id[]=080&node_id[]=081"
+      res =
+        conn
+        |> get(aot_path(conn, :get, %{node_id: ["080", "081"]}))
+        |> json_response(:ok)
 
-      conn = get(conn, "/api/v2/aot?sensor=eyes&sensor=BMP180")
-      %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == @total_records
+      assert length(res["data"]) == 9
     end
-
-    test "network_name and node_id", %{conn: conn} do
-      conn = get(conn, "/api/v2/aot?network_name=chicago&node_id=081")
-      %{"meta" => meta, "data" => _} = json_response(conn, 200)
-      assert meta["counts"]["total_records"] == 0
-    end
-
-    # TODO: write test after implementation
-    # test "observations" do
-    # end
-  end
-
-  test "page_size param cannot exceed 5000" do
-    get(build_conn(), "/api/v2/aot?page_size=5001")
-    |> json_response(422)
-  end
-
-  test "page_size param cannot be less than 1" do
-    get(build_conn(), "/api/v2/aot?page_size=0")
-    |> json_response(422)
-  end
-
-  test "page_size param cannot be negative" do
-    get(build_conn(), "/api/v2/aot?page_size=-1")
-    |> json_response(422)
-  end
-
-  test "page_size cannot be a string" do
-    get(build_conn(), "/api/v2/aot?page_size=string")
-    |> json_response(422)
-  end
-
-  test "valid page_size param" do
-    get(build_conn(), "/api/v2/aot?page_size=501")
-    |> json_response(200)
-  end
-
-  test "valid page param" do
-    get(build_conn(), "/api/v2/aot?page=1")
-    |> json_response(200)
-  end
-
-  test "page param can't be zero" do
-    get(build_conn(), "/api/v2/aot?page=0")
-    |> json_response(422)
-  end
-
-  test "page param can't be negative" do
-    get(build_conn(), "/api/v2/aot?page=-1")
-    |> json_response(422)
-  end
-
-  test "page param can't be a word" do
-    get(build_conn(), "/api/v2/aot?page=wrong")
-    |> json_response(422)
   end
 end

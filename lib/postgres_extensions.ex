@@ -15,22 +15,20 @@ defmodule Plenario.TsRange do
   @typedoc """
   """
   @type t :: %__MODULE__{
-    lower: NaiveDateTime.t,
-    upper: NaiveDateTime.t,
-    lower_inclusive: boolean,
-    upper_inclusive: boolean
-  }
+          lower: NaiveDateTime.t(),
+          upper: NaiveDateTime.t(),
+          lower_inclusive: boolean,
+          upper_inclusive: boolean
+        }
 
-  defstruct [
-    lower: nil,
-    upper: nil,
-    lower_inclusive: true,
-    upper_inclusive: true
-  ]
+  defstruct lower: nil,
+            upper: nil,
+            lower_inclusive: true,
+            upper_inclusive: true
 
   @doc """
   """
-  @spec new(NaiveDateTime.t, NaiveDateTime.t, boolean, boolean) :: TsRange.t
+  @spec new(NaiveDateTime.t(), NaiveDateTime.t(), boolean, boolean) :: TsRange.t()
   def new(lower, upper, lower_inclusive \\ true, upper_inclusive \\ true) do
     %TsRange{
       lower: from_erl(lower),
@@ -42,7 +40,7 @@ defmodule Plenario.TsRange do
 
   @doc """
   """
-  @spec from_postgrex(Range.t) :: TsRange.t
+  @spec from_postgrex(Range.t()) :: TsRange.t()
   def from_postgrex(range) do
     new(
       from_erl(range.lower),
@@ -54,7 +52,7 @@ defmodule Plenario.TsRange do
 
   @doc """
   """
-  @spec to_postgrex(TsRange.t) :: Range.t
+  @spec to_postgrex(TsRange.t()) :: Range.t()
   def to_postgrex(range) do
     %Range{
       lower: to_erl(range.lower),
@@ -64,36 +62,56 @@ defmodule Plenario.TsRange do
     }
   end
 
-  defp to_erl({{_, _, }, {_, _, _, _}} = erl), do: erl
+  defp to_erl({ymd, {h, m, s}}), do: {ymd, {h, m, s, 0}}
+
+  defp to_erl({{_, _}, {_, _, _, _}} = erl), do: erl
+
   defp to_erl(%NaiveDateTime{} = d) do
     {ymd, {h, m, s}} = NaiveDateTime.to_erl(d)
     {ymd, {h, m, s, 0}}
   end
 
+  defp to_erl(_), do: nil
+
   defp from_erl(%NaiveDateTime{} = ndt), do: ndt
-  defp from_erl({{y, m, d}, {h, i, s, u}}) do
-    {:ok, n} = NaiveDateTime.new(y, m, d, h, i, s, {u, 0})
-    n
+
+  defp from_erl({{y, m, d}, {h, i, s}}) do
+    case NaiveDateTime.new(y, m, d, h, i, s, {0, 0}) do
+      {:ok, n} -> n
+      _ -> nil
+    end
   end
 
+  defp from_erl({{y, m, d}, {h, i, s, u}}) do
+    case NaiveDateTime.new(y, m, d, h, i, s, {u, 0}) do
+      {:ok, n} -> n
+      _ -> nil
+    end
+  end
+
+  defp from_erl(_), do: nil
+
   defimpl String.Chars, for: Plenario.TsRange do
-    @spec to_string(TsRange.t) :: String.t
+    @spec to_string(TsRange.t()) :: String.t()
     def to_string(r) do
       lb =
         case r.lower_inclusive do
           true -> "["
           false -> "("
         end
+
       ub =
         case r.upper_inclusive do
           true -> "]"
           false -> ")"
         end
+
       lo =
         case r.lower do
           nil -> ""
           _ -> "#{r.lower}"
         end
+
       hi =
         case r.upper do
           nil -> ""
@@ -101,6 +119,27 @@ defmodule Plenario.TsRange do
         end
 
       "#{lb}#{lo}, #{hi}#{ub}"
+    end
+  end
+
+  defimpl Poison.Encoder, for: Plenario.TsRange do
+    def encode(range, opts) do
+      Poison.Encoder.Map.encode(
+        %{
+          lower_inclusive: range.lower_inclusive,
+          upper_inclusive: range.upper_inclusive,
+          lower: Timex.format!(range.lower, "%Y-%m-%dT%H:%M:%S", :strftime),
+          upper: Timex.format!(range.upper, "%Y-%m-%dT%H:%M:%S", :strftime)
+        },
+        opts
+      )
+    end
+  end
+
+  defimpl Poison.Decoder, for: Plenario.TsRange do
+    def decode(tasks, _opts) do
+      Map.update!(tasks, :lower, &Timex.parse!(&1, "%Y-%m-%dT%H:%M:%S", :strftime))
+      |> Map.update!(:upper, &Timex.parse!(&1, "%Y-%m-%dT%H:%M:%S", :strftime))
     end
   end
 
@@ -137,11 +176,11 @@ defmodule Plenario.Extensions.TsRange do
 
   @behaviour Postgrex.SuperExtension
 
-  @range_empty   0x01
-  @range_lb_inc  0x02
-  @range_ub_inc  0x04
-  @range_lb_inf  0x08
-  @range_ub_inf  0x10
+  @range_empty 0x01
+  @range_lb_inc 0x02
+  @range_ub_inc 0x04
+  @range_lb_inf 0x08
+  @range_ub_inf 0x10
 
   def init(_), do: nil
 
@@ -158,20 +197,21 @@ defmodule Plenario.Extensions.TsRange do
         lower = encode_value(lower, type)
         upper = encode_value(upper, type)
         unquote(__MODULE__).encode(range, oid, lower, upper)
+
       other, _, _ ->
-        raise ArgumentError,
-          Postgrex.Utils.encode_msg(other, Postgrex.Range)
+        raise ArgumentError, Postgrex.Utils.encode_msg(other, Postgrex.Range)
     end
   end
 
   def decode(_) do
     quote location: :keep do
-      <<len :: int32, binary :: binary-size(len)>>, [oid], [type] ->
-        <<flags, data :: binary>> = binary
+      <<len::int32, binary::binary-size(len)>>, [oid], [type] ->
+        <<flags, data::binary>> = binary
         # decode_list/2 and @null defined by TypeModule
         case decode_list(data, type) do
           [upper, lower] ->
             unquote(__MODULE__).decode(flags, oid, [lower, upper], @null)
+
           empty_or_one ->
             unquote(__MODULE__).decode(flags, oid, empty_or_one, @null)
         end
@@ -180,8 +220,12 @@ defmodule Plenario.Extensions.TsRange do
 
   # helpers
 
-  def encode(%Plenario.TsRange{lower_inclusive: lower_inc,
-                             upper_inclusive: upper_inc}, _oid, lower, upper) do
+  def encode(
+        %Plenario.TsRange{lower_inclusive: lower_inc, upper_inclusive: upper_inc},
+        _oid,
+        lower,
+        upper
+      ) do
     flags = 0
 
     {flags, bin} =
@@ -212,7 +256,7 @@ defmodule Plenario.Extensions.TsRange do
         flags
       end
 
-    [<<IO.iodata_length(bin)+1::int32>>, flags | bin]
+    [<<IO.iodata_length(bin) + 1::int32>>, flags | bin]
   end
 
   def decode(flags, _oid, [], null) when (flags &&& @range_empty) != 0 do
@@ -238,6 +282,7 @@ defmodule Plenario.Extensions.TsRange do
 
     lower_inclusive = (flags &&& @range_lb_inc) != 0
     upper_inclusive = (flags &&& @range_ub_inc) != 0
+
     %Plenario.TsRange{
       lower: lower,
       upper: upper,

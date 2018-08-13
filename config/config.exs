@@ -10,12 +10,11 @@ config :plenario, env: Mix.env()
 config :plenario, Plenario.Repo,
   types: Plenario.PostGisTypes,
   extensions: Plenario.Extensions.TsRange,
-  handshake_timeout: 120000,
-  pool_timeout: 120000,
-  timeout: 120000
+  handshake_timeout: 120_000,
+  pool_timeout: 120_000,
+  timeout: 120_000
 
 config :plenario, ecto_repos: [Plenario.Repo]
-
 
 # Configures the endpoint
 config :plenario, PlenarioWeb.Endpoint,
@@ -24,16 +23,12 @@ config :plenario, PlenarioWeb.Endpoint,
   render_errors: [view: PlenarioWeb.ErrorView, accepts: ~w(html json)],
   pubsub: [name: Plenario.PubSub, adapter: Phoenix.PubSub.PG2]
 
-
 # Configures Elixir's Logger
-config :logger, :console,
-  format: "$time $metadata[$level] $message\n"
-
+config :logger, :console, format: "$time $metadata[$level] $message\n"
 
 # Configure the exporter
 config :plenario, :s3_export_ttl, days: 5
 config :plenario, :s3_export_bucket, "plenario-exports"
-
 
 # configure quantum scheduler
 config :plenario, :refresh_offest, minutes: -1
@@ -51,9 +46,7 @@ config :plenario, PlenarioAot.AotScheduler,
     {"*/5 * * * *", {PlenarioAot.AotScheduler, :import_aot_data, []}}
   ]
 
-config :plenario, PlenarioAot,
-  pool_size: 10
-
+config :plenario, PlenarioAot, pool_size: 10
 
 # configure canary
 config :canary,
@@ -61,14 +54,14 @@ config :canary,
   unauthorized_handler: {PlenarioAuth.ErrorHandler, :handle_unauthorized},
   not_found_handler: {PlenarioAuth.ErrorHandler, :handle_not_found}
 
-
 # configure bamboo (email)
 config :plenario, PlenarioMailer, adapter: Bamboo.LocalAdapter
 config :plenario, :email_sender, "plenario@uchicago.edu"
 config :plenario, :email_subject, "Plenario Notification"
 
 config :cors_plug,
-  max_age: 300, # five minutes
+  # five minutes
+  max_age: 300,
   methods: ["GET", "HEAD", "OPTIONS"]
 
 # configure sentry
@@ -77,17 +70,16 @@ config :sentry,
   environment_name: Mix.env(),
   included_environments: [:prod]
 
-
 # configure aws client
 config :ex_aws,
   secret_access_key: [{:system, "AWS_SECRET_ACCESS_KEY"}, :instance_role],
   access_key_id: [{:system, "AWS_ACCESS_KEY_ID"}, :instance_role]
 
-  # Configure worker settings
-  config :plenario, PlenarioEtl,
-    chunk_size: 100,
-    pool_size: 10,
-    num_ingest_workers: 3
+# Configure worker settings
+config :plenario, PlenarioEtl,
+  chunk_size: 100,
+  pool_size: 10,
+  num_ingest_workers: 3
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

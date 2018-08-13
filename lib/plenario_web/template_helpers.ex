@@ -39,14 +39,19 @@ defmodule PlenarioWeb.TemplateHelpers do
   A helper function that generates a tooltip.
   """
   def tooltip(message) do
-    content_tag(:i, "",
+    content_tag(
+      :i,
+      "",
       class: "fas fa-question-circle",
       data: [
         toggle: "tooltip",
         "fa-transform": "shrink-4"
       ],
-      title: message)
+      title: message
+    )
   end
+
+  def strftime(nil), do: "-"
 
   def strftime(%NaiveDateTime{} = timestamp) do
     Timex.format!(timestamp, "%d %B %Y %I:%M:%S %p", :strftime)
