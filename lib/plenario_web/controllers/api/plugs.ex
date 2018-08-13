@@ -24,6 +24,23 @@ defmodule PlenarioWeb.Api.Plugs do
 
   @page_size_error "`page_size` must be a positive integer less than or equal to #{@max_page_size}"
 
+  @doc """
+  This function validates that a given `page_size` parameter is a positive integer that is
+  at most the default set by the module attribute `@max_page_size`. If no value is given,
+  it uses the default page size set in the module attribute `@default_page_size`.
+
+  If the value satisfies that, is is assigned to the connection as :page_size in its parsed
+  integer form.
+
+  If it doesn't satisfy the restrictions, it errors back to the client.
+  ## Example
+
+      # request comes in as /api/v2/data-sets?page_size=100
+      conn.assigns[:page_size] = 100
+
+      # request comes in as /api/v2/data-sets
+      conn.assigns[:page_size] = @default_page_size
+  """
   @spec check_page_size(Plug.Conn.t(), any()) :: Plug.Conn.t()
   def check_page_size(%Conn{params: %{"page_size" => size}} = conn, _opts)
       when is_integer(size) and size > 0 and size <= @max_page_size,
@@ -59,6 +76,23 @@ defmodule PlenarioWeb.Api.Plugs do
 
   @page_error "`page` must be a positive integer"
 
+  @doc """
+  This function validates that a given `page` paramter is a positive integer. If no value is given,
+  it uses the value module attribute `@default_page`.
+
+  If the value is a positive integer, it is assigned to the connection as :page in its parsed
+  integer form.
+
+  If it isn't, it errors back to the client.
+
+  ## Example
+
+      # request comes in as /api/v2/data-sets?page=4
+      conn.assigns[:page] = 4
+
+      # request comes in as /api/v2/data-sets
+      conn.assigns[:page] = @default_page
+  """
   @spec check_page(Plug.Conn.t(), any()) :: Plug.Conn.t()
   def check_page(%Conn{params: %{"page" => page}} = conn, _opts)
       when is_integer(page) and page > 0,
@@ -88,6 +122,25 @@ defmodule PlenarioWeb.Api.Plugs do
 
   @order_error "`order_by` must follow format 'direction:field' where direction is either 'asc' or 'desc'"
 
+  @doc """
+  This function validates that a given `order_by` parameter matches the pattern `asc|desc:value`.
+  If no value is given, it uses the value given in the function's options key `:default_order`.
+
+  If the parameter satisfies the pattern, it is assigned to the connection as a tuple consisting
+  of the atomized versions fo the direction and the field name under the :order_by key.
+
+  If it doesn't match up, it errors back to the client.
+
+  ## Example
+
+      # request comes in as /api/v2/data-sets?order_by=desc:timestamp
+      conn.assigns[:order_by] = {:desc, :timestamp}
+
+      # plug assigned in controller as
+      plug :check_order_by, default_order: "asc:name"
+      # request comes in as /api/v2/data-sets
+      conn.assigns[:order_by] = {:asc, :name}
+  """
   @spec check_order_by(Plug.Conn.t(), any()) :: Plug.Conn.t()
   def check_order_by(%Conn{params: %{"order_by" => order}} = conn, _opts) when is_bitstring(order) do
     case Regex.match?(~r/^asc|desc\:/i, order) do
@@ -114,6 +167,43 @@ defmodule PlenarioWeb.Api.Plugs do
 
   @tsrange_geom_ops ["contains", "within", "intersects"]
 
+  @doc """
+  This function picks up the parameters passed in requests to the API. The keys are then filtered
+  to those not used in other plugs (see the `@excluded_keys` module attribute).
+
+  From those key/values, it then inspects the values to check that they follow the pattern
+  `op:value`. If there is no operator, it is assumed that strict equivalence was desired and we
+  inject the `"eq"` operator.
+
+  If the operator is not in the `@acceptable_ops` module attribute, the request is errored back
+  to the client.
+
+  For certain spectial operators (those in `@tsrange_geom_ops`) we go a step futher to parse and
+  validate the value portion of the filter to ensure the database isn't hit with total trash. If
+  we can determine that the value is not parseable into either struct, the client gets an error.
+
+  Finally, once all of that is done we assign them as a list of tuples to :filters on the
+  connection.
+
+  ## Example
+
+      # Request comes in as /api/v2/data-sets?page_size=2&page=4&order_by=asc:name\
+      #  &last_updated=within:{"lower":"2018-01-01T00:00:00","upper":"2018-02-01T00:00L00","upper_inclusive":false}
+
+      conn.assigns = [
+        page: 4,
+        page_size: 2
+        order_by: {:asc, :name},
+        filters: [
+          {:last_updated, "within", %TsRange{lower: ~N[2018-01-01 00:00:00], upper: ~N[2018-01-01 00:00:00], upper_inclusive: false}}
+        ]
+      ]
+
+      # Request comes in as /api/v2/data-sets?page_size=2&page=4&order_by=asc:name\
+      #  &last_updated=within:the-last-week
+
+      halt_with(conn, :bad_request, "Could not parse value for `last_updated`")
+  """
   @spec check_filters(Plug.Conn.t(), any()) :: Plug.Conn.t()
   def check_filters(%Conn{params: params} = conn, _opts) when is_map(params) do
     params =
