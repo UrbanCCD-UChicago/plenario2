@@ -1,108 +1,85 @@
 defmodule PlenarioWeb.Api.DetailController do
+  @moduledoc """
+  """
 
   use PlenarioWeb, :api_controller
 
+  import Ecto.Query
+
   import PlenarioWeb.Api.Plugs
 
-  import PlenarioWeb.Api.Utils, only: [
-    render_page: 5,
-    map_to_query: 2,
-    halt_with: 2
-  ]
+  import PlenarioWeb.Api.Utils,
+    only: [
+      apply_filter: 4,
+      halt_with: 2,
+      halt_with: 3,
+      render_detail: 3,
+      validate_data_set: 1,
+      validate_data_set: 2
+    ]
 
   alias Plenario.{
     ModelRegistry,
     Repo
   }
 
-  alias Plenario.Actions.MetaActions
-
   alias Plenario.Schemas.Meta
 
-  alias PlenarioWeb.Controllers.Api.CaptureArgs
+  plug(:check_page_size)
+  plug(:check_page)
+  plug(:check_order_by, default_order: "asc:row_id")
+  plug(:check_filters)
 
-  defmodule CaptureColumnArgs do
-    def init(opts), do: opts
-
-    def call(conn, opts) do
-      meta = MetaActions.get(conn.params["slug"], with_virtual_points: true)
-      do_call(meta, conn, opts)
-    end
-
-    def do_call(nil, conn, _opts) do
-        conn |> halt_with(:not_found)
-    end
-
-    def do_call(%Meta{state: "ready"} = meta, conn, opts) do
-      columns = MetaActions.get_column_names(meta)
-      vpfs =
-        meta.virtual_points()
-        |> Enum.map(fn vpf -> vpf.name() end)
-      CaptureArgs.call(conn, opts ++ [fields: columns ++ vpfs])
-    end
-
-    def do_call(_, conn, _), do: halt_with(conn, :not_found)
+  @spec get(Plug.Conn.t(), map()) :: Plug.Conn.t()
+  def get(conn, %{"slug" => slug}) do
+    validate_data_set(slug)
+    |> render_data_set(conn, "get.json")
   end
 
-  defmodule CaptureBboxArg do
-    def init(opts), do: opts
-
-    def call(%Plug.Conn{params: %{"bbox" => geojson}} = conn, opts) do
-      meta = MetaActions.get(conn.params["slug"], with_virtual_points: true)
-      geom = Poison.decode!(geojson) |>  Geo.JSON.decode()
-      geom = %{geom | srid: 4326}
-
-      vpf_query_map =
-        meta.virtual_points()
-        |> Stream.map(fn vpf -> vpf.name() end)
-        |> Enum.map(fn vpf_name -> {vpf_name, {"in", geom}} end)
-
-      assign(conn, opts[:assign], vpf_query_map)
-    end
-
-    def call(conn, opts) do
-      assign(conn, opts[:assign], [])
-    end
+  @spec head(Plug.Conn.t(), map()) :: Plug.Conn.t()
+  def head(conn, %{"slug" => slug}) do
+    validate_data_set(slug)
+    |> render_data_set(conn, "head.json")
   end
 
-  plug(CaptureArgs, assign: :ordering_fields, fields: ["order_by"])
-  plug(CaptureArgs, assign: :windowing_fields, fields: ["row_id", "updated_at"])
-  plug :check_page
-  plug :check_page_size, default_page_size: 500, page_size_limit: 5000
-  plug(CaptureColumnArgs, assign: :column_fields)
-  plug(CaptureBboxArg, assign: :bbox_fields)
+  def describe(conn, %{"slug" => slug}) do
+    meta =
+      validate_data_set(
+        slug,
+        with_user: true,
+        with_fields: true,
+        with_virtual_dates: true,
+        with_virtual_points: true
+      )
 
-  def construct_query_from_conn_assigns(conn, %{"slug" => slug}) do
-    ordering_fields = Map.get(conn.assigns, :ordering_fields)
-    windowing_fields = Map.get(conn.assigns, :windowing_fields)
-    column_fields = Map.get(conn.assigns, :column_fields)
-    bbox_query_map = Map.get(conn.assigns, :bbox_fields)
+    render_detail(conn, "describe.json", meta)
+  end
+
+  defp render_data_set(%Meta{state: "ready"} = meta, conn, view) do
+    model = ModelRegistry.lookup(meta.slug)
+
+    {dir, fname} = conn.assigns[:order_by]
 
     query =
-      ModelRegistry.lookup(slug)
-      |> map_to_query(ordering_fields)
-      |> map_to_query(windowing_fields)
-      |> map_to_query(column_fields)
-      |> map_to_query(bbox_query_map)
+      model
+      |> order_by([q], [{^dir, ^fname}])
 
-    params = windowing_fields ++ ordering_fields ++ column_fields ++ bbox_query_map
+    query =
+      conn.assigns[:filters]
+      |> Enum.reduce(query, fn {fname, op, value}, query ->
+        apply_filter(query, fname, op, value)
+      end)
 
-    {query, params}
+    try do
+      page = conn.assigns[:page]
+      page_size = conn.assigns[:page_size]
+      data = Repo.paginate(query, page: page, page_size: page_size)
+      render_detail(conn, view, data)
+    rescue
+      e in [Ecto.QueryError, Ecto.SubQueryError, Postgrex.Error] ->
+        halt_with(conn, :bad_request, e.message)
+    end
   end
 
-  def get(conn, params = %{"page" => page, "page_size" => page_size}) do
-    pagination_fields = [page: page, page_size: page_size]
-    {query, params_used} = construct_query_from_conn_assigns(conn, params)
-    page = Repo.paginate(query, pagination_fields)
-    render_page(conn, "get.json", params_used ++ pagination_fields, page.entries, page)
-  end
-
-  def head(conn, params = %{"page" => page}) do
-    pagination_fields = [page: page, page_size: 1]
-    {query, params_used} = construct_query_from_conn_assigns(conn, params)
-    page = Repo.paginate(query, pagination_fields)
-    render_page(conn, "get.json", params_used ++ pagination_fields, page.entries, page)
-  end
-
-  def describe(conn, params), do: get(conn, params)
+  defp render_data_set(_, conn, _), do: halt_with(conn, :not_found)
 end

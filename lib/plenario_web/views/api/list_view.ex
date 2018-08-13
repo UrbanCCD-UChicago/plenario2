@@ -1,6 +1,8 @@
 defmodule PlenarioWeb.Api.ListView do
+  @moduledoc """
+  """
+
   use PlenarioWeb, :api_view
 
-  def render("get.json", params), do: PlenarioWeb.Api.DetailView.render("get.json", params)
-  def render("head.json", params), do: PlenarioWeb.Api.DetailView.render("get.json", params)
+  defdelegate render(view, opts), to: PlenarioWeb.Api.DetailView
 end

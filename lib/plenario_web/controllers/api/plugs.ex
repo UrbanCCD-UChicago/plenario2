@@ -1,126 +1,237 @@
 defmodule PlenarioWeb.Api.Plugs do
+  @moduledoc """
+  """
 
-  import PlenarioWeb.Api.Utils, only: [
-    halt_with: 3
-  ]
+  import PlenarioWeb.Api.Utils,
+    only: [
+      halt_with: 3
+    ]
+
+  import Plug.Conn,
+    only: [
+      assign: 3
+    ]
+
+  alias Plenario.TsRange
 
   alias Plug.Conn
 
-  @doc """
-  This function guarantees two outcomes. The returned `conn` will have a valid `page_size` in `params`, even if no
-  `page_size` was provided. If a `page_size` was provided that is invalid (not a number, smaller than 0 or larger than
-  the `:page_size_limit` opt), it breaks the pipeline early and returns a conn with an error.
+  # CHECK PAGE SIZE
 
-  This is an implementation of the `call/2` method for building a plug. It's meant to be used in combination
-  with the plug macro to be *plugged* (heh) into a request handling pipeline.
+  @max_page_size 5_000
 
-  ## Examples
+  @default_page_size 200
 
-      iex> use Plug.Builder
-      iex> plug :check_page_size, default_page_size: 500, page_size_limit: 5000
+  @page_size_error "`page_size` must be a positive integer less than or equal to #{@max_page_size}"
 
-      iex> conn = %Conn{params: %{}}
-      iex> check_page_size(conn, default_page_size: 500, page_size_limit: 5000)
-      %Conn{params: %{"page_size" => 500}}
+  @spec check_page_size(Plug.Conn.t(), any()) :: Plug.Conn.t()
+  def check_page_size(%Conn{params: %{"page_size" => size}} = conn, _opts)
+      when is_integer(size) and size > 0 and size <= @max_page_size,
+      do: assign(conn, :page_size, size)
 
-      iex> conn = %Conn{params: %{"page_size" => "wrong"}}
-      iex> check_page_size(conn, default_page_size: 500, page_size_limit: 5000)
-      %Conn{status: 422}
+  def check_page_size(%Conn{params: %{"page_size" => size}} = conn, _opts)
+      when is_integer(size) and size > @max_page_size,
+      do: halt_with(conn, :bad_request, @page_size_error)
 
-      iex> conn = %Conn{params: %{"page_size" => "5001"}}
-      iex> check_page_size(conn, default_page_size: 500, page_size_limit: 5000)
-      %Conn{status: 422}
+  def check_page_size(%Conn{params: %{"page_size" => size}} = conn, _opts)
+      when is_integer(size) and size <= 0,
+      do: halt_with(conn, :bad_request, @page_size_error)
 
-  """
-  def check_page_size(conn = %Conn{params: %{"page_size" => page_size}}, opts) when is_integer(page_size) do
-    case (opts[:page_size_limit] > page_size) and (page_size > 0) do
-      true ->
-        conn
-      false ->
-        conn
-        |> halt_with(422, "Provided page_size '#{page_size}' must be between 0 and #{opts[:page_size_limit]}")
+  def check_page_size(%Conn{params: %{"page_size" => size}} = conn, _opts) when is_bitstring(size) do
+    case Integer.parse(size) do
+      {value, ""} ->
+        %Conn{conn | params: Map.put(conn.params, "page_size", value)}
+        |> check_page_size(nil)
+
+      _ ->
+        halt_with(conn, :bad_request, @page_size_error)
     end
   end
 
-  @doc """
-  "page_size" not an integer? Attempt to parse it to an integer and toss it back up. If parsing fails, halt the
-  request pipeline and inform the user.
-  """
-  def check_page_size(conn = %Conn{params: %{"page_size" => page_size}}, opts) do
-    case Integer.parse(page_size) do
-      {parsed_page_size, _} ->
-        check_page_size(%{conn | params: Map.put(conn.params, "page_size", parsed_page_size)}, opts)
-      :error ->
-        conn
-        |> halt_with(422, "Provided page_size '#{page_size}' must be a number.")
-    end
+  def check_page_size(conn, _opts) do
+    %Conn{conn | params: Map.put(conn.params, "page_size", @default_page_size)}
+    |> check_page_size(nil)
   end
 
-  @doc """
-  No "page_size" specified? Assign the default and toss it back up.
-  """
-  def check_page_size(conn, opts) do
-    check_page_size(%{conn | params: Map.put(conn.params, "page_size", opts[:default_page_size])}, opts)
-  end
+  # CHECK PAGE (NUMBER)
 
-  @doc """
-  This function guarantees two outcomes. The returned `conn` will have a valid `page` in `params`, even if no
-  `page` was provided. If a `page` was provided that is invalid (not a number, negative), it breaks the pipeline
-  early and returns a conn with an error.
+  @default_page 1
 
-  This is an implementation of the `call/2` method for building a plug. It's meant to be used in combination
-  with the plug macro to be *plugged* (heh) into a request handling pipeline.
+  @page_error "`page` must be a positive integer"
 
-  ## Examples
+  @spec check_page(Plug.Conn.t(), any()) :: Plug.Conn.t()
+  def check_page(%Conn{params: %{"page" => page}} = conn, _opts)
+      when is_integer(page) and page > 0,
+      do: assign(conn, :page, page)
 
-      iex> use Plug.Builder
-      iex> plug :check_page
+  def check_page(%Conn{params: %{"page" => page}} = conn, _opts)
+      when is_integer(page) and page <= 0,
+      do: halt_with(conn, :bad_request, @page_error)
 
-      iex> conn = %Conn{params: %{}}
-      iex> check_page(conn)
-      %Conn{params: %{"page" => 2}}
-
-      iex> conn = %Conn{params: %{"page" => "wrong"}}
-      iex> check_page(conn)
-      %Conn{status: 422}
-
-      iex> conn = %Conn{params: %{"page" => "-100"}}
-      iex> check_page(conn)
-      %Conn{status: 422}
-
-  """
-  def check_page(conn = %Conn{params: %{"page" => page}}, _) when is_integer(page) and page > 0, do: conn
-  def check_page(conn = %Conn{params: %{"page" => page}}, _) when is_integer(page) and page <= 0 do
-    conn
-    |> halt_with(422, "Provided page '#{page}' must be positive.")
-  end
-
-  @doc """
-  "page" is a float? Convert it to an integer and toss it back up.
-  """
-  def check_page(conn = %Conn{params: %{"page" => page}}, opts) when is_float(page) do
-    page_float = round(page)
-    check_page(%{conn | params: Map.put(conn.params, "page", page_float)}, opts)
-  end
-
-  @doc """
-  "page" not an integer? Attempt to parse it to an integer and toss it back up. If parsing fails, halt the
-  request pipeline and inform the user.
-  """
-  def check_page(conn = %Conn{params: %{"page" => page}}, opts) do
+  def check_page(%Conn{params: %{"page" => page}} = conn, _opts) when is_bitstring(page) do
     case Integer.parse(page) do
-      {parsed_page, _} ->
-        check_page(%{conn | params: Map.put(conn.params, "page", parsed_page)}, opts)
-      :error ->
-        conn
-        |> halt_with(422, "Provided page '#{page}' must be a number.")
+      {value, ""} ->
+        %Conn{conn | params: Map.put(conn.params, "page", value)}
+        |> check_page(nil)
+
+      _ ->
+        halt_with(conn, :bad_request, @page_error)
     end
   end
 
-  @doc """
-  No "page" specified? Assign the default and toss it back up.
-  """
-  def check_page(conn, opts) do
-    check_page(%{conn | params: Map.put(conn.params, "page", 1)}, opts)
+  def check_page(conn, _opts) do
+    %Conn{conn | params: Map.put(conn.params, "page", @default_page)}
+    |> check_page(nil)
+  end
+
+  # CHECK ORDER BY
+
+  @order_error "`order_by` must follow format 'direction:field' where direction is either 'asc' or 'desc'"
+
+  @spec check_order_by(Plug.Conn.t(), any()) :: Plug.Conn.t()
+  def check_order_by(%Conn{params: %{"order_by" => order}} = conn, _opts) when is_bitstring(order) do
+    case Regex.match?(~r/^asc|desc\:/i, order) do
+      true ->
+        [dir, field] = String.split(order, ":", parts: 2)
+        dir = String.downcase(dir)
+        assign(conn, :order_by, {String.to_atom(dir), String.to_atom(field)})
+
+      false ->
+        halt_with(conn, :bad_request, @order_error)
+    end
+  end
+
+  def check_order_by(conn, opts) do
+    %Conn{conn | params: Map.put(conn.params, "order_by", opts[:default_order])}
+    |> check_order_by(nil)
+  end
+
+  # CHECK FILTERS
+
+  @excluded_keys ["page", "page_size", "order_by", "slug", "dataset_name"]
+
+  @acceptable_ops ["lt", "le", "eq", "ge", "gt", "in", "contains", "within", "intersects"]
+
+  @tsrange_geom_ops ["contains", "within", "intersects"]
+
+  @spec check_filters(Plug.Conn.t(), any()) :: Plug.Conn.t()
+  def check_filters(%Conn{params: params} = conn, _opts) when is_map(params) do
+    params =
+      params
+      |> Enum.reject(fn {key, _} -> key in @excluded_keys end)
+
+    {params, errors} =
+      params
+      |> Enum.reduce({[], []}, fn {field, filter}, {params, errors} ->
+        [op, value] =
+          case is_list(filter) do
+            true ->
+              ["in", filter]
+
+            false ->
+              try do
+                [o, v] = String.split(filter, ":", parts: 2)
+                [o, v]
+              rescue
+                MatchError ->
+                  ["eq", filter]
+              end
+          end
+
+        case op in @acceptable_ops do
+          true ->
+            params = params ++ [{String.to_atom(field), op, value}]
+            {params, errors}
+
+          false ->
+            errors = errors ++ [field]
+            {params, errors}
+        end
+      end)
+
+    check_params_errors({params, errors}, conn)
+  end
+
+  def check_filters(conn, _opts), do: conn
+
+  defp check_params_errors({_, errors}, conn) when is_list(errors) and length(errors) > 0 do
+    fields =
+      errors
+      |> Enum.join(", ")
+
+    message = "Could not parse filters for field(s) #{fields}"
+    halt_with(conn, :bad_request, message)
+  end
+
+  defp check_params_errors({params, _}, conn) do
+    {params, errors} =
+      params
+      |> Enum.reduce({[], []}, fn {field, op, value}, {params, errors} ->
+        case op in @tsrange_geom_ops do
+          false ->
+            params = params ++ [{field, op, value}]
+            {params, errors}
+
+          true ->
+            value =
+              try do
+                Poison.decode!(value, as: %TsRange{})
+              rescue
+                _ ->
+                  try do
+                    Poison.decode!(value)
+                    |> Geo.JSON.decode()
+                  rescue
+                    _ ->
+                      :error
+                  end
+              end
+
+            case value do
+              :error ->
+                errors = errors ++ [field]
+                {params, errors}
+
+              strukt ->
+                params = params ++ [{field, op, strukt}]
+                {params, errors}
+            end
+        end
+      end)
+
+    check_tsrange_geoms({params, errors}, conn)
+  end
+
+  defp check_tsrange_geoms({_, errors}, conn) when is_list(errors) and length(errors) > 0 do
+    fields =
+      errors
+      |> Enum.join(", ")
+
+    message = "Could not parse field(s) #{fields}"
+    halt_with(conn, :bad_request, message)
+  end
+
+  defp check_tsrange_geoms({params, _}, conn), do: assign(conn, :filters, params)
+
+  # APPLY WINDOW
+
+  @spec apply_window(Plug.Conn.t(), any()) :: Plug.Conn.t()
+  def apply_window(%Conn{params: %{"window" => window}} = conn, _opts) when is_bitstring(window) do
+    case Timex.parse(window, "%Y-%m-%dT%H:%M:%S", :strftime) do
+      {:ok, window} ->
+        assign(conn, :window, window)
+
+      _ ->
+        halt_with(conn, :bad_request, "Could not parse value for `window`")
+    end
+  end
+
+  def apply_window(conn, _opts) do
+    now =
+      NaiveDateTime.utc_now()
+      |> Timex.format!("%Y-%m-%dT%H:%M:%S", :strftime)
+
+    %Conn{conn | params: Map.put(conn.params, "window", now)}
+    |> apply_window(nil)
   end
 end

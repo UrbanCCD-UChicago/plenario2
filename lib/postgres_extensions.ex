@@ -122,6 +122,27 @@ defmodule Plenario.TsRange do
     end
   end
 
+  defimpl Poison.Encoder, for: Plenario.TsRange do
+    def encode(range, opts) do
+      Poison.Encoder.Map.encode(
+        %{
+          lower_inclusive: range.lower_inclusive,
+          upper_inclusive: range.upper_inclusive,
+          lower: Timex.format!(range.lower, "%Y-%m-%dT%H:%M:%S", :strftime),
+          upper: Timex.format!(range.upper, "%Y-%m-%dT%H:%M:%S", :strftime)
+        },
+        opts
+      )
+    end
+  end
+
+  defimpl Poison.Decoder, for: Plenario.TsRange do
+    def decode(tasks, _opts) do
+      Map.update!(tasks, :lower, &Timex.parse!(&1, "%Y-%m-%dT%H:%M:%S", :strftime))
+      |> Map.update!(:upper, &Timex.parse!(&1, "%Y-%m-%dT%H:%M:%S", :strftime))
+    end
+  end
+
   @behaviour Ecto.Type
 
   @doc false
