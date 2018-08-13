@@ -14,8 +14,8 @@ defmodule PlenarioWeb.Api.DetailController do
       halt_with: 2,
       halt_with: 3,
       render_detail: 3,
-      validate_data_set: 1,
-      validate_data_set: 2
+      validate_slug_get_meta: 1,
+      validate_slug_get_meta: 2
     ]
 
   alias Plenario.{
@@ -32,19 +32,19 @@ defmodule PlenarioWeb.Api.DetailController do
 
   @spec get(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def get(conn, %{"slug" => slug}) do
-    validate_data_set(slug)
+    validate_slug_get_meta(slug)
     |> render_data_set(conn, "get.json")
   end
 
   @spec head(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def head(conn, %{"slug" => slug}) do
-    validate_data_set(slug)
+    validate_slug_get_meta(slug)
     |> render_data_set(conn, "head.json")
   end
 
   def describe(conn, %{"slug" => slug}) do
     meta =
-      validate_data_set(
+      validate_slug_get_meta(
         slug,
         with_user: true,
         with_fields: true,
