@@ -25,7 +25,7 @@
         </div>
 
         <div class="col-lg-8 card">
-          <div id="map" class="h-100"></div>
+          <l-map></l-map>
         </div>
       </div>
     </div>
@@ -41,11 +41,8 @@
 
 
 <script>
-import L from 'leaflet';
-import 'leaflet-draw';
-import "leaflet/dist/leaflet.css";
-
 import ActionCard from './ActionCard.vue';
+import LMap from './LMap.vue';
 import SearchResults from './SearchResults.vue';
 import SpaceSearch from './SpaceSearch.vue';
 import TimeCard from './TimeCard.vue';
@@ -123,6 +120,7 @@ export default {
 
   components: {
     ActionCard,
+    LMap,
     SearchResults,
     SpaceSearch,
     TimeCard,
@@ -138,20 +136,6 @@ export default {
     }
   },
 
-  mounted: function () {
-    var map = L.map('map').setView([51.505, -0.09], 13);
-     L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}{r}.png', {
-         attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-     }).addTo(map);
-     // FeatureGroup is to store editable layers
-     var drawnItems = new L.FeatureGroup();
-     map.addLayer(drawnItems);
-     var drawControl = new L.Control.Draw({
-         edit: {
-             featureGroup: drawnItems
-  }
-     });
-     map.addControl(drawControl);
-  }
+ 
 }
 </script>
