@@ -25,7 +25,8 @@
         </div>
 
         <div class="col-lg-8 card">
-          <l-map ref="map" :zoom=13 :center="[47.413220, -1.219482]">
+          <l-map ref="map" :zoom=13 :center="[41.8781, -87.6298]">
+            <l-tile-layer url="https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}{r}.png"></l-tile-layer>
           </l-map>
         </div>
       </div>
@@ -42,7 +43,9 @@
 
 
 <script>
-import { LMap } from 'vue2-leaflet';
+import { LMap, LTileLayer } from 'vue2-leaflet';
+import L from 'leaflet'
+import "leaflet/dist/leaflet.css";
 
 import ActionCard from './ActionCard.vue';
 import SearchResults from './SearchResults.vue';
@@ -123,6 +126,7 @@ export default {
   components: {
     ActionCard,
     LMap,
+    LTileLayer,
     SearchResults,
     SpaceSearch,
     TimeCard,
