@@ -25,9 +25,7 @@
         </div>
 
         <div class="col-lg-8 card">
-          <l-map ref="map" :zoom=13 :center="[41.8781, -87.6298]">
-            <l-tile-layer url="https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}{r}.png"></l-tile-layer>
-          </l-map>
+          <div id="map" class="h-100"></div>
         </div>
       </div>
     </div>
@@ -43,8 +41,8 @@
 
 
 <script>
-import { LMap, LTileLayer } from 'vue2-leaflet';
-import L from 'leaflet'
+import L from 'leaflet';
+import 'leaflet-draw';
 import "leaflet/dist/leaflet.css";
 
 import ActionCard from './ActionCard.vue';
@@ -125,8 +123,6 @@ export default {
 
   components: {
     ActionCard,
-    LMap,
-    LTileLayer,
     SearchResults,
     SpaceSearch,
     TimeCard,
@@ -140,7 +136,22 @@ export default {
     updateSearchResults: function (event) {
       this.searchResults = event;
     }
+  },
+
+  mounted: function () {
+    var map = L.map('map').setView([51.505, -0.09], 13);
+     L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}{r}.png', {
+         attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+     }).addTo(map);
+     // FeatureGroup is to store editable layers
+     var drawnItems = new L.FeatureGroup();
+     map.addLayer(drawnItems);
+     var drawControl = new L.Control.Draw({
+         edit: {
+             featureGroup: drawnItems
+  }
+     });
+     map.addControl(drawControl);
   }
 }
 </script>
-
