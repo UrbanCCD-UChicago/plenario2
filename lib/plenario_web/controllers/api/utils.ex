@@ -12,7 +12,6 @@ defmodule PlenarioWeb.Api.Utils do
   import Plenario.Queries.Utils,
     only: [
       timestamp_within: 2,
-      tsrange_contains_timestamp: 2,
       tsrange_intersects: 2
     ]
 
@@ -421,7 +420,4 @@ defmodule PlenarioWeb.Api.Utils do
 
   def apply_filter(query, fname, "intersects", %Polygon{} = value),
     do: where(query, [q], st_intersects(field(q, ^fname), ^value))
-
-  def apply_filter(query, fname, "contains", %NaiveDateTime{} = value),
-    do: where(query, [q], tsrange_contains_timestamp(field(q, ^fname), ^value))
 end
