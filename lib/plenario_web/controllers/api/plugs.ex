@@ -163,9 +163,9 @@ defmodule PlenarioWeb.Api.Plugs do
 
   @excluded_keys ["page", "page_size", "order_by", "slug", "dataset_name"]
 
-  @acceptable_ops ["lt", "le", "eq", "ge", "gt", "in", "contains", "within", "intersects"]
+  @acceptable_ops ["lt", "le", "eq", "ge", "gt", "in", "within", "intersects"]
 
-  @tsrange_geom_ops ["contains", "within", "intersects"]
+  @tsrange_geom_ops ["within", "intersects"]
 
   @doc """
   This function picks up the parameters passed in requests to the API. The keys are then filtered
