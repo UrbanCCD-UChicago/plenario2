@@ -1,5 +1,6 @@
 <template>
   <div>
+    <comparer />
     <div class="row no-gutters">
       <div class="row">
         <div class="col">
@@ -25,7 +26,6 @@
         </div>
 
         <div class="col-lg-8 card">
-          <l-map></l-map>
         </div>
       </div>
     </div>
@@ -46,6 +46,7 @@ import LMap from './LMap.vue';
 import SearchResults from './SearchResults.vue';
 import SpaceSearch from './SpaceSearch.vue';
 import TimeCard from './TimeCard.vue';
+import Comparer from './Comparer.vue';
 
 export default {
   name: 'Explorer',
@@ -124,6 +125,7 @@ export default {
     SearchResults,
     SpaceSearch,
     TimeCard,
+    Comparer
   },
 
   methods: {

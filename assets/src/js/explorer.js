@@ -1,9 +1,11 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
+import Chartist from 'vue-chartist';
 
 import Explorer from './components/Explorer.vue';
 
 Vue.use(Vuex);
+Vue.use(Chartist);
 
 /**
  * A container that holds all application state. Changes to the store trigger
