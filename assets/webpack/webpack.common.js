@@ -14,7 +14,7 @@ function getS3AssetURL(argv) {
   let bucketName;
   if (argv.mode === 'development') {
     bucketName = 'plenario2-assets-dev';
-  } else if (argv.env.staging) {
+  } else if (argv.env && argv.env.staging) {
     bucketName = 'plenario2-assets-staging';
   } else {
     bucketName = 'plenario2-assets';
@@ -159,7 +159,7 @@ module.exports = (_, argv) => {
 
   // If enabled on the command line (via --env.analyzer), start a server which displays how the
   // various dependencies contribute to the final bundle size
-  if (argv.env.analyzer) {
+  if (argv.env && argv.env.analyzer) {
     config.plugins.push(new BundleAnalyzerPlugin({ openAnalyzer: false }));
   }
 
