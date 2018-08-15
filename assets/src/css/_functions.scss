@@ -6,7 +6,8 @@
 //
 // $value - the value to check for emptiness
 @function empty($value) {
-  @if not $value or $value == "" or $value == 0 or $value == () or length($value) == 0 {
+  @if (not $value or $value == "" or $value == 0 or
+    $value == () or length($value) == 0) {
     @return true;
   }
   @return false;
@@ -21,12 +22,17 @@
   $index: str-index($string, $search);
   
   @if $index {
-    @return str-slice($string, 1, $index - 1) + $replace + str-replace(str-slice($string, $index + str-length($search)), $search, $replace);
+    @return
+      str-slice($string, 1, $index - 1) +
+      $replace +
+      str-replace(
+          str-slice($string, $index + str-length($search)),
+          $search,
+          $replace
+        );
   }
-  
   @return $string;
 }
-
 
 /* === GRAPHICS HELPERS === */
 
@@ -39,5 +45,8 @@
 //
 // Supported in IE10+, Edge, Firefox 16+, Chrome 26+, Safari 6.1+, Opera 12.1+
 @function transparent-overlay($color, $opacity) {
-  @return linear-gradient(change_color($color, $alpha: 1 - $opacity) 0%, change_color($color, $alpha: 1 - $opacity) 100%);
+  @return linear-gradient(
+      change_color($color, $alpha: $opacity) 0%, 
+      change_color($color, $alpha: $opacity) 100%
+    );
 }

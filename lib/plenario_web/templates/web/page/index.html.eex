@@ -84,9 +84,7 @@ $(window).on('scroll', throttle(showHideNavbar, 100));
     
   </div>
 
-  <div class="coverskip" onclick="skipCover(this);">
-    <!-- <i class="fas fa-chevron-down fa-2x"></i> -->
-  </div>
+  <div class="coverskip fas fa-chevron-down" onclick="skipCover(this);"></div>
 
 </section>
 

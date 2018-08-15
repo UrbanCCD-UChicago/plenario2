@@ -10,8 +10,9 @@
     <title>Plenario</title>
 
     <!-- Import css and js files built by Webpack -->
-    <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
-    <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
+    <link rel="stylesheet" href="<%= static_path(@conn, "/css/main.css") %>">
+    <script src="<%= static_path(@conn, "/js/polyfill.bundle.js") %>"></script>
+    <script src="<%= static_path(@conn, "/js/main.bundle.js") %>"></script>
     <link rel="shortcut icon" type="image/png" href="<%= static_path(@conn, "/images/favicon.png") %>">
   </head>
 

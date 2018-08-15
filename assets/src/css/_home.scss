@@ -9,9 +9,11 @@
   padding: 0;
   background-size: cover;
   background-position: center;
+  
   @include media-breakpoint-down(sm) {
     text-align: center;
   }
+
   // The standard Bootstrap link style (primary color, no decoration) reads very
   // poorly over an image, so we override with bold weight (or a "pop" animation
   // on hover, for nav links) and whatever higher contrast text color we've
@@ -20,10 +22,11 @@
     color: inherit;
     font-weight: bolder;
     &.nav-link {
-      font-weight: inherit;
       @include move-on-hover(-0.1em);
+      font-weight: inherit;
     }
   }
+
   // Stop the cover styles from bleeding into dropdown menus where they're
   // unneeded (since the dropdown has a solid background)
   .dropdown-menu {
@@ -32,16 +35,20 @@
       font-weight: inherit;
     }
   }
+
+  // Push the navbar spacing below the first cover instead of above, since the
+  // first cover is meant to cover (heh) the navbar
   &:first-of-type {
-    // Push the navbar spacing below the first cover instead of above, since the
-    // first cover is meant to cover (heh) the navbar
     top: -$navbar-spacing;
     margin-bottom: $navbar-spacing;
   }
 }
 
 .cover.cityscape {
-  @include darkened-bg-img-responsive("https://s3.us-east-2.amazonaws.com/plenario2-assets-dev/images/chicago-sunset-xx.jpg", 0.6);  
+  @include darkened-bg-img-responsive(
+      $image: "#{$s3AssetUrl}/images/chicago-sunset-xx.jpg",
+      $amount: 0.6
+    );
   @include text-over-image-readability-helper($strength: 0.4);
   color: $white;
   hr {
@@ -52,11 +59,7 @@
 .coverskip {
   @include move-on-hover(0.25rem);
   display: inline-block;
-  font-size: 5rem;
-  line-height: 0.8em;
-  transform: scaleX(1.5);
+  font-size: 2rem;
+  line-height: 0.9em;
   cursor: pointer;
-  &::after {
-    content: "\2304";
-  }
 }
