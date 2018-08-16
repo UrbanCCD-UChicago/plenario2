@@ -4,6 +4,9 @@ module.exports = {
   plugins: [
     'stylelint-scss',
   ],
+  processors: [
+    ['@mapbox/stylelint-processor-arbitrary-tags', { fileFilterRegex: [/\.vue$/] }],
+  ],
   rules: {
     'at-rule-no-unknown': null, // disabled in favor of SCSS-aware version below
     'at-rule-no-vendor-prefix': true,
@@ -53,11 +56,11 @@ module.exports = {
     'scss/dollar-variable-colon-space-after': 'at-least-one-space',
     'scss/dollar-variable-colon-space-before': 'never',
     'scss/dollar-variable-no-missing-interpolation': true,
-    // 'scss/double-slash-comment-whitespace-inside': 'always',
+    'scss/double-slash-comment-whitespace-inside': 'always',
     'scss/media-feature-value-dollar-variable': 'always',
     'scss/no-duplicate-dollar-variables': true,
-    // 'scss/operator-no-newline-before': true,
-    // 'scss/operator-no-unspaced': true,
+    'scss/operator-no-newline-before': true,
+    'scss/operator-no-unspaced': true,
     'scss/partial-no-import': true,
     'scss/selector-no-redundant-nesting-selector': true,
   },
