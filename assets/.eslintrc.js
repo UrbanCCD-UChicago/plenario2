@@ -1,11 +1,19 @@
+/* eslint-disable key-spacing */
 module.exports = {
-  parser: 'babel-eslint',
-  extends: ['airbnb-base'],
+  extends: ['eslint:recommended', 'airbnb-base'],
   env: {
     browser: true,
     node: true,
   },
   rules: {
-    'import/no-extraneous-dependencies': ['error', {'devDependencies': true}],
-  }
+    'key-spacing': [
+      'error',
+      {
+        beforeColon: false,
+        afterColon: true,
+        align: 'value',
+      },
+    ],
+    'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
+  },
 };

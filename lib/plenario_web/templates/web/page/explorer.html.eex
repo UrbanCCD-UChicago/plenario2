@@ -1,3 +1,6 @@
+<!-- FIXME: this is not the right way to do this. -->
+<script src="<%= static_path(@conn, "/js/explorer.bundle.js") %>"></script>
+
 <!-- Vue.js application mount point -->
 <div id="app"></div>
 
@@ -132,8 +135,6 @@
     <% end %>
   <% end %>
 
-  <!-- Loads the vue application into this template only -->
-  <script src="<%= static_path(@conn, "/js/explorer.js") %>"></script>
 </div>
 
 <script>
