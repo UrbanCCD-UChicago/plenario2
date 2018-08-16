@@ -290,41 +290,17 @@ defmodule Plenario.Actions.MetaActions do
     fields =
       VirtualPointFieldActions.list(for_meta: meta)
       |> Enum.map(& &1.name)
+      |> Enum.join(", ")
 
-    stx = Enum.map(fields, &"st_x(\"#{&1}\")") |> Enum.join(", ")
-    sty = Enum.map(fields, &"st_y(\"#{&1}\")") |> Enum.join(", ")
+    view = "#{meta.table_name}_view"
 
     query = """
-    SELECT
-      MIN(subq.min_x) AS min_x,
-      MIN(subq.min_y) AS min_y,
-      MAX(subq.max_x) AS max_x,
-      MAX(subq.max_y) AS max_y
-    FROM (
-      SELECT
-        LEAST(#{stx}) AS min_x,
-        LEAST(#{sty}) AS min_y,
-        GREATEST(#{stx}) AS max_x,
-        GREATEST(#{sty}) AS max_y
-      FROM
-        "#{meta.table_name}_view"
-    ) AS subq
+    SELECT st_convexhull(st_union("#{fields}"))
+    FROM "#{view}"
     """
 
-    %Postgrex.Result{rows: [[min_x, min_y, max_x, max_y]]} = Repo.query!(query)
-
-    %Geo.Polygon{
-      coordinates: [
-        [
-          {max_x, min_y},
-          {min_x, min_y},
-          {min_x, max_y},
-          {max_x, max_y},
-          {max_x, min_y}
-        ]
-      ],
-      srid: 4326
-    }
+    %Postgrex.Result{rows: [[bbox]]} = Repo.query!(query)
+    bbox
   end
 
   def dump_bbox(%Meta{bbox: nil}), do: nil

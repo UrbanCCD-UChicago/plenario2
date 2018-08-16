@@ -20,7 +20,9 @@ defmodule PlenarioAot.AotActions do
   def list_metas, do: Repo.all(AotMeta)
 
   def get_meta(identifier) when is_integer(identifier), do: Repo.get_by(AotMeta, id: identifier)
-  def get_meta(identifier) when is_bitstring(identifier), do: Repo.get_by(AotMeta, slug: identifier)
+
+  def get_meta(identifier) when is_bitstring(identifier),
+    do: Repo.get_by(AotMeta, slug: identifier)
 
   def update_meta(%AotMeta{} = meta, params \\ []) do
     params = Enum.into(params, %{})
@@ -32,52 +34,26 @@ defmodule PlenarioAot.AotActions do
   end
 
   def compute_and_update_meta_bbox(%AotMeta{} = meta) do
-    query =
-      from d in AotData,
-      where: d.aot_meta_id == ^meta.id,
-      select: %{
-        min_lat: min(d.latitude),
-        max_lat: max(d.latitude),
-        min_lon: min(d.longitude),
-        max_lon: max(d.longitude)
-      }
-    res = Repo.one(query)
+    bbox =
+      AotData
+      |> where([d], d.aot_meta_id == ^meta.id)
+      |> select([d], fragment("st_convexhull(st_union(?))", d.location))
+      |> Repo.one()
 
-    case res do
-      %{min_lat: min_lat, max_lat: max_lat, min_lon: min_lon, max_lon: max_lon} ->
-        bbox = %Geo.Polygon{
-          srid: 4326,
-          coordinates: [[
-            {max_lat, min_lon},
-            {min_lat, min_lon},
-            {min_lat, max_lon},
-            {max_lat, max_lon},
-            {max_lat, min_lon}
-          ]]
-        }
-
-        case update_meta(meta, bbox: bbox) do
-          {:ok, _} ->
-            :ok
-
-          {:error, cs} ->
-            Logger.error("#{inspect(cs)}")
-            :ok
-        end
-
-      _ ->
-        {:error, "No available min/max tuples"}
-    end
+    update_meta(meta, bbox: bbox)
   end
 
   def compute_and_update_meta_time_range(%AotMeta{} = meta) do
     query =
-      from d in AotData,
-      where: d.aot_meta_id == ^meta.id,
-      select: %{
-        min_ts: min(d.timestamp),
-        max_ts: max(d.timestamp)
-      }
+      from(
+        d in AotData,
+        where: d.aot_meta_id == ^meta.id,
+        select: %{
+          min_ts: min(d.timestamp),
+          max_ts: max(d.timestamp)
+        }
+      )
+
     res = Repo.one(query)
 
     case res do
@@ -101,9 +77,11 @@ defmodule PlenarioAot.AotActions do
     upper = Timex.format!(upper, "{ISOdate} {ISOtime}")
     "#{lower} to #{upper}"
   end
+
   def format_time_range(_), do: "-"
 
   def insert_data(%AotMeta{} = meta, %{} = json_payload), do: insert_data(meta.id, json_payload)
+
   def insert_data(meta, json_payload) do
     params = Map.merge(json_payload, %{"aot_meta_id" => meta})
 
@@ -126,6 +104,7 @@ defmodule PlenarioAot.AotActions do
 
     Enum.each(paths_values, fn {path, value} ->
       [sensor, observation] = String.split(path, ".")
+
       params = %{
         aot_data_id: data.id,
         path: path,
@@ -139,9 +118,12 @@ defmodule PlenarioAot.AotActions do
     end)
   end
 
-  defp get_json_paths_and_values(json) when is_map(json), do: json |> Map.to_list() |> to_flat_map(%{})
+  defp get_json_paths_and_values(json) when is_map(json),
+    do: json |> Map.to_list() |> to_flat_map(%{})
 
-  defp to_flat_map([{pk, %{} = v} | t], acc), do: v |> to_list(pk) |> to_flat_map(to_flat_map(t, acc))
+  defp to_flat_map([{pk, %{} = v} | t], acc),
+    do: v |> to_list(pk) |> to_flat_map(to_flat_map(t, acc))
+
   defp to_flat_map([{k, v} | t], acc), do: to_flat_map(t, Map.put_new(acc, k, v))
   defp to_flat_map([], acc), do: acc
 

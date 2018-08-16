@@ -13,7 +13,7 @@ defmodule PlenarioWeb.Web.PageController do
       :s3_asset_path,
       Map.get(
         %{
-          "dev.plenar.io":  "https://s3.us-east-2.amazonaws.com/plenario2-assets-staging",
+          "dev.plenar.io": "https://s3.us-east-2.amazonaws.com/plenario2-assets-staging",
           "plenar.io": "https://s3.us-east-2.amazonaws.com/plenario2-assets"
         },
         conn.host,
@@ -22,7 +22,7 @@ defmodule PlenarioWeb.Web.PageController do
     )
   end
 
-  plug :assign_s3_path
+  plug(:assign_s3_path)
 
   ##
   # flat pages
@@ -41,7 +41,9 @@ defmodule PlenarioWeb.Web.PageController do
   # first load
 
   def explorer(conn, params) when params == %{} do
-    render conn, "explorer.html",
+    render(
+      conn,
+      "explorer.html",
       results: nil,
       granularity: @default_granularity,
       map_center: @default_center,
@@ -49,6 +51,7 @@ defmodule PlenarioWeb.Web.PageController do
       bbox: nil,
       starts: nil,
       ends: nil
+    )
   end
 
   # user submits form
@@ -66,7 +69,10 @@ defmodule PlenarioWeb.Web.PageController do
         true ->
           conn
           |> put_status(:bad_request)
-          |> put_flash(:error, "You must select a time range with a starting date earlier than the ending date.")
+          |> put_flash(
+            :error,
+            "You must select a time range with a starting date earlier than the ending date."
+          )
 
         false ->
           conn
@@ -84,9 +90,7 @@ defmodule PlenarioWeb.Web.PageController do
               value -> value
             end
 
-          message =
-            existing_message <>
-            "You must select an area on the map to search data sets."
+          message = existing_message <> "You must select an area on the map to search data sets."
 
           conn
           |> put_status(:bad_request)
@@ -114,7 +118,9 @@ defmodule PlenarioWeb.Web.PageController do
           bbox.coordinates |> Poison.encode!()
       end
 
-    render conn, "explorer.html",
+    render(
+      conn,
+      "explorer.html",
       results: results,
       granularity: granularity,
       map_center: center,
@@ -122,6 +128,7 @@ defmodule PlenarioWeb.Web.PageController do
       bbox: coords,
       starts: starts,
       ends: ends
+    )
   end
 
   defp parse_granularity(params), do: Map.get(params, "granularity", @default_granularity)
@@ -153,17 +160,19 @@ defmodule PlenarioWeb.Web.PageController do
         Plenario.TsRange.new(starts, ends)
     end
   end
+
   defp make_time_range(_, _), do: nil
 
   defp parse_coords(params) do
     bbox = Map.get(params, "coords")
+
     cond do
       is_binary(bbox) ->
         case Poison.decode(bbox) do
           {:ok, json} ->
             cond do
               is_list(json) ->
-                coords = for [lat, lon] <- json, do: {lat, lon}
+                coords = for [lat, lon] <- json, do: {lon, lat}
                 first = List.first(coords)
                 coords = coords ++ [first]
                 %Geo.Polygon{coordinates: [coords], srid: 4326}
@@ -173,13 +182,19 @@ defmodule PlenarioWeb.Web.PageController do
                   "_northEast" => %{"lat" => max_lat, "lng" => min_lon},
                   "_southWest" => %{"lat" => min_lat, "lng" => max_lon}
                 } = json
-                %Geo.Polygon{coordinates: [[
-                  {max_lat, max_lon},
-                  {min_lat, max_lon},
-                  {min_lat, min_lon},
-                  {max_lat, min_lon},
-                  {max_lat, max_lon}
-                ]], srid: 4326}
+
+                %Geo.Polygon{
+                  coordinates: [
+                    [
+                      {max_lon, max_lat},
+                      {min_lon, max_lat},
+                      {min_lon, min_lat},
+                      {max_lon, min_lat},
+                      {max_lon, max_lat}
+                    ]
+                  ],
+                  srid: 4326
+                }
 
               true ->
                 nil
@@ -195,6 +210,7 @@ defmodule PlenarioWeb.Web.PageController do
   end
 
   defp find_center(nil), do: @default_center
+
   defp find_center(bbox) do
     coords = List.first(bbox.coordinates)
 
@@ -286,14 +302,16 @@ defmodule PlenarioWeb.Web.PageController do
       |> Repo.all()
       |> Enum.reject(fn {_, _, humid} -> is_nil(humid) end)
 
-    render(conn, "aot-explorer.html", [
+    render(
+      conn,
+      "aot-explorer.html",
       points: node_locations_data,
       temp_hm_data: temp_heatmap_data,
       humid_hm_data: humid_heatmap_data,
       labels: temp_humid_graph_data[:labels],
       temps_data: Enum.at(temp_humid_graph_data[:datasets], 0),
       humid_data: Enum.at(temp_humid_graph_data[:datasets], 1)
-    ])
+    )
   end
 
   @red "255,99,132"
@@ -308,16 +326,21 @@ defmodule PlenarioWeb.Web.PageController do
 
   defp format_line_chart(records, keys) do
     labels = Enum.map(records, fn [dt | _] -> dt end)
+
     datasets =
       keys
       |> Enum.with_index(1)
       |> Enum.map(fn {key, index} ->
         data = Enum.map(records, fn row -> Enum.at(row, index) end)
+
         %{
           label: key,
           data: data,
-          backgroundColor: Enum.at(Stream.cycle([@red, @blue, @yellow, @green, @purple]), index) |> bgrnd_color(),
-          borderColor: Enum.at(Stream.cycle([@red, @blue, @yellow, @green, @purple]), index) |> border_color(),
+          backgroundColor:
+            Enum.at(Stream.cycle([@red, @blue, @yellow, @green, @purple]), index) |> bgrnd_color(),
+          borderColor:
+            Enum.at(Stream.cycle([@red, @blue, @yellow, @green, @purple]), index)
+            |> border_color(),
           border: 1,
           fill: true
         }
