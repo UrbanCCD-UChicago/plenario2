@@ -1,3 +1,6 @@
+<!-- FIXME: this is not the right way to do this. -->
+<script src="<%= static_path(@conn, "/js/explorer.bundle.js") %>"></script>
+
 <div class="container mt-2 mb-1">
   <h1>Explore Data Sets</h1>
 
@@ -77,8 +80,6 @@
     <% end %>
   <% end %>
 
-  <!-- Loads the vue application into this template only -->
-  <script src="<%= static_path(@conn, "/js/explorer.js") %>"></script>
 </div>
 
 <script>

@@ -1,7 +1,15 @@
+/* global $:false */
+
+import * as L from 'leaflet';
+import 'leaflet-draw';
 import Vue from 'vue';
 import Vuex from 'vuex';
 
 import Explorer from './components/Explorer.vue';
+
+/* CSS imports (needed to force Webpack to bundle them) */
+import 'leaflet/dist/leaflet.css';
+import 'leaflet-draw/dist/leaflet.draw.css';
 
 Vue.use(Vuex);
 
@@ -31,13 +39,19 @@ const store = new Vuex.Store({
   }
 });
 
-new Vue({
-  components: { Explorer },
+// So current Leaflet implementation doesn't break
+window.L = L;
 
-  /**
-   * Inject the `store` into all child components. Any children of this root
-   * component will have access to a `$store` property containing the 
-   * application state.
-   */
-  store: store
-}).$mount('#app');
+// Only mount Vue once page has loaded
+$(() => {
+  new Vue({
+    components: { Explorer },
+
+    /**
+     * Inject the `store` into all child components. Any children of this root
+     * component will have access to a `$store` property containing the 
+     * application state.
+     */
+    store: store
+  }).$mount('#app');
+});
