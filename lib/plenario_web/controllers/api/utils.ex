@@ -207,6 +207,13 @@ defmodule PlenarioWeb.Api.Utils do
           total_records: 1
         }
 
+      "head.json" ->
+        %{
+          data_count: 1,
+          total_pages: 1,
+          total_records: page.total_entries
+        }
+
       _ ->
         %{
           data_count: length(page.entries),
