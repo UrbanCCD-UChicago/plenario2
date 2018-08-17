@@ -377,7 +377,13 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
         |> get(detail_path(conn, :describe, meta.slug))
         |> json_response(:ok)
 
-      assert Map.keys(res["data"]) == @describe_keys
+      assert length(res["data"]) == 1
+
+      meta =
+        res["data"]
+        |> List.first()
+
+      assert Map.keys(meta) == @describe_keys
     end
   end
 end
