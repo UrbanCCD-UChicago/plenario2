@@ -65,6 +65,18 @@ defmodule PlenarioWeb.Api.AotControllerTest do
 
       refute res["meta"]["params"]["window"] == nil
     end
+
+    test "when given format=geojson it will respond with data objects formatted as geojson", %{
+      conn: conn
+    } do
+      res =
+        conn
+        |> get(aot_path(conn, :get, %{format: "geojson"}))
+        |> json_response(:ok)
+
+      res["data"]
+      |> Enum.each(fn record -> assert Map.keys(record) == ["geometry", "properties", "type"] end)
+    end
   end
 
   describe "GET /aot with filters" do
@@ -178,6 +190,18 @@ defmodule PlenarioWeb.Api.AotControllerTest do
 
       assert head["timestamp"] == "2018-03-07T15:54:04.000000"
     end
+
+    test "when given format=geojson it will respond with data objects formatted as geojson", %{
+      conn: conn
+    } do
+      res =
+        conn
+        |> get(aot_path(conn, :head, %{format: "geojson"}))
+        |> json_response(:ok)
+
+      res["data"]
+      |> Enum.each(fn record -> assert Map.keys(record) == ["geometry", "properties", "type"] end)
+    end
   end
 
   describe "GET /aot/@describe" do
@@ -202,6 +226,18 @@ defmodule PlenarioWeb.Api.AotControllerTest do
 
       # clean this up
       Plenario.Repo.delete!(meta)
+    end
+
+    test "when given format=geojson it will respond with data objects formatted as geojson", %{
+      conn: conn
+    } do
+      res =
+        conn
+        |> get(aot_path(conn, :describe, %{format: "geojson"}))
+        |> json_response(:ok)
+
+      res["data"]
+      |> Enum.each(fn record -> assert Map.keys(record) == ["geometry", "properties", "type"] end)
     end
   end
 end
