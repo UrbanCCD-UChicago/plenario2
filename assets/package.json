@@ -52,7 +52,6 @@
     "uglifyjs-webpack-plugin": "^1.2.7",
     "url-loader": "^1.0.1",
     "vue": "^2.5.16",
-    "vue-chartist": "^2.1.2",
     "vue-loader": "^15.2.6",
     "vue-template-compiler": "^2.5.16",
     "vue2-leaflet": "^1.0.2",
