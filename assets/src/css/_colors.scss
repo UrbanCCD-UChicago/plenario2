@@ -6,12 +6,16 @@ $blue:   #7197b3;
 $cyan:   #82c5cc;
 $purple: #8d73ac;
 
-$gray-base: $blue;
 @function make-gray($color, $level, $desaturate: 80%) {
   $neutralized-color: hsl(hue($color), saturation($color), $lightness: 50%);
   $lightness-adjustment: ((500 - $level) / 100 * 20%);
-  @return scale-color($neutralized-color, $saturation: -$desaturate, $lightness: $lightness-adjustment);
+  @return scale-color(
+      $neutralized-color,
+      $saturation: -1 * $desaturate, 
+      $lightness: $lightness-adjustment
+    );
 }
+$gray-base: $blue;
 $gray-100: make-gray($gray-base, 100);
 $gray-200: make-gray($gray-base, 200);
 $gray-300: make-gray($gray-base, 300);

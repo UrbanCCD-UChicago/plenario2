@@ -3,14 +3,19 @@
 //
 // Supported in all browsers that would be running on a HiDPI device
 @mixin hidpi {
+  // This media selector is fragile and carefully constructed, so any styleguide
+  // violations are intentional. Note this is a major exception to the rule and
+  // should not be taken as precedent to disable StyleLint for new code.
+  // stylelint-disable
   @media only screen and (-webkit-min-device-pixel-ratio: 1.25),
          only screen and ( min--moz-device-pixel-ratio: 1.25),
-         only screen and ( -o-min-device-pixel-ratio: 1.25/1),
+         only screen and ( -o-min-device-pixel-ratio: 1.25 / 1),
          only screen and ( min-device-pixel-ratio: 1.25),
          only screen and ( min-resolution: 200dpi),
          only screen and ( min-resolution: 1.25dppx) {
     @content;
   }
+  // stylelint-enable
 }
 
 // Generates appropriate media queries to request differently-sized versions of
@@ -33,6 +38,7 @@
   @each $breakpoint in map-keys($grid-breakpoints) {
     @include media-breakpoint-up($breakpoint) {
       background-image: unquote($before)url(str-replace($url-base, "-xx", "-#{$breakpoint}"))unquote($after);
+      
       @include hidpi {
         background-image: unquote($before)url(str-replace($url-base, "-xx", "-#{$breakpoint}@2x"))unquote($after);
       }
@@ -43,41 +49,56 @@
 // Fade-out a background image toward a specified color, useful for muted or
 // stylized image backgrounds without having to regenerate image assets.
 //
-// $image - the URL of the base image
-// $color - the color to fade the image toward
-// $amt   - the effect strength, in the range 0.0 (no change) - 1.0 (pure color)
-@mixin faded-bg-img($image, $color, $amt) {
+// $image  - the URL of the base image
+// $color  - the color to fade the image toward
+// $amount - effect strength, in the range 0.0 (no change) - 1.0 (pure color)
+@mixin faded-bg-img($image, $color, $amount) {
   background-color: $color;
-  background-image: transparent-overlay($color, 1.0 - $amt), url($image), transparent-overlay($color, 0);
+  background-image:
+    transparent-overlay($color, 1.0 - $amount),
+    url($image),
+    transparent-overlay($color, 1);
 }
 
 // Dim a background image toward black, useful for muted image backgrounds
 // without having to regenerate image assets.
 //
-// $image - the URL of the base image
-// $amt   - the effect strength, in the range 0.0 (no change) - 1.0 (pure black)
-@mixin darkened-bg-img($image, $amt) {
-  @include faded-bg-img($image, $black, $amt);
+// $image  - the URL of the base image
+// $amount - effect strength, in the range 0.0 (no change) - 1.0 (pure black)
+@mixin darkened-bg-img($image, $amount) {
+  @include faded-bg-img($image: $image, $color: $black, $amount: $amount);
 }
 
 // Works exactly like faded-bg-image(), except uses responsive-bg-img() to
 // optimize which size image is loaded.
 //
-// $image - the base URL of the image (see responsive-bg-img() for syntax)
-// $color - the color to fade the image toward
-// $amt   - the effect strength, in the range 0.0 (no change) - 1.0 (pure color)
-@mixin faded-bg-img-responsive($image, $color, $amt) {
+// $image  - the base URL of the image (see responsive-bg-img() for syntax)
+// $color  - the color to fade the image toward
+// $amount - effect strength, in the range 0.0 (no change) - 1.0 (pure color)
+@mixin faded-bg-img-responsive($image, $color, $amount) {
+  $above: "#{transparent-overlay($color, 1.0 - $amount)}";
+  $below: "#{transparent-overlay($color, 1)}";
+  
   background-color: $color;
-  @include responsive-bg-img($image, "#{transparent-overlay($color, 1.0 - $amt)}", "#{transparent-overlay($color, 0)}");
+  
+  @include responsive-bg-img(
+      $url-base: $image,
+      $layers-above: $above,
+      $layers-below: $below
+    );
 }
 
 // Works exactly like darkened-bg-image(), except uses responsive-bg-img() to
 // optimize which size image is loaded.
 //
-// $image - the base URL of the image (see responsive-bg-img() for syntax)
-// $amt   - the effect strength, in the range 0.0 (no change) - 1.0 (pure black)
-@mixin darkened-bg-img-responsive($image, $amt) {
-  @include faded-bg-img-responsive($image, $black, $amt);
+// $image  - the base URL of the image (see responsive-bg-img() for syntax)
+// $amount - effect strength, in the range 0.0 (no change) - 1.0 (pure black)
+@mixin darkened-bg-img-responsive($image, $amount) {
+  @include faded-bg-img-responsive(
+      $image: $image,
+      $color: $black,
+      $amount: $amount
+    );
 }
 
 // Applies several subtle effects to improve the readability of text and icons
@@ -103,8 +124,8 @@
     // CSS filters produce a somewhat stronger shadow effect than box-shadow
     // does, and it stacks with itself, so this factor adjusts the spread down
     // to compensate and avoid blotchy dark spots in concave parts of images
-    $filter-reduction-factor: 3;
-    filter: drop-shadow(0 0 ($img-spread/$filter-reduction-factor) $img-color);
+    $filter-multiplier: 0.33;
+    filter: drop-shadow(0 0 ($img-spread * $filter-multiplier) $img-color);
   }
   .btn {
     // Solid buttons get a drop shadow just like images, but outline buttons get
