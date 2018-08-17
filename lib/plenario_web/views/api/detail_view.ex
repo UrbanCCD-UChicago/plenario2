@@ -11,7 +11,7 @@ defmodule PlenarioWeb.Api.DetailView do
         counts: opts[:counts],
         params: opts[:params]
       },
-      data: opts[:data] |> clean()
+      data: opts[:data]
     }
   end
 
@@ -22,7 +22,7 @@ defmodule PlenarioWeb.Api.DetailView do
         counts: opts[:counts],
         params: opts[:params]
       },
-      data: opts[:data] |> clean() |> Enum.take(1)
+      data: opts[:data] |> Enum.take(1)
     }
   end
 
@@ -33,7 +33,7 @@ defmodule PlenarioWeb.Api.DetailView do
         counts: opts[:counts],
         params: opts[:params]
       },
-      data: opts[:data] |> clean()
+      data: opts[:data]
     }
   end
 end

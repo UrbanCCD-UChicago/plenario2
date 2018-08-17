@@ -161,7 +161,7 @@ defmodule PlenarioWeb.Api.Plugs do
 
   # CHECK FILTERS
 
-  @excluded_keys ["page", "page_size", "order_by", "slug", "dataset_name"]
+  @excluded_keys ["page", "page_size", "order_by", "slug", "dataset_name", "format", "window"]
 
   @acceptable_ops ["lt", "le", "eq", "ge", "gt", "in", "within", "intersects"]
 
@@ -305,7 +305,19 @@ defmodule PlenarioWeb.Api.Plugs do
 
   # APPLY WINDOW
 
+  @doc """
+  This function is used for the AoT Controller -- it checks for a `window` param and optionally
+  sets it to the current timestamp if not found.
+
+  The window is used in the queries to limit the data so that if a client is paging through
+  the data set, the pagination remains stable during a freah load of more recent data.
+
+  The function assigns :window as a NaiveDateTime struct for immediate query interpolation.
+  """
   @spec apply_window(Plug.Conn.t(), any()) :: Plug.Conn.t()
+  def apply_window(%Conn{params: %{"window" => %NaiveDateTime{} = w}} = conn, _opts),
+    do: assign(conn, :window, w)
+
   def apply_window(%Conn{params: %{"window" => window}} = conn, _opts) when is_bitstring(window) do
     case Timex.parse(window, "%Y-%m-%dT%H:%M:%S", :strftime) do
       {:ok, window} ->
@@ -323,5 +335,37 @@ defmodule PlenarioWeb.Api.Plugs do
 
     %Conn{conn | params: Map.put(conn.params, "window", now)}
     |> apply_window(nil)
+  end
+
+  # CHECK FORMAT
+
+  @formats ["json", "geojson"]
+
+  @format_error "`format` must be either 'json' or 'geojson'"
+
+  @default_format :json
+
+  @doc """
+  This function checks for a `format` param. By default, the API will return data
+  in JSON format. However, clients can request data be returned in GeoJSON format
+  instead.
+
+  The function assigns :format as an atom of either :json or :geojson for strict
+  matching later in the pipeline.
+  """
+  @spec check_format(Plug.Conn.t(), any()) :: Plug.Conn.t()
+  def check_format(%Conn{params: %{"format" => fmt}} = conn, _opts) when is_atom(fmt),
+    do: assign(conn, :format, fmt)
+
+  def check_format(%Conn{params: %{"format" => fmt}} = conn, _opts)
+      when is_bitstring(fmt) and fmt in @formats,
+      do: assign(conn, :format, String.to_atom(fmt))
+
+  def check_format(%Conn{params: %{"format" => _}} = conn, _opts),
+    do: halt_with(conn, :bad_request, @format_error)
+
+  def check_format(conn, _opts) do
+    %Conn{conn | params: Map.put(conn.params, "format", @default_format)}
+    |> check_format(nil)
   end
 end

@@ -58,7 +58,11 @@ defmodule PlenarioWeb.Api.Utils do
     links = make_links(:detail, view, conn, page)
     counts = make_counts(view, page)
     params = fmt_params(conn)
-    data = get_data(view, page)
+
+    data =
+      get_data(view, page)
+      |> clean_data()
+      |> format_data(:detail, view, conn.assigns[:format])
 
     Phoenix.Controller.render(
       conn,
@@ -82,7 +86,11 @@ defmodule PlenarioWeb.Api.Utils do
     links = make_links(:list, view, conn, page)
     counts = make_counts(view, page)
     params = fmt_params(conn)
-    data = get_data(view, page)
+
+    data =
+      get_data(view, page)
+      |> clean_data()
+      |> format_data(:list, view, conn.assigns[:format])
 
     Phoenix.Controller.render(
       conn,
@@ -148,6 +156,11 @@ defmodule PlenarioWeb.Api.Utils do
           get_data(view, page)
       end
 
+    data =
+      data
+      |> clean_data()
+      |> format_data(:aot, view, conn.assigns[:format])
+
     Phoenix.Controller.render(
       conn,
       view,
@@ -157,6 +170,8 @@ defmodule PlenarioWeb.Api.Utils do
       data: data
     )
   end
+
+  # meta helpers
 
   defp make_links(controller, view, conn, page) do
     {prev_page_number, next_page_number} = get_prev_next_page_numbers(page)
@@ -216,16 +231,6 @@ defmodule PlenarioWeb.Api.Utils do
     end
   end
 
-  defp get_data(view, page) do
-    case view do
-      "describe.json" ->
-        page
-
-      _ ->
-        page.entries
-    end
-  end
-
   defp get_prev_next_page_numbers(%Page{total_pages: last, page_number: current}) do
     previous = if current == 1, do: nil, else: current - 1
     next = if current == last, do: nil, else: current + 1
@@ -282,10 +287,128 @@ defmodule PlenarioWeb.Api.Utils do
           params
 
         w ->
-          Map.put(params, :window, w)
+          Map.put(params, :window, Timex.format!(w, "%Y-%m-%dT%H:%M:%S", :strftime))
       end
 
     params
+  end
+
+  # data helpers
+
+  defp get_data(view, page) do
+    case view do
+      "describe.json" ->
+        page
+
+      _ ->
+        page.entries
+    end
+  end
+
+  @scrub_keys [
+    :__meta__,
+    :__struct__,
+    :id,
+    :inserted_at,
+    :updated_at,
+    :source_type,
+    :table_name,
+    :state,
+    :user_id,
+    :meta_id,
+    :aot_meta_id,
+    :password,
+    :password_hash
+  ]
+
+  @scrub_values [
+    Ecto.Association.NotLoaded,
+    Plug.Conn
+  ]
+
+  @doc """
+  This function takes either a list of maps or a single map (map being either a literal map or a
+  struct) and scrubs undesirable key/value pairs from it. Things like `__meta__` keys and
+  `%Ecto.Association.NotLoaded{}` either bleed too much information and/or have serialization
+  issues.
+
+  See the module attributes `@scrub_keys` and `@scrub_values`.
+  """
+  @spec clean_data(list(map())) :: list(map())
+  def clean_data(records) when is_list(records) do
+    do_clean(records, [])
+  end
+
+  @spec clean_data(map()) :: map()
+  def clean_data(record) when is_map(record) do
+    Map.to_list(record)
+    |> Enum.filter(fn {key, value} -> is_clean(key, value) end)
+    |> Map.new()
+  end
+
+  defp do_clean([], acc) do
+    Enum.reverse(acc)
+  end
+
+  defp do_clean([head | tail], acc) do
+    cleaned = clean_data(head)
+    do_clean(tail, [cleaned | acc])
+  end
+
+  for key <- @scrub_keys do
+    defp is_clean(unquote(key), _), do: false
+  end
+
+  for value <- @scrub_values do
+    defp is_clean(_, %unquote(value){}), do: false
+  end
+
+  defp is_clean(_, _), do: true
+
+  defp format_data(data, :list, _, :json), do: data
+  defp format_data(data, :list, _, :geojson), do: to_geojson(data, :bbox)
+
+  defp format_data(data, :detail, "describe.json", :json), do: data
+  defp format_data(data, :detail, "describe.json", :geojson), do: to_geojson(data, :bbox)
+
+  defp format_data(data, :detail, _, :json), do: data
+
+  defp format_data(data, :detail, _, :geojson) do
+    {field, _} =
+      data
+      |> List.first()
+      |> Enum.filter(fn {_, value} -> is_geom(value) end)
+      |> List.first()
+
+    to_geojson(data, field)
+  end
+
+  defp format_data(data, :aot, "describe.json", :json), do: data
+  defp format_data(data, :aot, "describe.json", :geojson), do: to_geojson(data, :bbox)
+
+  defp format_data(data, :aot, _, :json), do: data
+  defp format_data(data, :aot, _, :geojson), do: to_geojson(data, :location)
+
+  defp is_geom(%Geo.Point{}), do: true
+  defp is_geom(%Geo.Polygon{}), do: true
+  defp is_geom(_), do: false
+
+  defp to_geojson(data, key) do
+    data
+    |> Enum.map(fn record ->
+      case Map.pop(record, key) do
+        {nil, _} ->
+          nil
+
+        {geom, record} ->
+          %{
+            type: "Feature",
+            geometry: geom |> Geo.JSON.encode(),
+            properties: record
+          }
+      end
+    end)
+    |> Enum.reject(&(&1 == nil))
   end
 
   # HALT

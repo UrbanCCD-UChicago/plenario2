@@ -26,6 +26,7 @@ defmodule PlenarioWeb.Api.AotController do
   plug(:check_page_size)
   plug(:check_order_by, default_order: "desc:timestamp")
   plug(:check_filters)
+  plug(:check_format)
   plug(:apply_window)
 
   @meta_keys [:network_name, :bbox, :time_rage]

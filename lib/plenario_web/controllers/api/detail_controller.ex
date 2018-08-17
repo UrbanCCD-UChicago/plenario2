@@ -29,6 +29,7 @@ defmodule PlenarioWeb.Api.DetailController do
   plug(:check_page)
   plug(:check_order_by, default_order: "asc:row_id")
   plug(:check_filters)
+  plug(:check_format)
 
   @spec get(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def get(conn, %{"slug" => slug}) do
@@ -52,7 +53,7 @@ defmodule PlenarioWeb.Api.DetailController do
         with_virtual_points: true
       )
 
-    render_detail(conn, "describe.json", meta)
+    render_detail(conn, "describe.json", [meta])
   end
 
   defp render_data_set(%Meta{state: "ready"} = meta, conn, view) do
