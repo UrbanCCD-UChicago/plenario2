@@ -5,26 +5,22 @@ defmodule PlenarioWeb.Api.AotControllerTest do
 
   import PlenarioWeb.Router.Helpers
 
-  alias Plenario.Repo
-
   alias PlenarioAot.AotActions
 
   @endpoint PlenarioWeb.Endpoint
 
   @fixture "test/fixtures/aot-chicago.json"
 
-  @total_records 10
-
   setup_all do
     Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
     Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
 
-    {:ok, meta} = AotActions.create_meta("Chicago", "https://example.com/")
+    {:ok, meta} = AotActions.create_meta("Chicago", "https://example.com/chicago")
 
-    Repo.transaction(fn ->
+    Plenario.Repo.transaction(fn ->
       File.read!(@fixture)
       |> Poison.decode!()
-      |> Enum.map(fn obj -> {:ok, _} = AotActions.insert_data(meta, obj) end)
+      |> Enum.map(&AotActions.insert_data(meta, &1))
     end)
 
     AotActions.compute_and_update_meta_bbox(meta)
@@ -33,8 +29,8 @@ defmodule PlenarioWeb.Api.AotControllerTest do
     {:ok, conn: build_conn(), meta: meta}
   end
 
-  describe "GET :get naive" do
-    test "applies page", %{conn: conn} do
+  describe "GET /aot" do
+    test "applies page number", %{conn: conn} do
       res =
         conn
         |> get(aot_path(conn, :get))
@@ -67,56 +63,145 @@ defmodule PlenarioWeb.Api.AotControllerTest do
         |> get(aot_path(conn, :get))
         |> json_response(:ok)
 
-      window = res["meta"]["params"]["window"]
-      {:ok, _} = Timex.parse(window, "%Y-%m-%dT%H:%M:%S", :strftime)
+      refute res["meta"]["params"]["window"] == nil
     end
   end
 
-  describe "GET :get" do
-    test "filter with a known `network_name` will yield results", %{conn: conn, meta: meta} do
-      # flaky test, requires sleep to let db settle
-      Process.sleep(1000)
+  describe "GET /aot with filters" do
+    test "with a good bbox will be :ok", %{conn: conn} do
+      bbox =
+        %Geo.Polygon{
+          srid: 4326,
+          coordinates: [
+            [
+              {1, 2},
+              {1, 1},
+              {2, 1},
+              {2, 2},
+              {1, 2}
+            ]
+          ]
+        }
+        |> Geo.JSON.encode()
+        |> Poison.encode!()
 
-      res =
-        conn
-        |> get(aot_path(conn, :get, %{network_name: meta.network_name}))
-        |> json_response(:ok)
-
-      assert length(res["data"]) == @total_records
+      conn
+      |> get(aot_path(conn, :get, %{location: "within:#{bbox}"}))
+      |> json_response(:ok)
     end
 
-    test "filter with an unknown `network_name` will yield 0 results", %{conn: conn} do
+    test "with a malformed bbox will be :bad_request", %{conn: conn} do
+      conn
+      |> get(aot_path(conn, :get, %{location: "within:chicago"}))
+      |> json_response(:bad_request)
+    end
+
+    test "with a good timerange will be :ok", %{conn: conn} do
+      range =
+        %Plenario.TsRange{
+          lower: ~N[2018-01-01 00:00:00],
+          upper: ~N[2019-01-01 00:00:00],
+          upper_inclusive: false
+        }
+        |> Poison.encode!()
+
+      conn
+      |> get(aot_path(conn, :get, %{timestamp: "within:#{range}"}))
+      |> json_response(:ok)
+    end
+
+    test "with a malformed timerange will be :bad_request", %{conn: conn} do
+      conn
+      |> get(aot_path(conn, :get, %{timestamp: "within:last week"}))
+      |> json_response(:bad_request)
+    end
+
+    test "with an unknown network name will be :ok and yield 0 results", %{conn: conn} do
+      # flaky test; let it sleep
+      Process.sleep(500)
+
       res =
         conn
-        |> get(aot_path(conn, :get, %{network_name: "nada"}))
+        |> get(aot_path(conn, :get, %{network_name: "the-moon"}))
         |> json_response(:ok)
 
       assert length(res["data"]) == 0
+
+      assert res["meta"]["counts"] == %{
+               "data_count" => 0,
+               "total_pages" => 1,
+               "total_records" => 0
+             }
     end
 
-    test "filter with a known `network_name` and an unknown `node_id` will yield 0 results", %{
-      conn: conn,
-      meta: meta
-    } do
-      res =
-        conn
-        |> get(aot_path(conn, :get, %{network_name: meta.network_name, node_id: "nope"}))
-        |> json_response(:ok)
+    test "with an array of node ids will be :ok", %{conn: conn} do
+      # flaky test; let it sleep
+      Process.sleep(500)
 
-      assert length(res["data"]) == 0
-    end
-
-    test "filter with multiple `good node_id`s will yield results", %{conn: conn} do
-      # flaky test, requires sleep to let db settle
-      Process.sleep(1000)
-
-      # path = "/api/v2/aot?node_id[]=080&node_id[]=081"
       res =
         conn
         |> get(aot_path(conn, :get, %{node_id: ["080", "081"]}))
         |> json_response(:ok)
 
       assert length(res["data"]) == 9
+    end
+  end
+
+  describe "GET /aot/@head" do
+    setup do
+      # All of these tests can be flaky.
+      Process.sleep(500)
+    end
+
+    test "in default order", %{conn: conn} do
+      res =
+        conn
+        |> get(aot_path(conn, :head))
+        |> json_response(:ok)
+
+      head =
+        res["data"]
+        |> List.first()
+
+      assert head["timestamp"] == "2018-03-07T15:54:04.000000"
+    end
+
+    test "in custom order", %{conn: conn} do
+      res =
+        conn
+        |> get(aot_path(conn, :head, %{order_by: "asc:timestamp"}))
+        |> json_response(:ok)
+
+      head =
+        res["data"]
+        |> List.first()
+
+      assert head["timestamp"] == "2018-03-07T15:54:04.000000"
+    end
+  end
+
+  describe "GET /aot/@describe" do
+    test "with a single network", %{conn: conn} do
+      res =
+        conn
+        |> get(aot_path(conn, :describe))
+        |> json_response(:ok)
+
+      assert length(res["data"]) == 1
+    end
+
+    test "with multiple networks", %{conn: conn} do
+      {:ok, meta} = AotActions.create_meta("Detroit", "https://example.com/detroit")
+
+      res =
+        conn
+        |> get(aot_path(conn, :describe))
+        |> json_response(:ok)
+
+      assert length(res["data"]) == 2
+
+      # clean this up
+      Plenario.Repo.delete!(meta)
     end
   end
 end
