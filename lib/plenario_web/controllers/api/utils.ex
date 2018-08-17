@@ -266,13 +266,15 @@ defmodule PlenarioWeb.Api.Utils do
     page = conn.assigns[:page]
     size = conn.assigns[:page_size]
     {dir, field} = conn.assigns[:order_by]
+    format = conn.assigns[:format]
 
     params = %{
       page: page,
       page_size: size,
       order_by: %{
         dir => field
-      }
+      },
+      format: format
     }
 
     params =

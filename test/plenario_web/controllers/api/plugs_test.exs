@@ -354,4 +354,27 @@ defmodule PlenarioWeb.Api.PlugsTest do
     window = res["meta"]["params"]["window"]
     refute is_nil(window)
   end
+
+  describe "check_format" do
+    test "defualts to json", %{conn: conn} do
+      res =
+        conn
+        |> get(list_path(conn, :get))
+        |> json_response(:ok)
+
+      assert res["meta"]["params"]["format"] == "json"
+    end
+
+    test "accepts geojson", %{conn: conn} do
+      conn
+      |> get(list_path(conn, :get, %{format: "geojson"}))
+      |> json_response(:ok)
+    end
+
+    test "will 400 when given an unknown value", %{conn: conn} do
+      conn
+      |> get(list_path(conn, :get, %{format: "tsv"}))
+      |> json_response(:bad_request)
+    end
+  end
 end
