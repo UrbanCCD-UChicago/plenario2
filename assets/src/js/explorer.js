@@ -6,11 +6,12 @@ import Vue from 'vue';
 import Vuex from 'vuex';
 import Chartist from 'vue-chartist';
 
-import Explorer from './components/Explorer.vue';
-
 /* CSS imports (needed to force Webpack to bundle them) */
+import 'chartist/dist/chartist.min.css';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
+
+import Explorer from './components/Explorer.vue';
 
 Vue.use(Vuex);
 Vue.use(Chartist);
@@ -23,22 +24,22 @@ Vue.use(Chartist);
  */
 const store = new Vuex.Store({
   state: {
-    query: {},
-    datasets: {}
+    query:    {},
+    datasets: {},
   },
 
   mutations: {
 
     /**
      * Assign parameter values to the query state.
-     * 
-     * @param {Object} state 
-     * @param {Object} params 
+     *
+     * @param {Object} state
+     * @param {Object} params
      */
-    assignQuery (state, params) {
+    assignQuery(state, params) {
       Vue.set(state, 'query', Object.assign(state.query, params));
-    }
-  }
+    },
+  },
 });
 
 // So current Leaflet implementation doesn't break
@@ -51,9 +52,9 @@ $(() => {
 
     /**
      * Inject the `store` into all child components. Any children of this root
-     * component will have access to a `$store` property containing the 
+     * component will have access to a `$store` property containing the
      * application state.
      */
-    store: store
+    store,
   }).$mount('#app');
 });

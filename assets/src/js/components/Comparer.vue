@@ -13,12 +13,8 @@
       </div> <!-- map-plot-area -->
 
       <div class="col-lg-6" id="chart-plot-area">
-        <chartist
-          ratio="ct-major-second"
-          type="Line"
-          :data="chartData"
-          :options="chartOptions" >
-        </chartist>
+        <div class="ct-chart ct-golden-section" id="chart">
+        </div>
       </div> <!-- chart-plot-area -->
 
       <div class="col-12">
@@ -30,11 +26,9 @@
   </section>
 </template>
 
-<style lang="scss">
-@import "chartist/dist/scss/chartist.scss";
-</style>
-
 <script>
+import Chartist from 'chartist';
+
 import LMap from './LMap.vue';
 import SearchParameterBreadcrumbs from './SearchParameterBreadcrumbs.vue';
 
@@ -54,6 +48,10 @@ export default {
           lineSmooth: false
       }
     }
+  },
+
+  mounted: function() {
+    new Chartist.Line('#chart', this.chartData);
   }
 }
 </script>
