@@ -6,10 +6,8 @@
       granularity="day" />
     
     <div class="row no-gutters" id="plotting-area">
-      <div class="col-lg-6" id="map-plot-area">
-        <div class="embed-responsive">
-          <l-map></l-map>
-        </div>
+      <div class="col-lg-6 card" id="map-plot-area">
+        <l-map></l-map>
       </div> <!-- map-plot-area -->
 
       <div class="col-lg-6" id="chart-plot-area">

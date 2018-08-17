@@ -26,6 +26,7 @@
         </div>
 
         <div class="col-lg-8 card">
+          <l-map></l-map>
         </div>
       </div>
     </div>
