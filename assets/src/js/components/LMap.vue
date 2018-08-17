@@ -8,11 +8,18 @@ import 'leaflet-draw';
 import "leaflet/dist/leaflet.css";
 
 export default {
+  
+  props: {
+    drawTools: {
+      type: Boolean,
+      default: false
+    }
+  },
 
   data: function () {
     return {
       drawnItems: new L.FeatureGroup()
-    }
+    };
   },
 
   /**
@@ -30,6 +37,12 @@ export default {
 
     // FeatureGroup is to store editable layers
     var drawControl = new L.Control.Draw({
+      draw: {
+        marker: false,
+        circlemarker: false,
+        polyline: false
+      },
+
       edit: {
         featureGroup: this.drawnItems
       }
@@ -37,7 +50,10 @@ export default {
 
     //
     map.addLayer(this.drawnItems);
-    map.addControl(drawControl);
+
+    if (this.drawTools) {
+      map.addControl(drawControl);
+    }
 
     //
     map.on('draw:created', this.onDraw);

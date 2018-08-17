@@ -4,7 +4,6 @@ import * as L from 'leaflet';
 import 'leaflet-draw';
 import Vue from 'vue';
 import Vuex from 'vuex';
-import Chartist from 'vue-chartist';
 
 /* CSS imports (needed to force Webpack to bundle them) */
 import 'chartist/dist/chartist.min.css';
@@ -14,7 +13,6 @@ import 'leaflet-draw/dist/leaflet.draw.css';
 import Explorer from './components/Explorer.vue';
 
 Vue.use(Vuex);
-Vue.use(Chartist);
 
 /**
  * A container that holds all application state. Changes to the store trigger

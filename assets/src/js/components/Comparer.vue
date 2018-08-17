@@ -6,11 +6,11 @@
       granularity="day" />
     
     <div class="row no-gutters" id="plotting-area">
-      <div class="col-lg-6 card" id="map-plot-area">
-        <l-map></l-map>
+      <div class="col-lg-5 card" id="map-plot-area">
+        <!-- <l-map></l-map> -->
       </div> <!-- map-plot-area -->
 
-      <div class="col-lg-6" id="chart-plot-area">
+      <div class="col-lg-7" id="chart-plot-area">
         <div class="ct-chart ct-golden-section" id="chart">
         </div>
       </div> <!-- chart-plot-area -->
