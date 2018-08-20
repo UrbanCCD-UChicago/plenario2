@@ -254,6 +254,19 @@ defmodule PlenarioWeb.Api.ListControllerTest do
       |> Enum.each(&assert Map.keys(&1) == @record_keys)
     end
 
+    test "the meta.counts are accurate to response", %{conn: conn} do
+      res =
+        conn
+        |> get(list_path(conn, :head))
+        |> json_response(:ok)
+
+      assert res["meta"]["counts"] == %{
+               "data_count" => 1,
+               "total_pages" => 1,
+               "total_records" => 1
+             }
+    end
+
     test "when given format=geojson it will respond with data objects formatted as geojson", %{
       conn: conn
     } do
