@@ -200,25 +200,18 @@ defmodule PlenarioWeb.Api.Utils do
 
   defp make_counts(view, page) do
     case view do
-      "describe.json" ->
+      "get.json" ->
         %{
-          data_count: 1,
-          total_pages: 1,
-          total_records: 1
-        }
-
-      "head.json" ->
-        %{
-          data_count: 1,
-          total_pages: 1,
+          data_count: length(page.entries),
+          total_pages: page.total_pages,
           total_records: page.total_entries
         }
 
       _ ->
         %{
-          data_count: length(page.entries),
-          total_pages: page.total_pages,
-          total_records: page.total_entries
+          data_count: 1,
+          total_pages: 1,
+          total_records: 1
         }
     end
   end
