@@ -37,10 +37,16 @@ defmodule PlenarioAot.AotActions do
     bbox =
       AotData
       |> where([d], d.aot_meta_id == ^meta.id)
+      |> select([d], fragment("st_envelope(st_union(?))", d.location))
+      |> Repo.one()
+
+    hull =
+      AotData
+      |> where([d], d.aot_meta_id == ^meta.id)
       |> select([d], fragment("st_convexhull(st_union(?))", d.location))
       |> Repo.one()
 
-    update_meta(meta, bbox: bbox)
+    update_meta(meta, bbox: bbox, hull: hull)
   end
 
   def compute_and_update_meta_time_range(%AotMeta{} = meta) do
