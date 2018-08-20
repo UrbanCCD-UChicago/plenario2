@@ -368,10 +368,10 @@ defmodule PlenarioWeb.Api.Utils do
   defp is_clean(_, _), do: true
 
   defp format_data(data, :list, _, :json), do: data
-  defp format_data(data, :list, _, :geojson), do: to_geojson(data, :bbox)
+  defp format_data(data, :list, _, :geojson), do: to_geojson(data, :hull)
 
   defp format_data(data, :detail, "describe.json", :json), do: data
-  defp format_data(data, :detail, "describe.json", :geojson), do: to_geojson(data, :bbox)
+  defp format_data(data, :detail, "describe.json", :geojson), do: to_geojson(data, :hull)
 
   defp format_data(data, :detail, _, :json), do: data
 
@@ -386,7 +386,7 @@ defmodule PlenarioWeb.Api.Utils do
   end
 
   defp format_data(data, :aot, "describe.json", :json), do: data
-  defp format_data(data, :aot, "describe.json", :geojson), do: to_geojson(data, :bbox)
+  defp format_data(data, :aot, "describe.json", :geojson), do: to_geojson(data, :hull)
 
   defp format_data(data, :aot, _, :json), do: data
   defp format_data(data, :aot, _, :geojson), do: to_geojson(data, :location)

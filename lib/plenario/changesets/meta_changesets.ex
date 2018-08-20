@@ -29,6 +29,7 @@ defmodule Plenario.Changesets.MetaChangesets do
     latest_import: DateTime | nil,
     next_import: DateTime | nil,
     bbox: Geo.Polygon | nil,
+    hull: Geo.Polygon | nil,
     time_range: Plenario.TsRange | Postgrex.Range | nil
   }
 
@@ -39,11 +40,11 @@ defmodule Plenario.Changesets.MetaChangesets do
   @update_keys [
     :name, :description, :attribution, :source_url, :source_type, :refresh_rate,
     :refresh_interval, :refresh_starts_on, :refresh_ends_on, :first_import,
-    :latest_import, :next_import, :bbox, :time_range
+    :latest_import, :next_import, :bbox, :hull, :time_range
   ]
 
   @acceptible_post_new_update_keys MapSet.new([
-    :first_import, :latest_import, :next_import, :bbox, :time_range
+    :first_import, :latest_import, :next_import, :bbox, :hull, :time_range
   ])
 
   @spec new() :: Ecto.Changeset.t()

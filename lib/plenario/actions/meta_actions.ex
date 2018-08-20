@@ -82,6 +82,12 @@ defmodule Plenario.Actions.MetaActions do
   def update_bbox(meta, bbox), do: MetaActions.update(meta, bbox: bbox)
 
   @doc """
+  Convenience function for updating a Meta's hull attribute.
+  """
+  @spec update_hull(meta :: Meta, hull :: Geo.Polygon) :: ok_instance
+  def update_hull(meta, hull), do: MetaActions.update(meta, hull: hull)
+
+  @doc """
   Convenience function for updating a Meta's time_range attribute.
   """
   @spec update_time_range(Meta.t(), Plenario.TsRange.t()) :: ok_instance
@@ -295,12 +301,34 @@ defmodule Plenario.Actions.MetaActions do
     view = "#{meta.table_name}_view"
 
     query = """
-    SELECT st_convexhull(st_union("#{fields}"))
+    SELECT st_envelope(st_union("#{fields}"))
     FROM "#{view}"
     """
 
     %Postgrex.Result{rows: [[bbox]]} = Repo.query!(query)
     bbox
+  end
+
+  @doc """
+  Selects all points in the data set's table and finds the minimum and maximum
+  values. From those values, it creates a Polygon.
+  """
+  @spec compute_hull!(Meta.t()) :: Geo.Polygon.t()
+  def compute_hull!(meta) do
+    fields =
+      VirtualPointFieldActions.list(for_meta: meta)
+      |> Enum.map(& &1.name)
+      |> Enum.join(", ")
+
+    view = "#{meta.table_name}_view"
+
+    query = """
+    SELECT st_convexhull(st_union("#{fields}"))
+    FROM "#{view}"
+    """
+
+    %Postgrex.Result{rows: [[hull]]} = Repo.query!(query)
+    hull
   end
 
   def dump_bbox(%Meta{bbox: nil}), do: nil

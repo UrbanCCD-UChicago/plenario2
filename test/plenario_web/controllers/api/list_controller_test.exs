@@ -30,6 +30,7 @@ defmodule PlenarioWeb.Api.ListControllerTest do
     "description",
     "fields",
     "first_import",
+    "hull",
     "latest_import",
     "name",
     "next_import",

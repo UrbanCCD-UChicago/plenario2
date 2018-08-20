@@ -51,6 +51,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     "description",
     "fields",
     "first_import",
+    "hull",
     "latest_import",
     "name",
     "next_import",
@@ -155,6 +156,8 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     {:ok, meta} = MetaActions.update_latest_import(meta, NaiveDateTime.utc_now())
     bbox = MetaActions.compute_bbox!(meta)
     {:ok, meta} = MetaActions.update_bbox(meta, bbox)
+    hull = MetaActions.compute_hull!(meta)
+    {:ok, meta} = MetaActions.update_hull(meta, hull)
     range = MetaActions.compute_time_range!(meta)
     {:ok, meta} = MetaActions.update_time_range(meta, range)
 
