@@ -1,6 +1,15 @@
 <template>
-  <div id="map" class="h-100"></div>
+  <div class="map"></div>
 </template>
+
+
+<style lang="scss" scoped>
+.map {
+  width: 100%;
+  height: 100%;
+}
+</style>
+
 
 <script>
 import L from 'leaflet';
@@ -21,9 +30,8 @@ export default {
    * element, vm.$el will also be in-document when mounted is called.
    */
   mounted: function () {
-
     // 
-    var map = L.map('map').setView([41.8781, -87.6298], 13);
+    const map = L.map(this.$el).setView([41.8781, -87.6298], 13);
 
     // 
     L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}{r}.png').addTo(map);
