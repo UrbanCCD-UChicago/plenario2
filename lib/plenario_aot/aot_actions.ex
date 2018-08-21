@@ -46,7 +46,14 @@ defmodule PlenarioAot.AotActions do
       |> select([d], fragment("st_convexhull(st_union(?))", d.location))
       |> Repo.one()
 
-    update_meta(meta, bbox: bbox, hull: hull)
+    case update_meta(meta, bbox: bbox, hull: hull) do
+      {:ok, _} ->
+        :ok
+
+      {:error, cs} ->
+        Logger.error("#{inspect(cs)}")
+        :ok
+    end
   end
 
   def compute_and_update_meta_time_range(%AotMeta{} = meta) do
