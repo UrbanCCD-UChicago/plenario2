@@ -1,7 +1,6 @@
 /* global $:false, Pikaday:false */
 
 import 'bootstrap';
-import 'chart.js';
 import 'phoenix_html';
 import 'popper.js';
 import { throttle } from 'lodash-es';
