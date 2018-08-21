@@ -48,11 +48,11 @@ defmodule PlenarioWeb.Api.Plugs do
 
   def check_page_size(%Conn{params: %{"page_size" => size}} = conn, _opts)
       when is_integer(size) and size > @max_page_size,
-      do: halt_with(conn, :bad_request, @page_size_error)
+      do: halt_with(conn, :forbidden, @page_size_error)
 
   def check_page_size(%Conn{params: %{"page_size" => size}} = conn, _opts)
       when is_integer(size) and size <= 0,
-      do: halt_with(conn, :bad_request, @page_size_error)
+      do: halt_with(conn, :unprocessable_entity, @page_size_error)
 
   def check_page_size(%Conn{params: %{"page_size" => size}} = conn, _opts) when is_bitstring(size) do
     case Integer.parse(size) do
@@ -100,7 +100,7 @@ defmodule PlenarioWeb.Api.Plugs do
 
   def check_page(%Conn{params: %{"page" => page}} = conn, _opts)
       when is_integer(page) and page <= 0,
-      do: halt_with(conn, :bad_request, @page_error)
+      do: halt_with(conn, :unprocessable_entity, @page_error)
 
   def check_page(%Conn{params: %{"page" => page}} = conn, _opts) when is_bitstring(page) do
     case Integer.parse(page) do
