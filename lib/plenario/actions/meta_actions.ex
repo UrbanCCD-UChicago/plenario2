@@ -354,7 +354,7 @@ defmodule Plenario.Actions.MetaActions do
 
   defp do_get_points(nil, _, _), do: []
 
-  defp do_get_points(pt, meta, limit) do
+  defp do_get_points(pt, %Meta{state: "ready"} = meta, limit) do
     # we need to use a raw query here to harness the
     # tablesample selection in postgres.
     query = """
@@ -371,4 +371,6 @@ defmodule Plenario.Actions.MetaActions do
       "[#{lat}, #{lon}]"
     end)
   end
+
+  defp do_get_points(_, _, _), do: []
 end

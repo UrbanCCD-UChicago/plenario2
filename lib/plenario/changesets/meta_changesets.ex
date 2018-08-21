@@ -57,6 +57,7 @@ defmodule Plenario.Changesets.MetaChangesets do
     |> validate_required(@required_keys)
     |> unique_constraint(:source_url)
     |> unique_constraint(:name)
+    |> validate_length(:name, max: 58)
     |> cast_assoc(:user)
     |> test_source_url()
     |> validate_source_type()
@@ -71,6 +72,7 @@ defmodule Plenario.Changesets.MetaChangesets do
     |> validate_required(@required_keys)
     |> unique_constraint(:source_url)
     |> unique_constraint(:name)
+    |> validate_length(:name, max: 58)
     |> cast_assoc(:user)
     |> validate_state()
     |> test_source_url()
@@ -79,6 +81,7 @@ defmodule Plenario.Changesets.MetaChangesets do
     |> validate_refresh_interval()
     |> validate_refresh_ends_on()
     |> set_slug()
+    |> set_table_name()
   end
 
   defp validate_state(%Ecto.Changeset{valid?: true, changes: changes} = changeset) do
