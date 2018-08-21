@@ -11,6 +11,7 @@ defmodule PlenarioAot.AotMeta do
     field :slug, :string
     field :source_url, :string
     field :bbox, Geo.Polygon
+    field :hull, Geo.Polygon
     field :time_range, Plenario.TsRange
     timestamps()
 
@@ -26,7 +27,7 @@ defmodule PlenarioAot.AotMeta do
 
   defp do_changeset(meta, params) do
     meta
-    |> cast(params, [:network_name, :source_url, :bbox, :time_range])
+    |> cast(params, [:network_name, :source_url, :bbox, :hull, :time_range])
     |> validate_required([:network_name, :source_url])
     |> unique_constraint(:network_name)
     |> unique_constraint(:source_url)

@@ -23,6 +23,7 @@ defmodule PlenarioWeb.Api.ListController do
   plug(:check_page)
   plug(:check_order_by, default_order: "asc:name")
   plug(:check_filters)
+  plug(:check_format)
 
   @spec get(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def get(conn, _params), do: render_metas(conn, "get.json")

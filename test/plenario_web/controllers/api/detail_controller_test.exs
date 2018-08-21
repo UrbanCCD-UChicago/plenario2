@@ -51,6 +51,7 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     "description",
     "fields",
     "first_import",
+    "hull",
     "latest_import",
     "name",
     "next_import",
@@ -155,6 +156,8 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
     {:ok, meta} = MetaActions.update_latest_import(meta, NaiveDateTime.utc_now())
     bbox = MetaActions.compute_bbox!(meta)
     {:ok, meta} = MetaActions.update_bbox(meta, bbox)
+    hull = MetaActions.compute_hull!(meta)
+    {:ok, meta} = MetaActions.update_hull(meta, hull)
     range = MetaActions.compute_time_range!(meta)
     {:ok, meta} = MetaActions.update_time_range(meta, range)
 
@@ -219,6 +222,19 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
 
       res["data"]
       |> Enum.each(&assert Map.keys(&1) == keys)
+    end
+
+    test "when given format=geojson it will respond with data objects formatted as geojson", %{
+      conn: conn,
+      meta: meta
+    } do
+      res =
+        conn
+        |> get(detail_path(conn, :get, meta.slug, %{format: "geojson"}))
+        |> json_response(:ok)
+
+      res["data"]
+      |> Enum.each(fn record -> assert Map.keys(record) == ["geometry", "properties", "type"] end)
     end
   end
 
@@ -365,6 +381,19 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
       res["data"]
       |> Enum.each(&assert Map.keys(&1) == keys)
     end
+
+    test "when given format=geojson it will respond with data objects formatted as geojson", %{
+      conn: conn,
+      meta: meta
+    } do
+      res =
+        conn
+        |> get(detail_path(conn, :head, meta.slug, %{format: "geojson"}))
+        |> json_response(:ok)
+
+      res["data"]
+      |> Enum.each(fn record -> assert Map.keys(record) == ["geometry", "properties", "type"] end)
+    end
   end
 
   describe "GET @describe endpoint" do
@@ -377,7 +406,26 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
         |> get(detail_path(conn, :describe, meta.slug))
         |> json_response(:ok)
 
-      assert Map.keys(res["data"]) == @describe_keys
+      assert length(res["data"]) == 1
+
+      meta =
+        res["data"]
+        |> List.first()
+
+      assert Map.keys(meta) == @describe_keys
+    end
+
+    test "when given format=geojson it will respond with data objects formatted as geojson", %{
+      conn: conn,
+      meta: meta
+    } do
+      res =
+        conn
+        |> get(detail_path(conn, :describe, meta.slug, %{format: "geojson"}))
+        |> json_response(:ok)
+
+      res["data"]
+      |> Enum.each(fn record -> assert Map.keys(record) == ["geometry", "properties", "type"] end)
     end
   end
 end
