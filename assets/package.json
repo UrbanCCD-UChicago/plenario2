@@ -52,6 +52,7 @@
     "url-loader": "^1.0.1",
     "vue": "^2.5.16",
     "vue-loader": "^15.2.6",
+    "vue-router": "^3.0.1",
     "vue-template-compiler": "^2.5.16",
     "vue2-leaflet": "^1.0.2",
     "vuejs-datepicker": "^1.5.2",

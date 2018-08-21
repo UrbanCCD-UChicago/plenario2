@@ -2,8 +2,6 @@
 <script src="<%= static_path(@conn, "/js/explorer.bundle.js") %>"></script>
 
 <div class="container mt-2 mb-1">
-  <h1>Explore Data Sets</h1>
-
   <!-- Vue.js application mount point -->
   <div id="app">
     <explorer 
@@ -13,96 +11,4 @@
       :api=2>
     </explorer>
   </div>
-
-
-  <%= if assigns[:results] do %>
-
-    <h2 class="mt-5">Search Results</h2>
-
-    <%= if length(@results) > 0 do %>
-      <%= for res <- @results do %>
-
-      <div class="row">
-        <div class="col-12">
-          <h3><%= res.name %></h3>
-        </div>
-        <div class="col-lg-3">
-          <p>
-            <strong>Source:</strong> <%= res.attribution %>
-          </p>
-          <p>
-            <strong>Description:</strong><span style="white-space: pre-line;"><%= res.description %></span>
-          </p>
-          <p>
-            <strong>Contributor:</strong> <%= res.user.name %>
-          </p>
-          <p>
-            <strong>Records:</strong> <%= Plenario.Actions.MetaActions.get_record_count(res) %>
-          </p>
-          <p>
-            <strong>Time Range:</strong> <%= strftime(res.time_range) %>
-          </p>
-          <hr>
-          <p>
-            <%= button "View Details", to: data_set_path(@conn, :show, res.id), method: :get, class: "btn btn-primary" %>
-          </p>
-          <p>
-            <%= button "Export to CSV", to: export_path(@conn, :export_meta, res.id), class: "btn btn-outline-primary" %>
-          </p>
-        </div>
-        <div class="col-lg-9">
-          <%= if length(res.charts) == 0 do %>
-            <%= PlenarioWeb.SharedView.render_map(
-              bbox: Plenario.Actions.MetaActions.dump_bbox(res),
-              ds_points: Plenario.Actions.MetaActions.get_points(res),
-              map_id: "ds_#{res.id}_map"
-            )%>
-          <% end %>
-          <%= for chart <- res.charts do %>
-          <div
-            id="chart-<%= chart.id %>"
-            class="chart"
-            link="<%= chart_path(@conn, :render_chart, res.id, chart.id, starts: "#{@starts}", ends: "#{@ends}", bbox: @bbox, granularity: @granularity) %>">
-          </div>
-          <% end %>
-        </div>
-      </div>
-      <hr class="dotborder">
-    <% end %>
-
-    <% else %>
-      <div class="card bg-light">
-        <div class="card-body">
-          <p class="card-text lead">Sorry, we didn't find any data sets that matched your criteria.</p>
-          <p class="card-text">Try expanding the time range or the map area.</p>
-        </div>
-      </div>
-    <% end %>
-  <% end %>
-
 </div>
-
-<script>
-$.fn.isInViewport = function () {
-  let elementTop = $(this).offset().top;
-  let elementBottom = elementTop + $(this).outerHeight();
-  let viewportTop = $(window).scrollTop();
-  let viewportBottom = viewportTop + $(window).height();
-  return elementBottom > viewportTop && elementTop < viewportBottom;
-};
-
-let charts = $('.chart').map(function () { return this; });
-
-let fetchCharts = function () {
-  $(charts).each(function () {
-    if ( $(this).isInViewport() && !$(this).hasClass('loaded') ) {
-      $(this).addClass('loaded');
-      let url = $(this).attr('link');
-      let that = $(this);
-      $.get(url, function (data) { $(that).html(data); });
-    }
-  });
-};
-
-$(window).on('resize scroll', throttle(fetchCharts, 100));
-</script>

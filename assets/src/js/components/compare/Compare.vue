@@ -7,7 +7,7 @@
     
     <div class="row no-gutters" id="plotting-area">
       <div class="col-lg-5 card" id="map-plot-area">
-        <!-- <l-map></l-map> -->
+        <l-map></l-map>
       </div> <!-- map-plot-area -->
 
       <div class="col-lg-7" id="chart-plot-area">
@@ -27,7 +27,7 @@
 <script>
 import Chartist from 'chartist';
 
-import LMap from './LMap.vue';
+import LMap from './../LMap.vue';
 import SearchParameterBreadcrumbs from './SearchParameterBreadcrumbs.vue';
 
 export default {
