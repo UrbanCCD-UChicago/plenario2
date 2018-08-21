@@ -129,6 +129,9 @@ defmodule Plenario.Actions.DataSetActions do
   @copy "db-actions/etl/copy.sql.eex"
   @refresh_view "db-actions/etl/refresh-view.sql.eex"
 
+  #            ms     s    m
+  @etl_timeout 1000 * 60 * 20
+
   def etl!(%Meta{id: meta_id}, download_path), do: etl!(meta_id, download_path)
   def etl!(meta_id, download_path) do
     meta = MetaActions.get(meta_id)
@@ -150,13 +153,14 @@ defmodule Plenario.Actions.DataSetActions do
     sql_stream = Ecto.Adapters.SQL.stream(Repo, cmd)
     file_stream = File.stream!(download_path, [:utf8])
 
-    Repo.transaction fn ->
+    Repo.transaction(fn ->
       execute! @truncate_table, table_name: table_name
-
-      Repo.transaction(fn -> Enum.into(file_stream, sql_stream) end)
-
+      # set the load to infinite time out knowing that the surrounding timeout will
+      # terminate. this needs to be bumped because the default time out is 2 minutes,
+      # which for many data sets is far too short to load the entire document.
+      Repo.transaction(fn -> Enum.into(file_stream, sql_stream) end, timeout: :infinity)
       execute! @refresh_view, view_name: view_name
-    end
+    end, timeout: @etl_timeout)
 
     :ok
   end
