@@ -92,16 +92,16 @@ defmodule PlenarioWeb.Api.PlugsTest do
       assert res["meta"]["params"]["page_size"] == 200
     end
 
-    test "when given a value too large will :bad_request", %{conn: conn, meta: meta} do
+    test "when given a value too large will :forbidden", %{conn: conn, meta: meta} do
       conn
       |> get(detail_path(conn, :get, meta.slug, %{page_size: 1_000_000}))
-      |> json_response(:bad_request)
+      |> json_response(:forbidden)
     end
 
-    test "when given a value too little will :bad_request", %{conn: conn, meta: meta} do
+    test "when given a value too little will :unprocessable_entity", %{conn: conn, meta: meta} do
       conn
       |> get(detail_path(conn, :get, meta.slug, %{page_size: 0}))
-      |> json_response(:bad_request)
+      |> json_response(:unprocessable_entity)
     end
 
     test "when given a value not an integer will :bad_request", %{conn: conn, meta: meta} do
@@ -127,10 +127,10 @@ defmodule PlenarioWeb.Api.PlugsTest do
       assert res["meta"]["params"]["page"] == 1
     end
 
-    test "when given a value too little will :bad_request", %{conn: conn, meta: meta} do
+    test "when given a value too little will :unprocessable_entity", %{conn: conn, meta: meta} do
       conn
       |> get(detail_path(conn, :get, meta.slug, %{page: -1}))
-      |> json_response(:bad_request)
+      |> json_response(:unprocessable_entity)
     end
 
     test "when given a value not an integer will :bad_request", %{conn: conn, meta: meta} do

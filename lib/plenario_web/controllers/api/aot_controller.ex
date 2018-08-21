@@ -55,7 +55,7 @@ defmodule PlenarioWeb.Api.AotController do
     |> Enum.reduce(AotMeta, fn {fname, op, value}, query ->
       apply_filter(query, fname, op, value)
     end)
-    |> Repo.paginate(page: page, page_size: page_size)
+    |> Repo.paginate(page_number: page, page_size: page_size)
     |> render_aot(conn, "describe.json")
   end
 
@@ -95,7 +95,7 @@ defmodule PlenarioWeb.Api.AotController do
     try do
       page = conn.assigns[:page]
       page_size = conn.assigns[:page_size]
-      data = Repo.paginate(query, page: page, page_size: page_size)
+      data = Repo.paginate(query, page_number: page, page_size: page_size)
       {:ok, data}
     rescue
       e in [Ecto.QueryError, Ecto.SubQueryError, Postgrex.Error] ->

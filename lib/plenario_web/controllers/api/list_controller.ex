@@ -49,7 +49,7 @@ defmodule PlenarioWeb.Api.ListController do
     try do
       page = conn.assigns[:page]
       page_size = conn.assigns[:page_size]
-      data = Repo.paginate(query, page: page, page_size: page_size)
+      data = Repo.paginate(query, page_number: page, page_size: page_size)
       render_list(conn, view, data)
     rescue
       e in [Ecto.QueryError, Ecto.SubQueryError, Postgrex.Error] ->
