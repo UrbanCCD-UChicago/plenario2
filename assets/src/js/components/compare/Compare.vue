@@ -42,6 +42,17 @@ export default {
     }
   },
 
+  computed: {
+
+    /**
+     * These are the datasets to render on the map and in our chart. This list
+     * is filtered by selections made in the search widget.
+     */
+    selectedDatasets: function () {
+      return this.$store.state.selectedDatasets;
+    },
+  },
+
   mounted: function() {
     new Chartist.Line('#chart', this.chartData);
   }

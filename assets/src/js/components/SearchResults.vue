@@ -119,6 +119,12 @@ export default {
         this.selected = this.selected.concat([dataset.slug]);
       }
     },
+  },
+
+  watch: {
+    selected: function () {
+      this.$store.commit('setSelectedDatasets', this.selected);
+    }
   }
 }
 </script>

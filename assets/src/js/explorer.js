@@ -37,6 +37,7 @@ const store = new Vuex.Store({
       granularity: DEFAULT_GRANULARITY,
     },
     datasets: [],
+    selectedDatasets: [],
     host: '',
     port: 4000,
     ssl: false
@@ -61,6 +62,14 @@ const store = new Vuex.Store({
      */
     setDatasets(state, params) {
       Vue.set(state, 'datasets', params);
+    },
+
+    /**
+     * Setter for `datasets` state. Populate this object with the datasets
+     * you wish to render on the comparison page.
+     */
+    setSelectedDatasets(state, params) {
+      Vue.set(state, 'selectedDatasets', params);
     },
 
     /**
