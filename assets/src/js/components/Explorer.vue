@@ -5,8 +5,10 @@
       @reset="handleReset">
     </explorer-search-widget>
 
-    <div v-if="hasSearchResults" class="row no-gutters">
-      <search-results v-bind:value="this.datasets"></search-results>
+    <div class="card my-3 px-2 py-3" v-if="hasSearchResults">
+      <div class="row no-gutters">
+        <search-results v-bind:value="this.datasets"></search-results>
+      </div>
     </div>
   </div>
 </template>

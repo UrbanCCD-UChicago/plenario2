@@ -54,7 +54,7 @@ const store = new Vuex.Store({
     },
 
     /**
-     * Removes all the query arguments.
+     * Removes all the query arguments. Clears out the datasets.
      */
     clearQuery(state) {
       Vue.set(state, 'query', Object.assign(state.query, {
@@ -62,6 +62,8 @@ const store = new Vuex.Store({
         endDate: null,
         granularity: DEFAULT_GRANULARITY,
       }));
+
+      Vue.set(state, 'datasets', []);
     }
   },
 });
