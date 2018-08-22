@@ -1,9 +1,6 @@
 <template>
   <section class="container full-page">
     <div class="row">
-      <div class="col-12">
-        <h2>View & Compare</h2>
-      </div>
       <div class="col-12 col-md-7 col-lg-6">
         <p class="lead">Here's all the datasets Plenar.io found that match your search.</p>
         <p>
@@ -66,7 +63,7 @@
               placeholder="">
           </div>
           <div class="col-form-label-sm col-4 pr-2 text-muted text-right">
-              {{ selected.length }}&thinsp;/&thinsp;{{ value.data.length }} selected
+              {{ selected.length }}&thinsp;/&thinsp;{{ value.length }} selected
           </div>
         </form>
       </div>
@@ -92,7 +89,7 @@ export default {
 
   computed: {
     filteredDatasets: function () {
-      return this.value.data.filter((dataset) => {
+      return this.value.filter((dataset) => {
         return dataset.name.includes(this.filterString);
       });
     }
@@ -101,7 +98,7 @@ export default {
   props: {
     value: {
       required: true,
-      type: Object
+      type: Array
     },
   },
 

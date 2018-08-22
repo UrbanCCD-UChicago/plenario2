@@ -32,13 +32,13 @@
         <div class="card-body">
           <div class="row hairline-gutters">
             <div class="col-auto">
-              <button class="btn btn-block btn-danger">
+              <button class="btn btn-block btn-danger" @click="reset">
                 <font-awesome-icon icon="undo"></font-awesome-icon>
                 <span class="d-lg-none">Reset</span>
               </button>
             </div>
             <div class="col">
-              <button class="btn btn-block btn-info">
+              <button class="btn btn-block btn-info" @click="search">
                 <font-awesome-icon icon="search"></font-awesome-icon>
                 Search
               </button>
@@ -131,17 +131,16 @@ export default {
   },
   methods: {
     /**
-     * The handler for click events on our search button. This function emits
-     * search results as its state.
+     * The handler for click events on our search button.
      * 
      * - Needs error handling!
      */
     search: async function (_) {
       var json = await fetch(this.apiUrl).then(function(response) {
         return response.json();
-      })
+      });
 
-      this.$emit('search', json);
+      this.$store.commit('setDatasets', json.data);
     },
 
     /**

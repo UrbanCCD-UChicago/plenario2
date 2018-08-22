@@ -2,16 +2,31 @@
   <div class="time-range-form">
     <div class="form-group form-row">
       <label class="col-sm-1 col-lg-2 col-form-label" for="starting_on">Start</label>
-      <datepicker required @input="updateStore" class="col" input-class="bg-white" bootstrap-styling v-model="startDate"></datepicker>
+      <datepicker required bootstrap-styling
+        @input="setStartDate" 
+        class="col" 
+        input-class="bg-white"
+        :value="startDate">
+      </datepicker>
     </div>
     <div class="form-group form-row">
       <label class="col-sm-1 col-lg-2 col-form-label" for="ending_on">End</label>
-      <datepicker required @input="updateStore" class="col" input-class="bg-white" bootstrap-styling v-model="endDate"></datepicker>
+      <datepicker required bootstrap-styling
+        @input="setEndDate" 
+        class="col" 
+        input-class="bg-white" 
+        :value="endDate">
+      </datepicker>
     </div>
     <div class="form-group form-row">
       <label for="granularity" class="col-sm-2 col-sm-4 col-form-label">Granularity</label>
       <div class="col">
-        <select @click="updateStore" id="granularity" name="granularity" class="custom-select" v-model="granularity" required>
+        <select required 
+          @click="setGranularity" 
+          id="granularity" 
+          name="granularity" 
+          class="custom-select"
+          :value="granularity">
           <option value="day">Day</option>
           <option value="week">Week</option>
           <option value="month">Month</option>
@@ -40,22 +55,32 @@ import Datepicker from 'vuejs-datepicker';
 export default {
   name: 'TimeRangeForm',
 
-  data: function () {
-    return {
-      startDate: '',
-      endDate: '',
-      granularity: ''
-    }
+  computed: {
+    startDate: function() {
+      return this.$store.state.query.startDate;
+    },
+
+    endDate: function() {
+      return this.$store.state.query.endDate;
+    },
+
+    granularity: function() {
+      return this.$store.state.query.granularity;
+    },
   },
 
   methods: {
-    updateStore () {
-      this.$store.commit('assignQuery', {
-        startDate: this.startDate,
-        endDate: this.endDate,
-        granularity: this.granularity
-      });
-    }
+    setStartDate (startDate) {
+      this.$store.commit('setQuery', { startDate });
+    },
+
+    setEndDate (endDate) {
+      this.$store.commit('setQuery', { endDate });
+    },
+
+    setGranularity (event) {
+      this.$store.commit('setQuery', { granularity: event.target.value });
+    },
   },
 
   components: {

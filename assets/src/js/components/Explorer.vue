@@ -1,12 +1,12 @@
 <template>
   <div class="explorer">
-    <explorer-search-widget
+    <explorer-search-widget 
       :apiUrl="endpoint"
-      @search="doSearch">
+      @reset="handleReset">
     </explorer-search-widget>
 
     <div v-if="hasSearchResults" class="row no-gutters">
-      <search-results v-bind:value="searchResults"></search-results>
+      <search-results v-bind:value="this.datasets"></search-results>
     </div>
   </div>
 </template>
@@ -39,15 +39,17 @@ export default {
 
   data: function () {
     return {
-      searchResults: {},
       timeParams: {},
       spaceParams: {}
     }
   },
 
   computed: {
+    datasets: function () {
+      return this.$store.state.datasets;
+    },
     hasSearchResults: function() {
-      return Object.keys(this.searchResults).length > 0;
+      return this.datasets.length > 0;
     },
     endpoint: function() {
       return this.ssl ?
@@ -58,15 +60,16 @@ export default {
       return Object.assign(this.spaceParams, this.timeParams);
     }
   },
+
+  methods: {
+    handleReset: function () {
+      this.$store.commit('clearQuery');
+    }
+  },
+  
   components: {
     SearchResults,
     ExplorerSearchWidget,
   },
-  methods: {
-    doSearch: function (event) {
-      this.searchResults = event;
-    }
-  },
-
 }
 </script>
