@@ -1,6 +1,9 @@
 <template>
   <section class="container full-page">
     <div class="row">
+      <div class="col-12">
+        <h2>View & Compare</h2>
+      </div>
       <div class="col-12 col-md-7 col-lg-6">
         <p class="lead">Here's all the datasets Plenar.io found that match your search.</p>
         <p>
@@ -69,9 +72,7 @@
       </div>
     </div>
     <div class="col-12 px-0">
-      <button id="compare-submit-button" type="button" class="btn btn-primary" @click="compare">
-        Compare&emsp;<i class="fas fa-arrow-right"></i>
-      </button>
+      <router-link to="/compare" tag="button" class="btn btn-primary">Compare</router-link> 
     </div>
   </section>
 </template>
@@ -118,13 +119,6 @@ export default {
         this.selected = this.selected.concat([dataset.slug]);
       }
     },
-
-    /**
-     * Takes the slugs of datasets selected by the user and passes them along
-     * to the comparison page.
-     */
-    compare: function(_) {
-    }
   }
 }
 </script>
