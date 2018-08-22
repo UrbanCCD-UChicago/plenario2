@@ -91,7 +91,9 @@ export default {
   computed: {
     filteredDatasets: function () {
       return this.value.filter((dataset) => {
-        return dataset.name.includes(this.filterString);
+        return dataset.name.toLowerCase().includes(
+          this.filterString.toLowerCase()
+        );
       });
     }
   },
