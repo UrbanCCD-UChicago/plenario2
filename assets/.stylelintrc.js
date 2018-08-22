@@ -4,6 +4,9 @@ module.exports = {
   plugins: [
     'stylelint-scss',
   ],
+  processors: [
+    ['@mapbox/stylelint-processor-arbitrary-tags', { fileFilterRegex: [/\.vue$/] }],
+  ],
   rules: {
     'at-rule-no-unknown': null, // disabled in favor of SCSS-aware version below
     'at-rule-no-vendor-prefix': true,

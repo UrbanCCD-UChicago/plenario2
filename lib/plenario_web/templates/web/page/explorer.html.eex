@@ -1,74 +1,18 @@
 <!-- FIXME: this is not the right way to do this. -->
 <script src="<%= static_path(@conn, "/js/explorer.bundle.js") %>"></script>
+<link rel="stylesheet" href="<%= static_path(@conn, "/css/explorer.css") %>">
 
-<!-- Vue.js application mount point -->
-<div id="app"></div>
-
-<div class="container mt-2 mb-1">
-  <h1>Explore Data Sets</h1>
-
-  <div class="row no-gutters">
-    <div class="col-lg-3">
-      <div class="card mb-1">
-        <div class="card-header">Select a Date Range</div>
-        <div class="card-body">
-
-          <%= form_for @conn, page_path(@conn, :explorer), [method: :get], fn _f -> %>
-            <div class="form-row">
-
-              <div class="form-group col-6 col-lg-12">
-                <label for="starting_on">Starting On:</label>
-                <input type="text" class="form-control" id="starting_on" name="starting_on" value="<%= @starts %>" placeholder="YYYY-MM-DD" required>
-              </div>
-
-              <div class="form-group col-6 col-lg-12">
-                <label for="ending_on">Ending On:</label>
-                <input type="text" class="form-control" id="ending_on" name="ending_on" value="<%= @ends %>" placeholder="YYYY-MM-DD" required>
-              </div>
-
-              <script>
-                new Pikaday({
-                  field: document.getElementById('starting_on'),
-                  format: 'YYYY-MM-DD'
-                });
-
-                new Pikaday({
-                  field: document.getElementById('ending_on'),
-                  format: 'YYYY-MM-DD'
-                });
-              </script>
-
-              <div class="form-group">
-                <label for="granularity" class="control-label">Data Granularity:</label>
-                <select id="granularity" name="granularity" class="form-control" value="<% @granularity %>" required>
-                  <option value="day">Day</option>
-                  <option value="week">Week</option>
-                  <option value="month">Month</option>
-                  <option value="year">Year</option>
-                </select>
-              </div>
-
-              <input id="coords" name="coords" hidden>
-              <input id="zoom" name="zoom" hidden>
-
-              <div class="col-auto ml-auto col-lg-12">
-                <input type="submit" value="Search" class="btn btn-primary btn-block">
-              </div>
-
-            </div>
-
-          <% end %>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-lg-9">
-      <div class="card ml-lg-1">
-        <div class="card-header">Select an Area</div>
-        <%= PlenarioWeb.SharedView.render_map(draw_controls: true, map_height: "75vw", map_center: @map_center, bbox: @bbox, map_zoom: @map_zoom)%>
-      </div>
-    </div>
+<div class="container">
+  <!-- Vue.js application mount point -->
+  <div id="app">
+    <explorer 
+      host="<%= Application.get_env(:plenario, PlenarioWeb.Endpoint)[:url][:host] %>"
+      :port=4000
+      :ssl=false
+      :api=2>
+    </explorer>
   </div>
+
 
   <%= if assigns[:results] do %>
 

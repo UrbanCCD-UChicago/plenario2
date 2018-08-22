@@ -98,13 +98,13 @@ html, body {
 // Makes a row's gutters very thin, primarily for arranging Bootstrap cards
 // using grid classes with an appropriately tiny spacing.
 .row.hairline-gutters {
-  margin-right: ($grid-gutter-width / -8);
-  margin-left: ($grid-gutter-width / -8);
+  margin-right: ($grid-gutter-width / -16);
+  margin-left: ($grid-gutter-width / -16);
 
   > .col,
   > [class*="col-"] {
-    padding-right: ($grid-gutter-width / 8);
-    padding-left: ($grid-gutter-width / 8);
+    padding-right: ($grid-gutter-width / 16);
+    padding-left: ($grid-gutter-width / 16);
   }
 }
 
