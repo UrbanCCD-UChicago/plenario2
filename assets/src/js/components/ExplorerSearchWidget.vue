@@ -14,7 +14,7 @@
           </div>
         </div>
         <div class="space-map-section col-lg-8 order-lg-last">
-          <l-map></l-map>
+          <l-map drawTools></l-map>
         </div>
         <div class="time-section col-lg-4">
           <div class="card-body">
