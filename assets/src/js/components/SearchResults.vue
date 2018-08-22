@@ -66,7 +66,7 @@
               placeholder="">
           </div>
           <div class="col-form-label-sm col-4 pr-2 text-muted text-right">
-              {{ selected.length }}&thinsp;/&thinsp;{{ value.data.length }} selected
+              {{ selected.length }}&thinsp;/&thinsp;{{ value.length }} selected
           </div>
         </form>
       </div>
@@ -90,7 +90,7 @@ export default {
 
   computed: {
     filteredDatasets: function () {
-      return this.value.data.filter((dataset) => {
+      return this.value.filter((dataset) => {
         return dataset.name.includes(this.filterString);
       });
     }
@@ -99,7 +99,7 @@ export default {
   props: {
     value: {
       required: true,
-      type: Object
+      type: Array
     },
   },
 

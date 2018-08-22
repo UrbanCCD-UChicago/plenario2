@@ -14,12 +14,6 @@
         <div class="ct-chart ct-golden-section" id="chart">
         </div>
       </div> <!-- chart-plot-area -->
-
-      <div class="col-12">
-        <h1>
-          View &amp; Compare
-        </h1>
-      </div>
     </div> <!-- plotting-area -->
   </section>
 </template>

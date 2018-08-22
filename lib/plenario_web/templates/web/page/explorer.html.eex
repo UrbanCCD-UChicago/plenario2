@@ -5,11 +5,10 @@
 <div class="container">
   <!-- Vue.js application mount point -->
   <div id="app">
-    <explorer 
+    <explorer
       host="<%= Application.get_env(:plenario, PlenarioWeb.Endpoint)[:url][:host] %>"
-      :port=4000
       :ssl=false
-      :api=2>
-    </explorer>
+      :port=4000
+    />
   </div>
 </div>

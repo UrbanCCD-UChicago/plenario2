@@ -12,6 +12,8 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import { FontAwesomeIcon, FontAwesomeLayers } from '@fortawesome/vue-fontawesome';
 import Explorer from './components/Explorer.vue';
+import ExplorerSearchWidget from './components/ExplorerSearchWidget.vue';
+import Compare from './components/compare/Compare.vue';
 
 Vue.component('font-awesome-icon', FontAwesomeIcon);
 Vue.component('font-awesome-layers', FontAwesomeLayers);
@@ -85,7 +87,7 @@ const store = new Vuex.Store({
  */
 const routes = [
   {
-    path: '/', component: Search,
+    path: '/', component: ExplorerSearchWidget,
   },
   {
     path: '/compare', component: Compare,
@@ -117,6 +119,8 @@ $(() => {
      */
     router,
 
-    components: { Explorer }
+    components: {
+      Explorer
+    }
   }).$mount('#app');
 });
