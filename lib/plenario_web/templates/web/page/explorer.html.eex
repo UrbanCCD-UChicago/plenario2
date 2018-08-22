@@ -1,7 +1,8 @@
 <!-- FIXME: this is not the right way to do this. -->
 <script src="<%= static_path(@conn, "/js/explorer.bundle.js") %>"></script>
+<link rel="stylesheet" href="<%= static_path(@conn, "/css/explorer.css") %>">
 
-<div class="container mt-2 mb-1">
+<div class="container">
   <!-- Vue.js application mount point -->
   <div id="app">
     <explorer 

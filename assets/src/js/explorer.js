@@ -10,13 +10,16 @@ import VueRouter from 'vue-router';
 import 'chartist/dist/chartist.min.css';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
-
+import { FontAwesomeIcon, FontAwesomeLayers } from '@fortawesome/vue-fontawesome';
 import Explorer from './components/Explorer.vue';
-import Compare from './components/compare/Compare.vue';
-import Search from './components/search/Search.vue';
 
+Vue.component('font-awesome-icon', FontAwesomeIcon);
+Vue.component('font-awesome-layers', FontAwesomeLayers);
 Vue.use(Vuex);
 Vue.use(VueRouter);
+
+
+const DEFAULT_GRANULARITY = 'day';
 
 /**
  * A container that holds all application state. Changes to the store trigger
@@ -26,8 +29,12 @@ Vue.use(VueRouter);
  */
 const store = new Vuex.Store({
   state: {
-    query:    {},
-    datasets: {},
+    query:    {
+      startDate: null,
+      endDate: null,
+      granularity: DEFAULT_GRANULARITY,
+    },
+    datasets: [],
     host: '',
     port: 4000,
     ssl: false
@@ -36,14 +43,36 @@ const store = new Vuex.Store({
   mutations: {
 
     /**
-     * Assign parameter values to the query state.
+     * Assign parameter values to the query state. Use this to construct queries
+     * made against the backend.
      *
      * @param {Object} state
      * @param {Object} params
      */
-    assignQuery(state, params) {
+    setQuery(state, params) {
       Vue.set(state, 'query', Object.assign(state.query, params));
     },
+
+    /**
+     * Setter for `datasets` state. Populate this object with the results from
+     * queries to the backend.
+     */
+    setDatasets(state, params) {
+      Vue.set(state, 'datasets', params);
+    },
+
+    /**
+     * Removes all the query arguments. Clears out the datasets.
+     */
+    clearQuery(state) {
+      Vue.set(state, 'query', Object.assign(state.query, {
+        startDate: null,
+        endDate: null,
+        granularity: DEFAULT_GRANULARITY,
+      }));
+
+      Vue.set(state, 'datasets', []);
+    }
   },
 });
 
