@@ -8,15 +8,8 @@
 <script>
 export default {
   props: {
-    icon: {
-      type: String,
-      required: true,
-    },
-
-    text: {
-      type: String,
-      required: true,
-    }
+    icon: { type: String, required: true },
+    text: { type: String, required: true },
   },
-}
+};
 </script>

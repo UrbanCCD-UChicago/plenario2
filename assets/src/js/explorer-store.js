@@ -1,0 +1,63 @@
+import Vue from 'vue';
+import Vuex from 'vuex';
+
+const initialStates = {
+  granularity: 'day',
+};
+
+Vue.use(Vuex);
+
+/**
+ * A container that holds all application state. Changes to the store trigger
+ * updates in store listeners (Vue components). The store cannot be mutated
+ * directly. All mutations come through the interface provided by functions
+ * under the mutations value.
+ */
+export default new Vuex.Store({
+  state: {
+    query: {
+      startDate:   null,
+      endDate:     null,
+      granularity: initialStates.granularity,
+    },
+    datasets: null,
+    host:     '',
+    port:     4000,
+    ssl:      false,
+  },
+
+  mutations: {
+
+    /**
+     * Assign parameter values to the query state. Use this to construct queries
+     * made against the backend.
+     *
+     * @param {Object} state
+     * @param {Object} params
+     */
+    setQuery(state, params) {
+      Vue.set(state, 'query', Object.assign(state.query, params));
+    },
+
+    /**
+     * Setter for `datasets` state. Populate this object with the results from
+     * queries to the backend.
+     */
+    setDatasets(state, params) {
+      Vue.set(state, 'datasets', params);
+    },
+
+    /**
+     * Removes all the query arguments. Clears out the datasets.
+     */
+    clearQuery(state) {
+      Vue.set(state, 'query', Object.assign(state.query, {
+        startDate:   null,
+        endDate:     null,
+        granularity: initialStates.granularity,
+      }));
+
+      Vue.set(state, 'datasets', []);
+    },
+  },
+});
