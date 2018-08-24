@@ -1,6 +1,6 @@
 <template>
-  <div class="card search-widget">
-    <div class="row no-gutters flex-lg-column">
+  <div class="search-widget card">
+    <div class="grid row no-gutters flex-lg-column">
       <div class="space-text-section col-lg-4">
         <div class="card-body">
           <FontAwesomeLayers class="fa-2x float-left mr-2">
@@ -75,14 +75,16 @@ $widget-landscape-max-height:
   calc(100vh - #{$front-matter-height + $spacer});
 /* stylelint-enable scss/dollar-variable-colon-space-after */
 
-.search-widget {
+.search-widget,
+.grid {
   @include media-breakpoint-up(lg) {
     max-height: $widget-landscape-max-height;
   }
 }
 
 .space-text-section,
-.time-section {
+.time-section,
+.action-section {
   @include media-breakpoint-up(lg) {
     flex-basis: auto;
   }
