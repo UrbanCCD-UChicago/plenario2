@@ -368,4 +368,24 @@ defmodule PlenarioWeb.Api.Plugs do
     %Conn{conn | params: Map.put(conn.params, "format", @default_format)}
     |> check_format(nil)
   end
+
+  @doc """
+  Do we need the `_` tho? 
+  """
+  def check_group_by(%Conn{params: %{"group_by" => group_by}} = conn, _) 
+    when is_atom(group_by)
+  do 
+    conn = assign(conn, :group_by, group_by)
+    %{conn | params: Map.delete(conn.params, "group_by")}
+  end
+
+  def check_group_by(%Conn{params: %{"group_by" => group_by}} = conn, _) 
+    when is_bitstring(group_by)
+  do 
+    conn = assign(conn, :group_by, String.to_atom(group_by))
+    %{conn | params: Map.delete(conn.params, "group_by")}
+  end
+
+  def check_group_by(conn, _),
+    do: halt_with(conn, :bad_request, "`group_by` required and must be a string!")
 end

@@ -28,9 +28,9 @@ defmodule PlenarioWeb.Api.DetailController do
   plug(:check_page_size)
   plug(:check_page)
   plug(:check_order_by, default_order: "asc:row_id")
+  plug(:check_format)
+  plug :check_group_by, "Before group by" when action in [:aggregate]
   plug(:check_filters)
-  # todo need this
-  # plug(:check_group_by)
 
   @spec get(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def get(conn, %{"slug" => slug}) do
@@ -58,7 +58,7 @@ defmodule PlenarioWeb.Api.DetailController do
   end
 
   def aggregate(conn, %{"slug" => slug}) do
-    validate_data_set(slug)
+    validate_slug_get_meta(slug)
     |> render_data_set_aggregate(conn, "get.json")
   end
 
@@ -77,6 +77,14 @@ defmodule PlenarioWeb.Api.DetailController do
         apply_filter(query, fname, op, value)
       end)
 
+    # We need to get rid of this. 
+    #
+    # For example, I was trying to figure out why I was getting a 
+    # {error: null}. I kept trying different combos of query params.
+    # In the end it was because I hadn't migrated my database.
+    # 
+    # Error handling like jumbles together user facing errors and
+    # true errors for us developers. They need to be separate.
     try do
       page = conn.assigns[:page]
       page_size = conn.assigns[:page_size]
@@ -93,13 +101,14 @@ defmodule PlenarioWeb.Api.DetailController do
   defp render_data_set_aggregate(%Meta{state: "ready"} = meta, conn, view) do
     model = ModelRegistry.lookup(meta.slug)
 
+
+    IO.inspect(conn.assigns, pretty: true)
     page = conn.assigns[:page]
     page_size = conn.assigns[:page_size]
-    group_by_field = conn.params["group_by"] |> String.to_atom()
+    group_by_field = conn.assigns[:group_by]
 
     # order ∈ {:asc, :desc}
     {order, order_by} = conn.assigns[:order_by]
-
 
     # query =
     #   conn.assigns[:filters]
@@ -109,9 +118,8 @@ defmodule PlenarioWeb.Api.DetailController do
 
     # try do
       # data = Repo.paginate(query, page: page, page_size: page_size)
-      # Need to discern significant column here, read in as user arg
       data = from(model) |> group_by([p], fragment("date_part('month', ?)", field(p, ^group_by_field))) |> select([p], count("*")) |> Repo.all
-      IO.inspect(data)
+      IO.inspect(data, pretty: true)
       render_detail(conn, view, data)
     # rescue
     #   e in [Ecto.QueryError, Ecto.SubQueryError, Postgrex.Error] ->
