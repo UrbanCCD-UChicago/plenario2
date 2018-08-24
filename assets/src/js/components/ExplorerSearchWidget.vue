@@ -67,11 +67,13 @@
 @import "~bootstrap/scss/mixins/breakpoints";
 @import "../../css/convenience-variables";
 
+/* stylelint-disable scss/dollar-variable-colon-space-after */
 $front-matter-height:
   $navbar-spacing +
   ($h1-font-size * $headings-line-height) + $headings-margin-bottom;
 $widget-landscape-max-height:
   calc(100vh - #{$front-matter-height + $spacer});
+/* stylelint-enable scss/dollar-variable-colon-space-after */
 
 .search-widget {
   @include media-breakpoint-up(lg) {
