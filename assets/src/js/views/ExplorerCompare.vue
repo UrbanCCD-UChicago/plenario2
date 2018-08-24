@@ -10,31 +10,30 @@
       granularity="day" /> -->
 
     <!--
-      Indicate with tab is selected
-      Render conditionally based on which tab is selected
       Plot results of aggregate query
       -->
     <ul class="nav nav-fill">
       <li class="nav-item">
-        <a class="nav-link py-2 active bg-primary text-white font-weight-bold" href="#">
+        <a :class="mapIsActive ? activeClasses : inactiveClasses" @click="selectMap">
           <FontAwesomeIcon icon="map" />
           Map
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link py-2" href="#">
+        <a :class="mapIsActive ? inactiveClasses : activeClasses" @click="selectChart">
           <FontAwesomeIcon icon="chart-line" />
           Charts
         </a>
       </li>
     </ul>
 
-    <div class="row no-gutters" >
+    <div v-if="mapIsActive" class="row no-gutters" >
       <div class="col-lg ct-octave" >
         <LMap />
       </div>
     </div>
-    <div class="row">
+
+    <div v-if="!mapIsActive" class="row">
       <div class="col-lg">
         <div id="chart" class="ct-chart ct-octave">
         </div>
@@ -64,9 +63,29 @@ export default {
       lineSmooth: false,
     },
     chart: undefined,
+
+    mapIsActive: true,
+
+    activeClasses: {
+      'nav-link': true,
+      'py-2': true,
+      'active': true,
+      'bg-primary': true,
+      'text-white': true,
+      'font-weight-bold': true,
+    },
+
+    inactiveClasses: {
+      'nav-link': true,
+      'py-2': true,
+      'text-primary': true
+    },
   }),
-  mounted() {
-    this.chart = new Chartist.Line('#chart', this.chartData);
+
+  updated() {
+    if (!this.mapIsActive) {
+      this.chart = new Chartist.Line('#chart', this.chartData);
+    }
   },
 
   computed: {
@@ -80,8 +99,14 @@ export default {
     },
   },
 
-  mounted: function() {
-    new Chartist.Line('#chart', this.chartData);
+  methods: {
+    selectMap: function () {
+      this.mapIsActive = true;
+    },
+
+    selectChart: function () {
+      this.mapIsActive = false;
+    }, 
   }
 };
 </script>
