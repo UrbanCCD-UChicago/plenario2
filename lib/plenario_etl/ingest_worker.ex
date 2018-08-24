@@ -81,6 +81,9 @@ defmodule PlenarioEtl.IngestWorker do
     bbox = MetaActions.compute_bbox!(meta)
     {:ok, _} = MetaActions.update_bbox(meta, bbox)
 
+    hull = MetaActions.compute_hull!(meta)
+    {:ok, _} = MetaActions.update_hull(meta, hull)
+
     range = MetaActions.compute_time_range!(meta)
     {:ok, _} = MetaActions.update_time_range(meta, range)
 

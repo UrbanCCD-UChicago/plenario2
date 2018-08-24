@@ -415,7 +415,9 @@ defmodule Plenario.Actions.MetaActionsTest do
 
     assert bbox == %Geo.Polygon{
              coordinates: [
-               [{25.5, 10.5}, {21.1, 10.5}, {21.1, 10.9}, {25.5, 10.9}, {25.5, 10.5}]
+               [
+                 {21.1, 10.5}, {21.1, 10.9}, {25.5, 10.9}, {25.5, 10.5}, {21.1, 10.5}
+               ]
              ],
              srid: 4326
            }

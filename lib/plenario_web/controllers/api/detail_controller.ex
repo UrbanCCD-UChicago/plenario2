@@ -14,8 +14,8 @@ defmodule PlenarioWeb.Api.DetailController do
       halt_with: 2,
       halt_with: 3,
       render_detail: 3,
-      validate_data_set: 1,
-      validate_data_set: 2
+      validate_slug_get_meta: 1,
+      validate_slug_get_meta: 2
     ]
 
   alias Plenario.{
@@ -29,22 +29,23 @@ defmodule PlenarioWeb.Api.DetailController do
   plug(:check_page)
   plug(:check_order_by, default_order: "asc:row_id")
   plug(:check_filters)
+  plug(:check_format)
 
   @spec get(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def get(conn, %{"slug" => slug}) do
-    validate_data_set(slug)
+    validate_slug_get_meta(slug)
     |> render_data_set(conn, "get.json")
   end
 
   @spec head(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def head(conn, %{"slug" => slug}) do
-    validate_data_set(slug)
+    validate_slug_get_meta(slug)
     |> render_data_set(conn, "head.json")
   end
 
   def describe(conn, %{"slug" => slug}) do
     meta =
-      validate_data_set(
+      validate_slug_get_meta(
         slug,
         with_user: true,
         with_fields: true,
@@ -52,7 +53,7 @@ defmodule PlenarioWeb.Api.DetailController do
         with_virtual_points: true
       )
 
-    render_detail(conn, "describe.json", meta)
+    render_detail(conn, "describe.json", [meta])
   end
 
   defp render_data_set(%Meta{state: "ready"} = meta, conn, view) do
@@ -73,7 +74,7 @@ defmodule PlenarioWeb.Api.DetailController do
     try do
       page = conn.assigns[:page]
       page_size = conn.assigns[:page_size]
-      data = Repo.paginate(query, page: page, page_size: page_size)
+      data = Repo.paginate(query, page_number: page, page_size: page_size)
       render_detail(conn, view, data)
     rescue
       e in [Ecto.QueryError, Ecto.SubQueryError, Postgrex.Error] ->

@@ -29,6 +29,7 @@ defmodule Plenario.Changesets.MetaChangesets do
     latest_import: DateTime | nil,
     next_import: DateTime | nil,
     bbox: Geo.Polygon | nil,
+    hull: Geo.Polygon | nil,
     time_range: Plenario.TsRange | Postgrex.Range | nil
   }
 
@@ -39,11 +40,11 @@ defmodule Plenario.Changesets.MetaChangesets do
   @update_keys [
     :name, :description, :attribution, :source_url, :source_type, :refresh_rate,
     :refresh_interval, :refresh_starts_on, :refresh_ends_on, :first_import,
-    :latest_import, :next_import, :bbox, :time_range
+    :latest_import, :next_import, :bbox, :hull, :time_range
   ]
 
   @acceptible_post_new_update_keys MapSet.new([
-    :first_import, :latest_import, :next_import, :bbox, :time_range
+    :first_import, :latest_import, :next_import, :bbox, :hull, :time_range
   ])
 
   @spec new() :: Ecto.Changeset.t()
@@ -56,6 +57,7 @@ defmodule Plenario.Changesets.MetaChangesets do
     |> validate_required(@required_keys)
     |> unique_constraint(:source_url)
     |> unique_constraint(:name)
+    |> validate_length(:name, max: 58)
     |> cast_assoc(:user)
     |> test_source_url()
     |> validate_source_type()
@@ -70,6 +72,7 @@ defmodule Plenario.Changesets.MetaChangesets do
     |> validate_required(@required_keys)
     |> unique_constraint(:source_url)
     |> unique_constraint(:name)
+    |> validate_length(:name, max: 58)
     |> cast_assoc(:user)
     |> validate_state()
     |> test_source_url()
@@ -78,6 +81,7 @@ defmodule Plenario.Changesets.MetaChangesets do
     |> validate_refresh_interval()
     |> validate_refresh_ends_on()
     |> set_slug()
+    |> set_table_name()
   end
 
   defp validate_state(%Ecto.Changeset{valid?: true, changes: changes} = changeset) do

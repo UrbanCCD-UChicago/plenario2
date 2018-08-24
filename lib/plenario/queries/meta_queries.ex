@@ -163,6 +163,13 @@ defmodule Plenario.Queries.MetaQueries do
   def bbox_intersects(query, bbox), do: from m in query, where: st_intersects(m.bbox, ^bbox)
 
   @doc """
+  A composable query that filters returned Metas whose hull intersects
+  with the bounding box param.
+  """
+  @spec hull_intersects(query :: Ecto.Query.t(), user :: User) :: Ecto.Query.t()
+  def hull_intersects(query, hull), do: from m in query, where: st_intersects(m.hull, ^hull)
+
+  @doc """
   A composable query that filters returned Metas whose time range intersects
   with the time range param.
   """
@@ -189,6 +196,7 @@ defmodule Plenario.Queries.MetaQueries do
   | :with_charts                | false         | doesn't apply func |
   | :for_user                   | :dont_use_me  | doesn't apply func |
   | :bbox_intersects            | :dont_use_me  | doesn't apply func |
+  | :hull_intersects            | :dont_use_me  | doesn't apply func |
   | :time_range_intersects      | :dont_use_me  | doesn't apply func |
 
   ## Examples
@@ -215,6 +223,7 @@ defmodule Plenario.Queries.MetaQueries do
       with_charts: false,
       for_user: :dont_use_me,
       bbox_intersects: :dont_use_me,
+      hull_intersects: :dont_use_me,
       time_range_intersects: :dont_use_me
     ]
 
@@ -233,6 +242,7 @@ defmodule Plenario.Queries.MetaQueries do
     |> Utils.bool_compose(opts[:with_charts], MetaQueries, :with_charts)
     |> Utils.filter_compose(opts[:for_user], MetaQueries, :for_user)
     |> Utils.filter_compose(opts[:bbox_intersects], MetaQueries, :bbox_intersects)
+    |> Utils.filter_compose(opts[:hull_intersects], MetaQueries, :hull_intersects)
     |> Utils.filter_compose(opts[:time_range_intersects], MetaQueries, :time_range_intersects)
   end
 end

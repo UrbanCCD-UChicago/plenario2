@@ -87,6 +87,7 @@ defmodule Plenario.Schemas.Meta do
     field :next_import, :utc_datetime, default: nil
 
     field :bbox, Geo.Polygon, default: nil
+    field :hull, Geo.Polygon, default: nil
     field :time_range, Plenario.TsRange, default: nil
 
     timestamps(type: :utc_datetime)

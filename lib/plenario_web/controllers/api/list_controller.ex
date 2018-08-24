@@ -23,6 +23,7 @@ defmodule PlenarioWeb.Api.ListController do
   plug(:check_page)
   plug(:check_order_by, default_order: "asc:name")
   plug(:check_filters)
+  plug(:check_format)
 
   @spec get(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def get(conn, _params), do: render_metas(conn, "get.json")
@@ -48,7 +49,7 @@ defmodule PlenarioWeb.Api.ListController do
     try do
       page = conn.assigns[:page]
       page_size = conn.assigns[:page_size]
-      data = Repo.paginate(query, page: page, page_size: page_size)
+      data = Repo.paginate(query, page_number: page, page_size: page_size)
       render_list(conn, view, data)
     rescue
       e in [Ecto.QueryError, Ecto.SubQueryError, Postgrex.Error] ->

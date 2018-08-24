@@ -1,5 +1,4 @@
 defmodule Plenario.Seed do
-
   require Logger
 
   alias Plenario.Actions.{
@@ -24,16 +23,21 @@ defmodule Plenario.Seed do
 
   defp make_user do
     {:ok, user} = UserActions.create(@user_name, @user_email, @user_password)
+    {:ok, user} = UserActions.promote_to_admin(user)
     user
   end
 
   defp make_meta(user) do
     {:ok, meta} = MetaActions.create(@meta_name, user, @meta_url, @meta_src_type)
-    {:ok, meta} = MetaActions.update(meta,
-      refresh_rate: "days",
-      refresh_interval: 1,
-      description: "Lorem Ipsum\nDNA Chicago Beaches\nDolor Sit Amet",
-      attribution: "City of Chicago")
+
+    {:ok, meta} =
+      MetaActions.update(
+        meta,
+        refresh_rate: "days",
+        refresh_interval: 1,
+        description: "Lorem Ipsum\nDNA Chicago Beaches\nDolor Sit Amet",
+        attribution: "City of Chicago"
+      )
 
     meta
   end
@@ -107,6 +111,7 @@ defmodule Plenario.Seed do
     url:  #{@aot_url}
 
     """
+
     Logger.info(msg)
 
     :ok

@@ -13,6 +13,7 @@ defmodule Plenario.Testing.PlenarioTest do
     # add bbox and range to original meta, make ready
     bbox = Geo.WKT.decode("POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
     {:ok, _} = MetaActions.update_bbox(meta, bbox)
+    {:ok, _} = MetaActions.update_hull(meta, bbox)
     {:ok, _} = MetaActions.update_time_range(meta, Plenario.TsRange.new(~N[2017-01-01T00:00:00], ~N[2018-12-31T00:00:00]))
     m = MetaActions.get(meta.id)
     Meta.submit_for_approval(m) |> Repo.update()
@@ -26,6 +27,7 @@ defmodule Plenario.Testing.PlenarioTest do
     meta2 = MetaActions.get(m.id)
     bbox = Geo.WKT.decode("POLYGON ((-30 -10, -40 -40, -20 -40, -10 -20, -30 -10))")
     {:ok, _} = MetaActions.update_bbox(meta2, bbox)
+    {:ok, _} = MetaActions.update_hull(meta2, bbox)
     {:ok, _} = MetaActions.update_time_range(meta2, Plenario.TsRange.new(~N[2015-01-01T00:00:00], ~N[2016-12-31T00:00:00]))
     m = MetaActions.get(meta2.id)
     Meta.submit_for_approval(m) |> Repo.update()

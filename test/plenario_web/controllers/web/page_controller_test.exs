@@ -56,9 +56,11 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     {_, upper} = NaiveDateTime.from_iso8601("2018-12-31T00:00:00.0")
 
     {:ok, _} = MetaActions.update_bbox(meta1, bbox)
+    {:ok, _} = MetaActions.update_hull(meta1, bbox)
     {:ok, _} = MetaActions.update_time_range(meta1, Plenario.TsRange.new(lower, upper))
 
     {:ok, _} = MetaActions.update_bbox(meta2, bbox)
+    {:ok, _} = MetaActions.update_hull(meta2, bbox)
     {:ok, _} = MetaActions.update_time_range(meta2, Plenario.TsRange.new(lower, upper))
 
     bbox =
@@ -72,6 +74,7 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     {_, upper} = NaiveDateTime.from_iso8601("2016-12-31T00:00:00.0")
 
     {:ok, _} = MetaActions.update_bbox(meta3, bbox)
+    {:ok, _} = MetaActions.update_hull(meta3, bbox)
     {:ok, _} = MetaActions.update_time_range(meta3, Plenario.TsRange.new(lower, upper))
 
     {:ok, _} = MetaActions.update_bbox(meta4, bbox)
@@ -128,7 +131,7 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     refute response =~ meta1.name
     refute response =~ meta2.name
     assert response =~ meta3.name
-    assert response =~ meta4.name
+    refute response =~ meta4.name
 
     params = %{
       "starting_on" => "2016-11-01",
