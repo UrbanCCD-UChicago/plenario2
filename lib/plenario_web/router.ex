@@ -140,18 +140,6 @@ defmodule PlenarioWeb.Router do
     |> Enum.each(fn verb -> verb.("/*path", MethodNotAllowedController, :match) end)
   end
 
-  scope "/v1/api", PlenarioWeb.Api do
-    pipe_through([:api])
-
-    get("/datasets", ShimController, :datasets)
-    get("/fields/:slug", ShimController, :fields)
-    get("/detail", ShimController, :detail)
-
-    # Method not allowed
-    [&post/3, &put/3, &patch/3, &delete/3, &connect/3, &trace/3]
-    |> Enum.each(fn verb -> verb.("/*path", MethodNotAllowedController, :match) end)
-  end
-
   if Mix.env() == :dev do
     forward("/sent-emails", Bamboo.EmailPreviewPlug)
   end

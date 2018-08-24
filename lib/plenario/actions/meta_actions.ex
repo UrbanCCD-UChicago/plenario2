@@ -82,6 +82,12 @@ defmodule Plenario.Actions.MetaActions do
   def update_bbox(meta, bbox), do: MetaActions.update(meta, bbox: bbox)
 
   @doc """
+  Convenience function for updating a Meta's hull attribute.
+  """
+  @spec update_hull(meta :: Meta, hull :: Geo.Polygon) :: ok_instance
+  def update_hull(meta, hull), do: MetaActions.update(meta, hull: hull)
+
+  @doc """
   Convenience function for updating a Meta's time_range attribute.
   """
   @spec update_time_range(Meta.t(), Plenario.TsRange.t()) :: ok_instance
@@ -290,41 +296,39 @@ defmodule Plenario.Actions.MetaActions do
     fields =
       VirtualPointFieldActions.list(for_meta: meta)
       |> Enum.map(& &1.name)
+      |> Enum.join(", ")
 
-    stx = Enum.map(fields, &"st_x(\"#{&1}\")") |> Enum.join(", ")
-    sty = Enum.map(fields, &"st_y(\"#{&1}\")") |> Enum.join(", ")
+    view = "#{meta.table_name}_view"
 
     query = """
-    SELECT
-      MIN(subq.min_x) AS min_x,
-      MIN(subq.min_y) AS min_y,
-      MAX(subq.max_x) AS max_x,
-      MAX(subq.max_y) AS max_y
-    FROM (
-      SELECT
-        LEAST(#{stx}) AS min_x,
-        LEAST(#{sty}) AS min_y,
-        GREATEST(#{stx}) AS max_x,
-        GREATEST(#{sty}) AS max_y
-      FROM
-        "#{meta.table_name}_view"
-    ) AS subq
+    SELECT st_envelope(st_union("#{fields}"))
+    FROM "#{view}"
     """
 
-    %Postgrex.Result{rows: [[min_x, min_y, max_x, max_y]]} = Repo.query!(query)
+    %Postgrex.Result{rows: [[bbox]]} = Repo.query!(query)
+    bbox
+  end
 
-    %Geo.Polygon{
-      coordinates: [
-        [
-          {max_x, min_y},
-          {min_x, min_y},
-          {min_x, max_y},
-          {max_x, max_y},
-          {max_x, min_y}
-        ]
-      ],
-      srid: 4326
-    }
+  @doc """
+  Selects all points in the data set's table and finds the minimum and maximum
+  values. From those values, it creates a Polygon.
+  """
+  @spec compute_hull!(Meta.t()) :: Geo.Polygon.t()
+  def compute_hull!(meta) do
+    fields =
+      VirtualPointFieldActions.list(for_meta: meta)
+      |> Enum.map(& &1.name)
+      |> Enum.join(", ")
+
+    view = "#{meta.table_name}_view"
+
+    query = """
+    SELECT st_convexhull(st_union("#{fields}"))
+    FROM "#{view}"
+    """
+
+    %Postgrex.Result{rows: [[hull]]} = Repo.query!(query)
+    hull
   end
 
   def dump_bbox(%Meta{bbox: nil}), do: nil
@@ -350,7 +354,7 @@ defmodule Plenario.Actions.MetaActions do
 
   defp do_get_points(nil, _, _), do: []
 
-  defp do_get_points(pt, meta, limit) do
+  defp do_get_points(pt, %Meta{state: "ready"} = meta, limit) do
     # we need to use a raw query here to harness the
     # tablesample selection in postgres.
     query = """
@@ -367,4 +371,6 @@ defmodule Plenario.Actions.MetaActions do
       "[#{lat}, #{lon}]"
     end)
   end
+
+  defp do_get_points(_, _, _), do: []
 end

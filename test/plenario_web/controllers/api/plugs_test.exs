@@ -92,16 +92,16 @@ defmodule PlenarioWeb.Api.PlugsTest do
       assert res["meta"]["params"]["page_size"] == 200
     end
 
-    test "when given a value too large will :bad_request", %{conn: conn, meta: meta} do
+    test "when given a value too large will :forbidden", %{conn: conn, meta: meta} do
       conn
       |> get(detail_path(conn, :get, meta.slug, %{page_size: 1_000_000}))
-      |> json_response(:bad_request)
+      |> json_response(:forbidden)
     end
 
-    test "when given a value too little will :bad_request", %{conn: conn, meta: meta} do
+    test "when given a value too little will :unprocessable_entity", %{conn: conn, meta: meta} do
       conn
       |> get(detail_path(conn, :get, meta.slug, %{page_size: 0}))
-      |> json_response(:bad_request)
+      |> json_response(:unprocessable_entity)
     end
 
     test "when given a value not an integer will :bad_request", %{conn: conn, meta: meta} do
@@ -127,10 +127,10 @@ defmodule PlenarioWeb.Api.PlugsTest do
       assert res["meta"]["params"]["page"] == 1
     end
 
-    test "when given a value too little will :bad_request", %{conn: conn, meta: meta} do
+    test "when given a value too little will :unprocessable_entity", %{conn: conn, meta: meta} do
       conn
       |> get(detail_path(conn, :get, meta.slug, %{page: -1}))
-      |> json_response(:bad_request)
+      |> json_response(:unprocessable_entity)
     end
 
     test "when given a value not an integer will :bad_request", %{conn: conn, meta: meta} do
@@ -281,19 +281,6 @@ defmodule PlenarioWeb.Api.PlugsTest do
       assert res["meta"]["counts"]["total_records"] == 400
     end
 
-    test "contains", %{conn: conn} do
-      res =
-        conn
-        |> get(
-          shim_path(conn, :datasets, %{
-            "obs_data__ge" => "2017-01-01"
-          })
-        )
-        |> json_response(:ok)
-
-      assert res["meta"]["total"] == 1
-    end
-
     test "within tsrange", %{conn: conn, meta: meta} do
       range =
         TsRange.new(~N[2017-01-01 00:00:00], ~N[2018-01-01 00:00:00], upper_inc: false)
@@ -366,5 +353,28 @@ defmodule PlenarioWeb.Api.PlugsTest do
 
     window = res["meta"]["params"]["window"]
     refute is_nil(window)
+  end
+
+  describe "check_format" do
+    test "defualts to json", %{conn: conn} do
+      res =
+        conn
+        |> get(list_path(conn, :get))
+        |> json_response(:ok)
+
+      assert res["meta"]["params"]["format"] == "json"
+    end
+
+    test "accepts geojson", %{conn: conn} do
+      conn
+      |> get(list_path(conn, :get, %{format: "geojson"}))
+      |> json_response(:ok)
+    end
+
+    test "will 400 when given an unknown value", %{conn: conn} do
+      conn
+      |> get(list_path(conn, :get, %{format: "tsv"}))
+      |> json_response(:bad_request)
+    end
   end
 end

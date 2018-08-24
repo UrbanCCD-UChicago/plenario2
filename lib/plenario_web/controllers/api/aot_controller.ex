@@ -26,6 +26,7 @@ defmodule PlenarioWeb.Api.AotController do
   plug(:check_page_size)
   plug(:check_order_by, default_order: "desc:timestamp")
   plug(:check_filters)
+  plug(:check_format)
   plug(:apply_window)
 
   @meta_keys [:network_name, :bbox, :time_rage]
@@ -54,7 +55,7 @@ defmodule PlenarioWeb.Api.AotController do
     |> Enum.reduce(AotMeta, fn {fname, op, value}, query ->
       apply_filter(query, fname, op, value)
     end)
-    |> Repo.paginate(page: page, page_size: page_size)
+    |> Repo.paginate(page_number: page, page_size: page_size)
     |> render_aot(conn, "describe.json")
   end
 
@@ -94,7 +95,7 @@ defmodule PlenarioWeb.Api.AotController do
     try do
       page = conn.assigns[:page]
       page_size = conn.assigns[:page_size]
-      data = Repo.paginate(query, page: page, page_size: page_size)
+      data = Repo.paginate(query, page_number: page, page_size: page_size)
       {:ok, data}
     rescue
       e in [Ecto.QueryError, Ecto.SubQueryError, Postgrex.Error] ->
