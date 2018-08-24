@@ -1,24 +1,46 @@
 <template>
-  <section class="container">
-    <SearchParameterBreadcrumbBar
+  <div class="card">
+    <!--
+      Spread out evenly accross the top
+      -->
+    <!-- <SearchParameterBreadcrumbBar
       area-specified
       start-date="foo"
       end-date="bar"
-      granularity="day" />
-    <div id="plotting-area"
-         class="row no-gutters" >
-      <div id="map-plot-area"
-           class="col-lg-5" >
+      granularity="day" /> -->
+
+    <!--
+      Indicate with tab is selected
+      Render conditionally based on which tab is selected
+      Plot results of aggregate query
+      -->
+    <ul class="nav nav-fill">
+      <li class="nav-item">
+        <a class="nav-link py-2 active bg-primary text-white font-weight-bold" href="#">
+          <FontAwesomeIcon icon="map" />
+          Map
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link py-2" href="#">
+          <FontAwesomeIcon icon="chart-line" />
+          Charts
+        </a>
+      </li>
+    </ul>
+
+    <div class="row no-gutters" >
+      <div class="col-lg ct-octave" >
         <LMap />
       </div>
-      <div id="chart-plot-area"
-           class="col-lg-7">
-        <div id="chart"
-             class="ct-chart ct-golden-section">
+    </div>
+    <div class="row">
+      <div class="col-lg">
+        <div id="chart" class="ct-chart ct-octave">
         </div>
       </div>
     </div>
-  </section>
+  </div>
 </template>
 
 <script>

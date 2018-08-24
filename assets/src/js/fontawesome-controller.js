@@ -1,5 +1,6 @@
 import { config, dom, library } from '@fortawesome/fontawesome-svg-core';
 import {
+  faChartLine,
   faCheckSquare,
   faChevronDown,
   faCircle,
@@ -7,6 +8,7 @@ import {
   faFilter,
   faInfoCircle,
   faLock,
+  faMap,
   faPencilAlt,
   faQuestionCircle,
   faSignOutAlt,
@@ -22,6 +24,7 @@ import { faGithub } from '@fortawesome/free-brands-svg-icons';
 config.autoReplaceSvg = 'nest';
 library.add(
   faCalendarAlt,
+  faChartLine,
   faCheckSquare,
   faChevronDown,
   faCircle,
@@ -29,6 +32,7 @@ library.add(
   faFilter,
   faInfoCircle,
   faLock,
+  faMap,
   faPencilAlt,
   faQuestionCircle,
   faSearch,
