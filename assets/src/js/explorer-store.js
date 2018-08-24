@@ -24,6 +24,7 @@ export default new Vuex.Store({
     host:     '',
     port:     4000,
     ssl:      false,
+    selectedDatasetSlugs: [],
   },
 
   mutations: {
@@ -58,6 +59,13 @@ export default new Vuex.Store({
       }));
 
       Vue.set(state, 'datasets', []);
+    },
+
+    /**
+     * Stores a list of dataset slugs for the comparison page to use.
+     */
+    setSelectedDatasets(state, slugs) {
+      Vue.set(state, 'selectedDatasetSlugs', slugs);
     },
   },
 });
