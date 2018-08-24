@@ -5,8 +5,8 @@
     "watch": "webpack --mode=development --config ./webpack/webpack.dev.js --watch-stdin --env.analyzer",
     "build:production": "webpack --mode=production --config ./webpack/webpack.prod.js",
     "build:staging": "webpack --mode=production --config ./webpack/webpack.prod.js --env.staging",
-    "start": "npm run watch",
-    "deploy": "npm run build:production"
+    "start": "yarn watch",
+    "deploy": "yarn build:production"
   },
   "dependencies": {
     "phoenix": "file:../deps/phoenix",

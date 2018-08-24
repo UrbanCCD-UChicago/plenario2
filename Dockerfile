@@ -45,8 +45,8 @@ RUN bash nodesource_setup.sh
 RUN apt-get update -qq
 RUN apt-get install nodejs -y
 RUN if [ -d "./assets/node_modules" ]; then rm -rf ./assets/node_modules; fi
-RUN cd assets && npm install && cd ..
+RUN cd assets && yarn && cd ..
 
 # compile assets
-RUN cd assets && npm run deploy && cd ..
+RUN cd assets && yarn deploy && cd ..
 RUN mix phx.digest
