@@ -23,7 +23,7 @@
 
 <script>
 import Chartist from 'chartist';
-import '../../../node_modules/chartist/dist/chartist.min.css';
+import 'chartist/dist/chartist.min.css';
 import SearchParameterBreadcrumbBar
   from '../components/SearchParameterBreadcrumbBar.vue';
 import LMap from '../components/LMap.vue';
