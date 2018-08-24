@@ -86,11 +86,9 @@
         </div>
       </div>
       <div class="col-12 px-0">
-        <router-link to="/compare"
-                    tag="button"
-                    class="btn btn-primary btn-block">
+        <button @click="toCompare" class="btn btn-primary btn-block">
           Compare
-        </router-link>
+        </button>
       </div>
     </section>
   </div>
@@ -124,6 +122,18 @@ export default {
       } else {
         this.selected = this.selected.concat([dataset.slug]);
       }
+    },
+
+    /**
+     * 
+     */
+    toCompare() {
+      this.$router.push({
+        path: '/compare',
+        query: {
+          'data-sets': this.selected
+        }
+      })
     },
   },
 

@@ -12,6 +12,8 @@
     <!--
       Plot results of aggregate query
       -->
+
+    <!-- rely on built in bootstrap active/inactive state -->
     <ul class="nav nav-fill">
       <li class="nav-item">
         <a :class="mapIsActive ? activeClasses : inactiveClasses" @click="selectMap">
@@ -27,18 +29,36 @@
       </li>
     </ul>
 
-    <div v-if="mapIsActive" class="row no-gutters" >
+    <!-- rely on built in bootstrap active/inactive state -->
+    <div v-show="mapIsActive" class="row no-gutters" >
       <div class="col-lg ct-octave" >
         <LMap />
       </div>
     </div>
 
-    <div v-if="!mapIsActive" class="row">
+    <div v-show="!mapIsActive" class="row">
       <div class="col-lg">
         <div id="chart" class="ct-chart ct-octave">
         </div>
       </div>
     </div>
+
+    <table class="table table-hover p-bottom-0">
+      <thead>
+        <tr>
+          <th scope="col"></th>
+          <th scope="col">Dataset Name</th>
+          <th scope="col">Result Count</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="datasetSlug in selectedDatasetSlugs" v-bind:key="datasetSlug">
+          <th scope="row">Toggle</th>
+          <td>{{ datasetSlug }}</td>
+          <td>>9000</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </template>
 
@@ -94,8 +114,8 @@ export default {
      * These are the datasets to render on the map and in our chart. This list
      * is filtered by selections made in the search widget.
      */
-    selectedDatasets: function () {
-      return this.$store.state.selectedDatasets;
+    selectedDatasetSlugs: function () {
+      return this.$route.query['data-sets'];
     },
   },
 
