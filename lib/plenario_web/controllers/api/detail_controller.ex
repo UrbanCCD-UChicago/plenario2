@@ -29,12 +29,8 @@ defmodule PlenarioWeb.Api.DetailController do
   plug(:check_page)
   plug(:check_order_by, default_order: "asc:row_id")
   plug(:check_filters)
-<<<<<<< HEAD
   # todo need this
   # plug(:check_group_by)
-=======
-  plug(:check_format)
->>>>>>> 5dc2a45c721ab5ec0b89c5e146747f5e3132e3c4
 
   @spec get(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def get(conn, %{"slug" => slug}) do
