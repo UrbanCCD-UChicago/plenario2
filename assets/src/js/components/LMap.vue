@@ -1,70 +1,49 @@
 <template>
-  <div id="map" class="h-100"></div>
+  <div class="map h-100">
+  </div>
 </template>
 
 <script>
 import L from 'leaflet';
 import 'leaflet-draw';
-import "leaflet/dist/leaflet.css";
+import 'leaflet/dist/leaflet.css';
+import 'leaflet-draw/dist/leaflet.draw.css';
+
+const enabledDrawTools = {
+  // Ommitted tools are enabled by default
+  marker:       false,
+  circlemarker: false,
+  polyline:     false,
+};
 
 export default {
-  
   props: {
-    drawTools: {
-      type: Boolean,
-      default: false
-    }
+    drawTools: { type: Boolean, default: false },
   },
+  data: () => ({
+    drawnItems: null,
+  }),
+  mounted() {
+    const map = L.map(this.$el).setView([41.8781, -87.6298], 13);
 
-  data: function () {
-    return {
-      drawnItems: new L.FeatureGroup()
-    };
-  },
-
-  /**
-   * Called after the instance has been mounted, where el is replaced by the 
-   * newly created vm.$el. If the root instance is mounted to an in-document 
-   * element, vm.$el will also be in-document when mounted is called.
-   */
-  mounted: function () {
-
-    // 
-    var map = L.map('map').setView([41.8781, -87.6298], 13);
-
-    // 
     L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-    // FeatureGroup is to store editable layers
-    var drawControl = new L.Control.Draw({
-      draw: {
-        marker: false,
-        circlemarker: false,
-        polyline: false
-      },
-
-      edit: {
-        featureGroup: this.drawnItems
-      }
-    });
-
-    //
-    map.addLayer(this.drawnItems);
-
     if (this.drawTools) {
-      map.addControl(drawControl);
+      this.drawnItems = new L.FeatureGroup().addTo(map);
+      new L.Control.Draw({
+        draw: enabledDrawTools,
+        edit: { featureGroup: this.drawnItems },
+      }).addTo(map);
+      map.on('draw:created', this.onDraw);
     }
-
-    //
-    map.on('draw:created', this.onDraw);
   },
 
   methods: {
-    onDraw: function (event) {
+    onDraw(event) {
       this.drawnItems.clearLayers();
       this.drawnItems.addLayer(event.layer);
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
