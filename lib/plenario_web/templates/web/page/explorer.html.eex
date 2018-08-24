@@ -93,10 +93,10 @@
           </p>
           <hr>
           <p>
-            <%= button "View Details", to: data_set_path(@conn, :show, res.id), method: :get, class: "btn btn-primary" %>
+            <%= link "View Details", to: data_set_path(@conn, :show, res.id), method: :get, class: "btn btn-primary" %>
           </p>
           <p>
-            <%= button "Export to CSV", to: export_path(@conn, :export_meta, res.id), class: "btn btn-outline-primary" %>
+            <%= link "Download a Copy", to: res.source_url, target: "_blank", class: "btn btn-outline-primary" %>
           </p>
         </div>
         <div class="col-lg-9">
