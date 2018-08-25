@@ -70,7 +70,7 @@ defmodule PlenarioWeb.Api.DetailController do
     timestamp = conn.assigns[:group_by]
 
     data = 
-      buckets(model, timestamp, 3600) 
+      buckets(model, timestamp, "month") 
       |> Repo.all()
       |> Enum.map(&bucket_fmt/1)
 
@@ -86,8 +86,8 @@ defmodule PlenarioWeb.Api.DetailController do
     from m in model,
       select: {
         count(m.row_id), 
-        fragment("to_timestamp(floor(extract('epoch' from ?) / ?) * ?) as interval", 
-          field(m, ^timestamp), ^interval, ^interval)},
+        fragment("date_trunc(?, ?) as interval", 
+          ^interval, field(m, ^timestamp))},
       group_by: fragment("interval"),
       order_by: fragment("interval")
   end
