@@ -388,4 +388,17 @@ defmodule PlenarioWeb.Api.Plugs do
 
   def check_group_by(conn, _),
     do: halt_with(conn, :bad_request, "`group_by` required and must be a string!")
+
+  @doc """
+  Do we need the `_` tho? 
+  """
+  def check_granularity(%Conn{params: %{"granularity" => granularity}} = conn, _) 
+    when is_bitstring(granularity)
+  do 
+    conn = assign(conn, :granularity, granularity)
+    %{conn | params: Map.delete(conn.params, "granularity")}
+  end
+
+  def check_granularity(conn, _),
+    do: halt_with(conn, :bad_request, "`granularity` required and must be a string!")
 end

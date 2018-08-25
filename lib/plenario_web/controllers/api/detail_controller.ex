@@ -30,6 +30,7 @@ defmodule PlenarioWeb.Api.DetailController do
   plug(:check_order_by, default_order: "asc:row_id")
   plug(:check_format)
   plug :check_group_by, "Before group by" when action in [:aggregate]
+  plug :check_granularity, "Before group by" when action in [:aggregate]
   plug(:check_filters)
 
   @spec get(Plug.Conn.t(), map()) :: Plug.Conn.t()
@@ -65,12 +66,19 @@ defmodule PlenarioWeb.Api.DetailController do
     meta = validate_slug_get_meta(slug)
     model = ModelRegistry.lookup(meta.slug)
 
-    page = conn.assigns[:page]
-    page_size = conn.assigns[:page_size]
     timestamp = conn.assigns[:group_by]
+    granularity = conn.assigns[:granularity]
+
+    query = buckets(model, timestamp, granularity)  
+
+    query =
+      conn.assigns[:filters]
+      |> Enum.reduce(query, fn {fname, op, value}, query ->
+        apply_filter(query, fname, op, value)
+      end)
 
     data = 
-      buckets(model, timestamp, "month") 
+      query 
       |> Repo.all()
       |> Enum.map(&bucket_fmt/1)
 
