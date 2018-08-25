@@ -1,18 +1,5 @@
 <template>
   <div class="card">
-    <!--
-      Spread out evenly accross the top
-      -->
-    <!-- <SearchParameterBreadcrumbBar
-      area-specified
-      start-date="foo"
-      end-date="bar"
-      granularity="day" /> -->
-
-    <!--
-      Plot results of aggregate query
-      -->
-
     <!-- rely on built in bootstrap active/inactive state -->
     <ul class="nav nav-fill">
       <li class="nav-item">
@@ -46,17 +33,16 @@
     <table class="table table-hover p-bottom-0">
       <thead>
         <tr>
-          <th scope="col"></th>
+          <th scope="col">Display</th>
           <th scope="col">Dataset Name</th>
           <th scope="col">Result Count</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="datasetSlug in selectedDatasetSlugs" v-bind:key="datasetSlug">
-          <th scope="row">Toggle</th>
-          <td>{{ datasetSlug }}</td>
-          <td>>9000</td>
-        </tr>
+        <DataSetRow 
+          v-for="datasetSlug in selectedDatasetSlugs" 
+          :key="datasetSlug"
+          :slug="datasetSlug" />
       </tbody>
     </table>
   </div>
@@ -68,11 +54,13 @@ import 'chartist/dist/chartist.css';
 import SearchParameterBreadcrumbBar
   from '../components/SearchParameterBreadcrumbBar.vue';
 import LMap from '../components/LMap.vue';
+import DataSetRow from '../components/DataSetRow.vue';
 
 export default {
   components: {
     LMap,
     SearchParameterBreadcrumbBar,
+    DataSetRow,
   },
   data: () => ({
     chartData: {
@@ -115,7 +103,16 @@ export default {
      * is filtered by selections made in the search widget.
      */
     selectedDatasetSlugs: function () {
-      return this.$route.query['data-sets'];
+      var datasets = this.$route.query['data-sets'];
+
+      // When a single dataset argument is provided, we receive it as a string.
+      // Iterating over the string will generate a table element for every
+      // character.
+      if (typeof(datasets) == 'object') {
+        return datasets;
+      } else {
+        return [datasets];
+      }
     },
   },
 

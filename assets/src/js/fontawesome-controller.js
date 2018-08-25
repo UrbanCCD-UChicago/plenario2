@@ -13,6 +13,8 @@ import {
   faQuestionCircle,
   faSignOutAlt,
   faSearch,
+  faToggleOff,
+  faToggleOn,
   faUndo,
 } from '@fortawesome/free-solid-svg-icons';
 import {
@@ -40,6 +42,8 @@ library.add(
   faSquareO,
   faUndo,
   faGithub,
+  faToggleOff,
+  faToggleOn,
 );
 
 export default {
