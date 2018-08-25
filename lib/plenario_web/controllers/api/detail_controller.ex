@@ -57,9 +57,49 @@ defmodule PlenarioWeb.Api.DetailController do
     render_detail(conn, "describe.json", [meta])
   end
 
+  # We need to halt if the meta is not found
+  # We need to halt if the meta is not ready
+  # Are we able to paginate?
+  # We need to apply filters
   def aggregate(conn, %{"slug" => slug}) do
-    validate_slug_get_meta(slug)
-    |> render_data_set_aggregate(conn, "get.json")
+    meta = validate_slug_get_meta(slug)
+    model = ModelRegistry.lookup(meta.slug)
+
+    page = conn.assigns[:page]
+    page_size = conn.assigns[:page_size]
+    timestamp = conn.assigns[:group_by]
+
+    data = 
+      buckets(model, timestamp, 3600) 
+      |> Repo.all()
+      |> Enum.map(&bucket_fmt/1)
+
+    Phoenix.Controller.render(conn, "get.json", data: data)
+  end
+
+  @doc """
+  Executing this query returns a list of tuples. The first element of the 
+  tuple is the count for a time bucket. The second element of the tuple is 
+  the time bucket.
+  """
+  def buckets(model, timestamp, interval) do
+    from m in model,
+      select: {
+        count(m.row_id), 
+        fragment("to_timestamp(floor(extract('epoch' from ?) / ?) * ?) as interval", 
+          field(m, ^timestamp), ^interval, ^interval)},
+      group_by: fragment("interval"),
+      order_by: fragment("interval")
+  end
+
+  @doc """
+  Used to create a map from the output of a bucketing query.
+  """
+  def bucket_fmt({count, {{y, m, d}, {hh, mm, ss, _}}}) do
+    %{
+      count: count,
+      bucket: NaiveDateTime.from_erl!({{y, m, d}, {hh, mm, ss}})
+    }
   end
 
   defp render_data_set(%Meta{state: "ready"} = meta, conn, view) do
@@ -97,35 +137,4 @@ defmodule PlenarioWeb.Api.DetailController do
   end
 
   defp render_data_set(_, conn, _), do: halt_with(conn, :not_found)
-
-  defp render_data_set_aggregate(%Meta{state: "ready"} = meta, conn, view) do
-    model = ModelRegistry.lookup(meta.slug)
-
-
-    IO.inspect(conn.assigns, pretty: true)
-    page = conn.assigns[:page]
-    page_size = conn.assigns[:page_size]
-    group_by_field = conn.assigns[:group_by]
-
-    # order ∈ {:asc, :desc}
-    {order, order_by} = conn.assigns[:order_by]
-
-    # query =
-    #   conn.assigns[:filters]
-    #   |> Enum.reduce(fn {field, operation, value}, query ->
-    #     apply_filter(query, field, operation, value)
-    #   end)
-
-    # try do
-      # data = Repo.paginate(query, page: page, page_size: page_size)
-      data = from(model) |> group_by([p], fragment("date_part('month', ?)", field(p, ^group_by_field))) |> select([p], count("*")) |> Repo.all
-      IO.inspect(data, pretty: true)
-      render_detail(conn, view, data)
-    # rescue
-    #   e in [Ecto.QueryError, Ecto.SubQueryError, Postgrex.Error] ->
-    #     halt_with(conn, :bad_request, e.message)
-    # end
-  end
-
-  defp render_data_set_aggregate(_, conn, _), do: halt_with(conn, :not_found)
 end
