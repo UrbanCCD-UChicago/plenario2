@@ -54,13 +54,14 @@ export default {
     var endDateDefault = new Date();
     var startDateDefault = new Date()
       .setDate(endDateDefault.getDate() - 90);
+    startDateDefault = new Date(startDateDefault);
 
     return {
       startDate: this.$route.query.startDate ?
-        this.$route.query.startDate :
+        new Date(this.$route.query.startDate) :
         startDateDefault,
       endDate: this.$route.query.endDate ?
-        this.$route.query.endDate :
+        new Date(this.$route.query.endDate) :
         endDateDefault,
       granularity: this.$route.query.granularity ?
         this.$route.query.granularity : 
@@ -92,8 +93,8 @@ export default {
      */
     updateUrl() {
       var query = Object.assign({}, this.$route.query, {
-        startDate: this.startDate,
-        endDate: this.endDate,
+        startDate: this.startDate.toISOString().slice(0, -5),
+        endDate: this.endDate.toISOString().slice(0, -5),
         granularity: this.granularity
       });
 

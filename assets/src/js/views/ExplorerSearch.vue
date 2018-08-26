@@ -23,9 +23,21 @@ export default {
     port() { return this.$store.state.port; },
     ssl() { return this.$store.state.ssl; },
     datasets() { return this.$store.state.datasets; },
-    endpoint() {
-      const protocol = this.ssl ? 'https' : 'http';
-      return `${protocol}://${this.host}:${this.port}/api/v2/data-sets`;
+    endpoint() { 
+      var result = `${this.$store.getters.metaEndpoint}`
+        + `?time_range=intersects:{`
+        +   `"lower": "${this.$route.query.startDate}",`
+        +   `"upper": "${this.$route.query.endDate}",`
+        +   `"upper_inclusive": false`
+        + `}`;
+      
+      if (this.$route.query.geojson) {
+        return result + `&bbox=${this.$route.query.geojson}`;
+      } 
+      
+      else {
+        return result;
+      }
     },
   },
   methods: {
@@ -33,6 +45,7 @@ export default {
       // TODO: actually use form data
       const datasets = await fetch(this.endpoint)
         .then(response => response.json())
+        .catch(error => console.error(error))
         .then(json => json.data);
       this.$store.commit('setDatasets', datasets);
     },

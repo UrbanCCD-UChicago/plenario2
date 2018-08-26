@@ -27,6 +27,18 @@ export default new Vuex.Store({
     selectedDatasetSlugs: [],
   },
 
+  getters: {
+    metaEndpoint: (state) => {
+      const protocol = state.ssl ? 'https' : 'http';
+      return `${protocol}://${state.host}:${state.port}/api/v2/data-sets`;
+    },
+
+    aggregateEndpoint: (state) => {
+      const protocol = state.ssl ? 'https' : 'http';
+      return `${protocol}://${state.host}:${state.port}/api/v2/aggregate`;
+    },
+  },
+
   mutations: {
 
     /**
