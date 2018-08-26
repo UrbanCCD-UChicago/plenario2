@@ -75,18 +75,35 @@ export default {
    * shared references were not enough.
    */
   updated() {
-    var query = Object.assign({}, this.$route.query, {
-      startDate: this.startDate,
-      endDate: this.endDate,
-      granularity: this.granularity
-    });
+    this.updateUrl();
+  },
 
-    var clone = JSON.parse(JSON.stringify(query));
+  /**
+   * 
+   */
+  mounted() {
+    this.updateUrl();
+  },
 
-    this.$router.replace({
-      name: 'search', 
-      query: clone,
-    });
+  methods: {
+
+    /**
+     * 
+     */
+    updateUrl() {
+      var query = Object.assign({}, this.$route.query, {
+        startDate: this.startDate,
+        endDate: this.endDate,
+        granularity: this.granularity
+      });
+
+      var clone = JSON.parse(JSON.stringify(query));
+
+      this.$router.replace({
+        name: 'search', 
+        query: clone,
+      });
+    }
   },
 
   components: {

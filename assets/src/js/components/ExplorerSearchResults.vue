@@ -111,6 +111,7 @@ export default {
     },
   },
   methods: {
+
     /**
      * Adds a dataset id to the `selected` array. If the id is already in the
      * array, remove it.
@@ -128,11 +129,15 @@ export default {
      * 
      */
     toCompare() {
+      var query = Object.assign({}, this.$route.query, {
+        'data-sets': this.selected,
+      });
+
+      var clone = JSON.parse(JSON.stringify(query));
+
       this.$router.push({
-        path: '/compare',
-        query: {
-          'data-sets': this.selected
-        }
+        name: 'compare',
+        query: clone,
       })
     },
   },

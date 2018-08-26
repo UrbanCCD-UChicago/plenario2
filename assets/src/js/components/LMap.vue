@@ -20,9 +20,13 @@ export default {
   props: {
     drawTools: { type: Boolean, default: false },
   },
-  data: () => ({
-    drawnItems: null,
-  }),
+
+  data: function () {
+    return {
+      drawnItems: null,
+      geojson: this.$route.query.geojson,
+    }
+  },
   mounted() {
     const map = L.map(this.$el).setView([41.8781, -87.6298], 13);
 
@@ -35,14 +39,38 @@ export default {
         edit: { featureGroup: this.drawnItems },
       }).addTo(map);
       map.on('draw:created', this.onDraw);
+
+      this.drawnItems.clearLayers();
+
+      if (this.geojson) {
+        L.geoJSON(JSON.parse(this.geojson)).addTo(this.drawnItems);
+      }
     }
+  },
+
+  updated: function() {
+    console.log(this.geojson);
+    this.drawnItems.clearLayers();
+    L.geoJSON(this.geojson).addTo(this.drawnItems);
   },
 
   methods: {
     onDraw(event) {
       this.drawnItems.clearLayers();
       this.drawnItems.addLayer(event.layer);
-    },
+
+      var query = Object.assign({}, this.$route.query, {
+        geojson: JSON.stringify(event.layer.toGeoJSON())
+      });
+
+
+      var clone = JSON.parse(JSON.stringify(query));
+
+      this.$router.replace({
+        name: 'search', 
+        query: clone,
+      });
+    }
   },
 };
 </script>
