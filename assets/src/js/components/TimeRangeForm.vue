@@ -79,9 +79,6 @@ export default {
     this.updateUrl();
   },
 
-  /**
-   * 
-   */
   mounted() {
     this.updateUrl();
   },
@@ -89,7 +86,11 @@ export default {
   methods: {
 
     /**
+     * Updates the url query values with the current data in our
+     * time range form.
      * 
+     * TODO: Note how we have to slice off the milliseconds from our strings?
+     *    The backend cannot parse timestamps if we include them for some reason.
      */
     updateUrl() {
       var query = Object.assign({}, this.$route.query, {

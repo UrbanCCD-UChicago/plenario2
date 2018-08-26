@@ -32,7 +32,11 @@ export default {
         + `}`;
       
       if (this.$route.query.geojson) {
-        return result + `&bbox=${this.$route.query.geojson}`;
+        // We have to do this because the backend only accepts a polygon...
+        var geojson = JSON.parse(this.$route.query.geojson);
+        var geometry = geojson.geometry;
+        geometry.srid = 4326;
+        return result + `&bbox=intersects:${JSON.stringify(geometry)}`;
       } 
       
       else {

@@ -269,12 +269,15 @@ defmodule PlenarioWeb.Api.Plugs do
               rescue
                 _ ->
                   try do
-                    Poison.decode!(value)
+                    # todo
+                    # Why can't the SRID be decoded here?
+                    geom = Poison.decode!(value)
                     |> Geo.JSON.decode()
-                  rescue
-                    _ ->
-                      :error
-                  end
+                    %{geom | srid: 4326}
+                    rescue
+                      _ ->
+                        :error
+                    end
               end
 
             case value do

@@ -14,6 +14,7 @@ const enabledDrawTools = {
   marker:       false,
   circlemarker: false,
   polyline:     false,
+  circle:       false,
 };
 
 export default {
