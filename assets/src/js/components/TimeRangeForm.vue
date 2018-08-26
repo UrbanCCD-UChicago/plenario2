@@ -3,30 +3,25 @@
     <div class="form-group form-row">
       <label class="col-sm-1 col-lg-2 col-form-label" for="starting_on">Start</label>
       <datepicker required bootstrap-styling
-        @input="setStartDate" 
         class="col" 
         input-class="bg-white"
-        :value="startDate">
-      </datepicker>
+        v-model="startDate" />
     </div>
     <div class="form-group form-row">
       <label class="col-sm-1 col-lg-2 col-form-label" for="ending_on">End</label>
       <datepicker required bootstrap-styling
-        @input="setEndDate" 
         class="col" 
         input-class="bg-white" 
-        :value="endDate">
-      </datepicker>
+        v-model="endDate" />
     </div>
     <div class="form-group form-row">
       <label for="granularity" class="col-sm-2 col-sm-4 col-form-label">Granularity</label>
       <div class="col">
         <select required 
-          @click="setGranularity" 
           id="granularity" 
           name="granularity" 
           class="custom-select"
-          :value="granularity">
+          v-model="granularity">
           <option value="day">Day</option>
           <option value="week">Week</option>
           <option value="month">Month</option>
@@ -55,32 +50,43 @@ import Datepicker from 'vuejs-datepicker';
 export default {
   name: 'TimeRangeForm',
 
-  computed: {
-    startDate: function() {
-      return this.$store.state.query.startDate;
-    },
+  data: function () {
+    var endDateDefault = new Date();
+    var startDateDefault = new Date()
+      .setDate(endDateDefault.getDate() - 90);
 
-    endDate: function() {
-      return this.$store.state.query.endDate;
-    },
-
-    granularity: function() {
-      return this.$store.state.query.granularity;
-    },
+    return {
+      startDate: this.$route.query.startDate ?
+        this.$route.query.startDate :
+        startDateDefault,
+      endDate: this.$route.query.endDate ?
+        this.$route.query.endDate :
+        endDateDefault,
+      granularity: this.$route.query.granularity ?
+        this.$route.query.granularity : 
+        'month',
+    };
   },
 
-  methods: {
-    setStartDate (startDate) {
-      this.$store.commit('setQuery', { startDate });
-    },
+  /**
+   * The cloning here occurs because of the way the vue router
+   * seems to track changes. It would not update the url parameters
+   * unless the object itself was different. Shallow copies with
+   * shared references were not enough.
+   */
+  updated() {
+    var query = Object.assign({}, this.$route.query, {
+      startDate: this.startDate,
+      endDate: this.endDate,
+      granularity: this.granularity
+    });
 
-    setEndDate (endDate) {
-      this.$store.commit('setQuery', { endDate });
-    },
+    var clone = JSON.parse(JSON.stringify(query));
 
-    setGranularity (event) {
-      this.$store.commit('setQuery', { granularity: event.target.value });
-    },
+    this.$router.replace({
+      name: 'search', 
+      query: clone,
+    });
   },
 
   components: {
