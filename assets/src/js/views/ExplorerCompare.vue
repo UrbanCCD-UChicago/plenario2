@@ -35,6 +35,7 @@
         <tr>
           <th scope="col">Display</th>
           <th scope="col">Dataset Name</th>
+          <th scope="col">Aggregate By</th>
           <th scope="col">Result Count</th>
         </tr>
       </thead>
@@ -42,7 +43,8 @@
         <DataSetRow 
           v-for="datasetSlug in selectedDatasetSlugs" 
           :key="datasetSlug"
-          :slug="datasetSlug" />
+          :slug="datasetSlug" 
+          :chart="chart" />
       </tbody>
     </table>
   </div>
