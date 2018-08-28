@@ -1,3 +1,4 @@
+import createPersistedState from 'vuex-persistedstate';
 import Vue from 'vue';
 import Vuex from 'vuex';
 
@@ -75,4 +76,8 @@ export default new Vuex.Store({
       Vue.set(state, 'selectedDatasetSlugs', slugs);
     },
   },
+
+  plugins: [
+    createPersistedState(),
+  ],
 });

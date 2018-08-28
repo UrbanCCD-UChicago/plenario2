@@ -40,14 +40,8 @@
 </template>
 
 <script>
-// 1) Issue detail query
-// 2) Store detail query
-// 3) Plot detail query
-
-// Truncate plot to 100 rows
-// Link dataset slug to dataset detail page
-
 import { SelfBuildingSquareSpinner } from 'epic-spinners'
+import Chartist from 'chartist';
 
 export default {
   data() {
@@ -57,6 +51,7 @@ export default {
       count: 0,
       currentTimestampColumn: null,
       aggregates: null,
+      points: null
     };
   },
 
@@ -97,12 +92,21 @@ export default {
       });
     },
 
-    endpoint() {
+    // Make use of geom filter
+    aggregateEndpoint() {
       return `${this.$store.getters.metaEndpoint}/${this.slug}/@aggregate?`
         + `group_by=${this.currentTimestampColumn}&`
         + `granularity=${this.granularity}&`
         + `${this.currentTimestampColumn}=ge:${this.startDate}&`
         + `${this.currentTimestampColumn}=le:${this.endDate}`;
+    },
+
+    // Make use of geom filter
+    detailEndpoint() {
+      return `${this.$store.getters.metaEndpoint}/${this.slug}/?`
+        + `format=geojson&`
+        + `${this.currentTimestampColumn}=ge:${this.startDate}&`
+        + `${this.currentTimestampColumn}=le:${this.endDate}&`;
     },
   },
 
@@ -119,35 +123,57 @@ export default {
       type: Object,
       required: true,
     },
+
+    /**
+     * A reference to the leaflet map to plot over.
+     */
+    lmap: {
+      type: Object,
+      required: true
+    }
   },
 
-  components: {
-    SelfBuildingSquareSpinner
-  },
+  components: {SelfBuildingSquareSpinner},
 
   methods: {
     runQueries: async function() {
       this.loaded = false;
       this.active = false;
 
-      const data = await fetch(this.endpoint)
+      this.aggregates = await fetch(this.aggregateEndpoint)
         .then(response => response.json())
         .catch(error => console.error(error))
         .then(json => json.data);
 
-      this.aggregates = data;
+      this.points = await fetch(this.detailEndpoint)
+        .then(response => response.json())
+        .catch(error => console.error(error))
+        .then(json => json.data);
       
-      this.count = 0;
-
-      for (var bucket of data) {
-        this.count += bucket.count;
-      }
+      this.count = this.aggregates.reduce((acc, bucket) => {
+        return acc + bucket.count;
+      }, 0);
 
       this.loaded = true;
     },
 
+    plotAggregates: function() {
+      let labels = this.aggregates.map(o => o.bucket);
+      let series = [this.aggregates.map(o => o.count)];
+
+      this.chart = new Chartist.Line('#chart', {labels, series});
+    },
+
+    plotPoints: function() {
+      let layer = L.geoJSON();
+      this.points.map(point => layer.addData(point));
+      layer.addTo(this.lmap);
+    },
+
     activate: function() {
       this.active = true;
+      this.plotAggregates();
+      this.plotPoints();
     },
 
     deactivate: function() {

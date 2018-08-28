@@ -3,13 +3,13 @@
     <!-- rely on built in bootstrap active/inactive state -->
     <ul class="nav nav-fill">
       <li class="nav-item">
-        <a :class="mapIsActive ? activeClasses : inactiveClasses" @click="selectMap">
+        <a class="{ nav-link: true, active: mapIsActive }" @click="selectMap">
           <FontAwesomeIcon icon="map" />
           Map
         </a>
       </li>
       <li class="nav-item">
-        <a :class="mapIsActive ? inactiveClasses : activeClasses" @click="selectChart">
+        <a class="nav-link" @click="selectChart">
           <FontAwesomeIcon icon="chart-line" />
           Charts
         </a>
@@ -50,51 +50,38 @@
   </div>
 </template>
 
+<style lang="scss" scoped>
+@import "~bootstrap/scss/functions";
+@import "~bootstrap/scss/variables";
+@import "~bootstrap/scss/bootstrap";
+
+/* stylelint-disable scss/at-extend-no-missing-placeholder */
+
+.nav-link {
+  @extend .text-primary;
+  @extend .py-2;
+}
+
+.nav-link.active {
+  @extend .bg-primary;
+  @extend .text-white;
+  @extend .font-weight-bold;
+}
+</style>
+
 <script>
 import Chartist from 'chartist';
 import 'chartist/dist/chartist.css';
-import SearchParameterBreadcrumbBar
-  from '../components/SearchParameterBreadcrumbBar.vue';
 import LMap from '../components/LMap.vue';
 import DataSetRow from '../components/DataSetRow.vue';
 
 export default {
-  components: {
-    LMap,
-    SearchParameterBreadcrumbBar,
-    DataSetRow,
-  },
-  data: () => ({
-    chartData: {
-      labels: ['A', 'B', 'C'],
-      series: [[1, 3, 2], [4, 6, 5]],
-    },
-    chartOptions: {
-      lineSmooth: false,
-    },
-    chart: undefined,
+  components: {LMap, DataSetRow},
 
+  data: function () {
+    return {
     mapIsActive: true,
-
-    activeClasses: {
-      'nav-link': true,
-      'py-2': true,
-      'active': true,
-      'bg-primary': true,
-      'text-white': true,
-      'font-weight-bold': true,
-    },
-
-    inactiveClasses: {
-      'nav-link': true,
-      'py-2': true,
-      'text-primary': true
-    },
-  }),
-
-  updated() {
-    if (!this.mapIsActive) {
-      this.chart = new Chartist.Line('#chart', this.chartData);
+      chart: new Chartist.Line('#chart', this.chartData),
     }
   },
 
