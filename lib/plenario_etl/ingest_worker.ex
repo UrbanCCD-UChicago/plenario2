@@ -5,6 +5,7 @@ defmodule PlenarioEtl.IngestWorker do
 
   require Logger
 
+  alias Briefly
   alias Plenario.Actions.MetaActions
 
   # init
@@ -96,9 +97,13 @@ defmodule PlenarioEtl.IngestWorker do
 
   # helpers
 
-  defp get_download_path(meta), do: "/tmp/#{meta.slug}.DOWNLOAD"
+  defp get_download_path(meta) do
+    Briefly.create!(prefix: "#{meta.slug}", extname: "DOWNLOAD")
+  end
 
-  defp get_sentinel_path(meta), do: "/tmp/#{meta.slug}.DONE"
+  defp get_sentinel_path(meta) do
+    Briefly.create!(prefix: "#{meta.slug}", extname: "DONE")
+  end
 
   defp ensure_clean_paths(d, s) do
     if File.exists?(d), do: File.rm!(d)
