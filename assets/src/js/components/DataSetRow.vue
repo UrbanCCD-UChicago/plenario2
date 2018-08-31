@@ -51,7 +51,8 @@ export default {
       count: 0,
       currentTimestampColumn: null,
       aggregates: null,
-      points: null
+      points: null,
+      features: new L.FeatureGroup()
     };
   },
 
@@ -108,6 +109,10 @@ export default {
         + `${this.currentTimestampColumn}=ge:${this.startDate}&`
         + `${this.currentTimestampColumn}=le:${this.endDate}&`;
     },
+
+    lmap: function () {
+      return this.$store.state.compareMap;
+    }
   },
 
   props: {
@@ -129,7 +134,6 @@ export default {
      */
     lmap: {
       type: Object,
-      required: true
     }
   },
 
@@ -165,9 +169,17 @@ export default {
     },
 
     plotPoints: function() {
-      let layer = L.geoJSON();
-      this.points.map(point => layer.addData(point));
-      layer.addTo(this.lmap);
+      let r = Math.floor(Math.random() * 255);
+      let g = Math.floor(Math.random() * 255);
+      let b = Math.floor(Math.random() * 255);
+      let color = "rgb("+r+" ,"+g+","+ b+")"; 
+
+      this.points.map((point) => {
+        let latitude = point.geometry.coordinates[0];
+        let longitude = point.geometry.coordinates[1];
+        L.circle([longitude, latitude], {color: color, radius: 15}).addTo(this.features);
+      });
+      this.features.addTo(this.lmap);
     },
 
     activate: function() {
@@ -178,6 +190,7 @@ export default {
 
     deactivate: function() {
       this.active = false;
+      this.features.clearLayers();
     }
   },
 

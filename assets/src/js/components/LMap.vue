@@ -35,10 +35,16 @@ export default {
     }
   },
 
+  /**
+   * Called after the instance has been mounted, where el is replaced by the 
+   * newly created vm.$el. If the root instance is mounted to an in-document 
+   * element, vm.$el will also be in-document when mounted is called.
+   */
   mounted() {
     this.initMap();
     this.possiblyInitDrawTools();
-    this.draw(L.geoJSON(JSON.parse(this.geojson)));
+    this.possiblyDrawUrlGeojson();
+    this.$store.commit('setCompareMap', this.lmap);
   },
 
   methods: {
@@ -59,6 +65,16 @@ export default {
         this.drawableFeatureGroup = new L.FeatureGroup().addTo(this.lmap);
         new L.Control.Draw(drawOptions).addTo(this.lmap);
         this.lmap.on('draw:created', this.onDraw);
+      }
+    },
+
+    /**
+     * Conditionally display existing geojson if there was something specified
+     * in the url.
+     */
+    possiblyDrawUrlGeojson() {
+      if (this.geojson) {
+        this.draw(L.geoJSON(JSON.parse(this.geojson)));
       }
     },
 

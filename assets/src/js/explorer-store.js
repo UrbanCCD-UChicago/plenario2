@@ -26,6 +26,7 @@ export default new Vuex.Store({
     port:     4000,
     ssl:      false,
     selectedDatasetSlugs: [],
+    compareMap: null
   },
 
   getters: {
@@ -74,6 +75,11 @@ export default new Vuex.Store({
      */
     setSelectedDatasets(state, slugs) {
       Vue.set(state, 'selectedDatasetSlugs', slugs);
+    },
+
+    setCompareMap(state, map) {
+      console.log('setCompareMap!');
+      Vue.set(state, 'compareMap', map);
     },
   },
 

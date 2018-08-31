@@ -19,7 +19,7 @@
     <!-- rely on built in bootstrap active/inactive state -->
     <div v-show="mapIsActive" class="row no-gutters" >
       <div class="col-lg ct-octave" >
-        <LMap />
+        <LMap v-on:lmapMounted="onLmapMounted" />
       </div>
     </div>
 
@@ -43,6 +43,7 @@
         <DataSetRow 
           v-for="datasetSlug in selectedDatasetSlugs" 
           :key="datasetSlug"
+          :lmap="lmap"
           :slug="datasetSlug" 
           :chart="chart" />
       </tbody>
@@ -56,6 +57,13 @@
 @import "~bootstrap/scss/bootstrap";
 
 /* stylelint-disable scss/at-extend-no-missing-placeholder */
+
+// This is not applying for some reason
+.ct-label.ct-horizontal.ct-end { 
+  position: relative; 
+  transform: rotate(45deg); 
+  transform-origin: left top; 
+}
 
 .nav-link {
   @extend .text-primary;
@@ -80,8 +88,9 @@ export default {
 
   data: function () {
     return {
-    mapIsActive: true,
+      mapIsActive: true,
       chart: new Chartist.Line('#chart', this.chartData),
+      lmap: null,
     }
   },
 
@@ -113,6 +122,10 @@ export default {
     selectChart: function () {
       this.mapIsActive = false;
     }, 
-  }
+
+    onLmapMounted: function (lmap) {
+      this.lmap = lmap;
+    },
+  },
 };
 </script>
