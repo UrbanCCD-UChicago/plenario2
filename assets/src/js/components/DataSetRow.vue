@@ -162,10 +162,21 @@ export default {
     },
 
     plotAggregates: function() {
-      let labels = this.aggregates.map(o => o.bucket);
-      let series = [this.aggregates.map(o => o.count)];
+      let data = this.aggregates.map((row) => {
+        return {x: Date.parse(row.bucket), y: row.count};
+      });
 
-      this.chart = new Chartist.Line('#chart', {labels, series});
+      this.chart = new Chartist.Line('#chart', {series: [
+        {name: 'foo', data: data}
+      ]}, {
+        axisX: {
+          type: Chartist.FixedScaleAxis,
+          divisor: 10,
+          labelInterpolationFnc: (value) => {
+            return new Date(value).toISOString();
+          },
+        }
+      });
     },
 
     plotPoints: function() {
