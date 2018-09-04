@@ -161,22 +161,37 @@ export default {
       this.loaded = true;
     },
 
+    /**
+     * todo(heyzoos) refactor this or die of shame
+     */
     plotAggregates: function() {
-      let data = this.aggregates.map((row) => {
-        return {x: Date.parse(row.bucket), y: row.count};
-      });
+      let data = {
+        name: this.slug, 
+        data: this.aggregates.map((row) => {
+          return {x: Date.parse(row.bucket), y: row.count};
+        }),
+      };
 
-      this.chart = new Chartist.Line('#chart', {series: [
-        {name: 'foo', data: data}
-      ]}, {
+      let series = this.chart.data.series;
+      series.push(data);
+
+      this.chart = new Chartist.Line('#chart', {series}, {
         axisX: {
           type: Chartist.FixedScaleAxis,
-          divisor: 10,
+          divisor: 5,
           labelInterpolationFnc: (value) => {
             return new Date(value).toISOString();
           },
         }
       });
+    },
+
+    unplotAggregates() {
+      let series = this.chart.data.series;
+      let existingData = series.find(o => o.name == this.slug);
+      let index = series.indexOf(existingData);
+      series.splice(index, 1);
+      this.chart.update({series});
     },
 
     plotPoints: function() {
@@ -202,6 +217,7 @@ export default {
     deactivate: function() {
       this.active = false;
       this.features.clearLayers();
+      this.unplotAggregates();
     }
   },
 
