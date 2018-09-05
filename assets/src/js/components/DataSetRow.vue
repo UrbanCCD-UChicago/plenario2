@@ -7,8 +7,12 @@
         :size="20"
         color="#ff1d5e"
       />
-      <FontAwesomeIcon @click="activate" v-else-if="!active" icon="toggle-off" />
-      <FontAwesomeIcon @click="deactivate" v-else icon="toggle-on" />
+      <button class="btn btn-outline-primary border-0" @click="activate" v-else-if="!active">
+        <FontAwesomeIcon icon="toggle-off" />
+      </button>
+      <button class="btn btn-outline-primary border-0" @click="deactivate" v-else>
+        <FontAwesomeIcon icon="toggle-on" />
+      </button>
     </th>
     <td>{{ slug }}</td>
     <td>

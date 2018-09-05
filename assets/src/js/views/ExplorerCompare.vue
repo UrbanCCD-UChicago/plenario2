@@ -2,18 +2,14 @@
   <div class="card">
     <!-- rely on built in bootstrap active/inactive state -->
     <ul class="nav nav-fill">
-      <li class="nav-item">
-        <a class="{ nav-link: true, active: mapIsActive }" @click="selectMap">
-          <FontAwesomeIcon icon="map" />
-          Map
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" @click="selectChart">
-          <FontAwesomeIcon icon="chart-line" />
-          Charts
-        </a>
-      </li>
+      <button class="nav-item btn btn-outline-primary border-0 m-1" @click="selectMap">
+        <FontAwesomeIcon icon="map" />
+        Map
+      </button>
+      <button class="nav-item btn btn-outline-primary border-0 m-1" @click="selectChart">
+        <FontAwesomeIcon icon="chart-line" />
+        Charts
+      </button>
     </ul>
 
     <!-- rely on built in bootstrap active/inactive state -->
@@ -51,31 +47,6 @@
   </div>
 </template>
 
-<style lang="scss" scoped>
-@import "~bootstrap/scss/functions";
-@import "~bootstrap/scss/variables";
-@import "~bootstrap/scss/bootstrap";
-
-/* stylelint-disable scss/at-extend-no-missing-placeholder */
-
-// This is not applying for some reason
-.ct-label.ct-horizontal.ct-end { 
-  position: relative; 
-  transform: rotate(45deg); 
-  transform-origin: left top; 
-}
-
-.nav-link {
-  @extend .text-primary;
-  @extend .py-2;
-}
-
-.nav-link.active {
-  @extend .bg-primary;
-  @extend .text-white;
-  @extend .font-weight-bold;
-}
-</style>
 
 <script>
 import Chartist from 'chartist';
