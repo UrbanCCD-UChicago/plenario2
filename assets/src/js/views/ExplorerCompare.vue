@@ -88,10 +88,28 @@ export default {
   methods: {
     selectMap: function () {
       this.mapIsActive = true;
+
+      // todo(heyzoos) Find a better solution to this bug and its sibling.
+      //
+      // This is a janky solution to a bug. The map just stops updating when
+      // you plot data while the map is hidden. 
+      //
+      // Provide 1000 as the second argument to `setTimeout` to see the bug in
+      // action.
+      setTimeout(() => { window.dispatchEvent(new Event('resize')) });
     },
 
     selectChart: function () {
       this.mapIsActive = false;
+
+      // This is a janky solution to a bug. The charts are confined to a 1x1 
+      // pixel space when you plot data while the chart is hidden. After you
+      // unhide the chart, the data stays in that 1x1 pixel space until a
+      // resize event.
+      //
+      // Provide 1000 as the second argument to `setTimeout` to see the bug in
+      // action.
+      setTimeout(() => { window.dispatchEvent(new Event('resize')) });
     }, 
 
     onLmapMounted: function (lmap) {
