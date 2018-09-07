@@ -32,7 +32,8 @@
           <th scope="col">Display</th>
           <th scope="col">Dataset Name</th>
           <th scope="col">Aggregate By</th>
-          <th scope="col">Result Count</th>
+          <th scope="col">Query Result Count</th>
+          <th scope="col">Download Source</th>
         </tr>
       </thead>
       <tbody>

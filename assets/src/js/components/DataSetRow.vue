@@ -44,6 +44,11 @@
       />
       <div v-else>{{ count }} rows</div>
     </td>
+    <td>
+      <a :href="source" class="btn btn-outline-primary border-0">
+        <FontAwesomeIcon icon="download" />
+      </a>
+    </td>
   </tr>
 </template>
 
@@ -142,7 +147,11 @@ export default {
 
     meta() {
       return this.$store.state.datasets.find(dset => dset.slug == this.slug);
-    }
+    },
+    
+    source() {
+      return this.meta.source_url;
+    },
   },
 
   props: {
