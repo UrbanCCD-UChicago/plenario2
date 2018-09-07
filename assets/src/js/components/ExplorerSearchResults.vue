@@ -39,7 +39,7 @@
         <div id="searchResults">
           <div class="row">
             <div class="col-12">
-              <table class="table table-sm mb-0">
+              <table class="table table-hover table-sm mb-0">
                 <thead class="thead-light">
                   <th scope="col"></th>
                   <th scope="col">Dataset Name</th>
@@ -93,6 +93,12 @@
     </section>
   </div>
 </template>
+
+<style lang="scss" scoped>
+tr {
+  cursor: pointer;
+}
+</style>
 
 <script>
 export default {

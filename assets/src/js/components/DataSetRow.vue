@@ -155,7 +155,6 @@ export default {
      * A reference to the chart to plot over when activated.
      */
     chart: {
-      type: Object,
       required: true,
     },
 
@@ -163,7 +162,6 @@ export default {
      * A reference to the leaflet map to plot over.
      */
     lmap: {
-      type: Object,
       required: true,
     }
   },

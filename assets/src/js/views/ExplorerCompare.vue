@@ -60,7 +60,7 @@ export default {
   data: function () {
     return {
       mapIsActive: true,
-      chart: new Chartist.Line('#chart', this.chartData),
+      chart: null,
       lmap: null,
     }
   },
@@ -83,6 +83,10 @@ export default {
         return [datasets];
       }
     },
+  },
+
+  mounted: function() {
+    this.chart = new Chartist.Line('#chart');
   },
 
   methods: {
