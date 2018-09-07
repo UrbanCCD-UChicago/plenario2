@@ -1,3 +1,4 @@
+import createPersistedState from 'vuex-persistedstate';
 import Vue from 'vue';
 import Vuex from 'vuex';
 
@@ -24,6 +25,20 @@ export default new Vuex.Store({
     host:     '',
     port:     4000,
     ssl:      false,
+    selectedDatasetSlugs: [],
+    compareMap: null
+  },
+
+  getters: {
+    showEndpoint: (state) => {
+      const protocol = state.ssl ? 'https' : 'http';
+      return `${protocol}://${state.host}:${state.port}/data-sets`;
+    },
+
+    metaEndpoint: (state) => {
+      const protocol = state.ssl ? 'https' : 'http';
+      return `${protocol}://${state.host}:${state.port}/api/v2/data-sets`;
+    },
   },
 
   mutations: {
@@ -59,5 +74,16 @@ export default new Vuex.Store({
 
       Vue.set(state, 'datasets', []);
     },
+
+    /**
+     * Stores a list of dataset slugs for the comparison page to use.
+     */
+    setSelectedDatasets(state, slugs) {
+      Vue.set(state, 'selectedDatasetSlugs', slugs);
+    },
   },
+
+  plugins: [
+    createPersistedState(),
+  ],
 });

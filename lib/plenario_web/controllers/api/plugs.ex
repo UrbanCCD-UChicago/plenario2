@@ -269,12 +269,15 @@ defmodule PlenarioWeb.Api.Plugs do
               rescue
                 _ ->
                   try do
-                    Poison.decode!(value)
+                    # todo
+                    # Why can't the SRID be decoded here?
+                    geom = Poison.decode!(value)
                     |> Geo.JSON.decode()
-                  rescue
-                    _ ->
-                      :error
-                  end
+                    %{geom | srid: 4326}
+                    rescue
+                      _ ->
+                        :error
+                    end
               end
 
             case value do
@@ -368,4 +371,37 @@ defmodule PlenarioWeb.Api.Plugs do
     %Conn{conn | params: Map.put(conn.params, "format", @default_format)}
     |> check_format(nil)
   end
+
+  @doc """
+  Do we need the `_` tho? 
+  """
+  def check_group_by(%Conn{params: %{"group_by" => group_by}} = conn, _) 
+    when is_atom(group_by)
+  do 
+    conn = assign(conn, :group_by, group_by)
+    %{conn | params: Map.delete(conn.params, "group_by")}
+  end
+
+  def check_group_by(%Conn{params: %{"group_by" => group_by}} = conn, _) 
+    when is_bitstring(group_by)
+  do 
+    conn = assign(conn, :group_by, String.to_atom(group_by))
+    %{conn | params: Map.delete(conn.params, "group_by")}
+  end
+
+  def check_group_by(conn, _),
+    do: halt_with(conn, :bad_request, "`group_by` required and must be a string!")
+
+  @doc """
+  Do we need the `_` tho? 
+  """
+  def check_granularity(%Conn{params: %{"granularity" => granularity}} = conn, _) 
+    when is_bitstring(granularity)
+  do 
+    conn = assign(conn, :granularity, granularity)
+    %{conn | params: Map.delete(conn.params, "granularity")}
+  end
+
+  def check_granularity(conn, _),
+    do: halt_with(conn, :bad_request, "`granularity` required and must be a string!")
 end
