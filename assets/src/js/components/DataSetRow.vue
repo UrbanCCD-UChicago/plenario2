@@ -14,7 +14,11 @@
         <FontAwesomeIcon icon="toggle-on" />
       </button>
     </th>
-    <td>{{ slug }}</td>
+    <td>
+      <a :href="showEndpoint" class="btn btn-outline-primary border-0">
+        {{ meta.name }}
+      </a>
+    </td>
     <td>
       <button class="btn btn-sm btn-outline-info dropdown-toggle" 
         type="button" id="dropdownMenu2" 
@@ -86,11 +90,7 @@ export default {
      * objects in the store. 
      */
     timestamps() {
-      let dataset = this.$store.state.datasets.find((dataset) => {
-        return dataset.slug == this.slug;
-      });
-
-      return dataset.fields.filter((field) => {
+      return this.meta.fields.filter((field) => {
         return field.type == "timestamp";
       }).map((field) => {
         return field.name;
@@ -113,6 +113,14 @@ export default {
         + `${this.currentTimestampColumn}=ge:${this.startDate}&`
         + `${this.currentTimestampColumn}=le:${this.endDate}&`;
     },
+
+    showEndpoint() {
+      return `${this.$store.getters.showEndpoint}/${this.slug}`;
+    }, 
+
+    meta() {
+      return this.$store.state.datasets.find(dset => dset.slug == this.slug);
+    }
   },
 
   props: {

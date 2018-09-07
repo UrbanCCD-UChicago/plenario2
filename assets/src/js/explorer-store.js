@@ -30,6 +30,11 @@ export default new Vuex.Store({
   },
 
   getters: {
+    showEndpoint: (state) => {
+      const protocol = state.ssl ? 'https' : 'http';
+      return `${protocol}://${state.host}:${state.port}/data-sets`;
+    },
+
     metaEndpoint: (state) => {
       const protocol = state.ssl ? 'https' : 'http';
       return `${protocol}://${state.host}:${state.port}/api/v2/data-sets`;
