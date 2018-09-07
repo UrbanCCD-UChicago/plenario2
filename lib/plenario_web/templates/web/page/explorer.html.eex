@@ -6,7 +6,7 @@
   <!-- Vue.js application mount point -->
   <div id="app"
     data-api-host="<%= Application.get_env(:plenario, PlenarioWeb.Endpoint)[:url][:host] %>"
-    data-api-port="4000"
-    data-api-ssl="false" >
+    data-api-port="<%= Application.get_env(:plenario, PlenarioWeb.Endpoint)[:http][:port] %>"
+    data-api-ssl="<%= :https in (Application.get_env(:plenario, PlenarioWeb.Endpoint) |> Keyword.keys()) %>"
   </div>
 </div>
