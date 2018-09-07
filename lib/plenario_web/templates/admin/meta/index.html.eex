@@ -39,9 +39,5 @@
       <% end %>
       <% end %>
     </div>
-
-    <div class="col-lg-6">
-      <%= PlenarioWeb.SharedView.render_doughnut(@chart_kvs) %>
-    </div>
   </div>
 </div>
