@@ -44,7 +44,7 @@ export default {
     this.initMap();
     this.possiblyInitDrawTools();
     this.possiblyDrawUrlGeojson();
-    this.$store.commit('setCompareMap', this.lmap);
+    this.emitLmapMountedEvent();
   },
 
   methods: {
@@ -61,8 +61,8 @@ export default {
      * Conditionally display the drawing tools, depends on this.drawTools.
      */
     possiblyInitDrawTools() {
+      this.drawableFeatureGroup = new L.FeatureGroup().addTo(this.lmap);
       if (this.drawTools) {
-        this.drawableFeatureGroup = new L.FeatureGroup().addTo(this.lmap);
         new L.Control.Draw(drawOptions).addTo(this.lmap);
         this.lmap.on('draw:created', this.onDraw);
       }
@@ -101,6 +101,14 @@ export default {
     onDraw(event) {
       this.draw(event.layer);
       this.updateUrl(JSON.stringify(event.layer.toGeoJSON()));
+    },
+
+    /**
+     * Emit an event with a reference to our lmap so that it can be shared and
+     * drawn to by other components.
+     */
+    emitLmapMountedEvent() {
+      this.$emit('lmapMounted', this.lmap);
     },
   },
 };

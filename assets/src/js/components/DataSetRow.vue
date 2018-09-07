@@ -113,10 +113,6 @@ export default {
         + `${this.currentTimestampColumn}=ge:${this.startDate}&`
         + `${this.currentTimestampColumn}=le:${this.endDate}&`;
     },
-
-    lmap: function () {
-      return this.$store.state.compareMap;
-    }
   },
 
   props: {
@@ -138,6 +134,7 @@ export default {
      */
     lmap: {
       type: Object,
+      required: true,
     }
   },
 

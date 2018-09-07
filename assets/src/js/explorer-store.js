@@ -76,11 +76,6 @@ export default new Vuex.Store({
     setSelectedDatasets(state, slugs) {
       Vue.set(state, 'selectedDatasetSlugs', slugs);
     },
-
-    setCompareMap(state, map) {
-      console.log('setCompareMap!');
-      Vue.set(state, 'compareMap', map);
-    },
   },
 
   plugins: [
