@@ -82,7 +82,11 @@ export default {
     },
 
     geojson() {
-      return this.query.geojson;
+      return JSON.stringify(JSON.parse(this.query.geojson).geometry);
+    },
+
+    vpf() {
+      return this.meta.virtual_points[0].name;
     },
 
     /**
@@ -100,18 +104,26 @@ export default {
     // Make use of geom filter
     aggregateEndpoint() {
       return `${this.$store.getters.metaEndpoint}/${this.slug}/@aggregate?`
+        + `${this.currentTimestampColumn}=within:{`
+        +   `"lower": "${this.startDate}",`
+        +   `"upper": "${this.endDate}",`
+        +   `"upper_inclusive": true`
+        + `}&`
         + `group_by=${this.currentTimestampColumn}&`
         + `granularity=${this.granularity}&`
-        + `${this.currentTimestampColumn}=ge:${this.startDate}&`
-        + `${this.currentTimestampColumn}=le:${this.endDate}`;
+        + `${this.vpf}=within:${this.geojson}`;
     },
 
     // Make use of geom filter
     detailEndpoint() {
       return `${this.$store.getters.metaEndpoint}/${this.slug}/?`
+        + `${this.currentTimestampColumn}=within:{`
+        +   `"lower": "${this.startDate}",`
+        +   `"upper": "${this.endDate}",`
+        +   `"upper_inclusive": true`
+        + `}&`
         + `format=geojson&`
-        + `${this.currentTimestampColumn}=ge:${this.startDate}&`
-        + `${this.currentTimestampColumn}=le:${this.endDate}&`;
+        + `${this.vpf}=within:${this.geojson}`;
     },
 
     showEndpoint() {
