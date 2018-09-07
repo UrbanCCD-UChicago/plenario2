@@ -12,8 +12,7 @@ config :plenario, PlenarioWeb.Endpoint,
   code_reloader: true,
   check_origin: false,
   watchers: [
-    npm: [
-      "run",
+    yarn: [
       "watch",
       cd: Path.expand("../assets", __DIR__)
     ]

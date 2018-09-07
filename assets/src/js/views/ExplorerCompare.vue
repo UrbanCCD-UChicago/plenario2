@@ -51,7 +51,7 @@
 
 <script>
 import Chartist from 'chartist';
-import 'chartist/dist/chartist.css';
+import 'chartist/dist/chartist.min.css';
 import LMap from '../components/LMap.vue';
 import DataSetRow from '../components/DataSetRow.vue';
 

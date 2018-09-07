@@ -76,7 +76,7 @@ asdf install
 
 to automatically install the correct versions of all three tools. When
 inside the project directory tree you'll automatically and transparently use the
-correct tool version when calling commands, e.g. `mix` or `npm`.
+correct tool version when calling commands, e.g. `mix`.
 
 #### Manually
 
@@ -85,6 +85,12 @@ managers running like nvm or kerl, you can find our currently employed versions
 of Erlang, Elixir, and Node listed in human-readable format in
 [.tool-versions](.tool-versions). Install them globally or with your version
 managers of choice, and make sure you're using them when working on Plenario.
+
+### Yarn
+
+We use [Yarn](https://yarnpkg.com/en/docs/install) to manage our JavaScript dependencies. While NPM has made great strides in the last few versions to match the "killer features" of Yarn, such a rapid release schedule comes with reliability issues. As such, we still prefer the stability afforded by Yarn.
+
+Please refer to [the Yarn documentation](https://yarnpkg.com/en/docs/install) for installation instructions.
 
 ### Docker and Postgres
 
@@ -129,13 +135,13 @@ docker pull mdillon/postgis
 > Installed dependencies are not tracked in git and will not update
 > automatically when changing branches.
 
-One last step; we need to install the Elixir plugins and NPM modules that
+One last step; we need to install the Elixir plugins and Node modules that
 Plenario depends on. Run the following from the project root:
 
 ```sh
 mix deps.get
 cd assets/
-npm install
+yarn
 ```
 
 You're all set! Read [Running Development Server](#running-development-server)
