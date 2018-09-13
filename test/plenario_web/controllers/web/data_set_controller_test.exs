@@ -168,11 +168,15 @@ defmodule PlenarioWeb.Web.Testing.DataSetControllerTest do
     end
   end
 
-  test "redirects to 404 for invalid ids", %{conn: conn} do
-    conn
-    |> get(data_set_path(conn, :show, "list"))
-    |> html_response(404)
-  end
+  # todo(heyzoos)
+  #
+  # Update this because we accept slugs now.
+  # 
+  # test "redirects to 404 for invalid ids", %{conn: conn} do
+  #   conn
+  #   |> get(data_set_path(conn, :show, "list"))
+  #   |> html_response(404)
+  # end
 
   @tag :auth
   test "request_changes/2", %{conn: conn, meta: meta} do

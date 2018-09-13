@@ -4,9 +4,8 @@
 
 
 // ===== Libraries =====
+// Libraries providing only CSS are imported in the JS entrypoint
 @import "~bootstrap/scss/bootstrap";
-@import "~leaflet/dist/leaflet";
-@import "~leaflet-draw/dist/leaflet.draw";
 @import "~pikaday/scss/pikaday";
 
 
@@ -21,7 +20,6 @@
 
 // ===== Page-specific styles =====
 @import "home";
-@import "docs";
 
 
 // ===== Universal site styles =====
@@ -62,7 +60,8 @@ html, body {
 // Gives the first section of the primary page contents extra padding so its
 // content doesn't render behind the fixed navbar.
 .navbar.fixed-top {
-  & + section, & + main {
+  + section,
+  + main {
     padding-top: $navbar-spacing;
   }
 }
@@ -99,18 +98,24 @@ html, body {
 // Makes a row's gutters very thin, primarily for arranging Bootstrap cards
 // using grid classes with an appropriately tiny spacing.
 .row.hairline-gutters {
-  margin-right: ($grid-gutter-width / -8);
-  margin-left: ($grid-gutter-width / -8);
+  margin-right: ($grid-gutter-width / -16);
+  margin-left: ($grid-gutter-width / -16);
 
   > .col,
   > [class*="col-"] {
-    padding-right: ($grid-gutter-width / 8);
-    padding-left: ($grid-gutter-width / 8);
+    padding-right: ($grid-gutter-width / 16);
+    padding-left: ($grid-gutter-width / 16);
   }
 }
 
 // Makes a particularly small button, for situations where Bootstrap's
 // <a.btn-sm> is not small enough (like table rows).
 .btn-xs {
-  @include button-size($btn-padding-y-sm / 2, $btn-padding-x-sm / 2, $font-size-sm, $btn-line-height-sm, $btn-border-radius-sm);
+  @include button-size(
+      $padding-y: $btn-padding-y-sm / 2,
+      $padding-x: $btn-padding-x-sm / 2,
+      $font-size: $font-size-sm,
+      $line-height: $btn-line-height-sm,
+      $border-radius: $btn-border-radius-sm
+    );
 }

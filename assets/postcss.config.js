@@ -1,12 +1,8 @@
-/* eslint-disable import/no-extraneous-dependencies,global-require */
+/* eslint-disable global-require */
 
 module.exports = {
   plugins: [
     require('postcss-import'),
-    require('postcss-cssnext'),
-    require('postcss-flexbugs-fixes'),
-    require('cssnano')({
-      preset: 'default',
-    }),
+    require('autoprefixer'),
   ],
 };

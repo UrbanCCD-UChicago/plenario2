@@ -14,9 +14,6 @@ defmodule PlenarioWeb.Web.DataSetController do
 
   alias PlenarioWeb.Web.ControllerUtils
 
-  plug Plenario.Plugs.AssertIdIsInteger
-  plug :authorize_resource, model: Meta
-
   def show(conn, %{"id" => id}) do
     meta = MetaActions.get(id, with_user: true, with_fields: true, with_constraints: true)
     do_show(meta, conn)
@@ -28,6 +25,7 @@ defmodule PlenarioWeb.Web.DataSetController do
     virtual_points = VirtualPointFieldActions.list(for_meta: meta, with_fields: true)
     charts = Chart.list_for_meta(meta.id)
     disabled? = meta.state != "new"
+
     user_is_owner? =
       case user do
         nil -> false
@@ -36,7 +34,9 @@ defmodule PlenarioWeb.Web.DataSetController do
 
     points = MetaActions.get_points(meta)
 
-    render(conn, "show.html",
+    render(
+      conn,
+      "show.html",
       meta: meta,
       virtual_dates: virtual_dates,
       virtual_points: virtual_points,
@@ -47,6 +47,12 @@ defmodule PlenarioWeb.Web.DataSetController do
     )
   end
 
+  defp do_show(nil, conn) do
+    conn
+    |> Phoenix.Controller.render(PlenarioWeb.Web.ErrorView, :"404")
+    |> halt()
+  end
+
   def new(conn, _) do
     changeset = MetaActions.new()
     action = data_set_path(conn, :create)
@@ -54,14 +60,26 @@ defmodule PlenarioWeb.Web.DataSetController do
     render(conn, "create.html", changeset: changeset, action: action, type_choices: type_choices)
   end
 
-  def create(conn, %{"meta" => %{"name" => name, "user_id" => user_id, "source_url" => source_url, "source_type" => source_type}}) do
+  def create(conn, %{
+        "meta" => %{
+          "name" => name,
+          "user_id" => user_id,
+          "source_url" => source_url,
+          "source_type" => source_type
+        }
+      }) do
     case MetaActions.create(name, user_id, source_url, source_type) do
       {:ok, meta} ->
         try do
           field_types = Plenario.FieldGuesser.guess_field_types!(meta)
           for {name, type} <- field_types, do: DataSetFieldActions.create(meta, "#{name}", type)
         rescue
-          _ -> put_flash(conn, :warning, "We couldn't parse the document to generate field definitions.")
+          _ ->
+            put_flash(
+              conn,
+              :warning,
+              "We couldn't parse the document to generate field definitions."
+            )
         end
 
         conn
@@ -71,6 +89,7 @@ defmodule PlenarioWeb.Web.DataSetController do
       {:error, changeset} ->
         action = data_set_path(conn, :create)
         type_choices = Meta.get_source_type_choices()
+
         conn
         |> put_status(:bad_request)
         |> put_flash(:error, "Please review errors below.")
@@ -79,10 +98,16 @@ defmodule PlenarioWeb.Web.DataSetController do
   end
 
   def edit(conn, %{"id" => id}) do
-    meta = MetaActions.get(id,
-      with_user: true, with_fields: true, with_constraints: true,
-      with_virtual_dates: true, with_virtual_points: true
-    )
+    meta =
+      MetaActions.get(
+        id,
+        with_user: true,
+        with_fields: true,
+        with_constraints: true,
+        with_virtual_dates: true,
+        with_virtual_points: true
+      )
+
     do_edit(meta, id, conn)
   end
 
@@ -93,12 +118,21 @@ defmodule PlenarioWeb.Web.DataSetController do
     source_type_choices = Meta.get_source_type_choices()
     refresh_rate_choices = Meta.get_refresh_rate_choices()
 
-    render(conn, "edit.html", meta: meta, changeset: changeset, action: action,
+    render(
+      conn,
+      "edit.html",
+      meta: meta,
+      changeset: changeset,
+      action: action,
       source_type_choices: source_type_choices,
-      refresh_rate_choices: refresh_rate_choices)
+      refresh_rate_choices: refresh_rate_choices
+    )
   end
 
-  def update(conn, %{"id" => id, "meta" => %{"force_fields_reset" => force_fields_reset}} = params) do
+  def update(
+        conn,
+        %{"id" => id, "meta" => %{"force_fields_reset" => force_fields_reset}} = params
+      ) do
     meta = MetaActions.get(id)
     do_update(meta, id, force_fields_reset, params, conn)
   end
@@ -111,6 +145,7 @@ defmodule PlenarioWeb.Web.DataSetController do
     force_fields_reset = force_fields_reset == "true"
 
     update_params = Enum.into(update_params, [])
+
     case MetaActions.update(meta, update_params) do
       {:ok, meta} ->
         if reset_fields or force_fields_reset do
@@ -120,7 +155,12 @@ defmodule PlenarioWeb.Web.DataSetController do
             for f <- fields, do: DataSetFieldActions.delete(f)
             for {name, type} <- field_types, do: DataSetFieldActions.create(meta, "#{name}", type)
           rescue
-            _ -> put_flash(conn, :warning, "We couldn't parse the document to generate field definitions.")
+            _ ->
+              put_flash(
+                conn,
+                :warning,
+                "We couldn't parse the document to generate field definitions."
+              )
           end
         end
 
@@ -138,7 +178,10 @@ defmodule PlenarioWeb.Web.DataSetController do
         |> put_flash(:error, "Please review errors below.")
         |> ControllerUtils.flash_base_errors(changeset)
         |> render(
-          "edit.html", meta: meta, changeset: changeset, action: action,
+          "edit.html",
+          meta: meta,
+          changeset: changeset,
+          action: action,
           source_type_choices: source_type_choices,
           refresh_rate_choices: refresh_rate_choices
         )
@@ -216,5 +259,4 @@ defmodule PlenarioWeb.Web.DataSetController do
     |> put_flash(:success, "Sending email to admins")
     |> redirect(to: data_set_path(conn, :request_changes, meta_id))
   end
-
 end

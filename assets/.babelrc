@@ -1,5 +1,8 @@
 {
   "presets": [
-    "env"
+    ["env", {
+      "modules": false,
+      "useBuiltIns": "entry"
+    }]
   ]
 }

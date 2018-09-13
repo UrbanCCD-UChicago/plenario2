@@ -129,6 +129,7 @@ defmodule PlenarioWeb.Router do
     get("/data-sets/:slug", DetailController, :get)
     get("/data-sets/:slug/@head", DetailController, :head)
     get("/data-sets/:slug/@describe", DetailController, :describe)
+    get("/data-sets/:slug/@aggregate", DetailController, :aggregate)
 
     get("/aot", AotController, :get)
     get("/aot/@head", AotController, :head)
