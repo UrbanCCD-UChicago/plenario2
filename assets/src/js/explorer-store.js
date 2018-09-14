@@ -21,12 +21,12 @@ export default new Vuex.Store({
       endDate:     null,
       granularity: initialStates.granularity,
     },
-    datasets: null,
-    host:     '',
-    port:     4000,
-    ssl:      false,
+    datasets:             null,
+    host:                 '',
+    port:                 4000,
+    ssl:                  false,
     selectedDatasetSlugs: [],
-    compareMap: null
+    compareMap:           null,
   },
 
   getters: {

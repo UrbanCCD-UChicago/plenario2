@@ -24,7 +24,7 @@ module.exports = (_, argv) => {
       // because a key photo or an error message GIF is a little bit too large. NOTE: rather
       // generous limits are set here, since this is a hard-pass filter, but in general we want to
       // shoot to keep our bundled assets in the 250kB range.
-      hints:             'error',
+      hints:             'warning',
       assetFilter:       fn => /\.(js|css|html?|svg|png)$/.test(fn),
       maxAssetSize:      524288,
       maxEntrypointSize: 1048576,
