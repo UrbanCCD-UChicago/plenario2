@@ -15,9 +15,6 @@ module.exports = (_, argv) => {
       warnings:     true,
       version:      true,
     },
-    optimization: {
-      splitChunks: { chunks: 'all' },
-    },
     performance: {
       // Hard error to avoid outputting a huge file by accident. We specifically only consider asset
       // types that would have been productively handled by Webpack so we don't error out just
