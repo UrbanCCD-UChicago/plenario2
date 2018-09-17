@@ -11,15 +11,7 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const staticAssetOutputPath = path.resolve(__dirname, '../../priv/static');
 
 function getS3AssetURL(argv) {
-  let bucketName;
-  if (argv.mode === 'development') {
-    bucketName = 'plenario2-assets-dev';
-  } else if (argv.env && argv.env.staging) {
-    bucketName = 'plenario2-assets-staging';
-  } else {
-    bucketName = 'plenario2-assets';
-  }
-  return `https://s3.us-east-2.amazonaws.com/${bucketName}`;
+  return `https://s3.amazonaws.com/plenario2-assets`;
 }
 
 module.exports = (_, argv) => {

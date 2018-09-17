@@ -31,9 +31,9 @@ $(window).on('scroll', throttle(showHideNavbar, 100));
 </script>
 
 <section class="jumbotron jumbotron-fluid cover cityscape mb-0">
-    
+
   <%= render PlenarioWeb.SharedView, "navbar-hero.html", conn: @conn, current_user: @current_user %>
-  
+
   <div class="container">
     <div class="row align-items-end">
       <div class="col-4 offset-4 offset-md-0 col-lg-2 ">
@@ -81,7 +81,7 @@ $(window).on('scroll', throttle(showHideNavbar, 100));
         </p>
       </div>
     </div>
-    
+
   </div>
 
   <div class="coverskip fas fa-chevron-down" onclick="skipCover(this);"></div>
@@ -89,9 +89,9 @@ $(window).on('scroll', throttle(showHideNavbar, 100));
 </section>
 
 <section class="container">
-  
+
   <%# NOTE: images in this section generated using these flags: "--retina --max 690 --step 24576" %>
-  
+
   <div class="row mb-5">
     <div class="col-lg-6">
       <h2 id="one-map-one-timeline" class="display-4">One Map, One Timeline</h2>
@@ -101,7 +101,7 @@ $(window).on('scroll', throttle(showHideNavbar, 100));
       <p>
         All of the data sets available in Plenario are available elsewhere online (that's what makes
         it <em>open data</em>), but Plenario lets you see all of the data on one unified map with
-        one unified timeline, no matter who's publishing it or the format they chose. 
+        one unified timeline, no matter who's publishing it or the format they chose.
       </p>
     </div>
     <div class="col-lg-6">
@@ -185,7 +185,7 @@ $(window).on('scroll', throttle(showHideNavbar, 100));
         src="<%= @s3_asset_path %>/images/satellite-838.jpg">
     </div>
   </div>
-  
+
   <div class="row mb-5">
     <div class="col-lg-6">
       <h2 id="tell-the-story-of-place" class="display-4">Tell the Story of Place</h2>
@@ -194,7 +194,7 @@ $(window).on('scroll', throttle(showHideNavbar, 100));
       </p>
       <p>
         Whether you care about climate change, demographic shifts, or driving accidents, Plenario
-        lets you easily the effects in a neighborhood, along a route, or throughout an entire city. 
+        lets you easily the effects in a neighborhood, along a route, or throughout an entire city.
       </p>
     </div>
     <div class="col-lg-6 order-lg-first">

@@ -5,9 +5,6 @@ import 'phoenix_html';
 import 'popper.js';
 import { throttle } from 'lodash-es';
 import '../css/main.scss';
-// This should just be covered by our config file. 
-// https://github.com/webpack/webpack/issues/4258
-import $ from 'jquery';  
 import fontawesomeController from './fontawesome-controller';
 
 // For now, just assign these to the global scope to preserve existing code
