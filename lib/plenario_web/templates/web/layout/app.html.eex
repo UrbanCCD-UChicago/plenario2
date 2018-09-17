@@ -19,7 +19,7 @@
   <body>
 
     <%= render PlenarioWeb.SharedView, "flashes.html", conn: @conn %>
-    
+
     <%= render PlenarioWeb.SharedView, "navbar-main.html", conn: @conn, current_user: @current_user %>
 
     <main role="main">

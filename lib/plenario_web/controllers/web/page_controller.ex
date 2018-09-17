@@ -8,18 +8,7 @@ defmodule PlenarioWeb.Web.PageController do
   alias PlenarioAot.{AotData, AotMeta}
 
   def assign_s3_path(conn, _opts) do
-    assign(
-      conn,
-      :s3_asset_path,
-      Map.get(
-        %{
-          "dev.plenar.io": "https://s3.us-east-2.amazonaws.com/plenario2-assets-staging",
-          "plenar.io": "https://s3.us-east-2.amazonaws.com/plenario2-assets"
-        },
-        conn.host,
-        "https://s3.us-east-2.amazonaws.com/plenario2-assets-dev"
-      )
-    )
+    assign(conn, :s3_asset_path, "https://s3.amazonaws.com/plenario2-assets")
   end
 
   plug(:assign_s3_path)
