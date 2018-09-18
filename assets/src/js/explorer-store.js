@@ -23,22 +23,13 @@ export default new Vuex.Store({
     },
     datasets:             null,
     host:                 '',
-    port:                 4000,
-    ssl:                  false,
     selectedDatasetSlugs: [],
     compareMap:           null,
   },
 
   getters: {
-    showEndpoint: (state) => {
-      const protocol = state.ssl ? 'https' : 'http';
-      return `${protocol}://${state.host}:${state.port}/data-sets`;
-    },
-
-    metaEndpoint: (state) => {
-      const protocol = state.ssl ? 'https' : 'http';
-      return `${protocol}://${state.host}:${state.port}/api/v2/data-sets`;
-    },
+    showEndpoint: state => `${state.host}/data-sets`,
+    metaEndpoint: state => `${state.host}/api/v2/data-sets`,
   },
 
   mutations: {

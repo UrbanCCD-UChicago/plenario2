@@ -5,8 +5,11 @@
 <div class="container">
   <!-- Vue.js application mount point -->
   <div id="app"
-    data-api-host="<%= Application.get_env(:plenario, PlenarioWeb.Endpoint)[:url][:host] %>"
-    data-api-port="<%= Application.get_env(:plenario, PlenarioWeb.Endpoint)[:http][:port] %>"
-    data-api-ssl="<%= :https in (Application.get_env(:plenario, PlenarioWeb.Endpoint) |> Keyword.keys()) %>"
+    data-api-host="<%=
+      case Application.get_env(:plenario, :env) do
+        :dev -> "http://localhost:4000"
+        :prod -> "https://#{Application.get_env(:plenario, PlenarioWeb.Endpoint)[:url][:host]}"
+      end
+    %>"
   </div>
 </div>
