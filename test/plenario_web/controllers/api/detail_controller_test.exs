@@ -428,4 +428,20 @@ defmodule PlenarioWeb.Api.DetailControllerTest do
       |> Enum.each(fn record -> assert Map.keys(record) == ["geometry", "properties", "type"] end)
     end
   end
+
+  describe "geojson format" do
+    test "query yields no results", %{conn: conn, meta: meta, vpf: vpf} do
+      path =
+        detail_path(conn, :get, meta.slug, %{
+          vpf.name => "within:#{@nada_bbox}",
+          "format" => "geojson"
+        })
+
+      response =
+        get(conn, path)
+        |> json_response(:ok)
+
+      assert length(response["data"]) == 0
+    end
+  end
 end

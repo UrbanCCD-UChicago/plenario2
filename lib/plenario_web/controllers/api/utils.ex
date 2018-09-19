@@ -375,6 +375,10 @@ defmodule PlenarioWeb.Api.Utils do
 
   defp format_data(data, :detail, _, :json), do: data
 
+  # For queries that yield no results, simply return an empty list. We are
+  # unable to infer the geom column without data, but there is nothing to
+  # format so we are okay.
+  defp format_data([], :detail, _, :geojson), do: []
   defp format_data(data, :detail, _, :geojson) do
     {field, _} =
       data
