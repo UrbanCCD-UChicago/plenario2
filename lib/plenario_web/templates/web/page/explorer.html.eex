@@ -8,6 +8,7 @@
     data-api-host="<%=
       case Application.get_env(:plenario, :env) do
         :dev -> "http://localhost:4000"
+        :test -> "http://localhost:4000"
         :prod -> "https://#{Application.get_env(:plenario, PlenarioWeb.Endpoint)[:url][:host]}"
       end
     %>"
