@@ -40,15 +40,15 @@ defmodule PlenarioAot.AotWorker do
   defp download_source(meta) do
     Logger.info("Starting AoT download for #{meta.network_name}")
 
-    resp = HTTPoison.get(meta.source_url)
+    resp = HTTPoison.get(meta.source_url, follow_redirect: true)
 
-    case resp.status_code do
-      200 ->
+    case resp do
+      {:ok, response} ->
         {:ok, path} = Briefly.create()
 
         Logger.debug("Payload being written to #{path} for #{meta.network_name}")
 
-        File.write!(path, resp.body)
+        File.write!(path, response.body)
         {path, meta}
 
       _ ->
