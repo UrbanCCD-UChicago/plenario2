@@ -5,13 +5,15 @@ defmodule PlenarioAot.AotWorker do
 
   alias PlenarioAot.{AotActions}
 
-  @timeout 1_000 * 60 * 5  # 5 minutes
+  # 5 minutes
+  @timeout 1_000 * 60 * 5
 
   ##
   # CLIENT API
 
   def process_observation_batch(pid_or_name) do
     Logger.info("Starting ETL of AoT data")
+
     Enum.each(AotActions.list_metas(), fn meta ->
       GenServer.call(pid_or_name, {:process, meta}, @timeout)
     end)
@@ -28,48 +30,84 @@ defmodule PlenarioAot.AotWorker do
   # SERVER IMPLEMENTATION
 
   def handle_call({:process, meta}, _, state) do
-    {:ok, path} = Briefly.create()
-    Logger.info("Starting download for AoT Network `#{meta.network_name}` from `#{meta.source_url}` to `#{path}`")
+    download_source(meta)
+    |> parse_source()
+    |> rip_payload()
 
-    %HTTPoison.Response{body: body} = HTTPoison.get!(meta.source_url)
-    File.write!(path, body)
+    {:reply, nil, state}
+  end
 
-    Logger.info("Finished download for `#{meta.network_name}`")
-    Logger.info("Starting to rip `#{path}` into `aot_data` table for AoT Network `#{meta.network_name}`")
+  defp download_source(meta) do
+    Logger.info("Starting AoT download for #{meta.network_name}")
 
-    # todo(heyzoos) this needs to be streamed, otherwise we're going to keep seeing heap memory errors
-    File.read!(path)
-    |> Poison.decode!()
-    |> Enum.each(fn json_payload ->
-      case AotActions.insert_data(meta, json_payload) do
-        {:error, cs} ->
-          Logger.error("#{inspect(cs)}")
-         _ ->
+    resp = HTTPoison.get(meta.source_url)
+
+    case resp.status_code do
+      200 ->
+        {:ok, path} = Briefly.create()
+
+        Logger.debug("Payload being written to #{path} for #{meta.network_name}")
+
+        File.write!(path, resp.body)
+        {path, meta}
+
+      _ ->
+        Logger.error("Non 200 response when trying to download #{meta.network_name}")
+        :error
+    end
+  end
+
+  defp parse_source(:error), do: :error
+
+  defp parse_source({path, meta}) do
+    Logger.info("Parsing source for #{meta.network_name}")
+
+    parsed =
+      File.read!(path)
+      |> Poison.decode()
+
+    case parsed do
+      {:ok, payload} ->
+        {payload, meta}
+
+      {:error, {reason, char, pos}} ->
+        Logger.error("JSON parse error: #{inspect(reason)} #{inspect(char)} #{inspect(pos)}")
+        :error
+    end
+  end
+
+  defp rip_payload(:error), do: :error
+
+  defp rip_payload({payload, meta}) do
+    Logger.info("Ripping payload for #{meta.network_name}")
+
+    payload
+    |> Enum.each(fn obs_set ->
+      case AotActions.insert_data(meta, obs_set) do
+        {:error, changeset} ->
+          Logger.error("#{inspect(changeset)}")
+
+        _ ->
           :ok
       end
     end)
 
-    Logger.info("Finished ripping `#{path}` for AoT Network `#{meta.network_name}`")
-    Logger.info("Updating bbox for AoT Network `#{meta.network_name}`")
+    Logger.info("Computing and updating metadata for #{meta.network_name}")
 
     case AotActions.compute_and_update_meta_bbox(meta) do
       :ok ->
-        Logger.info("Finished updating bbox for AoT Network `#{meta.network_name}`")
+        :ok
 
       {:error, message} ->
         Logger.error(message)
     end
-
-    Logger.info("Updating time_range for AoT Network `#{meta.network_name}`")
 
     case AotActions.compute_and_update_meta_time_range(meta) do
       :ok ->
-        Logger.info("Finished updating time_range for AoT Network `#{meta.network_name}`")
+        :ok
 
       {:error, message} ->
         Logger.error(message)
     end
-
-    {:reply, nil, state}
   end
 end
