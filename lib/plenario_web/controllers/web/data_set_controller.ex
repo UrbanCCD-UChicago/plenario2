@@ -14,10 +14,9 @@ defmodule PlenarioWeb.Web.DataSetController do
 
   alias PlenarioWeb.Web.ControllerUtils
 
-  def show(conn, %{"id" => id}) do
-    meta = MetaActions.get(id, with_user: true, with_fields: true, with_constraints: true)
-    do_show(meta, conn)
-  end
+  plug :load_and_authorize_resource, model: Meta, preload: [:user, :fields]
+
+  def show(conn, _), do: conn.assigns.meta |> do_show(conn)
 
   defp do_show(%Meta{} = meta, conn) do
     user = Guardian.Plug.current_resource(conn)
