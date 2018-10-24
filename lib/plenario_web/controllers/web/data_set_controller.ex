@@ -14,10 +14,11 @@ defmodule PlenarioWeb.Web.DataSetController do
 
   alias PlenarioWeb.Web.ControllerUtils
 
-  def show(conn, %{"id" => id}) do
-    meta = MetaActions.get(id, with_user: true, with_fields: true, with_constraints: true)
-    do_show(meta, conn)
-  end
+  import Canary.Plugs, only: [load_and_authorize_resource: 2]
+
+  plug :auth
+
+  def show(conn, _), do: conn.assigns.meta |> do_show(conn)
 
   defp do_show(%Meta{} = meta, conn) do
     user = Guardian.Plug.current_resource(conn)
@@ -258,5 +259,21 @@ defmodule PlenarioWeb.Web.DataSetController do
     conn
     |> put_flash(:success, "Sending email to admins")
     |> redirect(to: data_set_path(conn, :request_changes, meta_id))
+  end
+
+  # This is meant to be used as a plug, it fetches a meta record and authorizes
+  # the user against it. If the id is an integer, we fetch the meta record using
+  # the `id` field. If the id is a slug, we fetch the meta record using the `slug`
+  # field.
+  defp auth(conn, _) do
+    opts = [model: Meta, preload: [:user, :fields]]
+    case conn.params["id"] do
+      nil -> load_and_authorize_resource(conn, opts)
+      id ->
+        case Integer.parse(id) do
+          {integer, _} -> load_and_authorize_resource(conn, opts)
+          :error -> load_and_authorize_resource(conn, opts ++ [id_field: "slug"])
+        end
+    end
   end
 end
