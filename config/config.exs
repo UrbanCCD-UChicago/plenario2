@@ -40,14 +40,6 @@ config :plenario, PlenarioEtl,
     {"* * * * *", {PlenarioEtl, :import_data_sets, []}}
   ]
 
-config :plenario, PlenarioAot.AotScheduler,
-  global: true,
-  jobs: [
-    {"*/5 * * * *", {PlenarioAot.AotScheduler, :import_aot_data, []}}
-  ]
-
-config :plenario, PlenarioAot, pool_size: 10
-
 # configure canary
 config :canary,
   repo: Plenario.Repo,
