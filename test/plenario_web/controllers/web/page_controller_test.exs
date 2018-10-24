@@ -9,8 +9,6 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
     VirtualPointFieldActions
   }
 
-  alias PlenarioAot.AotActions
-
   setup do
     Plenario.ModelRegistry.clear()
   end
@@ -184,16 +182,6 @@ defmodule PlenarioWeb.Web.Testing.PageControllerTest do
   #   refute response =~ meta3.name
   #   refute response =~ meta4.name
   #   assert response =~ "Sorry, we didn't find any data sets that matched your criteria"
-  # end
-
-  # TODO: fix this later
-  # @tag :anon
-  # test "aot_explorer", %{conn: conn} do
-  #   AotActions.create_meta("Chicago", "https://example.com/")
-
-  #   conn
-  #   |> get(page_path(conn, :aot_explorer))
-  #   |> html_response(:ok)
   # end
 
   @tag :anon
