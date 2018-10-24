@@ -306,40 +306,6 @@ defmodule PlenarioWeb.Api.Plugs do
 
   defp check_tsrange_geoms({params, _}, conn), do: assign(conn, :filters, params)
 
-  # APPLY WINDOW
-
-  @doc """
-  This function is used for the AoT Controller -- it checks for a `window` param and optionally
-  sets it to the current timestamp if not found.
-
-  The window is used in the queries to limit the data so that if a client is paging through
-  the data set, the pagination remains stable during a freah load of more recent data.
-
-  The function assigns :window as a NaiveDateTime struct for immediate query interpolation.
-  """
-  @spec apply_window(Plug.Conn.t(), any()) :: Plug.Conn.t()
-  def apply_window(%Conn{params: %{"window" => %NaiveDateTime{} = w}} = conn, _opts),
-    do: assign(conn, :window, w)
-
-  def apply_window(%Conn{params: %{"window" => window}} = conn, _opts) when is_bitstring(window) do
-    case Timex.parse(window, "%Y-%m-%dT%H:%M:%S", :strftime) do
-      {:ok, window} ->
-        assign(conn, :window, window)
-
-      _ ->
-        halt_with(conn, :bad_request, "Could not parse value for `window`")
-    end
-  end
-
-  def apply_window(conn, _opts) do
-    now =
-      NaiveDateTime.utc_now()
-      |> Timex.format!("%Y-%m-%dT%H:%M:%S", :strftime)
-
-    %Conn{conn | params: Map.put(conn.params, "window", now)}
-    |> apply_window(nil)
-  end
-
   # CHECK FORMAT
 
   @formats ["json", "geojson"]
@@ -373,18 +339,18 @@ defmodule PlenarioWeb.Api.Plugs do
   end
 
   @doc """
-  Do we need the `_` tho? 
+  Do we need the `_` tho?
   """
-  def check_group_by(%Conn{params: %{"group_by" => group_by}} = conn, _) 
+  def check_group_by(%Conn{params: %{"group_by" => group_by}} = conn, _)
     when is_atom(group_by)
-  do 
+  do
     conn = assign(conn, :group_by, group_by)
     %{conn | params: Map.delete(conn.params, "group_by")}
   end
 
-  def check_group_by(%Conn{params: %{"group_by" => group_by}} = conn, _) 
+  def check_group_by(%Conn{params: %{"group_by" => group_by}} = conn, _)
     when is_bitstring(group_by)
-  do 
+  do
     conn = assign(conn, :group_by, String.to_atom(group_by))
     %{conn | params: Map.delete(conn.params, "group_by")}
   end
@@ -393,11 +359,11 @@ defmodule PlenarioWeb.Api.Plugs do
     do: halt_with(conn, :bad_request, "`group_by` required and must be a string!")
 
   @doc """
-  Do we need the `_` tho? 
+  Do we need the `_` tho?
   """
-  def check_granularity(%Conn{params: %{"granularity" => granularity}} = conn, _) 
+  def check_granularity(%Conn{params: %{"granularity" => granularity}} = conn, _)
     when is_bitstring(granularity)
-  do 
+  do
     conn = assign(conn, :granularity, granularity)
     %{conn | params: Map.delete(conn.params, "granularity")}
   end

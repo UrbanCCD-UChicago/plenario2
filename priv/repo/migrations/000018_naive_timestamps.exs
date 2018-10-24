@@ -44,9 +44,9 @@ defmodule Plenario.Repo.Migrations.MakeTimestampsNaive do
       modify :updated_at, :timestamp
     end
 
-    alter table(:aot_metas) do
-      remove :time_range
-      add :time_range, :tsrange
-    end
+    # alter table(:aot_metas) do
+    #   remove :time_range
+    #   add :time_range, :tsrange
+    # end
   end
 end
