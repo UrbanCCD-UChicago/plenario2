@@ -18,8 +18,7 @@ defmodule PlenarioWeb.Api.Utils do
   import PlenarioWeb.Router.Helpers,
     only: [
       detail_url: 4,
-      list_url: 3,
-      aot_url: 3
+      list_url: 3
     ]
 
   import Plug.Conn,
@@ -91,75 +90,6 @@ defmodule PlenarioWeb.Api.Utils do
       get_data(view, page)
       |> clean_data()
       |> format_data(:list, view, conn.assigns[:format])
-
-    Phoenix.Controller.render(
-      conn,
-      view,
-      links: links,
-      counts: counts,
-      params: params,
-      data: data
-    )
-  end
-
-  @doc """
-  This function slims down the logic that needs to be directly called in the controller. It takes
-  the Plug connection, the view name, and the Scrivener results and computes the metadata that
-  is attached to the response.
-
-  It then calls the view module function to put these pieces together in a response.
-  """
-  @spec render_aot(Scrivener.Page.t(), Plug.Conn.t(), String.t()) :: Plug.Conn.t()
-  def render_aot(page, conn, view) do
-    links = make_links(:aot, view, conn, page)
-    counts = make_counts(view, page)
-    params = fmt_params(conn)
-
-    data =
-      case view do
-        "describe.json" ->
-          get_data(view, page.entries)
-          |> Enum.map(
-            &Map.put(&1, :fields, [
-              %{
-                name: "node_id",
-                type: "text"
-              },
-              %{
-                name: "human_address",
-                type: "text"
-              },
-              %{
-                name: "latitude",
-                type: "float"
-              },
-              %{
-                name: "longitude",
-                type: "float"
-              },
-              %{
-                name: "timestamp",
-                type: "timestamp"
-              },
-              %{
-                name: "observations",
-                type: "object"
-              },
-              %{
-                name: "location",
-                type: "geometry(point, 4326)"
-              }
-            ])
-          )
-
-        _ ->
-          get_data(view, page)
-      end
-
-    data =
-      data
-      |> clean_data()
-      |> format_data(:aot, view, conn.assigns[:format])
 
     Phoenix.Controller.render(
       conn,
@@ -255,13 +185,6 @@ defmodule PlenarioWeb.Api.Utils do
     list_url(conn, fun_atom, params)
   end
 
-  defp make_url(:aot, _, _, nil), do: nil
-
-  defp make_url(:aot, fun_atom, conn, page_number) do
-    params = Map.merge(conn.params, %{"page" => page_number})
-    aot_url(conn, fun_atom, params)
-  end
-
   defp fmt_params(conn) do
     page = conn.assigns[:page]
     size = conn.assigns[:page_size]
@@ -318,7 +241,6 @@ defmodule PlenarioWeb.Api.Utils do
     :state,
     :user_id,
     :meta_id,
-    :aot_meta_id,
     :password,
     :password_hash
   ]
@@ -388,12 +310,6 @@ defmodule PlenarioWeb.Api.Utils do
 
     to_geojson(data, field)
   end
-
-  defp format_data(data, :aot, "describe.json", :json), do: data
-  defp format_data(data, :aot, "describe.json", :geojson), do: to_geojson(data, :hull)
-
-  defp format_data(data, :aot, _, :json), do: data
-  defp format_data(data, :aot, _, :geojson), do: to_geojson(data, :location)
 
   defp is_geom(%Geo.Point{}), do: true
   defp is_geom(%Geo.Polygon{}), do: true
@@ -509,21 +425,6 @@ defmodule PlenarioWeb.Api.Utils do
   What the signatures of this function do is match operators, and in select cases value types,
   to the proper application of the filter, rather than having to build the case by case logic into
   each time you need to dynamically apply conditions to a query.
-
-  ## Example
-
-      # Request comes in as /api/v2/aot?network_name=chicago&latitude=lt:42
-
-      conn.assigns[:filters] = [
-        {network_name, "eq", "chicago"},
-        {latitude, "lt", "42"}
-      ]
-
-      query =
-        conn.assigns[:filters]
-        |> Enum.reduce(AotData, {fname, op, value}, query -> apply_filter(query, fname, op, value) end)
-
-      Repo.all(query)
   """
   @spec apply_filter(Ecto.Queryable.t(), String.t(), String.t(), any()) :: Ecto.Queryable.t()
   def apply_filter(query, fname, "lt", value), do: where(query, [q], field(q, ^fname) < ^value)

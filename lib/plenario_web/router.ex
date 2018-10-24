@@ -41,7 +41,6 @@ defmodule PlenarioWeb.Router do
     # landing pages
     get("/", PageController, :index)
     get("/explore", PageController, :explorer)
-    get("/explore/array-of-things", PageController, :aot_explorer)
 
     # auth pages
     get("/login", AuthController, :index)
@@ -114,8 +113,6 @@ defmodule PlenarioWeb.Router do
     resources("/etl-jobs", EtlJobController)
 
     resources("/export-jobs", ExportJobController)
-
-    resources("/aot", AotController)
   end
 
   ##
@@ -130,10 +127,6 @@ defmodule PlenarioWeb.Router do
     get("/data-sets/:slug/@head", DetailController, :head)
     get("/data-sets/:slug/@describe", DetailController, :describe)
     get("/data-sets/:slug/@aggregate", DetailController, :aggregate)
-
-    get("/aot", AotController, :get)
-    get("/aot/@head", AotController, :head)
-    get("/aot/@describe", AotController, :describe)
 
     # Method not allowed
     [&post/3, &put/3, &patch/3, &delete/3, &connect/3, &trace/3]

@@ -5,7 +5,6 @@ defmodule PlenarioWeb.Web.PageController do
   import Plug.Conn
 
   alias Plenario.Repo
-  alias PlenarioAot.{AotData, AotMeta}
 
   def assign_s3_path(conn, _opts) do
     assign(conn, :s3_asset_path, "https://s3.amazonaws.com/plenario2-assets")
@@ -214,93 +213,6 @@ defmodule PlenarioWeb.Web.PageController do
     lat = (max_lat + min_lat) / 2
     lon = (max_lon + min_lon) / 2
     "[#{lat}, #{lon}]"
-  end
-
-  ##
-  # aot explorer
-
-  def aot_explorer(conn, _params) do
-    meta =
-      try do
-        Repo.get_by!(AotMeta, slug: "chicago")
-      rescue
-        _ -> Repo.one!(AotMeta)
-      end
-
-    node_locations_data =
-      AotData
-      |> select([:latitude, :longitude, :human_address, :node_id])
-      |> distinct([:latitude, :longitude])
-      |> where([d], fragment("? >= current_date - interval '24' hour", d.timestamp))
-      |> where([d], d.aot_meta_id == ^meta.id)
-      |> Repo.all()
-      |> Enum.map(fn row ->
-        {
-          "[#{row.latitude}, #{row.longitude}]",
-          String.trim(row.human_address),
-          row.node_id
-        }
-      end)
-
-    temp_humid_graph_data =
-      AotData
-      |> select([d], %{
-        trunc_timestamp: fragment("date_trunc('hour', ?) as trunc_timestamp", d.timestamp),
-        avg_temp: fragment("avg((observations->'HTU21D'->>'temperature')::float)"),
-        avg_humid: fragment("avg((observations->'HTU21D'->>'humidity')::float)")
-      })
-      |> where([d], fragment("? >= current_date - interval '24' hour", d.timestamp))
-      |> where([d], d.aot_meta_id == ^meta.id)
-      |> group_by(fragment("trunc_timestamp"))
-      |> order_by(asc: fragment("trunc_timestamp"))
-      |> Repo.all()
-      |> Enum.map(fn row ->
-        [
-          Timex.format!(row.trunc_timestamp, "{ISOdate} {ISOtime}"),
-          row.avg_temp,
-          row.avg_humid
-        ]
-      end)
-      |> format_line_chart(["Average Temperature", "Average Humidity"])
-
-    temp_heatmap_data =
-      AotData
-      |> select([d], {
-        d.latitude,
-        d.longitude,
-        fragment("(avg((observations->'HTU21D'->>'temperature')::float) * 2.1) + 20")
-      })
-      |> distinct([d], [d.latitude, d.longitude])
-      |> where([d], fragment("? >= current_date - interval '24' hour", d.timestamp))
-      |> where([d], d.aot_meta_id == ^meta.id)
-      |> group_by([d], [d.latitude, d.longitude])
-      |> Repo.all()
-      |> Enum.reject(fn {_, _, temp} -> is_nil(temp) end)
-
-    humid_heatmap_data =
-      AotData
-      |> select([d], {
-        d.latitude,
-        d.longitude,
-        fragment("avg((observations->'HTU21D'->>'humidity')::float)")
-      })
-      |> distinct([d], [d.latitude, d.longitude])
-      |> where([d], fragment("? >= current_date - interval '24' hour", d.timestamp))
-      |> where([d], d.aot_meta_id == ^meta.id)
-      |> group_by([d], [d.latitude, d.longitude])
-      |> Repo.all()
-      |> Enum.reject(fn {_, _, humid} -> is_nil(humid) end)
-
-    render(
-      conn,
-      "aot-explorer.html",
-      points: node_locations_data,
-      temp_hm_data: temp_heatmap_data,
-      humid_hm_data: humid_heatmap_data,
-      labels: temp_humid_graph_data[:labels],
-      temps_data: Enum.at(temp_humid_graph_data[:datasets], 0),
-      humid_data: Enum.at(temp_humid_graph_data[:datasets], 1)
-    )
   end
 
   @red "255,99,132"
