@@ -17,9 +17,6 @@
           <%= link "Explore", to: page_path(@conn, :explorer), class: "nav-link" %>
         </li>
         <li class="nav-item">
-          <%= link "Array of Things", to: page_path(@conn, :aot_explorer), class: "nav-link" %>
-        </li>
-        <li class="nav-item">
           <a href="https://plenario.docs.apiary.io" target="_blank" class="nav-link">API</a>
         </li>
         <li class="nav-item">

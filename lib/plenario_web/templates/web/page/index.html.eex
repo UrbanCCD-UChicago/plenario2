@@ -65,19 +65,11 @@ $(window).on('scroll', throttle(showHideNavbar, 100));
       <div class="col-12 d-md-none">
         <hr>
       </div>
-      <div class="col-12 col-md-6">
+      <div class="col-12 col-md-12">
         <p class="lead">
           Plenario is the official home for data from the
           Array&nbsp;of&nbsp;Things, providing block-level, real-time data in
           Chicago (and&nbsp;beyond).
-        </p>
-      </div>
-      <div class="col-12 col-md-6 order-md-4">
-        <p class="lead">
-          <a class="btn btn-info" href="https://arrayofthings.github.io">
-            Learn More <i class="fas fa-external-link-alt" data-fa-transform="shrink-4"></i>
-          </a>
-          <%= link "Explore AoT Data", to: page_path(@conn, :aot_explorer), class: "btn btn-info" %>
         </p>
       </div>
     </div>

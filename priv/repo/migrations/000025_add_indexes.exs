@@ -8,6 +8,6 @@ defmodule Plenario.Repo.Migrations.AddIndexes do
     create index(:metas, :state)
 
     # same here.
-    create index(:aot_metas, :time_range, using: "GIST")
+    # create index(:aot_metas, :time_range, using: "GIST")
   end
 end

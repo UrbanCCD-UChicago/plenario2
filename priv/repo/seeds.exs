@@ -8,8 +8,6 @@ defmodule Plenario.Seed do
     VirtualPointFieldActions
   }
 
-  alias PlenarioAot.AotActions
-
   @user_name "Plenario Admin"
   @user_email "plenario@uchicago.edu"
   @user_password "password"
@@ -17,9 +15,6 @@ defmodule Plenario.Seed do
   @meta_name "Chicago Beach Lab - DNA Tests"
   @meta_url "https://data.cityofchicago.org/api/views/hmqm-anjq/rows.csv?accessType=DOWNLOAD"
   @meta_src_type "csv"
-
-  @aot_name "Chicago"
-  @aot_url "http://www.mcs.anl.gov/research/projects/waggle/downloads/beehive1/plenario.json"
 
   defp make_user do
     {:ok, user} = UserActions.create(@user_name, @user_email, @user_password)
@@ -65,11 +60,6 @@ defmodule Plenario.Seed do
     :ok
   end
 
-  defp make_aot do
-    {:ok, aot} = AotActions.create_meta(@aot_name, @aot_url)
-    aot
-  end
-
   def seed do
     if Mix.env() != :dev do
       System.halt(1)
@@ -83,9 +73,6 @@ defmodule Plenario.Seed do
     :ok = make_fields(meta)
     {:ok, meta} = MetaActions.submit_for_approval(meta)
     {:ok, _} = MetaActions.approve(meta)
-
-    # setup aot chicago
-    aot = make_aot()
 
     # dump out info
     msg = """
@@ -102,13 +89,6 @@ defmodule Plenario.Seed do
     id:   #{meta.id}
     name: #{@meta_name}
     url:  #{@meta_url}
-
-    ============
-      AOT INFO
-    ============
-    id:   #{aot.id}
-    name: #{@aot_name}
-    url:  #{@aot_url}
 
     """
 

@@ -164,13 +164,6 @@ defmodule PlenarioWeb.Api.PlugsTest do
         |> json_response(:ok)
 
       assert res["meta"]["params"]["order_by"] == %{"asc" => "name"}
-
-      res =
-        conn
-        |> get(aot_path(conn, :get))
-        |> json_response(:ok)
-
-      assert res["meta"]["params"]["order_by"] == %{"desc" => "timestamp"}
     end
 
     test "when given a value without a direction will :bad_request", %{conn: conn, meta: meta} do
@@ -343,16 +336,6 @@ defmodule PlenarioWeb.Api.PlugsTest do
       |> get(list_path(conn, :get, %{"time_range" => "intersects:the past year"}))
       |> json_response(:bad_request)
     end
-  end
-
-  test "apply_window sets a maximum timestamp", %{conn: conn} do
-    res =
-      conn
-      |> get(aot_path(conn, :get, %{page_size: 2}))
-      |> json_response(:ok)
-
-    window = res["meta"]["params"]["window"]
-    refute is_nil(window)
   end
 
   describe "check_format" do
