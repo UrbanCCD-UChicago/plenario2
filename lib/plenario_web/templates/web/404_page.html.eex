@@ -5,12 +5,6 @@
   </h3>
 </div>
 
-<div class="row" style="margin:50px">
-  <a onclick="goback()">
-    <img src="/images/404.gif" class="img-responsive center-block" style="cursor:pointer">
-  </a>
-</div>
-
 <div class="row text-center">
   <h3>
     <a onclick="goback()"  style="cursor:pointer">Try going back.</a>

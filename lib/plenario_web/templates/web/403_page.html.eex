@@ -1,13 +1,7 @@
 <div class="row text-center">
   <h3>
-    So, uh, yeah. Don't do that.
+    Action Forbidden.
   </h3>
-</div>
-
-<div class="row" style="margin:50px">
-  <a onclick="goback()">
-    <img src="/images/403.gif" class="img-responsive center-block" style="cursor:pointer">
-  </a>
 </div>
 
 <div class="row text-center">
