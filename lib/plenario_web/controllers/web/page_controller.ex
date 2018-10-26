@@ -1,10 +1,7 @@
 defmodule PlenarioWeb.Web.PageController do
   use PlenarioWeb, :web_controller
 
-  import Ecto.Query
   import Plug.Conn
-
-  alias Plenario.Repo
 
   def assign_s3_path(conn, _opts) do
     assign(conn, :s3_asset_path, "https://s3.amazonaws.com/plenario2-assets")
@@ -213,40 +210,5 @@ defmodule PlenarioWeb.Web.PageController do
     lat = (max_lat + min_lat) / 2
     lon = (max_lon + min_lon) / 2
     "[#{lat}, #{lon}]"
-  end
-
-  @red "255,99,132"
-  @blue "54,162,235"
-  @yellow "255,206,86"
-  @green "75,192,192"
-  @purple "153,102,255"
-
-  defp bgrnd_color(base), do: "rgba(#{base},0.2)"
-
-  defp border_color(base), do: "rgba(#{base},1)"
-
-  defp format_line_chart(records, keys) do
-    labels = Enum.map(records, fn [dt | _] -> dt end)
-
-    datasets =
-      keys
-      |> Enum.with_index(1)
-      |> Enum.map(fn {key, index} ->
-        data = Enum.map(records, fn row -> Enum.at(row, index) end)
-
-        %{
-          label: key,
-          data: data,
-          backgroundColor:
-            Enum.at(Stream.cycle([@red, @blue, @yellow, @green, @purple]), index) |> bgrnd_color(),
-          borderColor:
-            Enum.at(Stream.cycle([@red, @blue, @yellow, @green, @purple]), index)
-            |> border_color(),
-          border: 1,
-          fill: true
-        }
-      end)
-
-    %{labels: labels, datasets: datasets}
   end
 end

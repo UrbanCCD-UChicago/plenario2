@@ -271,8 +271,8 @@ defmodule PlenarioWeb.Web.DataSetController do
       nil -> load_and_authorize_resource(conn, opts)
       id ->
         case Integer.parse(id) do
-          {integer, _} -> load_and_authorize_resource(conn, opts)
           :error -> load_and_authorize_resource(conn, opts ++ [id_field: "slug"])
+          _ -> load_and_authorize_resource(conn, opts)
         end
     end
   end
