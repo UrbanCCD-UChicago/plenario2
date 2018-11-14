@@ -9,6 +9,9 @@ defmodule PlenarioWeb.Testing.DataSetApiControllerTest do
   }
 
   setup do
+    Plenario.TableModelRegistry.clear()
+    Plenario.ViewModelRegistry.clear()
+
     user = create_user()
 
     crimes = create_data_set(%{user: user}, name: "crimes", src_url: "https://example.com/1")
@@ -278,7 +281,104 @@ defmodule PlenarioWeb.Testing.DataSetApiControllerTest do
   end
 
   describe "detail" do
-    # TODO: when i'm not exhausted
+    test "applies default pagination", %{conn: conn, crimes: data_set} do
+      resp =
+        conn
+        |> get(Routes.data_set_api_path(conn, :detail, data_set))
+        |> json_response(:ok)
+
+      assert resp["meta"]["query"]["paginate"] == [1, 200]
+    end
+
+    test "applies bbox param", %{conn: conn, crimes: data_set} do
+      geom =
+        %Geo.Polygon{
+          srid: 4326,
+          coordinates: [[
+            {1, 1},
+            {1, 2},
+            {2, 2},
+            {2, 1},
+            {1, 1}
+          ]]
+        }
+        |> Geo.JSON.encode()
+        |> Jason.encode!()
+
+      resp =
+        conn
+        |> get(Routes.data_set_api_path(conn, :detail, data_set, bbox: geom))
+        |> json_response(:ok)
+
+      assert length(resp["data"]) == 0
+
+      geom =
+        %Geo.Polygon{
+          srid: 4326,
+          coordinates: [[
+            {-88.0, 41.0},
+            {-88.0, 43.0},
+            {-85.0, 43.0},
+            {-85.0, 41.0},
+            {-88.0, 41.0}
+          ]]
+        }
+        |> Geo.JSON.encode()
+        |> Jason.encode!()
+
+      resp =
+        conn
+        |> get(Routes.data_set_api_path(conn, :detail, data_set, bbox: geom))
+        |> json_response(:ok)
+
+      assert length(resp["data"]) == 4
+      assert resp["meta"]["query"]["bbox"] == %{
+        "coordinates" => [
+          [
+            [-88.0, 41.0],
+            [-88.0, 43.0],
+            [-85.0, 43.0],
+            [-85.0, 41.0],
+            [-88.0, 41.0]
+          ]
+        ],
+        "crs" => %{
+          "properties" => %{"name" => "EPSG:4326"},
+          "type" => "name"
+        },
+        "type" => "Polygon"
+      }
+    end
+
+    test "applies time_range param", %{conn: conn, crimes: data_set} do
+      range =
+        Plenario.TsRange.new(~N[2000-01-01 00:00:00], ~N[2000-01-02 00:00:00])
+        |> Jason.encode!()
+
+      resp =
+        conn
+        |> get(Routes.data_set_api_path(conn, :detail, data_set, time_range: range))
+        |> json_response(:ok)
+
+      assert length(resp["data"]) == 0
+
+      range =
+        Plenario.TsRange.new(~N[2015-01-01 00:00:00], ~N[2018-01-01 00:00:00])
+        |> Jason.encode!()
+
+      resp =
+        conn
+        |> get(Routes.data_set_api_path(conn, :detail, data_set, time_range: range))
+        |> json_response(:ok)
+
+      assert length(resp["data"]) == 5
+      assert resp["meta"]["query"]["time_range"] == %{
+        "lower" => "2015-01-01T00:00:00",
+        "lower_inclusive" => true,
+        "upper" => "2018-01-01T00:00:00",
+        "upper_inclusive" => true
+      }
+    end
   end
 
   describe "@aggregate" do
