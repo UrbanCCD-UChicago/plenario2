@@ -1,4 +1,0 @@
-<canvas id="<%= @chart_id %>"></canvas>
-<script>
-new Chart(document.getElementById("<%= @chart_id %>"), <%= raw(@chart_dump) %>);
-</script>

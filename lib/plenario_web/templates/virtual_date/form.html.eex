@@ -1,0 +1,45 @@
+<%= form_for @changeset, @action, fn f -> %>
+
+<%= hidden_input f, :data_set_id, value: @dsid %>
+
+<div class="form-group">
+  <%= label f, "Year Field", class: "control-label" %>
+  <%= select f, :yr_field_id, @fields, class: "form-control", value: nil %>
+  <%= error_tag f, :yr_field_id %>
+</div>
+
+<div class="form-group">
+  <%= label f, "Month Field", class: "control-label" %>
+  <%= select f, :mo_field_id, @fields, class: "form-control", value: nil %>
+  <%= error_tag f, :mo_field_id %>
+</div>
+
+<div class="form-group">
+  <%= label f, "Day Field", class: "control-label" %>
+  <%= select f, :day_field_id, @fields, class: "form-control", value: nil %>
+  <%= error_tag f, :day_field_id %>
+</div>
+
+<div class="form-group">
+  <%= label f, "Hour Field", class: "control-label" %>
+  <%= select f, :hr_field_id, @fields, class: "form-control", value: nil %>
+  <%= error_tag f, :hr_field_id %>
+</div>
+
+<div class="form-group">
+  <%= label f, "Minute Field", class: "control-label" %>
+  <%= select f, :min_field_id, @fields, class: "form-control", value: nil %>
+  <%= error_tag f, :min_field_id %>
+</div>
+
+<div class="form-group">
+  <%= label f, "Second Field", class: "control-label" %>
+  <%= select f, :sec_field_id, @fields, class: "form-control", value: nil %>
+  <%= error_tag f, :sec_field_id %>
+</div>
+
+<div class="form-group">
+  <%= submit "Submit", class: "btn btn-primary" %>
+  <%= link "Cancel", to: Routes.data_set_path(@conn, :show, @dsid), class: "btn btn-success float-right" %>
+</div>
+<% end %>

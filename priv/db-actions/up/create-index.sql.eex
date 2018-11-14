@@ -1,4 +1,0 @@
-CREATE INDEX "idx_<%= view_name %>_<%= type %>_<%= id %>"
-ON "<%= view_name %>"
-<%= if using do %>USING <%= using %><% end %>
-("<%= name %>");

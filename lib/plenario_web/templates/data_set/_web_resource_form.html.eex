@@ -1,0 +1,11 @@
+<div class="form-group">
+  <%= label @f, "Source URL", class: "control-label" %>
+  <%= text_input @f, :src_url, class: "form-control", placeholder: "https://example.com/test.csv", disabled: not @fully_editable? %>
+  <%= error_tag @f, :src_url %>
+</div>
+
+<div class="form-group">
+  <%= label @f, "Source Type", class: "control-label" %>
+  <%= select @f, :src_type, src_type_choices(), class: "form-control", value: "csv", disabled: not @fully_editable? %>
+  <%= error_tag @f, :src_type %>
+</div>

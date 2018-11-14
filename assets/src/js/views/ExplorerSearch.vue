@@ -29,7 +29,11 @@ export default {
         +   `"lower": "${this.$route.query.startDate}",`
         +   `"upper": "${this.$route.query.endDate}",`
         +   `"upper_inclusive": false`
-        + `}`;
+        + `}`
+        + `&with_fields=true`
+        + `&with_virtual_dates=true`
+        + `&with_virtual_points=true`
+        + `&with_user=true`;
       
       if (this.$route.query.geojson) {
         // We have to do this because the backend only accepts a polygon...

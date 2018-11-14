@@ -1,0 +1,68 @@
+<h1>Listing Data sets</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Slug</th>
+      <th>Table name</th>
+      <th>View name</th>
+      <th>State</th>
+      <th>Soc domain</th>
+      <th>Soc 4x4</th>
+      <th>Src url</th>
+      <th>Src type</th>
+      <th>Socrata?</th>
+      <th>Attribution</th>
+      <th>Description</th>
+      <th>Refresh starts on</th>
+      <th>Refresh ends on</th>
+      <th>Refresh interval</th>
+      <th>Refresh rate</th>
+      <th>First import</th>
+      <th>Next import</th>
+      <th>Bbox</th>
+      <th>Hull</th>
+      <th>Time range</th>
+      <th>Num records</th>
+
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+<%= for data_set <- @data_sets do %>
+    <tr>
+      <td><%= data_set.name %></td>
+      <td><%= data_set.slug %></td>
+      <td><%= data_set.table_name %></td>
+      <td><%= data_set.view_name %></td>
+      <td><%= data_set.state %></td>
+      <td><%= data_set.soc_domain %></td>
+      <td><%= data_set.soc_4x4 %></td>
+      <td><%= data_set.src_url %></td>
+      <td><%= data_set.src_type %></td>
+      <td><%= data_set.socrata? %></td>
+      <td><%= data_set.attribution %></td>
+      <td><%= data_set.description %></td>
+      <td><%= data_set.refresh_starts_on %></td>
+      <td><%= data_set.refresh_ends_on %></td>
+      <td><%= data_set.refresh_interval %></td>
+      <td><%= data_set.refresh_rate %></td>
+      <td><%= data_set.first_import %></td>
+      <td><%= data_set.next_import %></td>
+      <td><%= data_set.bbox %></td>
+      <td><%= data_set.hull %></td>
+      <td><%= data_set.time_range %></td>
+      <td><%= data_set.num_records %></td>
+
+      <td>
+        <%= link "Show", to: Routes.data_set_path(@conn, :show, data_set) %>
+        <%= link "Edit", to: Routes.data_set_path(@conn, :edit, data_set) %>
+        <%= link "Delete", to: Routes.data_set_path(@conn, :delete, data_set), method: :delete, data: [confirm: "Are you sure?"] %>
+      </td>
+    </tr>
+<% end %>
+  </tbody>
+</table>
+
+<span><%= link "New Data set", to: Routes.data_set_path(@conn, :new) %></span>

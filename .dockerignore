@@ -8,9 +8,8 @@ test/
 .formatter.exs
 .gitignore
 .travis.yml
-Apache2-License.txt
-build
+build.bash
 coveralls.json
-deploy
+deploy.bash
 LICENSE
 README.md

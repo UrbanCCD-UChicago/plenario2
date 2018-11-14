@@ -1,0 +1,2 @@
+COPY "<%= temp_name %>"
+FROM STDIN

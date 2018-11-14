@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Plenario</title>
+
+    <!-- Import css and js files built by Webpack -->
+    <link rel="stylesheet" href='<%= Routes.static_path(@conn, "/css/main.css") %>'>
+    <script src='<%= Routes.static_path(@conn, "/js/polyfill.bundle.js") %>'></script>
+    <script src='<%= Routes.static_path(@conn, "/js/main.bundle.js") %>'></script>
+    <link rel="shortcut icon" type="image/png" href='<%= Routes.static_path(@conn, "/images/favicon.png") %>'>
+  </head>
+
+  <body>
+    <%= render "flashes.html", assigns %>
+    <%= 
+      case @admin_nav? do 
+        true -> render "navbar-admin.html", assigns
+        false -> render "navbar-main.html", assigns
+      end
+    %>
+    <main role="main">
+      <%= render @view_module, @view_template, assigns %>
+    </main>
+  </body>
+</html>

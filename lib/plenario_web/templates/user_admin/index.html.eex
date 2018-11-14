@@ -1,0 +1,51 @@
+<div class="container mt-2">
+  <div class="row">
+    <h2>Admins</h2>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Email</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <%= for u <- @admins do %>
+        <tr>
+          <td><%= u.username %></td>
+          <td><%= u.email %></td>
+          <td><%= link "Edit", to: Routes.user_admin_path(@conn, :edit, u), class: "btn btn-primary btn-sm" %></td>
+        </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="row">
+    <h2>Users</h2>
+  
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Email</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <%= for u <- @regulars do %>
+        <tr>
+          <td>
+            <%= u.username %>
+          </td>
+          <td>
+            <%= u.email %>
+          </td>
+          <td><%= link "Edit", to: Routes.user_admin_path(@conn, :edit, u), class: "btn btn-primary btn-sm" %></td>
+        </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

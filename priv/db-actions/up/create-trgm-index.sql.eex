@@ -1,3 +1,0 @@
-CREATE INDEX "idx_<%= view_name %>_<%= type %>_<%= id %>"
-ON "<%= view_name %>"
-USING GIN ( to_tsvector('english', "<%= name %>") )

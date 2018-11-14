@@ -1,33 +1,50 @@
-defmodule Plenario.Schemas.User do
-  @moduledoc """
-  Defines the schema for Users
-  """
-
+defmodule Plenario.User do
   use Ecto.Schema
 
-  @derive {Poison.Encoder, only: [:name, :email, :bio]}
-  schema "users" do
-    field :name, :string
-    field :email, :string
+  import Ecto.Changeset
 
-    field :password, :string, virtual: true
+  alias Plenario.{
+    User,
+    DataSet
+  }
+
+  schema "users" do
+    field :username, :string
+    field :email, :string
     field :password_hash, :string
+    field :password, :string, virtual: true
 
     field :bio, :string, default: nil
 
-    field :is_active, :boolean, default: true
-    field :is_admin, :boolean, default: false
+    field :is_admin?, :boolean, default: false
 
-    timestamps(type: :utc_datetime)
-
-    has_many :metas, Plenario.Schemas.Meta
+    has_many :data_sets, DataSet
   end
 
-  def get_status_name(user) do
-    cond do
-      user.is_active == false -> "Archived User"
-      user.is_admin -> "Admin"
-      user.is_active -> "Regular User"
-    end
+  defimpl Phoenix.HTML.Safe, for: User, do: def to_iodata(user), do: user.username
+
+  @attrs ~W|username email password bio is_admin?|a
+
+  @reqd ~W|username email|a
+
+  @email_regex ~r/.*@.*\..*/
+
+  @doc false
+  def changeset(user, attrs) do
+    user
+    |> cast(attrs, @attrs)
+    |> validate_required(@reqd)
+    |> validate_format(:email, @email_regex)
+    |> unique_constraint(:username)
+    |> unique_constraint(:email)
+    |> put_password_hash()
   end
+
+  defp put_password_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do
+    hash = Comeonin.Bcrypt.hashpwsalt(password)
+    put_change(changeset, :password_hash, hash)
+
+  end
+
+  defp put_password_hash(changeset), do: changeset
 end

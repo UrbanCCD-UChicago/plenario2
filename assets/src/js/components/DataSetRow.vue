@@ -116,10 +116,10 @@ export default {
         +   `"upper_inclusive": true`
         + `}&`
         + `group_by=${this.currentTimestampColumn}&`
-        + `granularity=${this.granularity}&`;
+        + `granularity=${this.granularity}`;
 
       if (this.geojson) {
-        return query + `${this.vpf}=within:${this.geojson}`;
+        return query + `&${this.vpf}=within:${this.geojson}`;
       } else {
         return query;
       }

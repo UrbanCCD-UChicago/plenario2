@@ -1,0 +1,33 @@
+<%= form_for @changeset, @action, fn f -> %>
+
+  <%= hidden_input f, :data_set_id, value: @dsid %>
+
+  <div class="form-group">
+    <%= label f, :name, class: "control-label" %>
+    <%= text_input f, :name, class: "form-control", disabled: true %>
+    <%= error_tag f, :name %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, :col_name, class: "control-label" %>
+    <%= text_input f, :col_name, class: "form-control", disabled: true %>
+    <%= error_tag f, :col_name %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, :type, class: "control-label" %>
+    <%= text_input f, :type, class: "form-control", disabled: true %>
+    <%= error_tag f, :type %>
+  </div>
+
+  <div class="form-group">
+    <%= label f, :description, class: "control-label" %>
+    <%= textarea f, :description, class: "form-control" %>
+    <%= error_tag f, :description %>
+  </div>
+
+  <div class="form-group">
+    <%= submit "Submit", class: "btn btn-primary" %>
+    <%= link "Cancel", to: Routes.data_set_path(@conn, :show, @dsid), class: "btn btn-success float-right" %>
+  </div>
+<% end %>

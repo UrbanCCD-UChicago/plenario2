@@ -1,0 +1,302 @@
+<div class="container mt-2">
+  <h2>
+    <%= @data_set.name %>
+    
+    <%= if @user_is_owner? do %>
+      <%= button "Delete", to: Routes.data_set_path(@conn, :delete, @data_set), method: :delete, class: "btn btn-primary float-right", style: "margin-left: 10px", data: [confirm: "Are you sure?"] %>
+    <% end %>
+    
+    <%= if @user_is_owner? and @submittable? do %>
+      <%= button "Submit for Approval", to: Routes.data_set_path(@conn, :submit_for_approval, @data_set), class: "btn btn-success float-right", style: "margin-left: 10px" %>
+    <% end %>
+    
+    <%= if @user_is_owner? and @ok_to_import? do %>
+      <%= button "Import Now", to: Routes.data_set_path(@conn, :ingest_now, @data_set), class: "btn btn-info float-right", style: "margin-left: 10px" %>
+    <% end %>
+    
+    <%= if not @submittable? and @user_is_owner? do %>
+      <%# link "Request Changes", to: Routes.data_set_path(@conn, :request_changes, @data_set), class: "btn btn-warning float-right", style: "margin-left: 10px" %>
+    <% end %>
+  </h2>
+
+  <hr>
+
+  <div class="row">
+    <div class="col-lg-12">
+      <h3>
+        General Info
+        <%= if @user_is_owner? do %>
+          <%= link "Edit", to: Routes.data_set_path(@conn, :edit, @data_set), class: "btn btn-success float-right" %>
+        <% end %>
+      </h3>
+      <table class="table table-striped">
+        <tbody>
+          <tr>
+            <td>Name:</td>
+            <td>
+              <%= @data_set.name %>
+            </td>
+          </tr>
+          <tr>
+            <td>Status:</td>
+            <td>
+              <%= @data_set.state %>
+            </td>
+          </tr>
+          <tr>
+            <td>Contributor:</td>
+            <td>
+              <%= @data_set.user.username %>
+            </td>
+          </tr>
+          <tr>
+            <td>Description:</td>
+            <td><span style="white-space: pre-line;">
+                <%= @data_set.description %></span></td>
+          </tr>
+          <tr>
+            <td>Attribution:</td>
+            <td>
+              <%= @data_set.attribution %>
+            </td>
+          </tr>
+          <%= if @data_set.socrata? do %>
+          <tr>
+            <td>Socrata Domain:</td>
+            <td><%= @data_set.soc_domain %></td>
+          </tr>
+          <tr>
+            <td>Socrata 4x4:</td>
+            <td><%= @data_set.soc_4x4 %></td>
+          </tr>
+          <% else %>
+          <tr>
+            <td>Source URL:</td>
+            <td><%= @data_set.src_url %></td>
+          </tr>
+          <% end %>
+          <tr>
+            <td>Refresh Cadence:</td>
+            <td>
+              <%= format_refresh_cadence(@data_set) %>
+            </td>
+          </tr>
+          <tr>
+            <td>Refresh Starts On:</td>
+            <td><%= @data_set.refresh_starts_on %></td>
+          </tr>
+          <tr>
+            <td>Refresh Ends On:</td>
+            <td>
+              <%= @data_set.refresh_ends_on %>
+            </td>
+          </tr>
+          <tr>
+            <td>First Import:</td>
+            <td>
+              <%= @data_set.first_import %>
+            </td>
+          </tr>
+          </tr>
+          <tr>
+            <td>Latest Import:</td>
+            <td>
+              <%= @data_set.latest_import %>
+            </td>
+          </tr>
+          </tr>
+          <tr>
+            <td>Next Import:</td>
+            <td>
+              <%= @data_set.next_import %>
+            </td>
+          </tr>
+          <tr>
+            <td>Time Range:</td>
+            <td>
+              <%= @data_set.time_range %>
+            </td>
+          </tr>
+          <tr>
+            <td>Number of Records:</td>
+            <td>
+              <%= @data_set.num_records %>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div> <!-- General Info -->
+  </div>
+
+  <hr>
+  
+  <div class="row">
+    <div class="col-lg-12">
+      <h3>
+        Data Set Fields
+        <%= if @user_is_owner? and @submittable? do %>
+          <%= button "Delete and Reload Fields", to: Routes.data_set_path(@conn, :reload_fields, @data_set), class: "btn btn-primary float-right" %>
+        <% end %>
+      </h3>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <%= if @user_is_owner? do %>
+              <th></th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <%= for f <- @data_set.fields do %>
+          <tr>
+            <td>
+              <%= f.name %>
+            </td>
+            <td>
+              <%= f.type %>
+            </td>
+            <td style="max-width: 6em; word-wrap: break-word;">
+              <%= f.description %>
+            </td>
+            <%= if @user_is_owner? do %>
+              <td>
+              <%= link "Edit", to: Routes.data_set_field_path(@conn, :edit, @data_set.id, f), class: "btn btn-success btn-sm float-right" %>
+            </td>
+            <% end %>
+            <% end %>
+        </tbody>
+      </table> <!-- .table.table-striped -->
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="row">
+    <div class="col-lg-12">
+      <h3>
+        Computed Date Fields
+        <%# tooltip "A composite field constructed from discrete fields in the data set: if the data set contains separate fields for, say, year, month and day, we can construct a single date field to index to better query the data." %>
+        <%= if @user_is_owner? and @submittable? do %>
+          <%= link "Add a New Date Field", to: Routes.data_set_virtual_date_path(@conn, :new, @data_set.id), class: "btn btn-success float-right" %>
+        <% end %>
+      </h3>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Year Ref</th>
+            <th>Month Ref</th>
+            <th>Day Ref</th>
+            <th>Hour Ref</th>
+            <th>Minute Ref</th>
+            <th>Second Ref</th>
+            <%= if @user_is_owner? and @submittable? do %>
+              <th></th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <%= for f <- @virtual_dates do %>
+          <tr>
+            <td>
+              <%= f.yr_field.col_name %>
+            </td>
+            <td>
+              <%= if f.mo_field do %>
+              <%= f.mo_field.col_name %>
+              <% else %>-
+              <% end %>
+            </td>
+            <td>
+              <%= if f.day_field do %>
+              <%= f.day_field.col_name %>
+              <% else %>-
+              <% end %>
+            </td>
+            <td>
+              <%= if f.hr_field do %>
+              <%= f.hr_field.col_name %>
+              <% else %>-
+              <% end %>
+            </td>
+            <td>
+              <%= if f.min_field do %>
+              <%= f.min_field.col_name %>
+              <% else %>-
+              <% end %>
+            </td>
+            <td>
+              <%= if f.sec_field do %>
+              <%= f.sec_field.col_name %>
+              <% else %>-
+              <% end %>
+            </td>
+            <%= if @user_is_owner? and @submittable? do %>
+              <td>
+                <%= link "Delete", to: Routes.data_set_virtual_date_path(@conn, :delete, @data_set.id, f.id), method: :delete, class: "btn btn-primary btn-sm", style: "margin-left: 10px" %>
+                <%= link "Edit", to: Routes.data_set_virtual_date_path(@conn, :edit, @data_set.id, f.id), class: "btn btn-success btn-sm", style: "margin-left: 10px" %>
+            </td>
+            <% end %>
+            <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="row">
+    <div class="col-lg-12">
+      <h3>
+        Computed Point Fields
+        <%# tooltip "A location field constructed from primitive fields in the data set: if the data set contains a single or separate fields that represent coordinate points, we can derive a coordinate field." %>
+        <%= if @user_is_owner? and @submittable? do %>
+          <%= link "Add a New Point Field", to: Routes.data_set_virtual_point_path(@conn, :new, @data_set.id), class: "btn btn-success float-right" %>
+        <% end %>
+      </h3>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Location Ref</th>
+            <th>Latitude Ref</th>
+            <th>Longitude Ref</th>
+            <%= if @user_is_owner? and @submittable? do %>
+              <th></th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <%= for f <- @virtual_points do %>
+          <tr>
+            <td>
+              <%= if f.loc_field do %>
+              <%= f.loc_field.col_name %>
+              <% else %>-
+              <% end %>
+            </td>
+            <td>
+              <%= if f.lat_field do %>
+              <%= f.lat_field.col_name %>
+              <% else %>-
+              <% end %>
+            </td>
+            <td>
+              <%= if f.lon_field do %>
+              <%= f.lon_field.col_name %>
+              <% else %>-
+              <% end %>
+            </td>
+            <%= if @user_is_owner? and @submittable? do %>
+              <td>
+                <%= link "Delete", to: Routes.data_set_virtual_point_path(@conn, :delete, @data_set.id, f.id), method: :delete, class: "btn btn-primary btn-sm", style: "margin-left: 10px" %>
+                <%= link "Edit", to: Routes.data_set_virtual_point_path(@conn, :edit, @data_set.id, f.id), class: "btn btn-success btn-sm", style: "margin-left: 10px" %>
+            </td>
+            <% end %>
+            <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

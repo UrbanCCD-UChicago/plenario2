@@ -1,6 +1,4 @@
-CREATE TABLE "<%= table_name %>" (
-  row_id BIGSERIAL PRIMARY KEY
-  <%= for f <- fields do %>
-  , "<%= f.name %>" TEXT
+CREATE TABLE "<%= table_name %>" ( <%= for {f, idx} <- Enum.with_index(fields, 1) do %>
+  "<%= f.col_name %>" TEXT <%= if idx < len_fields do %>,<% end %>
   <% end %>
 )

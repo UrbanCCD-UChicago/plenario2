@@ -1,0 +1,242 @@
+<script>
+  let mainNav;
+  let navHeight;
+  let firstCover;
+
+  let autoScrolling = false;
+
+  function showHideNavbar() {
+    if (autoScrolling) { return }
+    const coverBottom = firstCover.getBoundingClientRect().bottom;
+    coverBottom <= (navHeight / 2) ? mainNav.slideDown(200) : mainNav.slideUp(200);
+  }
+
+  function skipCover(skipElement) {
+    jumpTo($(skipElement).parents('.cover').next());
+  }
+
+  function jumpTo(target) {
+    autoScrolling = true;
+    $('html, body').animate({
+      scrollTop: $(target).offset().top - navHeight,
+    }, 200, function () { autoScrolling = false; });
+  }
+
+  $(document).ready(function () {
+    mainNav = $('#main-nav');
+    navHeight = mainNav.outerHeight();
+    firstCover = $('.cover').get(0);
+  })
+  $(window).on('scroll', throttle(showHideNavbar, 100));
+</script>
+
+<section class="jumbotron jumbotron-fluid cover cityscape mb-0">
+
+  <%= render PlenarioWeb.LayoutView, "navbar-hero.html", conn: @conn, current_user: @current_user %>
+
+  <div class="container">
+    <div class="row align-items-end">
+      <div class="col-4 offset-4 offset-md-0 col-lg-2 ">
+        <img class="img-fluid" src="<%= Routes.static_path(@conn, "/images/arch.svg") %>" alt="The Plenario logo, a stylized
+        red brick archway">
+      </div>
+      <div class="col-12 col-md-8 col-lg-10">
+        <h1 class="display-1 mb-0">Plenario</h1>
+        <p class="display-4 mb-0">
+          The Premier Open Data Platform
+          <!-- prefer "Hub"? -->
+        </p>
+      </div>
+    </div>
+    <hr>
+    <div class="row">
+      <div class="col-12 col-md-6">
+        <p class="lead">
+          Search hundreds of open data sets from around the world with a single convenient
+          interface. Everything appears on one map and in one timeline.
+        </p>
+      </div>
+      <div class="col-12 col-md-6 order-md-3">
+        <p class="lead">
+          <a class="btn btn-primary" href="#one-map-one-timeline" onclick="jumpTo('#one-map-one-timeline');">
+            Learn More
+          </a>
+          <%= link "Explore Data Sets", to: Routes.page_path(@conn, :explorer), class: "btn btn-primary" %>
+        </p>
+      </div>
+      <div class="col-12 d-md-none">
+        <hr>
+      </div>
+      <div class="col-12 col-md-12">
+        <p class="lead">
+          Plenario is the official home for data from the
+          Array&nbsp;of&nbsp;Things, providing block-level, real-time data in
+          Chicago (and&nbsp;beyond).
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="coverskip fas fa-chevron-down" onclick="skipCover(this);"></div>
+
+</section>
+
+<section class="container">
+
+  <%# NOTE: images in this section generated using these flags: "--retina --max 690 --step 24576" %>
+
+  <div class="row mb-5">
+    <div class="col-lg-6">
+      <h2 id="one-map-one-timeline" class="display-4">One Map, One Timeline</h2>
+      <p class="lead">
+        View and search across hundreds of open data sets in one place with one interface.
+      </p>
+      <p>
+        All of the data sets available in Plenario are available elsewhere online (that's what makes
+        it <em>open data</em>), but Plenario lets you see all of the data on one unified map with
+        one unified timeline, no matter who's publishing it or the format they chose.
+      </p>
+    </div>
+    <div class="col-lg-6">
+      <img class="img-fluid" alt="A hanging map with places marked on it with pushpins and paper flags" sizes="min-width(1200px) 540px,
+               min-width(992px) 450px,
+               min-width(768px) 690px,
+               min-width(576px) 510px,
+               100vw"
+        srcset="<%= @s3_asset_path %>/images/map-320.jpg 320w,
+                <%= @s3_asset_path %>/images/map-622.jpg 622w,
+                <%= @s3_asset_path %>/images/map-881.jpg 881w,
+                <%= @s3_asset_path %>/images/map-1140.jpg 1140w,
+                <%= @s3_asset_path %>/images/map-1380.jpg 1380w"
+        src="<%= @s3_asset_path %>/images/map-881.jpg">
+    </div>
+  </div>
+
+  <div class="row mb-5">
+    <div class="col-lg-6">
+      <h2 id="then-and-now" class="display-4">Then and Now (<em>Right Now</em>)</h2>
+      <p class="lead">
+        Search data sets back decades, and get new data ASAP.
+      </p>
+      <p>
+        Plenario updates data sets as quickly as the source provider does, so you'll always see the
+        most recent available data in our unified interface. Plus, for data provided by the Array of
+        Things that means you get minute-by-minute readings from every active node, updated several
+        times each hour.
+      </p>
+    </div>
+    <div class="col-lg-6 order-lg-first">
+      <img class="img-fluid" alt="A long exposure of a highway approaching a city, showing streaks of light from passing cars"
+        sizes="min-width(1200px) 540px,
+               min-width(992px) 450px,
+               min-width(768px) 690px,
+               min-width(576px) 510px,
+               100vw"
+        srcset="<%= @s3_asset_path %>/images/city-streaks-320.jpg 320w,
+                <%= @s3_asset_path %>/images/city-streaks-673.jpg 673w,
+                <%= @s3_asset_path %>/images/city-streaks-799.jpg 799w,
+                <%= @s3_asset_path %>/images/city-streaks-967.jpg 967w,
+                <%= @s3_asset_path %>/images/city-streaks-1051.jpg 1051w,
+                <%= @s3_asset_path %>/images/city-streaks-1177.jpg 1177w,
+                <%= @s3_asset_path %>/images/city-streaks-1262.jpg 1262w,
+                <%= @s3_asset_path %>/images/city-streaks-1380.jpg 1380w"
+        src="<%= @s3_asset_path %>/images/city-streaks-799.jpg">
+    </div>
+  </div>
+
+  <div class="row mb-5">
+    <div class="col-lg-6">
+      <h2 id="share-with-the-world" class="display-4">Share With the World</h2>
+      <p class="lead">
+        If you're already publishing an open data source it's super easy to add it to Plenario.
+      </p>
+      <p>
+        Anyone can
+        <%= link "sign up", to: Routes.session_path(@conn, :register) %> and register new publicly
+        available data sets. As long as it includes location and time fields we can index it and
+        make it available to the world! Static geographic data from zipped ESRI Shapefiles is also
+        supported.
+      </p>
+    </div>
+    <div class="col-lg-6">
+      <img class="img-fluid" alt="A NASA satellite orbiting above a view of the cloud-covered Earth" sizes="min-width(1200px) 540px,
+               min-width(992px) 450px,
+               min-width(768px) 690px,
+               min-width(576px) 510px,
+               100vw"
+        srcset="<%= @s3_asset_path %>/images/satellite-320.jpg 320w,
+                <%= @s3_asset_path %>/images/satellite-641.jpg 641w,
+                <%= @s3_asset_path %>/images/satellite-838.jpg 838w,
+                <%= @s3_asset_path %>/images/satellite-986.jpg 986w,
+                <%= @s3_asset_path %>/images/satellite-1133.jpg 1133w,
+                <%= @s3_asset_path %>/images/satellite-1232.jpg 1232w,
+                <%= @s3_asset_path %>/images/satellite-1380.jpg 1380w"
+        src="<%= @s3_asset_path %>/images/satellite-838.jpg">
+    </div>
+  </div>
+
+  <div class="row mb-5">
+    <div class="col-lg-6">
+      <h2 id="tell-the-story-of-place" class="display-4">Tell the Story of Place</h2>
+      <p class="lead">
+        With all the data at your fingertips, you can watch places change over time.
+      </p>
+      <p>
+        Whether you care about climate change, demographic shifts, or driving accidents, Plenario
+        lets you easily the effects in a neighborhood, along a route, or throughout an entire city.
+      </p>
+    </div>
+    <div class="col-lg-6 order-lg-first">
+      <img class="img-fluid" alt="A busy neighborhood market street on an overcast day" sizes="min-width(1200px) 540px,
+               min-width(992px) 450px,
+               min-width(768px) 690px,
+               min-width(576px) 510px,
+               100vw"
+        srcset="<%= @s3_asset_path %>/images/street-market-320.jpg 320w,
+                <%= @s3_asset_path %>/images/street-market-518.jpg 518w,
+                <%= @s3_asset_path %>/images/street-market-674.jpg 674w,
+                <%= @s3_asset_path %>/images/street-market-778.jpg 778w,
+                <%= @s3_asset_path %>/images/street-market-933.jpg 933w,
+                <%= @s3_asset_path %>/images/street-market-1037.jpg 1037w,
+                <%= @s3_asset_path %>/images/street-market-1140.jpg 1140w,
+                <%= @s3_asset_path %>/images/street-market-1244.jpg 1244w,
+                <%= @s3_asset_path %>/images/street-market-1380.jpg 1380w"
+        src="<%= @s3_asset_path %>/images/street-market-778.jpg">
+    </div>
+  </div>
+
+  <div class="row mb-5">
+    <div class="col-lg-6">
+      <h2 id="data-should-be-transparent" class="display-4">Data Should Be Transparent</h2>
+      <p class="lead">
+        We belive trust is good, but the ability to independently verify is better.
+      </p>
+      <p>
+        That's why Plenario is <a href="https://github.com/UrbanCCD-UChicago/plenario2">open
+          source</a>, and all data we serve is publicly available straight from the publisher. You
+        should always be able to trace what you see in Plenario all the way to the data source.
+      </p>
+    </div>
+    <div class="col-lg-6">
+      <img class="img-fluid" alt="The large reading room of a public library, with tiered shelving along the walls beneath grand windows"
+        sizes="min-width(1200px) 540px,
+               min-width(992px) 450px,
+               min-width(768px) 690px,
+               min-width(576px) 510px,
+               100vw"
+        srcset="<%= @s3_asset_path %>/images/library-320.jpg 320w,
+                <%= @s3_asset_path %>/images/library-531.jpg 531w,
+                <%= @s3_asset_path %>/images/library-648.jpg 648w,
+                <%= @s3_asset_path %>/images/library-766.jpg 766w,
+                <%= @s3_asset_path %>/images/library-884.jpg 884w,
+                <%= @s3_asset_path %>/images/library-1002.jpg 1002w,
+                <%= @s3_asset_path %>/images/library-1061.jpg 1061w,
+                <%= @s3_asset_path %>/images/library-1179.jpg 1179w,
+                <%= @s3_asset_path %>/images/library-1238.jpg 1238w,
+                <%= @s3_asset_path %>/images/library-1380.jpg 1380w"
+        src="<%= @s3_asset_path %>/images/library-766.jpg">
+    </div>
+  </div>
+
+</section>

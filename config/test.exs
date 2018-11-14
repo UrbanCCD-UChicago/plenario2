@@ -7,29 +7,8 @@ config :plenario, PlenarioWeb.Endpoint,
   server: false
 
 # Print only warnings and errors during test
-config :logger, level: :warn, metadata: [:request_id]
+config :logger, level: :warn
 
 # Configure your database
 config :plenario, Plenario.Repo,
-  adapter: Ecto.Adapters.Postgres,
-  username: "postgres",
-  password: "password",
-  database: "plenario_test",
-  hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
-
-# Configure Guardian
-config :plenario, PlenarioAuth.Guardian,
-  issuer: "Plenario",
-  secret_key: "qwertyuiopASDFGHJKLzxcvbnm1234567890QWERTYUIOPasdfghjklZXCVBNM!@"
-
-# Configure HTTP API
-config :plenario, :http, HTTP.Mock
-
-# Configure worker settings
-config :plenario, PlenarioEtl,
-  chunk_size: 100,
-  pool_size: 10
-
-# configure bamboo (email)
-config :plenario, PlenarioMailer, adapter: Bamboo.TestAdapter

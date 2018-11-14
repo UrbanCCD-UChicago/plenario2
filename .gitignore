@@ -42,12 +42,10 @@ node_modules/
 .idea
 *.iml
 .elixir_ls
+.vscode
 
 # build and release
 .deliver/releases/
-
-# Visual Studio Code
-.vscode/
 
 # Coverage Reports
 excoveralls.html

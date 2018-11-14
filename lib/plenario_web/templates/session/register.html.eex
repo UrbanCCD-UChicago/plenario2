@@ -1,0 +1,33 @@
+<div class="container mt-2 mb-5">
+  <div class="row">
+    <div class="col-md-6">
+      <h1>Sign Up</h1>
+
+      <p>Already have an account? Then <%= link "log in!", to: @login_action %></p>
+
+      <%= form_for @changeset, @register_action, fn f -> %>
+        <div class="form-group">
+          <%= label f, "Email", class: "control-label" %>
+          <%= text_input f, :email, class: "form-control" %>
+          <%= error_tag f, :email %>
+        </div>
+      
+        <div class="form-group">
+          <%= label f, "Username", class: "control-label" %>
+          <%= text_input f, :username, class: "form-control" %>
+          <%= error_tag f, :username %>
+        </div>
+
+        <div class="form-group">
+          <%= label f, "Password", class: "control-label" %>
+          <%= password_input f, :password, class: "form-control" %>
+          <%= error_tag f, :password %>
+        </div>
+
+        <div class="form-group">
+          <%= submit "Login", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
