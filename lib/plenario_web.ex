@@ -1,122 +1,54 @@
 defmodule PlenarioWeb do
-  @moduledoc """
-  The entrypoint for defining your web interface, such
-  as controllers, views, channels and so on.
-
-  This can be used in your application as:
-
-      use PlenarioWeb, :controller
-      use PlenarioWeb, :view
-
-  The definitions below will be executed for every view,
-  controller, etc, so keep them short and clean, focused
-  on imports, uses and aliases.
-
-  Do NOT define functions inside the quoted expressions
-  below. Instead, define any helper function in modules
-  and import those modules here.
-  """
-
-  def web_controller do
+  def controller do
     quote do
-      use Phoenix.Controller, namespace: PlenarioWeb.Web
-      import Plug.Conn
-      import PlenarioWeb.Router.Helpers
-      import PlenarioWeb.Gettext
-      import Canary.Plugs
+      use Phoenix.Controller, namespace: PlenarioWeb
 
-      def do_404(conn) do
-        conn
-        |> put_status(:not_found)
-        |> put_view(PlenarioWeb.ErrorView)
-        |> render("404.html")
+      import Plug.Conn
+      import PlenarioWeb.Gettext
+      alias PlenarioWeb.Router.Helpers, as: Routes
+      import Canary.Plugs
+      import PlenarioWeb.AdminNavPlug
+
+      def put_error_flashes(conn, %Ecto.Changeset{errors: errors}) do
+        conn = put_flash(conn, :error, "Please review and correct errors in the form below.")
+
+        case errors[:base] do
+          nil ->
+            conn
+
+          {msg, _} ->
+            put_flash(conn, :error, msg)
+        end
       end
+
+      def put_error_flashes(conn, _), do: conn
+
+      plug :admin_nav?
     end
   end
 
-  def admin_controller do
-    quote do
-      use Phoenix.Controller, namespace: PlenarioWeb.Admin
-      import Plug.Conn
-      import PlenarioWeb.Router.Helpers
-      import PlenarioWeb.Gettext
-      import Canary.Plugs
-    end
-  end
-
-  def api_controller do
-    quote do
-      use Phoenix.Controller, namespace: PlenarioWeb.Api
-      import Plug.Conn
-      import PlenarioWeb.Router.Helpers
-      import Canary.Plugs
-    end
-  end
-
-  def web_view do
-    quote do
-      use Phoenix.View,
-        root: "lib/plenario_web/templates/web",
-        namespace: PlenarioWeb.Web
-
-      # Import convenience functions from controllers
-      import Phoenix.Controller, only: [get_flash: 2, view_module: 1]
-
-      # Use all HTML functionality (forms, tags, etc)
-      use Phoenix.HTML
-
-      import PlenarioWeb.Router.Helpers
-      import PlenarioWeb.ErrorHelpers
-      import PlenarioWeb.Gettext
-      import PlenarioWeb.TemplateHelpers
-    end
-  end
-
-  def admin_view do
-    quote do
-      use Phoenix.View,
-        root: "lib/plenario_web/templates/admin",
-        namespace: PlenarioWeb.Admin
-
-      # Import convenience functions from controllers
-      import Phoenix.Controller, only: [get_flash: 2, view_module: 1]
-
-      # Use all HTML functionality (forms, tags, etc)
-      use Phoenix.HTML
-
-      import PlenarioWeb.Router.Helpers
-      import PlenarioWeb.ErrorHelpers
-      import PlenarioWeb.Gettext
-    end
-  end
-
-  def shared_view do
+  def view do
     quote do
       use Phoenix.View,
         root: "lib/plenario_web/templates",
         namespace: PlenarioWeb
 
       # Import convenience functions from controllers
-      import Phoenix.Controller, only: [get_flash: 2, view_module: 1]
+      import Phoenix.Controller, only: [get_flash: 1, get_flash: 2, view_module: 1]
 
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML
 
-      import PlenarioWeb.Router.Helpers
       import PlenarioWeb.ErrorHelpers
       import PlenarioWeb.Gettext
-    end
-  end
+      alias PlenarioWeb.Router.Helpers, as: Routes
 
-  def api_view do
-    quote do
-      use Phoenix.View,
-        root: "lib/plenario_web/templates/api",
-        namespace: PlenarioWeb.Api
+      alias Plenario.DataSet
 
-      import Phoenix.Controller, only: [view_module: 1]
-      import PlenarioWeb.Router.Helpers
-      import PlenarioWeb.ErrorHelpers
+      def format_refresh_cadence(%DataSet{refresh_rate: rate, refresh_interval: interval})
+        when not is_nil(rate) and not is_nil(interval), do: "#{rate} #{interval}"
+
+      def format_refresh_cadence(_), do: ""
     end
   end
 
@@ -128,9 +60,13 @@ defmodule PlenarioWeb do
     end
   end
 
-  @doc """
-  When used, dispatch to the appropriate controller/view/etc.
-  """
+  def channel do
+    quote do
+      use Phoenix.Channel
+      import PlenarioWeb.Gettext
+    end
+  end
+
   defmacro __using__(which) when is_atom(which) do
     apply(__MODULE__, which, [])
   end

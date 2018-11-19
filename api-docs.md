@@ -8,1709 +8,1014 @@ ready to search and download. The Plenario API can be used to perform
 geospatial and temporal queries. If you’d rather access Plenario’s data through
 a visual interface, check out the [Data Explorer](https://dev.plenar.io/explore).
 
-## What endpoints does the API provide?
+## System Schema
 
-There are 3 general endpoints that we will refer to:
+Plenario deals in _data sets_. A data set is more or less exactly what you think
+it is: a coherent document of data points for specific topic. Data sets listed with
+Plenario must contain a timestamp and a location.
 
-- The _list_ endpoint, which is where you can get a listing of all available
-  data sets with their metadata (names, source, fields, etc.)
-- The _detail_ endpoint, which is where you can page through the records
-  of the data sets
+Internally, our schema is
 
-## What HTTP specifics are allowed?
+1. `User`s are registered users that _own_ data sets
+1. `DataSet`s that contain metadata for a public document: the _source_ data set
+1. `Field`s that describe the columns/fields/attributes of the source data set
+1. `VirtualDate`s and `VirtualPoint`s that act as bindings for one or more regular
+   fields to create a single timestamp or point.
 
-### Version
+### User
 
-We currently only support HTTP/1.1 .
+| Attribute | Type    | Default | Required? | Description                         |
+| --------- | ------- | ------- | --------- | ----------------------------------- |
+| id        | integer |         | Yes       | The primary key                     |
+| username  | text    |         | Yes       | The user's name (real or otherwise) |
+| bio       | text    | nil     | No        | Biographical information            |
+| is_admin? | boolean | false   | Yes       | Is the user a system administrator? |  
 
-### Verbs
+### DataSet
 
-We support only 3 verbs:
+| Attribute         | Type      | Default | Required?   | Description                                                               |
+| ----------------- | --------- | ------- | ----------- | ------------------------------------------------------------------------- |
+| id                | integer   |         | Yes         | The primary key                                                           |
+| user_id           | integer   |         | Yes         | Foreign key to `User`                                                     |
+| src_type          | text      |         | Yes         | The type of the source document                                           |
+| soc_domain        | text      | nil     | Conditional | The domain name for the source                                            |
+| soc_4x4           | text      | nil     | Conditional | The 4x4 (id) for the source                                               |
+| src_url           | text      | nil     | Conditional | The full path to a web resource                                           |
+| description       | text      | nil     | No          | A long form description of the data set                                   |
+| attribution       | text      | nil     | No          | Attribution of data set's creator/owner                                   |
+| refresh_starts_on | timestamp | nil     | No          | The date the system begins importing the data                             |
+| refresh_ends_on   | timestamp | nil     | Conditional | The last date the system imports the data                                 |
+| refresh_interval  | text      | nil     | Conditional | A time interval value for scheduling successive imports                   |
+| refresh_rate      | integer   | nil     | Conditional | The number of intervals between scheduled imports                         |
+| first_import      | timestamp | nil     | No          | The timestamp of the very first import into the system                    |
+| latest_import     | timestamp | nil     | No          | The timestamp of the latest import into the system                        |
+| next_import       | timestamp | nil     | No          | The timestamp of the next import into the system                          |
+| bbox              | geometry  | nil     | No          | The bounding box of the geometries present in the data (calculated)       |
+| hull              | geometry  | nil     | No          | The convex hull of the geometries present in the data (calculated)        |
+| time_range        | tsrange   | nil     | No          | The lower and upper bounds of timestamps present in the data (calculated) |
+| num_records       | integer   | nil     | No          | The number of records in the data (calculated)                            |
 
-- `GET` to send requests to the endpoints
-- `OPTIONS` and `HEAD` are provisionally accepted, but return 204
+#### Conditional Requirements: Source Information
 
-### Scheme
+The `src_url` and combination of `soc_domain` and `soc_4x4` are mutually exclusive.
+If a data set is sourced directly from Socrata then users can provide the domain and
+ID of the resource and we can directly import the data. If the data set is sourced
+from a publicly available document then users provide the URL.
 
-Everything response is sent over `https`. Requests made to `http` will be
-redirected to port 443.
+#### Conditional Requirements: Refresh Information
 
-### Request Headers
+The `refresh_ends_on` attribute can only be set if the `refresh_starts_on` value is
+given and the end timestamp must be later that the start.
 
-The following headers have provisional acceptance and support:
+The `refresh_interval` and `refresh_rate` attributes set the schedule for how often
+the data set is refreshed from its source. These are only set if the starting timestamp
+is set.
 
-- `Accept` declares the format of response data; currently we only
-  support responses in `application/json`
-- `Accept-Charset` asks for the format of response text; currently we only
-  support responses in `UTF-8`
-- `Accept-Language` asks for responses to be in a given language; currently
-  we only support `en-US`
+### Field
 
+| Attribute   | Type    | Default | Required?   | Description                           |
+| ----------- | ------- | ------- | ----------- | ------------------------------------- |
+| id          | integer |         | Yes         | The primary key                       |
+| data_set_id | integer |         | Yes         | Foreign key to `DataSet`              |
+| name        | text    |         | Yes         | The original name of the column       |
+| col_name    | text    |         | Yes         | The normalized name of the column     |
+| type        | text    |         | Yes         | The database type of the column       |
+| description | text    | nil     | No          | A long form description of the column |
 
-_Regarding response data format (Accept)_
+### VirtualPoint
 
-In the future we may support other response types (such as XML or YAML),
-although right now we do not have any specific plans to do so. It will be
-driven by demand from our clients.
+| Attribute     | Type    | Default | Required?   | Description                                 |
+| ------------- | ------- | ------- | ----------- | ------------------------------------------- |
+| id            | integer |         | Yes         | The primary key                             |
+| data_set_id   | integer |         | Yes         | Foreign key to `DataSet`                    |
+| col_name      | text    |         | Yes         | The normalized, computed name of the column |
+| loc_field_id  | integer | nil     | Conditional | Foreign key to `Field`                      |
+| lon_field_id  | integer | nil     | Conditional | Foreign key to `Field`                      |
+| lat_field_id  | integer | nil     | Conditional | Foreign key to `Field`                      |
 
-_Regarding response charsets (Accept-Charset):_
+#### Conditional Requirements: Field References
 
-In the future we may support other character encodings other than UTF-8.
-For the time being, there doesn't seem to be a compelling argument for anything
-else, but that doesn't mean that some day we may need to support UTF-16 for
-example.
+Virtual points are made from either a single text field that contains a lat/lon pair or
+from two fields that contain lat and lon values. The attributes of the virtual point that
+reference these fields are mutually exclusive.
 
-_Regarding response languages (Accept-Language):_
+### VirtualDate
 
-In the future, we may add translation abilities for some internal aspects of
-the system: error messages would be the most likely first candidate. This
-will be largely driven through community support.
+| Attribute     | Type    | Default | Required?   | Description                                 |
+| ------------- | ------- | ------- | ----------- | ------------------------------------------- |
+| id            | integer |         | Yes         | The primary key                             |
+| data_set_id   | integer |         | Yes         | Foreign key to `DataSet`                    |
+| col_name      | text    |         | Yes         | The normalized, computed name of the column |
+| yr_field_id   | integer |         | Yes         | Foreign key to `Field`                      |
+| mo_field_id   | integer | nil     | No          | Foreign key to `Field`                      |
+| day_field_id  | integer | nil     | No          | Foreign key to `Field`                      |
+| hr_field_id   | integer | nil     | No          | Foreign key to `Field`                      |
+| min_field_id  | integer | nil     | No          | Foreign key to `Field`                      |
+| sec_field_id  | integer | nil     | No          | Foreign key to `Field`                      |
 
-## Queries
+## List Endpoint [/data-sets{?page,size,order,with_user,with_fields,with_virtual_dates,with_virtual_points,bbox,time_range}]
 
-The Plenario API provides several ways to organize and narrow down query
-results. Because of the uniform nature of the response data, the following
-information can be applied to _all_ of the endpoints exposed by the API.
+The list endpoint allows you to view metadata for all data sets and filter using
+geometries and time ranges.
 
-### Constructing Filters
+### Get All Data Sets [GET]
 
-For any endpoint, you can filter on any property for objects returned under the
-`data` key. The way you construct a filter is as follows:
-`{property}={operator}:{value}`
++ Parameters
 
-- _property_ is the name of the field
-- _operator_ is the query operator
-- _value_ is the filtering value
++ Response 200 (application/json)
 
-**Note:** All parameters are case sensitive.
-
-### Query Operators
-
-| Operator   | PostgreSQL Equivalent           |
-| ---------- | ------------------------------- |
-| lt         | a < b                           |
-| le         | a <= b                          |
-| eq         | a = b                           |
-| ge         | a >= b                          |
-| gt         | a > b                           |
-| within     | a <@ b _or_ st_within(a, b)     |
-| intersects | a && b _or_ st_intersects(a, b) |
-
-If you need to specify an array of values to filter against, you must format
-the property name with square brackets at the end: `?id[]=1&id[]=2`. This will
-create a query `id = ANY(1, 2)`.
-
-**Note:** The `within` and `intersects` operators only only work with timestamp
-ranges and polygons, and can only be successfully applied to properties whose
-value types are applicable. See the _Query Values_ section for more information.
-
-### Query Values
-
-All query values are initially treated as _strings_. When you use a mathematical
-operator, PostgreSQL will cast the value.
-
-There are 2 special types of values that the API will attempt to parse: _time
-ranges_ and _polygons_.
-
-#### Timestamps
-
-If you are passing a timestamp, it must be formatted as ISO 8601 date time
-without timezone information. **All timestamps in Plenario are UTC.**
-
-#### Time Ranges and Polygons
-
-Time ranges and polygons are used with the `within` and `intersects` operators.
-When the API picks up either of the operators, it will attempt to parse the
-value as a time range first and then a polygon.
-
-While both are passed as encoded JSON, they have different structures and are
-safe to be parsed in this order.
-
-##### Timestamp Ranges
-
-Timestamp range values must be URL Encoded JSON. The JSON structure of a time
-range is as follows:
-
-```json
 {
-  "lower": "2018-01-01T00:00:00",
-  "upper": "2019-01-01T00:00:00",
-  "lower_inclusive": true,
-  "upper_inclusive": false,
-}
-```
-
-You can omit the values for `lower_inclusive` and `upper_inclusive` -- their
-values will both be assumed to be `true`.
-
-##### Polygons
-
-Polygon values must be URL Encoded JSON. The JSON structure of a polygon
-is as follows:
-
-```json
-{
-  "type": "Polygon",  // Polygon must be capitalized
-  "crs": {
-    "type": "name",
-    "properties": {
-      "name": "EPSG:4326"
-    }
-  },
-  "coordinates": [[
-    [2, 2], // [max_x, max_y]
-    [2, 1], // [max_x, min_y]
-    [1, 1], // [min_x, min_y]
-    [1, 2], // [min_x, max_y]
-    [2, 2], // [max_x, max_y]
-  ]]
-}
-```
-
-**You must pass the SRID so PostGIS can properly interpolate the value.**
-
-## Responses
-
-There are 3 possible keys at the top level of the response document:
-
-- error
-- meta
-- data
-
-`error` and `data` are mutually exclusive: if the request errs then
-the error message is returned as a string value to the `error` key. If the
-request succeeds, the resources are returned as objects within an array under
-the `data` key. Successful responses will also include metadata under the
-`meta` key.
-
-### Error Response Example
-
-```json
-{
-  "error": "`page_size` must be a positive integer less than or equal to 5000"
-}
-```
-
-### Successful Response Example
-
-```json
-{
-  "meta": {
-    "counts": {
-      "data_count": 3,
-      "total_pages": 1379,
-      "total_records": 4137
-    },
-    "links": {
-      "current": "http://localhost:4000/api/v2/data-sets/chicago-beach-lab-dna-tests?order_by=asc%3Arow_id&page=2&page_size=3",
-      "next": "http://localhost:4000/api/v2/data-sets/chicago-beach-lab-dna-tests?order_by=asc%3Arow_id&page=3&page_size=3",
-      "previous": "http://localhost:4000/api/v2/data-sets/chicago-beach-lab-dna-tests?order_by=asc%3Arow_id&page=1&page_size=3"
-    },
-    "params": {
-      "order_by": {
-        "asc": "row_id"
-      },
-      "page": 2,
-      "page_size": 3
-    }
-  },
   "data": [
     {
-      "Beach": "Humboldt",
-      "Culture Note": null,
-      "Culture Reading Mean": null,
-      "Culture Sample 1 Reading": null,
-      "Culture Sample 1 Timestamp": null,
-      "Culture Sample 2 Reading": null,
-      "Culture Sample 2 Timestamp": null,
-      "Culture Sample Interval": null,
-      "Culture Test ID": null,
-      "DNA Reading Mean": 3241.4,
-      "DNA Sample 1 Reading": 3408.0,
-      "DNA Sample 2 Reading": 3083.0,
-      "DNA Sample Timestamp": "2017-07-22T00:00:00.000000",
-      "DNA Test ID": "4359",
-      "Latitude": 41.90643,
-      "Location": "(41.90643, -87.703717)",
-      "Longitude": -87.703717,
-      "row_id": 4,
-      "vpf_aIFP3fUiEIXRBqKl": {
-        "coordinates": [
-          -87.703717,
-          41.90643
-        ],
-        "srid": 4326
-      }
-    }, ...
-  ]
+      "attribution": null,
+      "description": null,
+      "first_import": "2018-11-15T15:50:00",
+      "hull": {
+        "geometry": {
+          "coordinates": [[
+            [-87.613420549815, 41.644600606134],
+            [-87.617220726706, 41.645321466737],
+            [-87.711006689015, 41.680447122059],
+            [-87.800795506966, 41.77455485671],
+            [-87.885900661547, 41.997549734494],
+            [-87.82067462443,  42.018654921014],
+            [-87.674159786454, 42.022534596869],
+            [-87.665831486161, 42.022670357197],
+            [-87.663624754563, 42.018243899328],
+            [-87.605102123245, 41.893276726607],
+            [-87.541877754079, 41.744762033174],
+            [-87.538955938706, 41.737601255071],
+            [-87.524532544316, 41.701829634069],
+            [-87.524544944022, 41.700606358679],
+            [-87.524646500057, 41.693464784392],
+            [-87.53502778049,  41.649287913511],
+            [-87.54265242328,  41.645937642876],
+            [-87.613420549815, 41.644600606134]
+          ]],
+          "crs": {
+            "properties": { "name": "EPSG:4326" },
+            "type": "name"
+          },
+          "type": "Polygon"
+        },
+        "type": "Feature"
+      },
+      "id": 1,
+      "latest_import": "2018-11-15T15:52:00",
+      "name": "Chicago 311 Tree Trims",
+      "next_import": null,
+      "num_records": 361694,
+      "refresh_ends_on": null,
+      "refresh_interval": null,
+      "refresh_rate": null,
+      "refresh_starts_on": null,
+      "slug": "chicago-311-tree-trims",
+      "source_url": "https://data.cityofchicago.org/resources/yvxb-fxjz.csv",
+      "state": "ready",
+      "time_range": {
+        "lower": "1971-01-13T00:00:00",
+        "lower_inclusive": true,
+        "upper": "2018-11-15T09:15:10",
+        "upper_inclusive": true
+      },
+      "user_id": 1
+    }
+  ],
+  "meta": {
+    "links": {
+      "current": "http://localhost:4000/api/v2/data-sets?order=asc%3Aname&page=1&size=200",
+      "next": "http://localhost:4000/api/v2/data-sets?order=asc%3Aname&page=2&size=200",
+      "previous": null
+    },
+    "query": {
+      "order": [
+        "asc",
+        "name"
+      ],
+      "paginate": [
+        1,
+        200
+      ]
+    }
+  }
 }
-```
 
-#### The Meta Object
-
-The `meta` object of the response contains metadata about the request and
-response.
-
-##### Counts
-
-The `meta.counts` object contains the count of items.
-
-- `meta.counts.data_count` is the number of objects in the `data` array
-- `meta.counts.total_pages` is the number of pages to iterate to get every
-  record that correlates to the request/query
-- `meta.counts.total_records` is the number of records that correlate to the
-  request/query
-
-##### Links
-
-The `meta.links` object contains navigation links.
-
-- `meta.links.previous` is the link to the previous page of records
-- `meta.links.current` is the link to the current page of records
-- `meta.links.next` is the link to the next page of records
-
-##### Params
-
-The `meta.params` object is a reconstruction of the query parameters passed
-in the request. It will always have `page`, `page_size` and `order_by` keys,
-as the API injects defaults to maintain pagination and ordering.
-
-#### The Data Array
-
-The `data` array of the response contains the records correlated to the
-request and query. Even if a request yields no results, this will still be
-an array.
-
-## Paging and Ordering Data
-
-As alluded to, the response data has an upper bound of 5,000 records. Most
-data sets exceed this value. In order to access all the records of a data
-set while enforcing the result cap, we implement paging.
-
-Paging is very simple -- to advance or return to any page, all you need to
-do is increment or decrement the page number respectively. We also provide
-links to handle paging in the `meta.links` object of the response
-so that clients can programmatically page through the data.
-
-Stable paging is contingent upon maintaining consistent order of the data. For
-most data set, we inject an internal `row_id` value to the records kept in our
-data base. This is a natural count the increments with the rows of the
-data we ingest. To put it another way, the order of the source document is
-preserved in the database.
-
-### Pagination Query Parameters
-
-- `page` is the page number
-- `page_size` is the maximum number of records in the page
-
-Requests without a given `page` number are assumed to be the root of the data
-set and default to `page=1`.
-
-Requests without a given `page_size` value default to 200. You can set this
-value to any positive integer up to 5,000.
-
-### Ordering Query Parameter
-
-- `order_by` is the order of the records
-
-Ordering is formatted as `order_by={direction}:{field}`. _direction_ can be one
-of `asc` or `desc`; _field_ is the field name to order by.
-
-The default value for ordering depends on the endpoint:
-
-- the _list_ endpoint orders by `asc:row_id`
-- the _detail_ endpoint orders by `asc:name`
-
-## The List Endpoint [/data-sets{?page,page_size,order_by,time_range,bbox}]
-
-```
-/api/v2/data-sets
-```
-
-The list endpoint is where you can access metadata about data sets. Metadata
-includes names, slugs, sources, refresh cadences, time ranges, bounding
-boxes, and other useful information about the data sets.
-
-All fields returned as a data set object in responses are able to be filtered
-against. Refer to the filtering, paging and ordering sections above.
-
-### Get All Metadata Entries [GET]
+### Paginate [GET]
 
 + Parameters
   + page (number, optional)
-      Sets the page number of the records returned.
+      Sets the page number for long lists of records
       + Default: 1
-  + page_size (number, optional)
-      Sets the maximum number of records in the page.
+  + size (number, optional)
+      Sets the number of records for a page of records.
+      Minimum value is 1 and maximum in 2,000.
       + Default: 200
-  + order_by (string, optional)
-      Orders the records. Format follows `order_by={asc|desc}:{field}`.
+
++ Response 200 (application/json)
+
+{
+  "data": [
+    {
+      "attribution": null,
+      "description": null,
+      "first_import": "2018-11-15T15:50:00",
+      "hull": {
+        "geometry": {
+          "coordinates": [[
+            [-87.613420549815, 41.644600606134],
+            [-87.617220726706, 41.645321466737],
+            [-87.711006689015, 41.680447122059],
+            [-87.800795506966, 41.77455485671],
+            [-87.885900661547, 41.997549734494],
+            [-87.82067462443,  42.018654921014],
+            [-87.674159786454, 42.022534596869],
+            [-87.665831486161, 42.022670357197],
+            [-87.663624754563, 42.018243899328],
+            [-87.605102123245, 41.893276726607],
+            [-87.541877754079, 41.744762033174],
+            [-87.538955938706, 41.737601255071],
+            [-87.524532544316, 41.701829634069],
+            [-87.524544944022, 41.700606358679],
+            [-87.524646500057, 41.693464784392],
+            [-87.53502778049,  41.649287913511],
+            [-87.54265242328,  41.645937642876],
+            [-87.613420549815, 41.644600606134]
+          ]],
+          "crs": {
+            "properties": { "name": "EPSG:4326" },
+            "type": "name"
+          },
+          "type": "Polygon"
+        },
+        "type": "Feature"
+      },
+      "id": 1,
+      "latest_import": "2018-11-15T15:52:00",
+      "name": "Chicago 311 Tree Trims",
+      "next_import": null,
+      "num_records": 361694,
+      "refresh_ends_on": null,
+      "refresh_interval": null,
+      "refresh_rate": null,
+      "refresh_starts_on": null,
+      "slug": "chicago-311-tree-trims",
+      "source_url": "https://data.cityofchicago.org/resources/yvxb-fxjz.csv",
+      "state": "ready",
+      "time_range": {
+        "lower": "1971-01-13T00:00:00",
+        "lower_inclusive": true,
+        "upper": "2018-11-15T09:15:10",
+        "upper_inclusive": true
+      },
+      "user_id": 1
+    }
+  ],
+  "meta": {
+    "links": {
+      "current": "http://localhost:4000/api/v2/data-sets?order=asc%3Aname&page=1&size=200",
+      "next": "http://localhost:4000/api/v2/data-sets?order=asc%3Aname&page=2&size=200",
+      "previous": null
+    },
+    "query": {
+      "order": [
+        "asc",
+        "name"
+      ],
+      "paginate": [
+        1,
+        200
+      ]
+    }
+  }
+}
+
+### Order [GET]
+
++ Parameters
+  + order (string, optional)
+      Sets the direction and field for ordering records.
+      Format must follow `dir:field`.
       + Default: "asc:name"
 
 + Response 200 (application/json)
 
 {
-  "meta": {
-    "params": {
-      "page_size": 200,
-      "page": 1,
-      "order_by": {
-        "asc": "name"
-      }
-    },
-    "links": {
-      "previous": null,
-      "next": null,
-      "current": "http://localhost:4000/api/v2/data-sets?order_by=asc%3Aname&page=1&page_size=200"
-    },
-    "counts": {
-      "total_records": 1,
-      "total_pages": 1,
-      "data_count": 1
-    }
-  },
   "data": [
     {
-      "virtual_points": [
-        {
-          "name": "vpf_aIFP3fUiEIXRBqKl",
-          "lon_field": "Longitude",
-          "loc_field": null,
-          "lat_field": "Latitude"
-        }
-      ],
-      "virtual_dates": [],
-      "user": {
-        "name": "Plenario Admin",
-        "email": "plenario@uchiago.edu",
-        "bio": null
+      "attribution": null,
+      "description": null,
+      "first_import": "2018-11-15T15:50:00",
+      "hull": {
+        "geometry": {
+          "coordinates": [[
+            [-87.613420549815, 41.644600606134],
+            [-87.617220726706, 41.645321466737],
+            [-87.711006689015, 41.680447122059],
+            [-87.800795506966, 41.77455485671],
+            [-87.885900661547, 41.997549734494],
+            [-87.82067462443,  42.018654921014],
+            [-87.674159786454, 42.022534596869],
+            [-87.665831486161, 42.022670357197],
+            [-87.663624754563, 42.018243899328],
+            [-87.605102123245, 41.893276726607],
+            [-87.541877754079, 41.744762033174],
+            [-87.538955938706, 41.737601255071],
+            [-87.524532544316, 41.701829634069],
+            [-87.524544944022, 41.700606358679],
+            [-87.524646500057, 41.693464784392],
+            [-87.53502778049,  41.649287913511],
+            [-87.54265242328,  41.645937642876],
+            [-87.613420549815, 41.644600606134]
+          ]],
+          "crs": {
+            "properties": { "name": "EPSG:4326" },
+            "type": "name"
+          },
+          "type": "Polygon"
+        },
+        "type": "Feature"
       },
-      "time_range": {
-        "upper_inclusive": true,
-        "upper": "2018-07-25T12:26:00",
-        "lower_inclusive": true,
-        "lower": "2015-05-26T00:00:00"
-      },
-      "source_url": "https://data.cityofchicago.org/api/views/hmqm-anjq/rows.csv?accessType=DOWNLOAD",
-      "slug": "chicago-beach-lab-dna-tests",
-      "refresh_starts_on": null,
-      "refresh_rate": "days",
-      "refresh_interval": 1,
+      "id": 1,
+      "latest_import": "2018-11-15T15:52:00",
+      "name": "Chicago 311 Tree Trims",
+      "next_import": null,
+      "num_records": 361694,
       "refresh_ends_on": null,
-      "next_import": "2018-07-27T15:40:39.789864Z",
-      "name": "Chicago Beach Lab - DNA Tests",
-      "latest_import": "2018-07-26T15:40:40.971985Z",
-      "first_import": "2018-07-26T15:40:39.781226Z",
+      "refresh_interval": null,
+      "refresh_rate": null,
+      "refresh_starts_on": null,
+      "slug": "chicago-311-tree-trims",
+      "source_url": "https://data.cityofchicago.org/resources/yvxb-fxjz.csv",
+      "state": "ready",
+      "time_range": {
+        "lower": "1971-01-13T00:00:00",
+        "lower_inclusive": true,
+        "upper": "2018-11-15T09:15:10",
+        "upper_inclusive": true
+      },
+      "user_id": 1
+    }
+  ],
+  "meta": {
+    "links": {
+      "current": "http://localhost:4000/api/v2/data-sets?order=asc%3Aname&page=1&size=200",
+      "next": "http://localhost:4000/api/v2/data-sets?order=asc%3Aname&page=2&size=200",
+      "previous": null
+    },
+    "query": {
+      "order": [
+        "asc",
+        "name"
+      ],
+      "paginate": [
+        1,
+        200
+      ]
+    }
+  }
+}
+
+### Include Related Objects [GET]
+
++ Parameters
+  + with_user (boolean, optional)
+      Should the response embed the related user?
+      + Default: true
+  + with_fields (boolean, optional)
+      Should the response embed the related fields?
+      + Default: true
+  + with_virtual_dates (boolean, optional)
+      Should the response embed the related virtual dates?
+      + Default: true
+  + with_virtual_points (boolean, optional)
+      Should the response embed the related virtual points?
+      + Default: true
+
++ Response 200 (application/json)
+
+{
+  "data": [
+    {
+      "attribution": null,
+      "description": null,
       "fields": [
         {
-          "type": "text",
-          "name": "DNA Test ID",
-          "description": null
+          "col_name": "creation_date",
+          "description": null,
+          "name": "creation_date",
+          "type": "timestamp"
         },
         {
-          "type": "timestamp",
-          "name": "DNA Sample Timestamp",
-          "description": null
+          "col_name": "status",
+          "description": null,
+          "name": "status",
+          "type": "text"
         },
         {
-          "type": "text",
-          "name": "Beach",
-          "description": null
+          "col_name": "completion_date",
+          "description": null,
+          "name": "completion_date",
+          "type": "timestamp"
         },
         {
-          "type": "float",
-          "name": "DNA Sample 1 Reading",
-          "description": null
+          "col_name": "service_request_number",
+          "description": null,
+          "name": "service_request_number",
+          "type": "text"
         },
         {
-          "type": "float",
-          "name": "DNA Sample 2 Reading",
-          "description": null
+          "col_name": "type_of_service_request",
+          "description": null,
+          "name": "type_of_service_request",
+          "type": "text"
         },
         {
-          "type": "float",
-          "name": "DNA Reading Mean",
-          "description": null
+          "col_name": "location_of_trees",
+          "description": null,
+          "name": "location_of_trees",
+          "type": "text"
         },
         {
-          "type": "text",
-          "name": "Culture Test ID",
-          "description": null
+          "col_name": "street_address",
+          "description": null,
+          "name": "street_address",
+          "type": "text"
         },
         {
-          "type": "text",
-          "name": "Culture Sample 1 Timestamp",
-          "description": null
+          "col_name": "zip_code",
+          "description": null,
+          "name": "zip_code",
+          "type": "integer"
         },
         {
-          "type": "text",
-          "name": "Culture Sample 1 Reading",
-          "description": null
+          "col_name": "x_coordinate",
+          "description": null,
+          "name": "x_coordinate",
+          "type": "integer"
         },
         {
-          "type": "text",
-          "name": "Culture Sample 2 Reading",
-          "description": null
+          "col_name": "y_coordinate",
+          "description": null,
+          "name": "y_coordinate",
+          "type": "integer"
         },
         {
-          "type": "text",
-          "name": "Culture Reading Mean",
-          "description": null
+          "col_name": "ward",
+          "description": null,
+          "name": "ward",
+          "type": "integer"
         },
         {
-          "type": "text",
-          "name": "Culture Note",
-          "description": null
+          "col_name": "police_district",
+          "description": null,
+          "name": "police_district",
+          "type": "integer"
         },
         {
-          "type": "text",
-          "name": "Culture Sample Interval",
-          "description": null
+          "col_name": "community_area",
+          "description": null,
+          "name": "community_area",
+          "type": "integer"
         },
         {
-          "type": "text",
-          "name": "Culture Sample 2 Timestamp",
-          "description": null
+          "col_name": "latitude",
+          "description": null,
+          "name": "latitude",
+          "type": "integer"
         },
         {
-          "type": "float",
-          "name": "Latitude",
-          "description": null
+          "col_name": "longitude",
+          "description": null,
+          "name": "longitude",
+          "type": "integer"
         },
         {
-          "type": "float",
-          "name": "Longitude",
-          "description": null
+          "col_name": "location",
+          "description": null,
+          "name": "location",
+          "type": "geometry"
         },
         {
-          "type": "text",
-          "name": "Location",
-          "description": null
+          "col_name": "location_city",
+          "description": null,
+          "name": "location_city",
+          "type": "text"
+        },
+        {
+          "col_name": "location_address",
+          "description": null,
+          "name": "location_address",
+          "type": "text"
+        },
+        {
+          "col_name": "location_zip",
+          "description": null,
+          "name": "location_zip",
+          "type": "text"
+        },
+        {
+          "col_name": "location_state",
+          "description": null,
+          "name": "location_state",
+          "type": "text"
+        },
+        {
+          "col_name": ":id",
+          "description": "The internal Socrata record ID",
+          "name": ":id",
+          "type": "text"
+        },
+        {
+          "col_name": ":created_at",
+          "description": "The timestamp of when the record was first created",
+          "name": ":created_at",
+          "type": "timestamp"
+        },
+        {
+          "col_name": ":updated_at",
+          "description": "The timestamp of when the record was last updated",
+          "name": ":updated_at",
+          "type": "timestamp"
         }
       ],
-      "description": "Lorem Ipsum\nDNA Chicago Beaches\nDolor Sit Amet",
-      "bbox": {
-        "srid": 4326,
+      "first_import": "2018-11-15T15:50:00",
+      "hull": {
+        "geometry": {
+          "coordinates": [[
+            [-87.613420549815, 41.644600606134],
+            [-87.617220726706, 41.645321466737],
+            [-87.711006689015, 41.680447122059],
+            [-87.800795506966, 41.77455485671],
+            [-87.885900661547, 41.997549734494],
+            [-87.82067462443,  42.018654921014],
+            [-87.674159786454, 42.022534596869],
+            [-87.665831486161, 42.022670357197],
+            [-87.663624754563, 42.018243899328],
+            [-87.605102123245, 41.893276726607],
+            [-87.541877754079, 41.744762033174],
+            [-87.538955938706, 41.737601255071],
+            [-87.524532544316, 41.701829634069],
+            [-87.524544944022, 41.700606358679],
+            [-87.524646500057, 41.693464784392],
+            [-87.53502778049,  41.649287913511],
+            [-87.54265242328,  41.645937642876],
+            [-87.613420549815, 41.644600606134]
+          ]],
+          "crs": {
+            "properties": { "name": "EPSG:4326" },
+            "type": "name"
+          },
+          "type": "Polygon"
+        },
+        "type": "Feature"
+      },
+      "id": 1,
+      "latest_import": "2018-11-15T15:52:00",
+      "name": "Chicago 311 Tree Trims",
+      "next_import": null,
+      "num_records": 361694,
+      "refresh_ends_on": null,
+      "refresh_interval": null,
+      "refresh_rate": null,
+      "refresh_starts_on": null,
+      "slug": "chicago-311-tree-trims",
+      "source_url": "https://data.cityofchicago.org/resources/yvxb-fxjz.csv",
+      "state": "ready",
+      "time_range": {
+        "lower": "1971-01-13T00:00:00",
+        "lower_inclusive": true,
+        "upper": "2018-11-15T09:15:10",
+        "upper_inclusive": true
+      },
+      "user": {
+        "bio": null, 
+        "username": "Plenario Admin"
+      }
+      "user_id": 1,
+      "virtual_dates": [],
+      "virtual_points": []
+    }
+  ],
+  "meta": {
+    "links": {
+      "current": "http://localhost:4000/api/v2/data-sets?order=asc%3Aname&page=1&size=200&with_fields=true&with_user=true&with_virtual_dates=true&with_virtual_points=true", 
+      "next": "http://localhost:4000/api/v2/data-sets?order=asc%3Aname&page=2&size=200&with_fields=true&with_user=true&with_virtual_dates=true&with_virtual_points=true", 
+      "previous": null
+    },
+    "query": {
+      "order": [
+        "asc",
+        "name"
+      ],
+      "paginate": [
+        1,
+        200
+      ],
+      "with_fields": true, 
+      "with_user": true, 
+      "with_virtual_dates": true, 
+      "with_virtual_points": true
+    }
+  }
+}
+
+### Filter by Bounding Box Contains [GET]
+
++ Parameters
+  + bbox (string, optional)
+      Filter the records to those whose bbox _contains_
+      a given point. The format of the value must be
+      `contains:{ geojson }`.
+      + Default: "contains:{\"coordinates\": [-87.8, 42.0], \"crs\": {\"properties\": {\"name\": \"EPSG:4326\"}, \"type\": \"name\"}, \"type\": \"Point\"}"
+
++ Response 200 (application/json)
+
+{
+  "data": [
+    {
+      "attribution": null,
+      "description": null,
+      "first_import": "2018-11-15T15:50:00",
+      "hull": {
+        "geometry": {
+          "coordinates": [[
+            [-87.613420549815, 41.644600606134],
+            [-87.617220726706, 41.645321466737],
+            [-87.711006689015, 41.680447122059],
+            [-87.800795506966, 41.77455485671],
+            [-87.885900661547, 41.997549734494],
+            [-87.82067462443,  42.018654921014],
+            [-87.674159786454, 42.022534596869],
+            [-87.665831486161, 42.022670357197],
+            [-87.663624754563, 42.018243899328],
+            [-87.605102123245, 41.893276726607],
+            [-87.541877754079, 41.744762033174],
+            [-87.538955938706, 41.737601255071],
+            [-87.524532544316, 41.701829634069],
+            [-87.524544944022, 41.700606358679],
+            [-87.524646500057, 41.693464784392],
+            [-87.53502778049,  41.649287913511],
+            [-87.54265242328,  41.645937642876],
+            [-87.613420549815, 41.644600606134]
+          ]],
+          "crs": {
+            "properties": { "name": "EPSG:4326" },
+            "type": "name"
+          },
+          "type": "Polygon"
+        },
+        "type": "Feature"
+      },
+      "id": 1,
+      "latest_import": "2018-11-15T15:52:00",
+      "name": "Chicago 311 Tree Trims",
+      "next_import": null,
+      "num_records": 361694,
+      "refresh_ends_on": null,
+      "refresh_interval": null,
+      "refresh_rate": null,
+      "refresh_starts_on": null,
+      "slug": "chicago-311-tree-trims",
+      "source_url": "https://data.cityofchicago.org/resources/yvxb-fxjz.csv",
+      "state": "ready",
+      "time_range": {
+        "lower": "1971-01-13T00:00:00",
+        "lower_inclusive": true,
+        "upper": "2018-11-15T09:15:10",
+        "upper_inclusive": true
+      },
+      "user_id": 1
+    }
+  ],
+  "meta": {
+    "links": {
+      "current": "http://localhost:4000/api/v2/data-sets?bbox=contains%3A%7B%22coordinates%22%3A+%5B-87.8%2C+42.0%5D%2C+%22crs%22%3A+%7B%22properties%22%3A+%7B%22name%22%3A+%22EPSG%3A4326%22%7D%2C+%22type%22%3A+%22name%22%7D%2C+%22type%22%3A+%22Point%22%7D&order=asc%3Aname&page=1&size=200", 
+      "next": "http://localhost:4000/api/v2/data-sets?bbox=contains%3A%7B%22coordinates%22%3A+%5B-87.8%2C+42.0%5D%2C+%22crs%22%3A+%7B%22properties%22%3A+%7B%22name%22%3A+%22EPSG%3A4326%22%7D%2C+%22type%22%3A+%22name%22%7D%2C+%22type%22%3A+%22Point%22%7D&order=asc%3Aname&page=2&size=200", 
+      "previous": null
+    },
+    "query": {
+      "bbox_contains": {
+        "coordinates": [
+          -87.8,
+          42.0
+        ],
+        "crs": {
+          "properties": {
+            "name": "EPSG:4326"
+          },
+          "type": "name"
+        },
+        "type": "Point"
+      },
+      "order": [
+        "asc",
+        "name"
+      ],
+      "paginate": [
+        1,
+        200
+      ]
+    }
+  }
+}
+
+### Filter by Bounding Box Intersects [GET]
+
++ Parameters
+  + bbox (string, optional)
+      Filter the records to those whose bbox _intersects_
+      a given geometry. The format of the value must be
+      `intersects:{ geojson }`.
+      + Default: "intersects:{\"coordinates\": [[[-88.0, 41.0], [-88.0, 43.0], [-85.0, 43.0], [-85.0, 41.0], [-88.0, 41.0]]], \"crs\": {\"properties\": {\"name\": \"EPSG:4326\"}, \"type\": \"name\"}, \"type\": \"Polygon\"}"
+
++ Response 200 (application/json)
+
+{
+  "data": [
+    {
+      "attribution": null,
+      "description": null,
+      "first_import": "2018-11-15T15:50:00",
+      "hull": {
+        "geometry": {
+          "coordinates": [[
+            [-87.613420549815, 41.644600606134],
+            [-87.617220726706, 41.645321466737],
+            [-87.711006689015, 41.680447122059],
+            [-87.800795506966, 41.77455485671],
+            [-87.885900661547, 41.997549734494],
+            [-87.82067462443,  42.018654921014],
+            [-87.674159786454, 42.022534596869],
+            [-87.665831486161, 42.022670357197],
+            [-87.663624754563, 42.018243899328],
+            [-87.605102123245, 41.893276726607],
+            [-87.541877754079, 41.744762033174],
+            [-87.538955938706, 41.737601255071],
+            [-87.524532544316, 41.701829634069],
+            [-87.524544944022, 41.700606358679],
+            [-87.524646500057, 41.693464784392],
+            [-87.53502778049,  41.649287913511],
+            [-87.54265242328,  41.645937642876],
+            [-87.613420549815, 41.644600606134]
+          ]],
+          "crs": {
+            "properties": { "name": "EPSG:4326" },
+            "type": "name"
+          },
+          "type": "Polygon"
+        },
+        "type": "Feature"
+      },
+      "id": 1,
+      "latest_import": "2018-11-15T15:52:00",
+      "name": "Chicago 311 Tree Trims",
+      "next_import": null,
+      "num_records": 361694,
+      "refresh_ends_on": null,
+      "refresh_interval": null,
+      "refresh_rate": null,
+      "refresh_starts_on": null,
+      "slug": "chicago-311-tree-trims",
+      "source_url": "https://data.cityofchicago.org/resources/yvxb-fxjz.csv",
+      "state": "ready",
+      "time_range": {
+        "lower": "1971-01-13T00:00:00",
+        "lower_inclusive": true,
+        "upper": "2018-11-15T09:15:10",
+        "upper_inclusive": true
+      },
+      "user_id": 1
+    }
+  ],
+  "meta": {
+    "links": {
+      "current": "http://localhost:4000/api/v2/data-sets?bbox=intersects%3A%7B%22coordinates%22%3A+%5B%5B%5B-88.0%2C+41.0%5D%2C+%5B-88.0%2C+43.0%5D%2C+%5B-85.0%2C+43.0%5D%2C+%5B-85.0%2C+41.0%5D%2C+%5B-88.0%2C+41.0%5D%5D%5D%2C+%22crs%22%3A+%7B%22properties%22%3A+%7B%22name%22%3A+%22EPSG%3A4326%22%7D%2C+%22type%22%3A+%22name%22%7D%2C+%22type%22%3A+%22Polygon%22%7D&order=asc%3Aname&page=1&size=200", 
+      "next": "http://localhost:4000/api/v2/data-sets?bbox=intersects%3A%7B%22coordinates%22%3A+%5B%5B%5B-88.0%2C+41.0%5D%2C+%5B-88.0%2C+43.0%5D%2C+%5B-85.0%2C+43.0%5D%2C+%5B-85.0%2C+41.0%5D%2C+%5B-88.0%2C+41.0%5D%5D%5D%2C+%22crs%22%3A+%7B%22properties%22%3A+%7B%22name%22%3A+%22EPSG%3A4326%22%7D%2C+%22type%22%3A+%22name%22%7D%2C+%22type%22%3A+%22Polygon%22%7D&order=asc%3Aname&page=2&size=200", 
+      "previous": null
+    },
+    "query": {
+      "bbox_intersects": {
         "coordinates": [
           [
             [
-              42.0213,
-              -87.703717
+              -88.0,
+              41.0
             ],
             [
-              41.7142,
-              -87.703717
+              -88.0,
+              43.0
             ],
             [
-              41.7142,
-              -87.5299
+              -85.0,
+              43.0
             ],
             [
-              42.0213,
-              -87.5299
+              -85.0,
+              41.0
             ],
             [
-              42.0213,
-              -87.703717
+              -88.0,
+              41.0
             ]
           ]
-        ]
+        ],
+        "crs": {
+          "properties": {
+            "name": "EPSG:4326"
+          },
+          "type": "name"
+        },
+        "type": "Polygon"
       },
-      "attribution": "City of Chicago"
+      "order": [
+        "asc",
+        "name"
+      ],
+      "paginate": [
+        1,
+        200
+      ]
     }
-  ]
+  }
 }
 
-### Filter By Time Range [GET]
+### Filter by Time Range Contains [GET]
 
 + Parameters
-  + time_range (object, optional)
-      Metadata entries list the time range of the records of the data set. These
-      ranges can be filtered by supplying your own `tsrange` and checking for
-      an intersection. **Note:** to filter with a time range in the list
-      endpoint you must use the `intersects:` operator. **Example:**
+  + time_range (string, optional)
+      Filter the records to those whose time range _contains_
+      a given timestamp. The format of the value must
+      be `contains:YYYY-mm-ddTHH:MM:SS`.
+      + Default: "contains:2018-04-21T15:00:00"
 
-      ```
-      {
-        "lower": "2017-01-01T00:00:00",
-        "upper": "2018-01-01T00:00:00",
++ Response 200 (application/json)
+
+{
+  "data": [
+    {
+      "attribution": null,
+      "description": null,
+      "first_import": "2018-11-15T15:50:00",
+      "hull": {
+        "geometry": {
+          "coordinates": [[
+            [-87.613420549815, 41.644600606134],
+            [-87.617220726706, 41.645321466737],
+            [-87.711006689015, 41.680447122059],
+            [-87.800795506966, 41.77455485671],
+            [-87.885900661547, 41.997549734494],
+            [-87.82067462443,  42.018654921014],
+            [-87.674159786454, 42.022534596869],
+            [-87.665831486161, 42.022670357197],
+            [-87.663624754563, 42.018243899328],
+            [-87.605102123245, 41.893276726607],
+            [-87.541877754079, 41.744762033174],
+            [-87.538955938706, 41.737601255071],
+            [-87.524532544316, 41.701829634069],
+            [-87.524544944022, 41.700606358679],
+            [-87.524646500057, 41.693464784392],
+            [-87.53502778049,  41.649287913511],
+            [-87.54265242328,  41.645937642876],
+            [-87.613420549815, 41.644600606134]
+          ]],
+          "crs": {
+            "properties": { "name": "EPSG:4326" },
+            "type": "name"
+          },
+          "type": "Polygon"
+        },
+        "type": "Feature"
+      },
+      "id": 1,
+      "latest_import": "2018-11-15T15:52:00",
+      "name": "Chicago 311 Tree Trims",
+      "next_import": null,
+      "num_records": 361694,
+      "refresh_ends_on": null,
+      "refresh_interval": null,
+      "refresh_rate": null,
+      "refresh_starts_on": null,
+      "slug": "chicago-311-tree-trims",
+      "source_url": "https://data.cityofchicago.org/resources/yvxb-fxjz.csv",
+      "state": "ready",
+      "time_range": {
+        "lower": "1971-01-13T00:00:00",
         "lower_inclusive": true,
+        "upper": "2018-11-15T09:15:10",
+        "upper_inclusive": true
+      },
+      "user_id": 1
+    }
+  ],
+  "meta": {
+    "links": {
+      "current": "http://localhost:4000/api/v2/data-sets?order=asc%3Aname&page=1&size=200&time_range=contains%3A2018-04-21T15%3A00%3A00",
+      "next": "http://localhost:4000/api/v2/data-sets?order=asc%3Aname&page=2&size=200&time_range=contains%3A2018-04-21T15%3A00%3A00",
+      "previous": null
+    },
+    "query": {
+      "order": [
+        "asc",
+        "name"
+      ],
+      "paginate": [
+        1,
+        200
+      ],
+      "time_range_contains": "2018-04-21T15:00:00"
+    }
+  }
+}
+
+### Filter by Time Range Intersects [GET]
+
++ Parameters
+  + time_range (string, optional)
+      Filter the records to those whose time range _intersects_
+      a given time range. The format of the value must
+      be `intersects:{ time range }`.
+      + Default: "intersects:{\"lower\": \"2015-01-01T00:00:00\", \"lower_inclusive\": true, \"upper\": \"2018-01-01T00:00:00\", \"upper_inclusive\": false}"
+
++ Response 200 (application/json)
+
+{
+  "data": [
+    {
+      "attribution": null,
+      "description": null,
+      "first_import": "2018-11-15T15:50:00",
+      "hull": {
+        "geometry": {
+          "coordinates": [[
+            [-87.613420549815, 41.644600606134],
+            [-87.617220726706, 41.645321466737],
+            [-87.711006689015, 41.680447122059],
+            [-87.800795506966, 41.77455485671],
+            [-87.885900661547, 41.997549734494],
+            [-87.82067462443,  42.018654921014],
+            [-87.674159786454, 42.022534596869],
+            [-87.665831486161, 42.022670357197],
+            [-87.663624754563, 42.018243899328],
+            [-87.605102123245, 41.893276726607],
+            [-87.541877754079, 41.744762033174],
+            [-87.538955938706, 41.737601255071],
+            [-87.524532544316, 41.701829634069],
+            [-87.524544944022, 41.700606358679],
+            [-87.524646500057, 41.693464784392],
+            [-87.53502778049,  41.649287913511],
+            [-87.54265242328,  41.645937642876],
+            [-87.613420549815, 41.644600606134]
+          ]],
+          "crs": {
+            "properties": { "name": "EPSG:4326" },
+            "type": "name"
+          },
+          "type": "Polygon"
+        },
+        "type": "Feature"
+      },
+      "id": 1,
+      "latest_import": "2018-11-15T15:52:00",
+      "name": "Chicago 311 Tree Trims",
+      "next_import": null,
+      "num_records": 361694,
+      "refresh_ends_on": null,
+      "refresh_interval": null,
+      "refresh_rate": null,
+      "refresh_starts_on": null,
+      "slug": "chicago-311-tree-trims",
+      "source_url": "https://data.cityofchicago.org/resources/yvxb-fxjz.csv",
+      "state": "ready",
+      "time_range": {
+        "lower": "1971-01-13T00:00:00",
+        "lower_inclusive": true,
+        "upper": "2018-11-15T09:15:10",
+        "upper_inclusive": true
+      },
+      "user_id": 1
+    }
+  ],
+  "meta": {
+    "links": {
+      "current": "http://localhost:4000/api/v2/data-sets?order=asc%3Aname&page=1&size=200&time_range=intersects%3A%7B%22lower%22%3A+%222015-01-01T00%3A00%3A00%22%2C+%22lower_inclusive%22%3A+true%2C+%22upper%22%3A+%222018-01-01T00%3A00%3A00%22%2C+%22upper_inclusive%22%3A+false%7D",
+      "next": "http://localhost:4000/api/v2/data-sets?order=asc%3Aname&page=2&size=200&time_range=intersects%3A%7B%22lower%22%3A+%222015-01-01T00%3A00%3A00%22%2C+%22lower_inclusive%22%3A+true%2C+%22upper%22%3A+%222018-01-01T00%3A00%3A00%22%2C+%22upper_inclusive%22%3A+false%7D",
+      "previous": null
+    },
+    "query": {
+      "order": [
+        "asc",
+        "name"
+      ],
+      "paginate": [
+        1,
+        200
+      ],
+      "time_range_intersects": {
+        "lower": "2015-01-01T00:00:00",
+        "lower_inclusive": true,
+        "upper": "2018-01-01T00:00:00",
         "upper_inclusive": false
       }
-      ```
-
-+ Response 200 (application/json)
-
-{
-  "meta": {
-    "params": {
-      "time_range": {
-        "intersects": {
-          "upper_inclusive": false,
-          "upper": "2018-01-01T00:00:00",
-          "lower_inclusive": true,
-          "lower": "2017-01-01T00:00:00"
-        }
-      },
-      "page_size": 200,
-      "page": 1,
-      "order_by": {
-        "asc": "name"
-      }
-    },
-    "links": {
-      "previous": null,
-      "next": null,
-      "current": "http://localhost:4000/api/v2/data-sets?order_by=asc%3Aname&page=1&page_size=200&time_range=intersects%3A%7B%22lower%22%3A%222017-01-01T00%3A00%3A00%22%2C%22upper%22%3A%222018-01-01T00%3A00%3A00%22%2C%22lower_inclusive%22%3Atrue%2C%22upper_inclusive%22%3Afalse%7D"
-    },
-    "counts": {
-      "total_records": 1,
-      "total_pages": 1,
-      "data_count": 1
     }
-  },
-  "data": [
-    {
-      "virtual_points": [
-        {
-          "name": "vpf_aIFP3fUiEIXRBqKl",
-          "lon_field": "Longitude",
-          "loc_field": null,
-          "lat_field": "Latitude"
-        }
-      ],
-      "virtual_dates": [],
-      "user": {
-        "name": "Plenario Admin",
-        "email": "plenario@uchiago.edu",
-        "bio": null
-      },
-      "time_range": {
-        "upper_inclusive": true,
-        "upper": "2018-07-25T12:26:00",
-        "lower_inclusive": true,
-        "lower": "2015-05-26T00:00:00"
-      },
-      "source_url": "https://data.cityofchicago.org/api/views/hmqm-anjq/rows.csv?accessType=DOWNLOAD",
-      "slug": "chicago-beach-lab-dna-tests",
-      "refresh_starts_on": null,
-      "refresh_rate": "days",
-      "refresh_interval": 1,
-      "refresh_ends_on": null,
-      "next_import": "2018-07-27T15:40:39.789864Z",
-      "name": "Chicago Beach Lab - DNA Tests",
-      "latest_import": "2018-07-26T15:40:40.971985Z",
-      "first_import": "2018-07-26T15:40:39.781226Z",
-      "fields": [
-        {
-          "type": "text",
-          "name": "DNA Test ID",
-          "description": null
-        },
-        {
-          "type": "timestamp",
-          "name": "DNA Sample Timestamp",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Beach",
-          "description": null
-        },
-        {
-          "type": "float",
-          "name": "DNA Sample 1 Reading",
-          "description": null
-        },
-        {
-          "type": "float",
-          "name": "DNA Sample 2 Reading",
-          "description": null
-        },
-        {
-          "type": "float",
-          "name": "DNA Reading Mean",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Test ID",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Sample 1 Timestamp",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Sample 1 Reading",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Sample 2 Reading",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Reading Mean",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Note",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Sample Interval",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Sample 2 Timestamp",
-          "description": null
-        },
-        {
-          "type": "float",
-          "name": "Latitude",
-          "description": null
-        },
-        {
-          "type": "float",
-          "name": "Longitude",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Location",
-          "description": null
-        }
-      ],
-      "description": "Lorem Ipsum\nDNA Chicago Beaches\nDolor Sit Amet",
-      "bbox": {
-        "srid": 4326,
-        "coordinates": [
-          [
-            [
-              42.0213,
-              -87.703717
-            ],
-            [
-              41.7142,
-              -87.703717
-            ],
-            [
-              41.7142,
-              -87.5299
-            ],
-            [
-              42.0213,
-              -87.5299
-            ],
-            [
-              42.0213,
-              -87.703717
-            ]
-          ]
-        ]
-      },
-      "attribution": "City of Chicago"
-    }
-  ]
-}
-
-### Filter By Bounding Box [GET]
-
-+ Parameters
-  + bbox (object, optional)
-      Metadata entries list the bounding box of the records of the data set.
-      These bboxes can be filtered by supplying your own `polygon` and checking
-      for an intersection. **Note:** to filter with a bbox in the list endpoint
-      you must use the `intersects` operator. **Example:**
-
-      ```
-      {
-        "type": "Polygon",
-        "crs": {
-          "type": "name",
-          "properties": {
-            "name": "EPSG:4326"
-          }
-        },
-        "coordinates": [[
-          [-88,43],
-          [-85,43],
-          [-85,40],
-          [-88,40],
-          [-88,43]
-        ]]
-      }
-      ```
-
-+ Response 200 (application/json)
-
-{
-  "meta": {
-    "params": {
-      "bbox": {
-        "intersects": {
-          "srid": 4326,
-          "coordinates": [[
-            [-88,43],
-            [-85,43],
-            [-85,40],
-            [-88,40],
-            [-88,43]
-          ]]
-        }
-      },
-      "page_size": 200,
-      "page": 1,
-      "order_by": {
-        "asc": "name"
-      }
-    },
-    "links": {
-      "previous": null,
-      "next": null,
-      "current": "http://localhost:4000/api/v2/data-sets?order_by=asc%3Aname&page=1&page_size=200&time_range=intersects%3A%7B%22lower%22%3A%222017-01-01T00%3A00%3A00%22%2C%22upper%22%3A%222018-01-01T00%3A00%3A00%22%2C%22lower_inclusive%22%3Atrue%2C%22upper_inclusive%22%3Afalse%7D"
-    },
-    "counts": {
-      "total_records": 1,
-      "total_pages": 1,
-      "data_count": 1
-    }
-  },
-  "data": [
-    {
-      "virtual_points": [
-        {
-          "name": "vpf_aIFP3fUiEIXRBqKl",
-          "lon_field": "Longitude",
-          "loc_field": null,
-          "lat_field": "Latitude"
-        }
-      ],
-      "virtual_dates": [],
-      "user": {
-        "name": "Plenario Admin",
-        "email": "plenario@uchiago.edu",
-        "bio": null
-      },
-      "time_range": {
-        "upper_inclusive": true,
-        "upper": "2018-07-25T12:26:00",
-        "lower_inclusive": true,
-        "lower": "2015-05-26T00:00:00"
-      },
-      "source_url": "https://data.cityofchicago.org/api/views/hmqm-anjq/rows.csv?accessType=DOWNLOAD",
-      "slug": "chicago-beach-lab-dna-tests",
-      "refresh_starts_on": null,
-      "refresh_rate": "days",
-      "refresh_interval": 1,
-      "refresh_ends_on": null,
-      "next_import": "2018-07-27T15:40:39.789864Z",
-      "name": "Chicago Beach Lab - DNA Tests",
-      "latest_import": "2018-07-26T15:40:40.971985Z",
-      "first_import": "2018-07-26T15:40:39.781226Z",
-      "fields": [
-        {
-          "type": "text",
-          "name": "DNA Test ID",
-          "description": null
-        },
-        {
-          "type": "timestamp",
-          "name": "DNA Sample Timestamp",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Beach",
-          "description": null
-        },
-        {
-          "type": "float",
-          "name": "DNA Sample 1 Reading",
-          "description": null
-        },
-        {
-          "type": "float",
-          "name": "DNA Sample 2 Reading",
-          "description": null
-        },
-        {
-          "type": "float",
-          "name": "DNA Reading Mean",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Test ID",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Sample 1 Timestamp",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Sample 1 Reading",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Sample 2 Reading",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Reading Mean",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Note",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Sample Interval",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Sample 2 Timestamp",
-          "description": null
-        },
-        {
-          "type": "float",
-          "name": "Latitude",
-          "description": null
-        },
-        {
-          "type": "float",
-          "name": "Longitude",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Location",
-          "description": null
-        }
-      ],
-      "description": "Lorem Ipsum\nDNA Chicago Beaches\nDolor Sit Amet",
-      "bbox": {
-        "srid": 4326,
-        "coordinates": [
-          [
-            [
-              42.0213,
-              -87.703717
-            ],
-            [
-              41.7142,
-              -87.703717
-            ],
-            [
-              41.7142,
-              -87.5299
-            ],
-            [
-              42.0213,
-              -87.5299
-            ],
-            [
-              42.0213,
-              -87.703717
-            ]
-          ]
-        ]
-      },
-      "attribution": "City of Chicago"
-    }
-  ]
-}
-
-## The List @head Directive [/data-sets/@head]
-
-```
-/api/v2/data-sets/@head
-```
-
-There is a special `@head` endpoint that can be used to get the first
-metadata record that satisfies the request/query. This is a convenience
-shortcut to inspect the output of the endpoint. It doesn't have much value
-beyond that.
-
-All filters and ordering options available to general list endpoint are
-applicable here.
-
-### Getting the List Head [GET]
-
-+ Response 200 (application/json)
-
-{
-  "meta": {
-    "params": {
-      "page_size": 200,
-      "page": 1,
-      "order_by": {
-        "asc": "name"
-      }
-    },
-    "links": {
-      "previous": null,
-      "next": null,
-      "current": "http://localhost:4000/api/v2/data-sets/@head?order_by=asc%3Aname&page=1&page_size=200"
-    },
-    "counts": {
-      "total_records": 1,
-      "total_pages": 1,
-      "data_count": 1
-    }
-  },
-  "data": [
-    {
-      "virtual_points": [
-        {
-          "name": "vpf_aIFP3fUiEIXRBqKl",
-          "lon_field": "Longitude",
-          "loc_field": null,
-          "lat_field": "Latitude"
-        }
-      ],
-      "virtual_dates": [],
-      "user": {
-        "name": "Plenario Admin",
-        "email": "plenario@uchiago.edu",
-        "bio": null
-      },
-      "time_range": {
-        "upper_inclusive": true,
-        "upper": "2018-07-25T12:26:00",
-        "lower_inclusive": true,
-        "lower": "2015-05-26T00:00:00"
-      },
-      "source_url": "https://data.cityofchicago.org/api/views/hmqm-anjq/rows.csv?accessType=DOWNLOAD",
-      "slug": "chicago-beach-lab-dna-tests",
-      "refresh_starts_on": null,
-      "refresh_rate": "days",
-      "refresh_interval": 1,
-      "refresh_ends_on": null,
-      "next_import": "2018-07-27T15:40:39.789864Z",
-      "name": "Chicago Beach Lab - DNA Tests",
-      "latest_import": "2018-07-26T15:40:40.971985Z",
-      "first_import": "2018-07-26T15:40:39.781226Z",
-      "fields": [
-        {
-          "type": "text",
-          "name": "DNA Test ID",
-          "description": null
-        },
-        {
-          "type": "timestamp",
-          "name": "DNA Sample Timestamp",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Beach",
-          "description": null
-        },
-        {
-          "type": "float",
-          "name": "DNA Sample 1 Reading",
-          "description": null
-        },
-        {
-          "type": "float",
-          "name": "DNA Sample 2 Reading",
-          "description": null
-        },
-        {
-          "type": "float",
-          "name": "DNA Reading Mean",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Test ID",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Sample 1 Timestamp",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Sample 1 Reading",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Sample 2 Reading",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Reading Mean",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Note",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Sample Interval",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Culture Sample 2 Timestamp",
-          "description": null
-        },
-        {
-          "type": "float",
-          "name": "Latitude",
-          "description": null
-        },
-        {
-          "type": "float",
-          "name": "Longitude",
-          "description": null
-        },
-        {
-          "type": "text",
-          "name": "Location",
-          "description": null
-        }
-      ],
-      "description": "Lorem Ipsum\nDNA Chicago Beaches\nDolor Sit Amet",
-      "bbox": {
-        "srid": 4326,
-        "coordinates": [
-          [
-            [
-              42.0213,
-              -87.703717
-            ],
-            [
-              41.7142,
-              -87.703717
-            ],
-            [
-              41.7142,
-              -87.5299
-            ],
-            [
-              42.0213,
-              -87.5299
-            ],
-            [
-              42.0213,
-              -87.703717
-            ]
-          ]
-        ]
-      },
-      "attribution": "City of Chicago"
-    }
-  ]
-}
-
-## The Detail Endpoint [/data-sets/{slug}{?page,page_size,order_by,vpf_aIFP3fUiEIXRBqKl}]
-
-```
-/data-sets/:slug
-```
-
-The detail endpoint is where you can access the records of the data sets. Each
-data set is unique, and therefor filtering and ordering are unique to each data
-set. However, each data set maintains an injected `row_id`. The row identifier
-is a natural integer that is applied row by row as the source document of the
-data set is ingested to preserve order.
-
-Paging works just as in all other endpoints by specifying `page_size` and
-`page`.
-
-It is also important to note that parameters are case sensitive. This can be
-a stumbling point when creating queries, as some data sets do not normalize
-their field names. Where you would expect a field to be named `event_location`,
-it could be named `Event Location` instead. Take care to inspect the fields
-of the data set either by the _list_ endpoint or the special _detail describe_
-endpoint (information below).
-
-There are two other concepts worth introducing here: virtual date and virtual
-point fields. Plenario is indexed by place and time. Most data sets are unable
-to serialize their data regarding these values in formats other than plain
-text. In order to accommodate these constraints we offer the ability to combine
-and parse `timestamp` and `point` values from one or more regular fields.
-
-Virtual dates consist of a minimum year value and default to January first at
-midnight of that year. The virtual date fields are prefixed with `vdf_`. As you
-inspect the metadata of the data set, you will see a special section that lists
-them. They are all interpreted by the database and application as `timestamps`
-without timezone. Virtual dates are uncommon, but they do exist.
-
-Virtual points are created by either a latitude/longitude pair of fields or a
-single field that lists both values. Virtual point fields are prefixed with
-`vpf_`. As you inspect the metadata of the data set, you will see a special
-section that lists them. They are interpreted by the database and application
-as `geometry(point, 4326)`.
-
-It's also worth noting that virtual points are extremely common. If you are
-planning to filter your requests with a bounding box, you should take care in
-calling the metadata endpoint for the data set to get the name of the field(s)
-you wish to filter on, as filtering requires single field assignment.
-
-### Getting all Records of a Data Set [GET]
-
-+ Parameters
-  + slug (string, required)
-      The _slug_ is the formatted name of the data set. In our examples, we will
-      be querying the _Chicago Beach Lab - DNA Tests_ data set. Its slug is
-      `chicago-beach-lab-dna-tests`.
-  + page (number, optional)
-      Sets the page number of the records returned.
-      + Default: 1
-  + page_size (number, optional)
-      Sets the maximum number of records in the page.
-      + Default: 200
-  + order_by (string, optional)
-      Orders the records. Format follows `order_by={asc|desc}:{field}`.
-      + Default: "asc:name"
-
-+ Response 200 (application/json)
-
-{
-  "meta": {
-    "params": {
-      "page_size": 2,
-      "page": 10,
-      "order_by": {
-        "asc": "row_id"
-      }
-    },
-    "links": {
-      "previous": "http://localhost:4000/api/v2/data-sets/chicago-beach-lab-dna-tests?order_by=asc%3Arow_id&page=9&page_size=2",
-      "next": "http://localhost:4000/api/v2/data-sets/chicago-beach-lab-dna-tests?order_by=asc%3Arow_id&page=11&page_size=2",
-      "current": "http://localhost:4000/api/v2/data-sets/chicago-beach-lab-dna-tests?order_by=asc%3Arow_id&page=10&page_size=2"
-    },
-    "counts": {
-      "total_records": 4137,
-      "total_pages": 2069,
-      "data_count": 2
-    }
-  },
-  "data": [
-    {
-      "vpf_aIFP3fUiEIXRBqKl": {
-        "srid": 4326,
-        "coordinates": [
-          -87.6152,
-          41.8935
-        ]
-      },
-      "row_id": 19,
-      "Longitude": -87.6152,
-      "Location": "(41.8935, -87.6152)",
-      "Latitude": 41.8935,
-      "DNA Test ID": "3095",
-      "DNA Sample Timestamp": "2017-06-21T00:00:00.000000",
-      "DNA Sample 2 Reading": 54,
-      "DNA Sample 1 Reading": 48,
-      "DNA Reading Mean": 50.9,
-      "Culture Test ID": null,
-      "Culture Sample Interval": null,
-      "Culture Sample 2 Timestamp": null,
-      "Culture Sample 2 Reading": null,
-      "Culture Sample 1 Timestamp": null,
-      "Culture Sample 1 Reading": null,
-      "Culture Reading Mean": null,
-      "Culture Note": null,
-      "Beach": "Ohio Street"
-    },
-    {
-      "vpf_aIFP3fUiEIXRBqKl": {
-        "srid": 4326,
-        "coordinates": [
-          -87.5299,
-          41.7142
-        ]
-      },
-      "row_id": 20,
-      "Longitude": -87.5299,
-      "Location": "(41.7142, -87.5299)",
-      "Latitude": 41.7142,
-      "DNA Test ID": "2905",
-      "DNA Sample Timestamp": "2017-06-14T00:00:00.000000",
-      "DNA Sample 2 Reading": 384,
-      "DNA Sample 1 Reading": 860,
-      "DNA Reading Mean": 574.7,
-      "Culture Test ID": null,
-      "Culture Sample Interval": null,
-      "Culture Sample 2 Timestamp": null,
-      "Culture Sample 2 Reading": null,
-      "Culture Sample 1 Timestamp": null,
-      "Culture Sample 1 Reading": null,
-      "Culture Reading Mean": null,
-      "Culture Note": null,
-      "Beach": "Calumet"
-    }
-  ]
-}
-
-### Filtering a Virtual Point Field [GET]
-
-As mentioned before, the names of fields for each data set are unique. This is
-also true for virtual points. In our example the name of the virtual point
-field of the data set is `vpf_aIFP3fUiEIXRBqKl`. In real world uses, this
-name will be different (for both this data set and all others).
-
-+ Parameters
-  + slug (string, required)
-      The _slug_ is the formatted name of the data set. In our examples, we will
-      be querying the _Chicago Beach Lab - DNA Tests_ data set. Its slug is
-      `chicago-beach-lab-dna-tests`.
-  + vpf_aIFP3fUiEIXRBqKl (object, optional)
-      Filter the records of the data sets by this field. In this particular
-      example, we are filtering a point field using a bounding box -- all
-      records returned must exist within that box. **NOTE:** for this query to
-      succeed we also must use the `within:` operator. **Example:**
-
-      ```
-      {
-        "type": "Polygon",
-        "crs": {
-          "type": "name",
-          "properties": {
-            "name": "EPSG:4326"
-          }
-        },
-        "coordinates": [[
-          [-87.65449, 41.9878],
-          [-87.65451, 41.9878],
-          [-87.65451, 41.9876],
-          [-87.65449, 41.9876],
-          [-87.65449, 41.9878]
-        ]]
-      }
-      ```
-
-+ Response 200 (application/json)
-
-{
-  "meta": {
-    "params": {
-      "vpf_aIFP3fUiEIXRBqKl": {
-        "within": {
-          "srid": 4326,
-          "coordinates": [
-            [
-              [
-                -87.65449,
-                41.9878
-              ],
-              [
-                -87.65451,
-                41.9878
-              ],
-              [
-                -87.65451,
-                41.9876
-              ],
-              [
-                -87.65449,
-                41.9876
-              ],
-              [
-                -87.65449,
-                41.9878
-              ]
-            ]
-          ]
-        }
-      },
-      "page_size": 200,
-      "page": 1,
-      "order_by": {
-        "asc": "row_id"
-      }
-    },
-    "links": {
-      "previous": null,
-      "next": null,
-      "current": "http://localhost:4000/api/v2/data-sets/chicago-beach-lab-dna-tests?order_by=asc%3Arow_id&page=1&page_size=200&vpf_aIFP3fUiEIXRBqKl=within%3A%7B%22type%22%3A%22Polygon%22%2C%22crs%22%3A%7B%22type%22%3A%22name%22%2C%22properties%22%3A%7B%22name%22%3A%22EPSG%3A4326%22%7D%7D%2C%22coordinates%22%3A%5B%5B%5B-87.65449%2C41.9878%5D%2C%5B-87.65451%2C41.9878%5D%2C%5B-87.65451%2C41.9876%5D%2C%5B-87.65449%2C41.9876%5D%2C%5B-87.65449%2C41.9878%5D%5D%5D%7D"
-    },
-    "counts": {
-      "total_records": 162,
-      "total_pages": 1,
-      "data_count": 162
-    }
-  },
-  "data": [
-    {
-      "vpf_aIFP3fUiEIXRBqKl": {
-        "srid": 4326,
-        "coordinates": [
-          -87.6545,
-          41.9877
-        ]
-      },
-      "row_id": 3,
-      "Longitude": -87.6545,
-      "Location": "(41.9877, -87.6545)",
-      "Latitude": 41.9877,
-      "DNA Test ID": "5451",
-      "DNA Sample Timestamp": "2017-08-23T00:00:00.000000",
-      "DNA Sample 2 Reading": 247,
-      "DNA Sample 1 Reading": 87,
-      "DNA Reading Mean": 146.6,
-      "Culture Test ID": null,
-      "Culture Sample Interval": null,
-      "Culture Sample 2 Timestamp": null,
-      "Culture Sample 2 Reading": null,
-      "Culture Sample 1 Timestamp": null,
-      "Culture Sample 1 Reading": null,
-      "Culture Reading Mean": null,
-      "Culture Note": null,
-      "Beach": "Osterman"
-    },
-    {
-      "vpf_aIFP3fUiEIXRBqKl": {
-        "srid": 4326,
-        "coordinates": [
-          -87.6545,
-          41.9877
-        ]
-      },
-      "row_id": 23,
-      "Longitude": -87.6545,
-      "Location": "(41.9877, -87.6545)",
-      "Latitude": 41.9877,
-      "DNA Test ID": "3641",
-      "DNA Sample Timestamp": "2017-07-04T00:00:00.000000",
-      "DNA Sample 2 Reading": 385,
-      "DNA Sample 1 Reading": 534,
-      "DNA Reading Mean": 453.4,
-      "Culture Test ID": null,
-      "Culture Sample Interval": null,
-      "Culture Sample 2 Timestamp": null,
-      "Culture Sample 2 Reading": null,
-      "Culture Sample 1 Timestamp": null,
-      "Culture Sample 1 Reading": null,
-      "Culture Reading Mean": null,
-      "Culture Note": null,
-      "Beach": "Osterman"
-    }, ...
-  ]
-}
-
-## The Detail @head Directive [/data-sets/{slug}/@head{?page,page_size,order_by,vpf_aIFP3fUiEIXRBqKl}]
-
-```
-/data-sets/:slug/@head
-```
-
-Just like the list head endpoint, you can get the first record of a detail
-endpoint by appending `/@head` to the resource route. This is a convenience
-shortcut to inspect the output of the endpoint. It doesn't have much value
-beyond that.
-
-All filters and ordering options available to general detail endpoint are
-applicable here.
-
-### Getting the Detail Head [GET]
-
-We're going to recycle the query of the last example (filtering with a bounding
-box on a virtual point field) and use the `@head` directive to only get the
-first record.
-
-+ Parameters
-  + slug (string, required)
-      The _slug_ is the formatted name of the data set. In our examples, we will
-      be querying the _Chicago Beach Lab - DNA Tests_ data set. Its slug is
-      `chicago-beach-lab-dna-tests`.
-
-+ Response 200 (application/json)
-
-{
-  "meta": {
-    "params": {
-      "vpf_aIFP3fUiEIXRBqKl": {
-        "within": {
-          "srid": 4326,
-          "coordinates": [
-            [
-              [
-                -87.65449,
-                41.9878
-              ],
-              [
-                -87.65451,
-                41.9878
-              ],
-              [
-                -87.65451,
-                41.9876
-              ],
-              [
-                -87.65449,
-                41.9876
-              ],
-              [
-                -87.65449,
-                41.9878
-              ]
-            ]
-          ]
-        }
-      },
-      "page_size": 200,
-      "page": 1,
-      "order_by": {
-        "asc": "row_id"
-      }
-    },
-    "links": {
-      "previous": null,
-      "next": null,
-      "current": "http://localhost:4000/api/v2/data-sets/chicago-beach-lab-dna-tests/@head?order_by=asc%3Arow_id&page=1&page_size=200&vpf_aIFP3fUiEIXRBqKl=within%3A%7B%22type%22%3A%22Polygon%22%2C%22crs%22%3A%7B%22type%22%3A%22name%22%2C%22properties%22%3A%7B%22name%22%3A%22EPSG%3A4326%22%7D%7D%2C%22coordinates%22%3A%5B%5B%5B-87.65449%2C41.9878%5D%2C%5B-87.65451%2C41.9878%5D%2C%5B-87.65451%2C41.9876%5D%2C%5B-87.65449%2C41.9876%5D%2C%5B-87.65449%2C41.9878%5D%5D%5D%7D"
-    },
-    "counts": {
-      "total_records": 162,
-      "total_pages": 1,
-      "data_count": 162
-    }
-  },
-  "data": [
-    {
-      "vpf_aIFP3fUiEIXRBqKl": {
-        "srid": 4326,
-        "coordinates": [
-          -87.6545,
-          41.9877
-        ]
-      },
-      "row_id": 3,
-      "Longitude": -87.6545,
-      "Location": "(41.9877, -87.6545)",
-      "Latitude": 41.9877,
-      "DNA Test ID": "5451",
-      "DNA Sample Timestamp": "2017-08-23T00:00:00.000000",
-      "DNA Sample 2 Reading": 247,
-      "DNA Sample 1 Reading": 87,
-      "DNA Reading Mean": 146.6,
-      "Culture Test ID": null,
-      "Culture Sample Interval": null,
-      "Culture Sample 2 Timestamp": null,
-      "Culture Sample 2 Reading": null,
-      "Culture Sample 1 Timestamp": null,
-      "Culture Sample 1 Reading": null,
-      "Culture Reading Mean": null,
-      "Culture Note": null,
-      "Beach": "Osterman"
-    }
-  ]
-}
-
-## The Detail @describe Directive [/data-sets/{slug}/@describe]
-
-```
-/data-sets/:slug/@describe
-```
-
-Just like the general list endpoint, the describe directive of the detail
-endpoint will provide you with all the metadata for the data set specified in
-the resource path (the slug). All you need to do is append `/@describe` to the
-resource.
-
-Filters, paging, and ordering are not applicable as this is a single resource
-and are unnecessary.
-
-### Getting the Detail Metadata [GET]
-
-+ Parameters
-  + slug (string, required)
-      The _slug_ is the formatted name of the data set. In our examples, we will
-      be querying the _Chicago Beach Lab - DNA Tests_ data set. Its slug is
-      `chicago-beach-lab-dna-tests`.
-
-+ Response 200 (application/json)
-
-{
-  "meta": {
-    "params": {
-      "page_size": 200,
-      "page": 1,
-      "order_by": {
-        "asc": "row_id"
-      }
-    },
-    "links": {
-      "previous": null,
-      "next": null,
-      "current": "http://localhost:4000/api/v2/data-sets/chicago-beach-lab-dna-tests/@describe?order_by=asc%3Arow_id&page=1&page_size=200"
-    },
-    "counts": {
-      "total_records": 1,
-      "total_pages": 1,
-      "data_count": 1
-    }
-  },
-  "data": {
-    "virtual_points": [
-      {
-        "name": "vpf_aIFP3fUiEIXRBqKl",
-        "lon_field": "Longitude",
-        "loc_field": null,
-        "lat_field": "Latitude"
-      }
-    ],
-    "virtual_dates": [],
-    "user": {
-      "name": "Plenario Admin",
-      "email": "plenario@uchiago.edu",
-      "bio": null
-    },
-    "time_range": {
-      "upper_inclusive": true,
-      "upper": "2018-07-25T12:26:00",
-      "lower_inclusive": true,
-      "lower": "2015-05-26T00:00:00"
-    },
-    "source_url": "https://data.cityofchicago.org/api/views/hmqm-anjq/rows.csv?accessType=DOWNLOAD",
-    "slug": "chicago-beach-lab-dna-tests",
-    "refresh_starts_on": null,
-    "refresh_rate": "days",
-    "refresh_interval": 1,
-    "refresh_ends_on": null,
-    "next_import": "2018-07-27T15:40:39.789864Z",
-    "name": "Chicago Beach Lab - DNA Tests",
-    "latest_import": "2018-07-26T15:40:40.971985Z",
-    "first_import": "2018-07-26T15:40:39.781226Z",
-    "fields": [
-      {
-        "type": "text",
-        "name": "DNA Test ID",
-        "description": null
-      },
-      {
-        "type": "timestamp",
-        "name": "DNA Sample Timestamp",
-        "description": null
-      },
-      {
-        "type": "text",
-        "name": "Beach",
-        "description": null
-      },
-      {
-        "type": "float",
-        "name": "DNA Sample 1 Reading",
-        "description": null
-      },
-      {
-        "type": "float",
-        "name": "DNA Sample 2 Reading",
-        "description": null
-      },
-      {
-        "type": "float",
-        "name": "DNA Reading Mean",
-        "description": null
-      },
-      {
-        "type": "text",
-        "name": "Culture Test ID",
-        "description": null
-      },
-      {
-        "type": "text",
-        "name": "Culture Sample 1 Timestamp",
-        "description": null
-      },
-      {
-        "type": "text",
-        "name": "Culture Sample 1 Reading",
-        "description": null
-      },
-      {
-        "type": "text",
-        "name": "Culture Sample 2 Reading",
-        "description": null
-      },
-      {
-        "type": "text",
-        "name": "Culture Reading Mean",
-        "description": null
-      },
-      {
-        "type": "text",
-        "name": "Culture Note",
-        "description": null
-      },
-      {
-        "type": "text",
-        "name": "Culture Sample Interval",
-        "description": null
-      },
-      {
-        "type": "text",
-        "name": "Culture Sample 2 Timestamp",
-        "description": null
-      },
-      {
-        "type": "float",
-        "name": "Latitude",
-        "description": null
-      },
-      {
-        "type": "float",
-        "name": "Longitude",
-        "description": null
-      },
-      {
-        "type": "text",
-        "name": "Location",
-        "description": null
-      }
-    ],
-    "description": "Lorem Ipsum\nDNA Chicago Beaches\nDolor Sit Amet",
-    "bbox": {
-      "srid": 4326,
-      "coordinates": [
-        [
-          [
-            42.0213,
-            -87.703717
-          ],
-          [
-            41.7142,
-            -87.703717
-          ],
-          [
-            41.7142,
-            -87.5299
-          ],
-          [
-            42.0213,
-            -87.5299
-          ],
-          [
-            42.0213,
-            -87.703717
-          ]
-        ]
-      ]
-    },
-    "attribution": "City of Chicago"
   }
 }

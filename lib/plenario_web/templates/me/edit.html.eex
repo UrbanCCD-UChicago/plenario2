@@ -1,0 +1,29 @@
+<div class="container mt-2">
+  <h2>Edit <%= @user %></h2>
+
+  <%= form_for @changeset, @update_action, fn f -> %>
+
+    <div class="form-group">
+      <%= label f, :username, class: "control-label" %>
+      <%= text_input f, :username, value: @user.username, class: "form-control" %>
+      <%= error_tag f, :username %>
+    </div>
+
+    <div class="form-group">
+      <%= label f, :password, class: "control-label" %>
+      <%= password_input f, :password, class: "form-control" %>
+      <%= error_tag f, :password %>
+    </div>
+
+    <div class="form-group">
+      <%= label f, :bio, class: "control-label" %>
+      <%= textarea f, :bio, value: @user.bio, class: "form-control" %>
+      <%= error_tag f, :bio %>
+    </div>
+
+    <div class="form-group">
+      <%= submit "Submit", class: "btn btn-danger float-left" %>
+      <%= link "Cancel", to: @show_action, class: "btn btn-success float-right" %>
+    </div>
+  <% end %>
+</div>

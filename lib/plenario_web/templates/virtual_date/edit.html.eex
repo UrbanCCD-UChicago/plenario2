@@ -1,0 +1,10 @@
+<div class="container mt-2">
+  <h1>
+    Edit Virtual Date
+    <%= button "Delete", to: Routes.data_set_virtual_date_path(@conn, :delete, @dsid, @virtual_date), method: :delete, class: "btn btn-danger float-right" %>
+  </h1>
+
+  <hr>
+
+  <%= render "form.html", assigns %>
+</div>

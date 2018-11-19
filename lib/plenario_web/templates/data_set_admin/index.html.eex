@@ -1,0 +1,122 @@
+<div class="container mt-2">
+
+  <h1>Data Set Admin</h1>
+
+  <%= if length(@erred) > 0 do %>
+  <div class="row">
+    <h2>
+      <%= length(@erred) %> Erred
+    </h2>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Contributor</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <%= for d <- @erred do %>
+        <tr>
+          <td><%= d.name %></td>
+          <td><%= d.user.username %></td>
+          <td><%= d.description %></td>
+        </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <% end %>
+
+  <%= if length(@approval) > 0 do %>
+  <div class="row">
+    <h2>
+      <%= length(@approval) %> Need Approval
+    </h2>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Contributor</th>
+          <th>Description</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <%= for d <- @approval do %>
+        <tr>
+          <td><%= d.name %></td>
+          <td><%= d.user.username %></td>
+          <td><%= d.description %></td>
+          <td><%= link "Review", to: Routes.data_set_admin_path(@conn, :review, d), class: "btn btn-sm btn-success float-right" %></td>
+        </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <% end %>
+
+  <%= if length(@first) > 0 do %>
+  <div class="row">
+    <h2>
+      <%= length(@first) %> Awaiting First Import
+    </h2>
+  
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Contributor</th>
+          <th>Description</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <%= for d <- @first do %>
+        <tr>
+          <td><%= d.name %></td>
+          <td><%= d.user.username %></td>
+          <td><%= d.description %></td>
+          <td><%= button "Import Now", to: Routes.data_set_path(@conn, :ingest_now, d), class: "btn btn-sm btn-success float-primary" %></td>
+        </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <% end %>
+
+  <%= if length(@live) > 0 do %>
+  <div class="row">
+    <h2>
+      <%= length(@live) %> Live
+    </h2>
+  
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Contributor</th>
+          <th>Description</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <%= for d <- @live do %>
+        <tr>
+          <td><%= d.name %></td>
+          <td><%= d.user.username %></td>
+          <td><%= d.description %></td>
+          <td>
+            <%= link "View/Edit", to: Routes.data_set_path(@conn, :edit, d), class: "btn btn-sm btn-info float-right", style: "margin-left: 10px" %>
+            <%= button "Import Now", to: Routes.data_set_path(@conn, :ingest_now, d), class: "btn btn-sm btn-success float-right" %>
+          </td>
+        </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <% end %>
+
+</div>

@@ -1,0 +1,27 @@
+<%= form_for @changeset, @action, fn f -> %>
+
+<%= hidden_input f, :data_set_id, value: @dsid %>
+
+<div class="form-group">
+  <%= label f, "Location Field", class: "control-label" %>
+  <%= select f, :loc_field_id, @fields, class: "form-control", value: nil %>
+  <%= error_tag f, :loc_field_id %>
+</div>
+
+<div class="form-group">
+  <%= label f, "Longitude Field", class: "control-label" %>
+  <%= select f, :lon_field_id, @fields, class: "form-control", value: nil %>
+  <%= error_tag f, :lon_field_id %>
+</div>
+
+<div class="form-group">
+  <%= label f, "Latitude Field", class: "control-label" %>
+  <%= select f, :lat_field_id, @fields, class: "form-control", value: nil %>
+  <%= error_tag f, :lat_field_id %>
+</div>
+
+<div class="form-group">
+  <%= submit "Submit", class: "btn btn-primary" %>
+  <%= link "Cancel", to: Routes.data_set_path(@conn, :show, @dsid), class: "btn btn-success float-right" %>
+</div>
+<% end %>

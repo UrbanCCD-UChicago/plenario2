@@ -1,0 +1,7 @@
+INSERT INTO "<%= table_name %>"
+  SELECT <%= for {f, idx} <- Enum.with_index(fields, 1) do %>
+    t.data->>'<%= f %>' AS "<%= f %>" <%= if idx < len_fields do %>,<% end %><% end %>
+  FROM (
+    SELECT jsonb_array_elements(data) as data
+    FROM "<%= temp_name %>"
+  ) AS t

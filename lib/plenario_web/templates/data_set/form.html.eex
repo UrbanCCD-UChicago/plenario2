@@ -1,0 +1,65 @@
+<%# 
+    PARAMS THAT NEED TO BE SET:
+
+    changeset: the form changeset
+    action: the form action
+%>
+
+<%= form_for @changeset, @action, fn f -> %>
+
+<%= hidden_input f, :user_id, value: Ecto.Changeset.get_field(f.source, :user_id) %>
+<%= hidden_input f, :socrata?, value: Ecto.Changeset.get_field(f.source, :socrata?) %>
+<%= hidden_input f, :state, value: Ecto.Changeset.get_field(f.source, :state) %>
+
+<div class="form-group">
+  <%= label f, :name, class: "control-label" %>
+  <%= text_input f, :name, class: "form-control", disabled: not @fully_editable? %>
+  <%= error_tag f, :name %>
+</div>
+
+<%= case Ecto.Changeset.get_field(f.source, :socrata?) do
+  true -> render "_socrata_form.html", f: f, fully_editable?: @fully_editable?
+  false -> render "_web_resource_form.html", f: f, fully_editable?: @fully_editable?
+end %>
+
+<div class="form-group">
+  <%= label f, :attribution, class: "control-label" %>
+  <%= text_input f, :attribution, class: "form-control", placeholder: "City of Chicago" %>
+  <%= error_tag f, :attribution %>
+</div>
+
+<div class="form-group">
+  <%= label f, :description, class: "control-label" %>
+  <%= textarea f, :description, class: "form-control", placeholder: "Long form description of the data set" %>
+  <%= error_tag f, :description %>
+</div>
+
+<div class="form-group">
+  <%= label f, :refresh_starts_on, class: "control-label" %>
+  <%= date_input f, :refresh_starts_on, class: "form-control" %>
+  <%= error_tag f, :refresh_starts_on %>
+</div>
+
+<div class="form-group">
+  <%= label f, :refresh_ends_on, class: "control-label" %>
+  <%= date_input f, :refresh_ends_on, class: "form-control" %>
+  <%= error_tag f, :refresh_ends_on %>
+</div>
+
+<div class="form-group">
+  <%= label f, :refresh_interval, class: "control-label" %>
+  <%= select f, :refresh_interval, refresh_interval_choices(), class: "form-control" %>
+  <%= error_tag f, :refresh_interval %>
+</div>
+
+<div class="form-group">
+  <%= label f, :refresh_rate, class: "control-label" %>
+  <%= number_input f, :refresh_rate, class: "form-control" %>
+  <%= error_tag f, :refresh_rate %>
+</div>
+
+<div class="form-group">
+  <%= submit "Submit", class: "btn btn-primary" %>
+</div>
+
+<% end %>

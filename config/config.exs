@@ -1,77 +1,63 @@
 use Mix.Config
 
-# Store the environment atom for situations where the `Mix` module is
-# unavailable such as production or when compiling releases through
-# Exrm or Distillery. Any code looking to use the environment atom should
-# do so through `Application.get_env(:plenario, :env)`
 config :plenario, env: Mix.env()
 
-# Configure the database and application repo
+# Configure your database
 config :plenario, Plenario.Repo,
-  types: Plenario.PostGisTypes,
-  extensions: Plenario.Extensions.TsRange,
-  handshake_timeout: 120_000,
-  pool_timeout: 120_000,
-  timeout: 120_000
+  username: "postgres",
+  password: "password",
+  database: "plenario_#{Mix.env()}",
+  hostname: "localhost",
+  pool_size: 10,
+  types: Plenario.PostgresTypes,
+  extensions: Plenario.Extensions.TsRange
 
-config :plenario, ecto_repos: [Plenario.Repo]
+config :plenario,
+  ecto_repos: [Plenario.Repo]
 
 # Configures the endpoint
 config :plenario, PlenarioWeb.Endpoint,
-  url: [host: "localhost"],
+  url: [
+    host: "localhost"
+  ],
   secret_key_base: "jCp/RnOfjaRob73dORfNI9QvsP5719peAhXoo6SP2N41Kw+5Ofq9N0Zu6cyzqGI4",
-  render_errors: [view: PlenarioWeb.ErrorView, accepts: ~w(html json)],
-  pubsub: [name: Plenario.PubSub, adapter: Phoenix.PubSub.PG2]
-
-# Configures Elixir's Logger
-config :logger, :console, format: "$time $metadata[$level] $message\n"
-
-# Configure the exporter
-config :plenario, :s3_export_ttl, days: 5
-config :plenario, :s3_export_bucket, "plenario-exports"
-
-# configure quantum scheduler
-config :plenario, :refresh_offest, minutes: -1
-
-config :plenario, PlenarioEtl,
-  global: true,
-  jobs: [
-    # run the find refreshable metas every minute (offset is 1 minute above)
-    {"* * * * *", {PlenarioEtl, :import_data_sets, []}}
+  render_errors: [
+    view: PlenarioWeb.ErrorView,
+    accepts: ~w(html json)
+  ],
+  pubsub: [
+    name: Plenario.PubSub,
+    adapter: Phoenix.PubSub.PG2
   ]
 
-# configure canary
+# Configures Elixir's Logger
+config :logger, :console,
+  format: "$time $metadata[$level] $message\n",
+  metadata: [:request_id]
+
+# Use Jason for JSON parsing in Phoenix
+config :phoenix, :json_library, Jason
+
+# configures the etl workers
+config :plenario, Plenario.Etl, num_workers: 3
+
+# configures etl schedule
+config :plenario, Plenario.Etl,
+  global: true,
+  jobs: [
+    {"* * * * *", {Plenario.Etl, :import_data_sets, []}}
+  ]
+
+# Configures guardian implementation
+config :plenario, Plenario.Auth.Guardian,
+  issuer: "plenario",
+  secret_key: "9vh18AVJKIOVaxAUzCK8Y0SAR4OvJ5zVEpolA8F+26YUYhklwR1JC5Tbh97vJu1X"
+
+# Configures the repo usage for Canary
 config :canary,
   repo: Plenario.Repo,
-  unauthorized_handler: {PlenarioAuth.ErrorHandler, :handle_unauthorized},
-  not_found_handler: {PlenarioAuth.ErrorHandler, :handle_not_found}
-
-# configure bamboo (email)
-config :plenario, PlenarioMailer, adapter: Bamboo.LocalAdapter
-config :plenario, :email_sender, "plenario@uchicago.edu"
-config :plenario, :email_subject, "Plenario Notification"
-
-config :cors_plug,
-  # five minutes
-  max_age: 300,
-  methods: ["GET", "HEAD", "OPTIONS"]
-
-# configure sentry
-config :sentry,
-  dsn: "https://public_key@app.getsentry.com/1",
-  environment_name: Mix.env(),
-  included_environments: [:prod]
-
-# configure aws client
-config :ex_aws,
-  secret_access_key: [{:system, "AWS_SECRET_ACCESS_KEY"}, :instance_role],
-  access_key_id: [{:system, "AWS_ACCESS_KEY_ID"}, :instance_role]
-
-# Configure worker settings
-config :plenario, PlenarioEtl,
-  chunk_size: 100,
-  pool_size: 10,
-  num_ingest_workers: 3
+  unauthorized_handler: {PlenarioWeb.ErrorController, :handle_unauthorized},
+  not_found_handler: {PlenarioWeb.ErrorController, :handle_not_found}
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

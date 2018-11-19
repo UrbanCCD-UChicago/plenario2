@@ -1,58 +1,57 @@
 CREATE MATERIALIZED VIEW "<%= view_name %>" AS
 SELECT
-  row_id
-
-  -- text fields
-  <%= for f <- text_fields do %>
-  , "<%= f.name %>"
+  -- text fields <%= for {f, idx} <- Enum.with_index(text_fields, 1) do %>
+  "<%= f.col_name %>" <%= if idx < len_text do %>,<% end %>
   <% end %>
 
-  -- boolean fields
-  <%= for f <- boolean_fields do %>
-  , p_boolean_from_text("<%= f.name %>") AS "<%= f.name %>"
+  -- boolean fields <%= for f <- boolean_fields do %>
+  , p_boolean_from_text("<%= f.col_name %>") AS "<%= f.col_name %>"
   <% end %>
 
-  -- integer fields
-  <%= for f <- integer_fields do %>
-  , p_integer_from_text("<%= f.name %>") AS "<%= f.name %>"
+  -- integer fields <%= for f <- integer_fields do %>
+  , p_integer_from_text("<%= f.col_name %>") AS "<%= f.col_name %>"
   <% end %>
 
-  -- float fields
-  <%= for f <- float_fields do %>
-  , p_float_from_text("<%= f.name %>") AS "<%= f.name %>"
+  -- float fields <%= for f <- float_fields do %>
+  , p_float_from_text("<%= f.col_name %>") AS "<%= f.col_name %>"
   <% end %>
 
-  -- timestmap fields
-  <%= for f <- timestamp_fields do %>
-  , p_timestamp_from_text("<%= f.name %>") AS "<%= f.name %>"
+  -- timestmap fields <%= for f <- timestamp_fields do %>
+  , p_timestamp_from_text("<%= f.col_name %>") AS "<%= f.col_name %>"
   <% end %>
 
-  -- virtual dates
-  <%= for f <- virtual_dates do %>
+  -- geometry fields <%= for f <- geometry_fields do %>
+  , p_geom_from_text("<%= f.col_name %>") AS "<%= f.col_name %>"
+  <% end %>
+
+  -- json fields <%= for f <- jsonb_fields do %>
+  , p_jsonb_from_text("<%= f.col_name %>") AS "<%= f.col_name %>"
+  <% end %>
+
+  -- virtual dates <%= for f <- virtual_dates do %>
   , p_timestamp_from_ymdhms(
-    "<%= f.year_field.name %>"
-    <%= if f.month_field do %>
-    , "<%= f.month_field.name %>"
+    "<%= f.yr_field.col_name %>"
+    <%= if f.mo_field do %>
+    , "<%= f.mo_field.col_name %>"
     <%= if f.day_field do %>
-    , "<%= f.day_field.name %>"
-    <%= if f.hour_field do %>
-    , "<%= f.hour_field.name %>"
-    <%= if f.minute_field do %>
-    , "<%= f.minute_field.name %>"
-    <%= if f.second_field do %>
-    , "<%= f.second_field.name %>"
+    , "<%= f.day_field.col_name %>"
+    <%= if f.hr_field do %>
+    , "<%= f.hr_field.col_name %>"
+    <%= if f.min_field do %>
+    , "<%= f.min_field.col_name %>"
+    <%= if f.sec_field do %>
+    , "<%= f.sec_field.col_name %>"
     <% end %><% end %><% end %><% end %><% end %>
-  ) AS "<%= f.name %>"
+  ) AS "<%= f.col_name %>"
   <% end %>
 
-  -- virtual points
-  <%= for f <- virtual_points do %>
+  -- virtual points <%= for f <- virtual_points do %>
   , <%= if f.loc_field do %>
-      p_point_from_loc("<%= f.loc_field.name %>")
+      p_point_from_loc("<%= f.loc_field.col_name %>")
     <% else %>
-      p_point_from_latlon("<%= f.lat_field.name %>", "<%= f.lon_field.name %>")
+      p_point_from_lon_lat("<%= f.lon_field.col_name %>", "<%= f.lat_field.col_name %>")
     <% end %>
-  AS "<%= f.name %>"
+  AS "<%= f.col_name %>"
   <% end %>
 
 FROM "<%= table_name %>";

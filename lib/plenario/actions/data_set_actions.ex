@@ -1,175 +1,154 @@
-defmodule Plenario.Actions.DataSetActions do
-  require Logger
+defmodule Plenario.DataSetActions do
+  import Plenario.ActionUtils
 
-  alias Plenario.Repo
-
-  alias Plenario.Actions.{
-    MetaActions,
-    DataSetFieldActions,
-    VirtualDateFieldActions,
-    VirtualPointFieldActions
+  alias Plenario.{
+    DataSet,
+    DataSetQueries,
+    FieldActions,
+    Repo,
+    VirtualDateActions,
+    VirtualPointActions
   }
 
-  alias Plenario.Schemas.{
-    Meta,
-    DataSetField,
-    VirtualDateField
-  }
+  # CRUD
 
-  # up!
+  def list(opts \\ []) do
+    DataSetQueries.list()
+    |> DataSetQueries.handle_opts(opts)
+    |> Repo.all()
+  end
 
-  @create_table "db-actions/up/create-table.sql.eex"
-  @create_view "db-actions/up/create-view.sql.eex"
-  @create_index "db-actions/up/create-index.sql.eex"
-  @create_trgm_index "db-actions/up/create-trgm-index.sql.eex"
+  def get(id, opts \\ []) do
+    ds =
+      DataSetQueries.get(id)
+      |> DataSetQueries.handle_opts(opts)
+      |> Repo.one()
 
-  def up!(%Meta{id: meta_id}), do: up!(meta_id)
-  def up!(meta_id) do
-    meta = MetaActions.get(meta_id)
-    fields = DataSetFieldActions.list(for_meta: meta)
-    virtual_dates = VirtualDateFieldActions.list(for_meta: meta, with_fields: true)
-    virtual_points = VirtualPointFieldActions.list(for_meta: meta, with_fields: true)
-
-    table_name = meta.table_name
-    view_name = "#{table_name}_view"
-
-    text_fields = Enum.filter(fields, & &1.type == "text")
-    boolean_fields = Enum.filter(fields, & &1.type == "boolean")
-    integer_fields = Enum.filter(fields, & &1.type == "integer")
-    float_fields = Enum.filter(fields, & &1.type == "float")
-    timestamp_fields = Enum.filter(fields, & &1.type == "timestamp")
-
-    gin_index_fields =
-      boolean_fields ++
-      integer_fields ++
-      float_fields ++
-      timestamp_fields ++
-      virtual_dates
-      |> Enum.map(fn f ->
-        case f do
-          %DataSetField{} ->
-            {"f", f.id, f.name}
-
-          %VirtualDateField{} ->
-            {"vdf", f.id, f.name}
-        end
-      end)
-
-    gist_index_fields =
-      virtual_points
-      |> Enum.map(& {"vpf", &1.id, &1.name})
-
-    tsvector_index_fields =
-      text_fields
-      |> Enum.map(& {"f", &1.id, &1.name})
-
-    Repo.transaction fn ->
-      execute! @create_table,
-        table_name: table_name,
-        fields: fields
-
-      execute! @create_view,
-        table_name: table_name,
-        view_name: view_name,
-        text_fields: text_fields,
-        boolean_fields: boolean_fields,
-        integer_fields: integer_fields,
-        float_fields: float_fields,
-        timestamp_fields: timestamp_fields,
-        virtual_dates: virtual_dates,
-        virtual_points: virtual_points
-
-      Enum.each(gin_index_fields, fn {type, id, name} ->
-        execute! @create_index,
-          view_name: view_name,
-          type: type,
-          id: id,
-          name: name,
-          using: false
-      end)
-
-      Enum.each(gist_index_fields, fn {type, id, name} ->
-        execute! @create_index,
-          view_name: view_name,
-          type: type,
-          id: id,
-          name: name,
-          using: "GIST"
-      end)
-
-      Enum.each(tsvector_index_fields, fn {type, id, name} ->
-        execute! @create_trgm_index,
-          view_name: view_name,
-          type: type,
-          id: id,
-          name: name
-      end)
+    case ds do
+      nil -> {:error, nil}
+      _ -> {:ok, ds}
     end
-
-    :ok
   end
 
-  # down!
+  def get!(id, opts \\ []) do
+    DataSetQueries.get(id)
+    |> DataSetQueries.handle_opts(opts)
+    |> Repo.one!()
+  end
 
-  @drop_table "db-actions/down/drop-table.sql.eex"
+  def create(params) do
+    params =
+      params_to_map(params)
+      |> parse_relation(:user)
 
-  def down!(%Meta{id: meta_id}), do: down!(meta_id)
-  def down!(meta_id) do
-    meta = MetaActions.get(meta_id)
-    Repo.transaction fn ->
-      execute! @drop_table, table_name: meta.table_name
+    DataSet.changeset(%DataSet{}, params)
+    |> Repo.insert()
+  end
+
+  def update(ds, params) do
+    params =
+      params_to_map(params)
+      |> parse_relation(:user)
+
+    DataSet.changeset(ds, params)
+    |> Repo.update()
+  end
+
+  def delete(ds), do: Repo.delete(ds)
+
+  # Other Actions
+
+  def compute_next_import!(%DataSet{refresh_rate: nil}, _), do: nil
+  def compute_next_import!(%DataSet{refresh_interval: nil}, _), do: nil
+  def compute_next_import!(%DataSet{refresh_interval: interval, refresh_rate: rate}, last) do
+    Timex.shift(last, [{String.to_atom(interval), rate}])
+    |> Timex.to_naive_datetime()
+  end
+
+  def compute_bbox!(%DataSet{} = ds) do
+    field_names = get_geom_fields(ds)
+
+    query = """
+    SELECT st_envelope(#{field_names})
+    FROM "#{ds.view_name}"
+    """
+
+    %Postgrex.Result{rows: [[bbox]], num_rows: 1} = Repo.query!(query)
+    bbox
+  end
+
+  def compute_hull!(%DataSet{} = ds) do
+    field_names = get_geom_fields(ds)
+
+    query = """
+    SELECT st_convexhull(#{field_names})
+    FROM "#{ds.view_name}"
+    """
+
+    %Postgrex.Result{rows: [[hull]], num_rows: 1} = Repo.query!(query)
+    hull
+  end
+
+  defp get_geom_fields(ds) do
+    fields =
+      FieldActions.list(for_data_set: ds)
+      |> Enum.filter(& &1.type == "geometry")
+      |> Enum.map(& &1.col_name)
+
+    points =
+      VirtualPointActions.list(for_data_set: ds)
+      |> Enum.map(& &1.col_name)
+
+    names =
+      (fields ++ points)
+      |> Enum.join("\", \"")
+
+    case length((fields ++ points)) do
+      1 -> "st_union(\"#{names}\")"
+      _ -> "st_union(st_collect(\"#{names}\"))"
     end
-
-    :ok
   end
 
-  # etl!
+  def compute_time_range!(%DataSet{} = ds) do
+    fields =
+      FieldActions.list(for_data_set: ds)
+      |> Enum.filter(& &1.type == "timestamp")
+      |> Enum.map(& &1.col_name)
 
-  @truncate_table "db-actions/etl/truncate-table.sql.eex"
-  @copy "db-actions/etl/copy.sql.eex"
-  @refresh_view "db-actions/etl/refresh-view.sql.eex"
+    dates =
+      VirtualDateActions.list(for_data_set: ds)
+      |> Enum.map(& &1.col_name)
 
-  #            ms     s    m
-  @etl_timeout 1000 * 60 * 20
+    field_names =
+      (fields ++ dates)
+      |> Enum.join("\", \"")
 
-  def etl!(%Meta{id: meta_id}, download_path), do: etl!(meta_id, download_path)
-  def etl!(meta_id, download_path) do
-    meta = MetaActions.get(meta_id)
+    query = """
+    SELECT
+      MIN( LEAST("#{field_names}")) AS lower,
+      MAX( GREATEST("#{field_names}")) AS upper
+    FROM "#{ds.view_name}"
+    """
 
-    table_name = meta.table_name
-    view_name = "#{table_name}_view"
+    %Postgrex.Result{rows: [[lower, upper]], num_rows: 1} = Repo.query!(query)
 
-    delimiter = if meta.source_type == "csv", do: ",", else: "\t"
-    header_line =
-      File.stream!(download_path, [:utf8])
-      |> Enum.take(1)
-      |> List.first()
-      |> String.trim()
-    headers =
-      Regex.split(~r/,(?=(?:[^"]*"[^"]*")*[^"]*$)/, header_line)
-      |> Enum.map(& String.trim(&1, "\""))
-    path = Path.join(:code.priv_dir(:plenario), @copy)
-    cmd = EEx.eval_file(path, [table_name: table_name, headers: headers, delimiter: delimiter], trim: true)
-    sql_stream = Ecto.Adapters.SQL.stream(Repo, cmd)
-    file_stream = File.stream!(download_path, [:utf8])
-
-    Repo.transaction(fn ->
-      execute! @truncate_table, table_name: table_name
-      # set the load to infinite time out knowing that the surrounding timeout will
-      # terminate. this needs to be bumped because the default time out is 2 minutes,
-      # which for many data sets is far too short to load the entire document.
-      Repo.transaction(fn -> Enum.into(file_stream, sql_stream) end, timeout: :infinity)
-      execute! @refresh_view, view_name: view_name
-    end, timeout: @etl_timeout)
-
-    :ok
+    case is_nil(lower) or is_nil(upper) do
+      true -> nil
+      false -> Plenario.TsRange.new(lower, upper)
+    end
   end
 
-  # helpers
+  def get_num_records!(%DataSet{} = ds) do
+    query = """
+    SELECT COUNT(*)
+    FROM "#{ds.view_name}"
+    """
 
-  defp execute!(template, bindings) do
-    Path.join([:code.priv_dir(:plenario), template])
-    |> EEx.eval_file(bindings, trim: true)
-    |> Repo.query!()
+    %Postgrex.Result{rows: [[count]], num_rows: 1} = Repo.query!(query)
+
+    case count do
+      0 -> nil
+      _ -> count
+    end
   end
 end

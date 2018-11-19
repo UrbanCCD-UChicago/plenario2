@@ -1,0 +1,115 @@
+<div class="container mt-2">
+  <div class="row">
+    <div class="col-md-5 order-last order-md-first">
+      <section>
+        <h1>About Me</h1>
+        <p>
+          <strong>Name:</strong>
+          <%= @user.username %><br>
+          <strong>Email:</strong>
+          <%= @user.email %><br>
+          <strong>Bio:</strong>
+          <%= @user.bio || "..." %><br>
+        </p>
+        <p>
+          <%= link "Update Information", to: Routes.me_path(@conn, :edit) %>
+        </p>
+      </section>
+      
+      <section>
+        <h1>Messages</h1>
+      <%#  <h2>Unread</h2>
+      <%#  <%= if length(@unread_messages) > 0 do %>
+      <%#  <%= for msg <- @unread_messages do %>
+      <%#  <p>
+      <%#    <%= msg.message %>
+      <%#    <br>
+      <%#    <%= link "Mark Read", to: admin_user_note_path(@conn, :mark_acknowledged, msg.id, redir: @conn.request_path), method: :post, class: "info" %>
+      <%#  </p>
+      <%#  <% end %>
+      <%#  <% else %>
+      <%#  <p class="lead text-muted">No unread messages</p>
+      <%#  <% end %>
+      <%#  <% if length(@read_messages) > 0 do %>
+      <%#  <h2 class="dotborder">Archived</h2>
+      <%#  <%= for msg <- @read_messages do %>
+      <%#  <p>
+      <%#    <%= msg.message %>
+      <%#  </p>
+      <%#  <% end %>
+      <%#  <% end %>
+      </section>
+    </div>
+    
+    <div class="col-md-7">
+      <section>
+        <div class="d-flex align-items-center">
+          <h1>
+            My Data Sets
+          </h1>
+          <%= link "Add New", to: Routes.data_set_path(@conn, :new), class: "btn btn-primary btn-sm mb-1 ml-auto" %>
+        </div>
+
+        <%= if length(@erred) > 0 do %>
+        <h2>Errors</h2>
+        <%= for m <- @erred do %>
+        <p>
+          <strong>
+            <%= m.name %></strong>
+          <br>
+          <%= link "View Information", to: Routes.data_set_path(@conn, :show, m) %>
+        </p>
+        <% end %>
+        <% end %>
+
+        <%= if length(@new) > 0 do %>
+        <h2>In Progress</h2>
+        <%= for m <- @new do %>
+        <p>
+          <strong>
+            <%= m.name %></strong>
+          <br>
+          <%= link "View Information and Edit", to: Routes.data_set_path(@conn, :show, m) %>
+        </p>
+        <% end %>
+        <% end %>
+
+        <%= if length(@needs_approval) > 0 do %>
+        <h2>Pending Admin Approval</h2>
+        <%= for m <- @needs_approval do %>
+        <p>
+          <strong>
+            <%= m.name %></strong>
+          <br>
+          <%= link "View Information", to: Routes.data_set_path(@conn, :show, m) %>
+        </p>
+        <% end %>
+        <% end %>
+
+        <%= if length(@awaiting_first_import) > 0 do %>
+        <h2>Pending First Scheduled Import</h2>
+        <%= for m <- @awaiting_first_import do %>
+        <p>
+          <strong>
+            <%= m.name %></strong>
+          <br>
+          <%= link "View Information", to: Routes.data_set_path(@conn, :show, m) %>
+        </p>
+        <% end %>
+        <% end %>
+
+        <%= if length(@ready) > 0 do %>
+        <h2>Live Data Sets</h2>
+        <%= for m <- @ready do %>
+        <p>
+          <strong>
+            <%= m.name %></strong>
+          <br>
+          <%= link "View Information", to: Routes.data_set_path(@conn, :show, m) %>
+        </p>
+        <% end %>
+        <% end %>
+      </section>
+    </div>
+  </div>
+</div>

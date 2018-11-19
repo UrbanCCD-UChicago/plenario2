@@ -1,0 +1,4 @@
+CREATE INDEX "idx_<%= view_name %>_<%= type %>_<%= id %>"
+ON "<%= view_name %>" 
+USING GIST
+("<%= name %>")

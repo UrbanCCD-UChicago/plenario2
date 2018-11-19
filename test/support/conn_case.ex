@@ -1,93 +1,61 @@
 defmodule PlenarioWeb.Testing.ConnCase do
-  @moduledoc """
-  This module defines the test case to be used by
-  tests that require setting up a connection.
-
-  Such tests rely on `Phoenix.ConnTest` and also
-  import other functionality to make it easier
-  to build common datastructures and query the data layer.
-
-  Finally, if the test case interacts with the database,
-  it cannot be async. For this reason, every test runs
-  inside a transaction which is reset at the beginning
-  of the test unless the test case is marked as async.
-  """
-
   use ExUnit.CaseTemplate
 
   use Phoenix.ConnTest
 
-  import PlenarioWeb.Router.Helpers
+  alias PlenarioWeb.Router.Helpers, as: Routes
 
-  alias Plenario.Actions.UserActions
+  alias Plenario.UserActions
 
   @endpoint PlenarioWeb.Endpoint
 
   using do
     quote do
-      # Import conveniences for testing with connections
       use Phoenix.ConnTest
-      import PlenarioWeb.Router.Helpers
-
-      # The default endpoint for testing
+      alias PlenarioWeb.Router.Helpers, as: Routes
       @endpoint PlenarioWeb.Endpoint
     end
   end
 
   setup tags do
-    # sandbox the db connection
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Plenario.Repo)
-    Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
 
-    # create an admin user
-    {:ok, admin_user} = UserActions.create("Admin User", "admin@example.com", "password")
-    {:ok, admin_user} = UserActions.promote_to_admin(admin_user)
+    unless tags[:async] do
+      Ecto.Adapters.SQL.Sandbox.mode(Plenario.Repo, {:shared, self()})
+    end
 
-    # create a regular user
-    {:ok, reg_user} = UserActions.create("Regular User", "regular@example.com", "password")
-
-    # setup connection
-    conn_ = Phoenix.ConnTest.build_conn()
-
-    conn =
+    context =
       cond do
-        tags[:auth] ->
-          post(
-            conn_,
-            auth_path(conn_, :login, %{
-              "user" => %{
-                "email" => "regular@example.com",
-                "password" => "password"
-              }
-            })
-          )
-
         tags[:admin] ->
-          post(
-            conn_,
-            auth_path(conn_, :login, %{
-              "user" => %{
-                "email" => "admin@example.com",
-                "password" => "password"
-              }
-            })
-          )
+          email = "admin@example.com"
+          password = "password"
 
-        tags[:anon] ->
-          conn_
+          {:ok, user} = UserActions.create(username: "Admin User", email: email, password: password, is_admin?: true)
+
+          conn = Phoenix.ConnTest.build_conn()
+          conn =
+            conn
+            |> post(Routes.session_path(conn, :login, %{"user" => %{"email" => email, "password" => password}}))
+
+          %{user: user, conn: conn}
+
+        tags[:auth] ->
+          email = "test@example.com"
+          password = "password"
+
+          {:ok, user} = UserActions.create(username: "Test User", email: email, password: password)
+
+          conn = Phoenix.ConnTest.build_conn()
+          conn =
+            conn
+            |> post(Routes.session_path(conn, :login, %{"user" => %{"email" => email, "password" => password}}))
+
+          %{user: user, conn: conn}
 
         true ->
-          conn_
+          %{conn: Phoenix.ConnTest.build_conn()}
       end
 
-    # return stuff
-    {
-      :ok,
-      [
-        conn: conn,
-        admin_user: admin_user,
-        reg_user: reg_user
-      ]
-    }
+    {:ok, context}
   end
 end
