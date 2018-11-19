@@ -1,7 +1,7 @@
 defmodule Plenario.Mixfile do
   use Mix.Project
 
-  @version "0.19.0"
+  @version "0.19.1"
 
   def project do
     [
@@ -83,7 +83,8 @@ defmodule Plenario.Mixfile do
 
       # releases
       {:distillery, "~> 1.5", only: :dev},
-      {:sentry, "~> 6.3.0", only: :prod}
+      {:sentry, "~> 6.3.0", only: :prod},
+      {:uuid, ">= 0.0.0", only: :prod}
     ]
   end
 
