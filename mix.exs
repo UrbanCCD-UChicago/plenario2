@@ -1,13 +1,13 @@
 defmodule Plenario.Mixfile do
   use Mix.Project
 
-  @version "0.19.1"
+  @version "0.19.2"
 
   def project do
     [
       app: :plenario,
       version: @version,
-      elixir: "~> 1.7",
+      elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
