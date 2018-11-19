@@ -82,9 +82,8 @@ defmodule Plenario.Mixfile do
       {:excoveralls, "~> 0.10.2", only: :test},
 
       # releases
-      {:distillery, "~> 1.5", only: :dev},
-      {:sentry, "~> 6.3.0", only: :prod},
-      {:uuid, ">= 0.0.0", only: :prod}
+      {:distillery, "~> 2.0"},
+      {:sentry, "~> 6.3.0", only: :prod}
     ]
   end
 
