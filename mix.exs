@@ -24,15 +24,9 @@ defmodule Plenario.Mixfile do
   end
 
   def application do
-    extras =
-      case Mix.env() do
-        :prod -> [:logger, :runtime_tools, :sentry]
-        _ -> [:logger, :runtime_tools]
-      end
-
     [
       mod: {Plenario.Application, []},
-      extra_applications: extras
+      extra_applications: [:logger, :runtime_tools]
     ]
   end
 
@@ -82,9 +76,7 @@ defmodule Plenario.Mixfile do
       {:excoveralls, "~> 0.10.2", only: :test},
 
       # releases
-      {:distillery, "~> 2.0"},
-      {:sentry, "~> 6.3.0"},
-      {:uuid, "~> 1.0", app: false, override: true}
+      {:distillery, "~> 2.0"}
     ]
   end
 
