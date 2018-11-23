@@ -75,11 +75,14 @@ export default {
      * The contents of the query string provided by the user. It's represented
      * as an object. For example, a query string like this:
      *
-     *
+     * ?foo=bar&fizz=buzz
      *
      * will be accessible as an object that looks like this:
      *
-     *
+     * {
+     *   foo: "bar",
+     *   fizz: "buzz"
+     * }
      *
      * Because this is a computed property, the query value is cached and will
      * not be updated unless the value `$route.query` changes.
