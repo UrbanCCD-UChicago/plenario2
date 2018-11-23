@@ -107,7 +107,15 @@ export default {
     value: { type: Array, required: true },
   },
   data: () => ({
+
+    /**
+     * Which datasets to carry with us and query for on the compare page.
+     */
     selected:     [],
+
+    /**
+     * Used in the filter widget to narrow down which datasets are shown.
+     */
     filterString: '',
   }),
   computed: {
@@ -132,7 +140,7 @@ export default {
     },
 
     /**
-     * 
+     * Move to the compare page and copy along the user provided query params.
      */
     toCompare() {
       var query = Object.assign({}, this.$route.query, {
