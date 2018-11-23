@@ -1,3 +1,2 @@
 #!/bin/sh
-
-$RELEASE_ROOT_DIR/bin/plenario eval 'Elixir.Plenario.ReleaseTasks.migrate()'
+release_ctl eval --mfa "Plenario.ReleaseTasks.migrate/1" --argv -- "$@"
