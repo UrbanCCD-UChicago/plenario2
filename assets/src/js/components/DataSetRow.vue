@@ -107,7 +107,7 @@ export default {
      *
      * The `endDate` is used to compose a data query for the back end. The
      * individual data points returned should not have their timestamp values
-     * go later the provided `endDate`.
+     * go later than the provided `endDate`.
      */
     endDate() {
       return this.query.endDate;
@@ -161,7 +161,7 @@ export default {
     },
 
     /**
-     * This sends a query to the aggregate endpoint of the backend API. The
+     * This generates a query url for the aggregate endpoint of the backend API. The
      * returned results are this dataset's values organized into buckets. This
      * information is used to plot points on our chart.
      */
@@ -183,7 +183,7 @@ export default {
     },
 
     /**
-     * This sends a query to the detail endpoint of the backend API. The
+     * This generates a query url for the detail endpoint of the backend API. The
      * returned results are this dataset's individual values. This information
      * is used to plot points on our map.
      */
@@ -213,7 +213,7 @@ export default {
 
     /**
      * Because all of the dataset metadata is stored in the $store itself,
-     * we cache the value for it to use in this component.
+     * we cache a copy of the value for use in this component.
      */
     meta() {
       return this.$store.state.datasets.find(dset => dset.slug == this.slug);
@@ -258,7 +258,7 @@ export default {
 
     /**
      * Invoked as soon as the component is initialized. It fetches both the
-     * aggregate data as well as the invidual data points. These value are
+     * aggregate data as well as the invidual data points. These values are
      * then used to plot both the map and the charts.
      */
     runQueries: async function() {
@@ -326,7 +326,7 @@ export default {
     /**
      * Plots all the individual data points for this dataset with a RANDOM color.
      *
-     * todo(heyzoos) use a consistent color pallete!!
+     * todo(heyzoos) Use a consistent color pallete!!
      */
     plotPoints: function() {
       let r = Math.floor(Math.random() * 255);
