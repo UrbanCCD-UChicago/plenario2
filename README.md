@@ -88,9 +88,13 @@ managers of choice, and make sure you're using them when working on Plenario.
 
 ### Yarn
 
-We use [Yarn](https://yarnpkg.com/en/docs/install) to manage our JavaScript dependencies. While NPM has made great strides in the last few versions to match the "killer features" of Yarn, such a rapid release schedule comes with reliability issues. As such, we still prefer the stability afforded by Yarn.
+We use [Yarn](https://yarnpkg.com/en/docs/install) to manage our JavaScript
+dependencies. While NPM has made great strides in the last few versions to match
+the "killer features" of Yarn, such a rapid release schedule comes with
+reliability issues. As such, we still prefer the stability afforded by Yarn.
 
-Please refer to [the Yarn documentation](https://yarnpkg.com/en/docs/install) for installation instructions.
+Please refer to [the Yarn documentation](https://yarnpkg.com/en/docs/install)
+for installation instructions.
 
 ### Docker and Postgres
 
@@ -223,71 +227,45 @@ Travis, update the `config/travis.exs` file.
 
 ## Building and Deploying Releases
 
-Erlang, which Elixir is built on top of, is old.  
-Like really old.  
-Like old enough to have gone to its 10-year college reunion old.
+Deployments are built using a Docker container and sent to the target host
+where they are swapped in for the running version.
 
-That means Erlang is mature, fast, and well supported, but it also means Elixir
-doesn't have access to the same level of deployment tooling as Node or Python or
-Ruby or even Java. Hence, this walk through&hellip;
+To create a fresh release archive and deploy it, all you need to run is
 
-### Extra Software Prerequisites
-
-In addition to everything listed in the development
-[software prerequisites](#development-software-prerequisites) above, building a
-Plenario release also requires the following:
-
-- A Docker account, signed in with `docker signin`
-- **awscli**, with your AWS credentials already set up (`aws config`)
-
-### Building
-
-To build the image, run the included `build` script as follows.
-
-```sh
-./build --tag <version number>
+```bash
+make deploy
 ```
 
-This will build the release, tag it properly, copy it to your host machine,
-and upload it to S3.
+> NOTE:
+> The defaults for deployments assume you have a .ssh/config file on your
+> machine and that it has a `dev` entry for the application host. The
+> deployment uses SSH and you must be able to connect to the host machine.
 
-If you don't want to upload it to S3, append the `--skip-upload` flag:
+### Specifying a Host Target
 
-```sh
-./build --tag <version number> --skip-upload
+If you need to specify a non-default hostname, run the deployment command as
+
+```bash
+make deploy HOST=some-host-name
 ```
 
-### Deploying
+### Running Migrations
 
-Deployments are naive: they will download a specific release archive from S3
-to your machine and then upload it to the target server. This is done so that
-you make deliberate choices.
+If you need to run migrations before starting the release, run the deployment
+command as
 
-To deploy, run the included `deploy` script as follows.
-
-> **NOTE**
-> You will need the target hostname configured in your local SSH config.
-
-```sh
-./deploy --tag <version number> --host <hostname>
+```bash
+make deploy MIGRATE=true
 ```
 
-This will download a built release archive from S3 and deploy it to the target
-host.
+### Running the Seed Script
 
-If you already have a local copy of the archive, you can skip the
-download with the `--skip-download` flag.
+If you need to run the seed script before starting the release, run the
+deployment command as
 
-```sh
-./deploy --tag <version number> --host <hostname> --skip-download
+```bash
+make deploy SEED=true
 ```
 
-#### Deployments with Migrations
-
-If the latest changes have deployments, there's a convenience wrapper included
-to run the changes. All you have to do is append `--run-migrations` to the
-end of the deployment command:
-
-```sh
-./deploy --tag <version number> --host <hostname> --run-migrations
-```
+> NOTE:
+> This will also run all unapplied migrations against the database.
