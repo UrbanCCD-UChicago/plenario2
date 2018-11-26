@@ -46,6 +46,9 @@ node_modules/
 
 # build and release
 .deliver/releases/
+/.hex
+/.mix
+/rel/artifacts
 
 # Coverage Reports
 excoveralls.html

@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+
+set -e
+
+## if you encounter errors and want verbose output, uncomment the next line
+# set -x
+
+## get the application name and version
+APP_NAME="$(grep 'app:' mix.exs | sed -e 's/\[//g' -e 's/ //g' -e 's/app://' -e 's/[:,]//g')"
+APP_VSN="$(grep 'version:' mix.exs | cut -d '"' -f2)"
+
+## read args
+
+POSITIONAL=()
+
+while [[ $# -gt 0 ]]
+do
+  key="$1"
+  case $key in
+    -h|--host)
+      HOST="$2"
+      shift
+      shift
+    ;;
+    --migrate)
+      RUN_MIGRATIONS=true
+      shift
+    ;;
+    --seed)
+      SEED=true
+      shift
+    ;;
+    *)
+      POSITIONAL+=("$1")
+      shift
+    ;;
+  esac
+done
+
+set -- "${POSITIONAL[@]}"
+
+## copy release archive to host and decompress
+
+echo "copying release archive to host and decompressing"
+scp rel/artifacts/$APP_NAME-$APP_VSN.tar.gz $HOST:
+ssh $HOST "mkdir -p releases/$APP_VSN && tar xf $APP_NAME-$APP_VSN.tar.gz -C releases/$APP_VSN && rm $APP_NAME-$APP_VSN.tar.gz"
+
+## stop current version, reset link
+
+echo "stopping current version, resetting link"
+ssh $HOST "if [[ -d \"plenario/bin/\" ]]; then ./plenario/bin/plenario stop || true; fi && if [[ -L \"plenario\" ]]; then rm plenario; fi && ln -s releases/$APP_VSN/ plenario"
+
+## run migrations?
+
+if [ "$RUN_MIGRATIONS" = true ]; then
+  echo "running migrations"
+  ssh $HOST "./plenario/bin/plenario migrate"
+fi
+
+## run seed script?
+
+if [ "$SEED" = true ]; then
+  echo "running seed script"
+  ssh $HOST "./plenario/bin/plenario seed"
+fi
+
+## restart the app
+
+echo "restarting app"
+ssh $HOST "./plenario/bin/plenario start"

@@ -1,12 +1,10 @@
 defmodule Plenario.Mixfile do
   use Mix.Project
 
-  @version "0.19.6"
-
   def project do
     [
       app: :plenario,
-      version: @version,
+      version: "0.20.0",
       elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
@@ -24,9 +22,16 @@ defmodule Plenario.Mixfile do
   end
 
   def application do
+    extras =
+      if Mix.env() == :prod do
+        [:sentry, :logger, :runtime_tools]
+      else
+        [:logger, :runtime_tools]
+      end
+
     [
       mod: {Plenario.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: extras
     ]
   end
 
@@ -56,7 +61,6 @@ defmodule Plenario.Mixfile do
       {:bcrypt_elixir, "~> 1.0"},
       {:guardian, "~> 1.0"},
       {:canary, "~> 1.1"},
-      {:canada, "~> 1.0"},
 
       # general utils
       {:timex, "~> 3.4"},
@@ -76,7 +80,8 @@ defmodule Plenario.Mixfile do
       {:excoveralls, "~> 0.10.2", only: :test},
 
       # releases
-      {:distillery, "~> 2.0"}
+      {:distillery, "~> 2.0"},
+      {:sentry, "~> 6.4"}
     ]
   end
 

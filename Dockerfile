@@ -1,62 +1,53 @@
 FROM ubuntu:xenial
 
-# ensure tag
-ARG tag
+# setup environment
 
-# install erlang 20.2.2
-
-RUN apt-get update -qq
-RUN apt-get install wget -y
-RUN wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb
-RUN dpkg -i erlang-solutions_1.0_all.deb
-RUN apt-get update -qq
-RUN apt-get install esl-erlang=1:20.2.2 -y
-
-# install elixir 1.6.0
-
-RUN apt-get install build-essential -y
-RUN apt-get install locales -y
-RUN locale-gen "en_US.UTF-8"
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
-RUN wget https://github.com/elixir-lang/elixir/archive/v1.6.0.tar.gz
-RUN tar xzf v1.6.0.tar.gz
-RUN cd elixir-1.6.0 && make clean install && cd ..
-RUN elixir -v
+ENV HOME /opt/build
+ENV TERM xterm
 
-# clone repo down
+# apt install build deps
 
-RUN apt-get install git -y
-RUN git clone --branch v$tag --depth 1 https://github.com/UrbanCCD-UChicago/plenario2.git
-WORKDIR plenario2/
+RUN mkdir -p /opt/deps
+WORKDIR /opt/deps
 
-# install dependencies
+RUN apt-get update -qq && \
+  apt-get install -y wget build-essential locales curl git && \
+  locale-gen "en_US.UTF-8"
 
-RUN mix local.hex --force
-RUN mix local.rebar --force
-RUN mix deps.get
+# install erlang 20.2.2
+
+RUN wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb && \
+  dpkg -i erlang-solutions_1.0_all.deb && \
+  apt-get update -qq && \
+  apt-get install -y esl-erlang=1:20.2.2
+
+# install elixir 1.6.0
+
+RUN wget https://github.com/elixir-lang/elixir/archive/v1.6.0.tar.gz && \
+  tar xzf v1.6.0.tar.gz && \
+  cd elixir-1.6.0 && \
+  make clean install && \
+  cd ..
 
 # install nodejs
 
-RUN apt-get install curl -y
-RUN curl -sL https://deb.nodesource.com/setup_8.x -o nodesource_setup.sh
-RUN bash nodesource_setup.sh
-RUN apt-get update -qq
-RUN apt-get install nodejs -y
+RUN curl -sL https://deb.nodesource.com/setup_8.x -o nodesource_setup.sh && \
+  bash nodesource_setup.sh && \
+  apt-get update -qq && \
+  apt-get install -y nodejs
 
 # install yarn
 
-RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
-RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
-RUN apt-get update
-RUN apt-get install yarn
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
+  echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
+  apt-get update -qq && \
+  apt-get install yarn
 
-# get js assets
+# make build dir and work from there
 
-RUN if [ -d "./assets/node_modules" ]; then rm -rf ./assets/node_modules; fi
-RUN cd assets && yarn && cd ..
-
-# compile assets
-RUN cd assets && yarn deploy && cd ..
-RUN mix phx.digest
+RUN mkdir -p /opt/build
+WORKDIR /opt/build
+CMD ["/bin/bash"]

@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+set -e
+
+## if you encounter errors and want verbose output, uncomment the next line
+# set -x
+
+## cd into app build directory
+cd /opt/build
+
+## get the application name and version
+APP_NAME="$(grep 'app:' mix.exs | sed -e 's/\[//g' -e 's/ //g' -e 's/app://' -e 's/[:,]//g')"
+APP_VSN="$(grep 'version:' mix.exs | cut -d '"' -f2)"
+
+## install updated versions of hex/rebar
+mix local.rebar --force
+mix local.hex --if-missing --force
+
+export MIX_ENV=prod
+
+## fetch deps and compile
+mix deps.get
+cd assets && yarn && yarn deploy && cd ..
+mix phx.digest
+
+## run an explicit clean to remove any build artifacts from the host
+mix do clean, compile --force
+
+## build the release
+mkdir -p /opt/build/rel/artifacts
+mix release
+
+## copy tarball to output
+cp "_build/prod/rel/$APP_NAME/releases/$APP_VSN/$APP_NAME.tar.gz" rel/artifacts/"$APP_NAME-$APP_VSN.tar.gz"
+
+## done
+exit 0

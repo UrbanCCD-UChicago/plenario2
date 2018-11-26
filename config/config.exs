@@ -59,6 +59,22 @@ config :canary,
   unauthorized_handler: {PlenarioWeb.ErrorController, :handle_unauthorized},
   not_found_handler: {PlenarioWeb.ErrorController, :handle_not_found}
 
+# Configures sentry error reporting
+tags =
+  case Application.spec(:plenario) do
+    nil -> []
+    spec -> spec
+  end
+
+config :sentry,
+  dsn: "https://key@sentry.io/1",
+  included_environments: [:prod],
+  environment_name: Mix.env(),
+  enable_source_code_context: true,
+  root_source_code_path: File.cwd!,
+  tags: Enum.into(tags, %{})
+
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"
