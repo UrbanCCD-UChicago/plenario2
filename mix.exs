@@ -4,7 +4,7 @@ defmodule Plenario.Mixfile do
   def project do
     [
       app: :plenario,
-      version: "0.20.1",
+      version: "0.20.2",
       elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
@@ -71,6 +71,7 @@ defmodule Plenario.Mixfile do
       {:jason, "~> 1.0"},
       {:poison, "~> 3.0", override: true},
       {:csv, "~> 2.0"},
+      {:nimble_csv, ">= 0.0.0"},
 
       # workflow utils
       {:gen_stage, "~> 0.14.0"},
