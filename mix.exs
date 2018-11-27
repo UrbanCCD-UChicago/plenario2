@@ -4,7 +4,7 @@ defmodule Plenario.Mixfile do
   def project do
     [
       app: :plenario,
-      version: "0.20.0",
+      version: "0.20.1",
       elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
@@ -61,6 +61,7 @@ defmodule Plenario.Mixfile do
       {:bcrypt_elixir, "~> 1.0"},
       {:guardian, "~> 1.0"},
       {:canary, "~> 1.1"},
+      {:canada, "~> 1.0"},
 
       # general utils
       {:timex, "~> 3.4"},

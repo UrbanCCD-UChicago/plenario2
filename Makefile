@@ -11,14 +11,16 @@ help:
 	@echo "$(APP_NAME):$(APP_VSN)"
 	@perl -nle 'print $& if m{^[a-zA-Z_-]+:.*?## .*$$}' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-build:
+base:
 	@echo "building base image"
 	docker build -t elixir-ubuntu:latest .
+
+build: base
 	@echo "building release"
-	sudo rm -r _build/ deps/ assets/node_modules/ .mix/ .hex/
+	sudo rm -r _build/ deps/ assets/node_modules/ .mix/ .hex/ || true
 	docker run -v $(APP_DIR):/opt/build --rm -it elixir-ubuntu:latest /opt/build/bin/build
 	@echo "cleaning up"
-	sudo rm -r _build/ deps/ assets/node_modules/ .mix/ .hex/
+	sudo rm -r _build/ deps/ assets/node_modules/ .mix/ .hex/ || true
 	mix deps.get
 
 deploy: build
