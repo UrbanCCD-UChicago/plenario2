@@ -3,6 +3,7 @@
 /db
 /deps
 /*.ez
+/cover/
 
 # Generated on crash by the VM
 erl_crash.dump
@@ -52,3 +53,6 @@ node_modules/
 
 # Coverage Reports
 excoveralls.html
+
+# other runtime directories and files
+downloads/

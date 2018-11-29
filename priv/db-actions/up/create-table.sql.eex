@@ -1,4 +1,3 @@
 CREATE TABLE "<%= table_name %>" ( <%= for {f, idx} <- Enum.with_index(fields, 1) do %>
-  "<%= f.col_name %>" TEXT <%= if idx < len_fields do %>,<% end %>
-  <% end %>
+  "<%= f.col_name %>" TEXT <%= if idx < len_fields do %>,<% end %> <% end %>
 )

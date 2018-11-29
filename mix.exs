@@ -10,14 +10,7 @@ defmodule Plenario.Mixfile do
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps(),
-      test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: [
-        coveralls: :test,
-        "coveralls.detail": :test,
-        "coveralls.post": :test,
-        "coveralls.html": :test
-      ]
+      deps: deps()
     ]
   end
 
@@ -67,11 +60,10 @@ defmodule Plenario.Mixfile do
       {:timex, "~> 3.4"},
       {:simple_slug, ">= 0.1.0"},
       {:httpoison, "~> 0.13.0", override: true},
-      {:exsoda, "~> 4.0"},
       {:jason, "~> 1.0"},
       {:poison, "~> 3.0", override: true},
       {:csv, "~> 2.0"},
-      {:nimble_csv, ">= 0.0.0"},
+      {:socrata, ">= 1.0.0"},
 
       # workflow utils
       {:gen_stage, "~> 0.14.0"},
@@ -79,7 +71,6 @@ defmodule Plenario.Mixfile do
 
       # testing utils
       {:mock, "~> 0.3.2", only: :test},
-      {:excoveralls, "~> 0.10.2", only: :test},
 
       # releases
       {:distillery, "~> 2.0"},

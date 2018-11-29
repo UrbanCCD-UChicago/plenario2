@@ -44,6 +44,13 @@ defmodule Plenario.Etl.Worker do
           num_records: num_records,
           latest_import: NaiveDateTime.utc_now()
 
+      try do
+        File.rm!(file)
+      rescue
+        _ ->
+          Logger.error("could not remove download #{file}")
+      end
+
       Logger.info("done processing #{ds.name}", worker: "#{inspect(self())}")
     end)
 

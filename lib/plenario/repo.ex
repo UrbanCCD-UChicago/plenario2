@@ -40,8 +40,13 @@ defmodule Plenario.Repo do
     integer_fields = Enum.filter(ds.fields, & &1.type == "integer")
     float_fields = Enum.filter(ds.fields, & &1.type == "float")
     timestamp_fields = Enum.filter(ds.fields, & &1.type == "timestamp")
-    geometry_fields = Enum.filter(ds.fields, & &1.type == "geometry")
     jsonb_fields = Enum.filter(ds.fields, & &1.type == "jsonb")
+
+    {geometry_fields, geojson_fields} =
+      case ds.socrata? do
+        false -> {Enum.filter(ds.fields, & &1.type == "geometry"), []}
+        true  -> {[], Enum.filter(ds.fields, & &1.type == "geometry")}
+      end
 
     # make lists of index-typed fields
     gin_bindings =
@@ -56,7 +61,7 @@ defmodule Plenario.Repo do
       end)
 
     gist_bindings =
-      (geometry_fields ++ points)
+      (geometry_fields ++ geojson_fields ++ points)
       |> Enum.map(fn f ->
         type =
           case f do
@@ -73,7 +78,7 @@ defmodule Plenario.Repo do
     # bring everything up in a transaction
     Repo.transaction(fn ->
       create_table(ds.table_name, ds.fields)
-      create_view(ds.table_name, ds.view_name, text_fields, boolean_fields, integer_fields, float_fields, timestamp_fields, geometry_fields, jsonb_fields, dates, points)
+      create_view(ds.table_name, ds.view_name, text_fields, boolean_fields, integer_fields, float_fields, timestamp_fields, geometry_fields, geojson_fields, jsonb_fields, dates, points)
       create_indexes(@create_gin_index, gin_bindings)
       create_indexes(@create_gist_index, gist_bindings)
       create_indexes(@create_tsvector_index, tsvector_bindings)
@@ -87,7 +92,7 @@ defmodule Plenario.Repo do
     |> Repo.query!()
   end
 
-  defp create_view(table_name, view_name, text, boolean, integer, float, timestamp, geometry, jsonb, vdates, vpoints) do
+  defp create_view(table_name, view_name, text, boolean, integer, float, timestamp, geometry, geojson, jsonb, vdates, vpoints) do
     fmt_sql(@create_view,
       table_name: table_name,
       view_name: view_name,
@@ -97,6 +102,7 @@ defmodule Plenario.Repo do
       float_fields: float,
       timestamp_fields: timestamp,
       geometry_fields: geometry,
+      geojson_fields: geojson,
       jsonb_fields: jsonb,
       virtual_dates: vdates,
       virtual_points: vpoints,

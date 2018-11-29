@@ -3,11 +3,11 @@ defmodule Plenario.Etl.FieldGuesser do
 
   import Plenario.Utils, only: [parse_timestamp: 1]
 
-  alias Exsoda.Reader
-
   alias Plenario.DataSet
 
   alias Plenario.Etl.Downloader
+
+  alias Socrata.Client
 
   @download_limit 10  # chunks
 
@@ -32,12 +32,11 @@ defmodule Plenario.Etl.FieldGuesser do
 
   # socrata
   def guess(%DataSet{soc_domain: domain, soc_4x4: fourby, socrata?: true}) do
-    {:ok, %HTTPoison.Response{body: body}} =
-      Reader.query(fourby, domain: domain)
-      |> Reader.get_view()
+    %HTTPoison.Response{body: body} = Client.new(domain) |> Client.get_view(fourby)
+    res = Jason.decode!(body)
 
     fields =
-      body["columns"]
+      res["columns"]
       |> Enum.map(fn col -> [col["fieldName"], col["dataTypeName"], col["description"]] end)
       |> Enum.reject(fn [key, _, _] -> String.starts_with?(key, ":@") end)
       |> Enum.map(fn [col, type, desc] -> [col, Map.get(@soc_types, type, "text"), desc] end)

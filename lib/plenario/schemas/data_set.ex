@@ -192,13 +192,13 @@ defmodule Plenario.DataSet do
   defp do_validate_soc_fields(changeset, nil, nil), do: changeset
 
   defp do_validate_soc_fields(changeset, domain, four_by) do
-    resp =
-      Exsoda.Reader.query(four_by, domain: domain)
-      |> Exsoda.Reader.get_view()
+    %HTTPoison.Response{status_code: code} =
+      Socrata.Client.new(domain)
+      |> Socrata.Client.get_view(four_by)
 
-    case resp do
-      {:ok, _} -> changeset
-      {:error, _} ->
+    case code do
+      200 -> changeset
+      _   ->
         add_error(changeset, :soc_4x4, @unreachable_msg)
         |> add_error(:soc_domain, @unreachable_msg)
     end
