@@ -1,32 +1,28 @@
 CREATE MATERIALIZED VIEW "<%= view_name %>" AS
 SELECT
   -- text fields <%= for {f, idx} <- Enum.with_index(text_fields, 1) do %>
-  "<%= f.col_name %>" <%= if idx < len_text do %>,<% end %>
-  <% end %>
+  "<%= f.col_name %>" <%= if idx < len_text do %>,<% end %> <% end %>
 
   -- boolean fields <%= for f <- boolean_fields do %>
-  , p_boolean_from_text("<%= f.col_name %>") AS "<%= f.col_name %>"
-  <% end %>
+  , p_boolean_from_text("<%= f.col_name %>") AS "<%= f.col_name %>" <% end %>
 
   -- integer fields <%= for f <- integer_fields do %>
-  , p_integer_from_text("<%= f.col_name %>") AS "<%= f.col_name %>"
-  <% end %>
+  , p_integer_from_text("<%= f.col_name %>") AS "<%= f.col_name %>" <% end %>
 
   -- float fields <%= for f <- float_fields do %>
-  , p_float_from_text("<%= f.col_name %>") AS "<%= f.col_name %>"
-  <% end %>
+  , p_float_from_text("<%= f.col_name %>") AS "<%= f.col_name %>" <% end %>
 
   -- timestmap fields <%= for f <- timestamp_fields do %>
-  , p_timestamp_from_text("<%= f.col_name %>") AS "<%= f.col_name %>"
-  <% end %>
+  , p_timestamp_from_text("<%= f.col_name %>") AS "<%= f.col_name %>" <% end %>
 
   -- geometry fields <%= for f <- geometry_fields do %>
-  , p_geom_from_text("<%= f.col_name %>") AS "<%= f.col_name %>"
-  <% end %>
+  , p_geom_from_text("<%= f.col_name %>") AS "<%= f.col_name %>" <% end %>
+
+  -- geojson fields <%= for f <- geojson_fields do %>
+  , p_geom_from_geojson("<%= f.col_name %>") AS "<%= f.col_name %>" <% end %>
 
   -- json fields <%= for f <- jsonb_fields do %>
-  , p_jsonb_from_text("<%= f.col_name %>") AS "<%= f.col_name %>"
-  <% end %>
+  , p_jsonb_from_text("<%= f.col_name %>") AS "<%= f.col_name %>" <% end %>
 
   -- virtual dates <%= for f <- virtual_dates do %>
   , p_timestamp_from_ymdhms(
@@ -42,8 +38,7 @@ SELECT
     <%= if f.sec_field do %>
     , "<%= f.sec_field.col_name %>"
     <% end %><% end %><% end %><% end %><% end %>
-  ) AS "<%= f.col_name %>"
-  <% end %>
+  ) AS "<%= f.col_name %>" <% end %>
 
   -- virtual points <%= for f <- virtual_points do %>
   , <%= if f.loc_field do %>
@@ -51,7 +46,6 @@ SELECT
     <% else %>
       p_point_from_lon_lat("<%= f.lon_field.col_name %>", "<%= f.lat_field.col_name %>")
     <% end %>
-  AS "<%= f.col_name %>"
-  <% end %>
+  AS "<%= f.col_name %>" <% end %>
 
 FROM "<%= table_name %>";

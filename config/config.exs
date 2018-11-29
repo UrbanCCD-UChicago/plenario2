@@ -74,6 +74,8 @@ config :sentry,
   root_source_code_path: File.cwd!,
   tags: Enum.into(tags, %{})
 
+# configures socrata client
+config :socrata, app_token: "ZGpi4mMo2vGtKFe1fKBOF4fJi"
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

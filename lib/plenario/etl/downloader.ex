@@ -1,14 +1,17 @@
 defmodule Plenario.Etl.Downloader do
   require Logger
 
-  alias Exsoda.Reader
-
   alias Plenario.{
     DataSet,
     FieldActions
   }
 
-  @socrata_page 50_000
+  alias Socrata.{
+    Client,
+    Query
+  }
+
+  @socrata_page 100_000
 
   def download(%DataSet{} = ds, limit \\ nil) do
     path = make_path(ds)
@@ -21,7 +24,8 @@ defmodule Plenario.Etl.Downloader do
   end
 
   defp make_path(%DataSet{slug: name, src_type: ext}) do
-    path = "/tmp/#{name}.#{ext}"
+    File.mkdir("downloads")
+    path = "downloads/#{name}.#{ext}"
 
     if File.exists?(path), do: File.rm!(path)
     File.touch!(path)
@@ -32,24 +36,27 @@ defmodule Plenario.Etl.Downloader do
   # SOCRATA
 
   defp do_download(%DataSet{soc_domain: domain, soc_4x4: fourby} = ds, path, _) when not is_nil(domain) and not is_nil(fourby) do
-    Logger.debug("using exsoda to download #{ds.name}")
+    Logger.debug("using socrata client to download #{ds.name}")
 
     fields =
       FieldActions.list(for_data_set: ds)
       |> Enum.map(& &1.col_name)
 
+    # make the client
+    client = Client.new(domain)
+
     # build the initial query
     query =
-      Reader.query(fourby, domain: domain)
-      |> Reader.select(fields)
-      |> Reader.order(":created_at DESC")
-      |> Reader.limit(@socrata_page)
+      Query.new(fourby)
+      |> Query.select(fields)
+      |> Query.order(":created_at DESC")
+      |> Query.limit(@socrata_page)
 
     # get a file handler and dump the opening bracket to it
     fh = File.open!(path, [:append, :utf8])
 
     # download in pages
-    download_socrata(ds, query, fh, path)
+    download_socrata(ds, client, query, fh)
   end
 
   # WEB RESOURCE
@@ -64,48 +71,41 @@ defmodule Plenario.Etl.Downloader do
 
   # Socrata Helpers
 
-  defp download_socrata(%DataSet{latest_import: nil}, query, fh, path),
-    do: page_socrata(Reader.limit(query, @socrata_page), fh, path, 0)
+  defp download_socrata(%DataSet{latest_import: nil}, client, query, fh),
+    do: page_socrata(Query.limit(query, @socrata_page), client, fh, 0)
 
-  defp download_socrata(%DataSet{latest_import: latest}, query, fh, path) do
+  defp download_socrata(%DataSet{latest_import: latest}, client, query, fh) do
     latest = Timex.format!(latest, "%Y-%m-%dT%H:%M:%S", :strftime)
 
     query =
       query
-      |> Reader.where(":updated_at >= '#{latest}'")
+      |> Query.where(":updated_at >= '#{latest}'")
 
-    page_socrata(query, fh, path, 0)
+    page_socrata(query, client, fh, 0)
   end
 
-  defp page_socrata(query, fh, path, offset) do
+  defp page_socrata(query, client, fh, offset) do
     query =
       query
-      |> Reader.offset(offset)
+      |> Query.offset(offset)
 
-    Logger.debug("paged socrata query is #{inspect(query)}")
+    Logger.debug("socrata query is #{inspect(query)}")
 
-    {:ok, stream} = Reader.run(query)
+    %HTTPoison.Response{status_code: 200, body: body} =
+      Client.get_records(client, query)
 
-    rows =
-      stream
-      |> Enum.map(fn record ->
-        record
-        |> Enum.map(fn {k, v} -> {:"#{k}", v} end)
-        |> Enum.into(%{})
-      end)
-
-    num_rows = length(rows)
-    Logger.debug("got #{num_rows} records")
-
-    content = Jason.encode!(rows)
-    IO.binwrite(fh, "#{content}\n")
-
-    case num_rows < @socrata_page do
-      true ->
+    decoded = Jason.decode!(body)
+    case length(decoded) do
+      0  ->
+        Logger.debug("no more records")
         File.close(fh)
 
-      false ->
-        page_socrata(query, fh, path, offset + @socrata_page)
+      len ->
+        Logger.debug("num records in response: #{len}")
+        encoded = Jason.encode!(decoded)
+        IO.binwrite(fh, "#{encoded}\n")
+        # page_socrata(query, client, fh, offset + @socrata_page)
+        File.close(fh)
     end
   end
 

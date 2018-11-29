@@ -1,4 +1,4 @@
 CREATE TEMPORARY TABLE "<%= temp_name %>" (
   data jsonb
 )
--- ON COMMIT DROP
+ON COMMIT DROP
