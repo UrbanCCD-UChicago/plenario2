@@ -70,7 +70,7 @@ defmodule Plenario.Mixfile do
       {:quantum, "~> 2.2"},
 
       # testing utils
-      {:mock, "~> 0.3.2", only: :test},
+      {:mock, "~> 0.3.2", only: [:test, :travis]},
 
       # releases
       {:distillery, "~> 2.0"},

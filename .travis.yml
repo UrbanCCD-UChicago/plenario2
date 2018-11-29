@@ -1,7 +1,7 @@
 language: elixir
 
-elixir:
-  - '1.6'
+elixir: '1.6.0'
+otp_release: '20.2.2'
 
 addons:
   postgresql: '9.6'
@@ -14,12 +14,6 @@ addons:
 
 services:
   - postgresql
-
-env:
-  - MIX_ENV=test
-
-before_script:
-  - psql -U postgres -c "create extension postgis"
 
 script:
   - mix test --trace --cover
