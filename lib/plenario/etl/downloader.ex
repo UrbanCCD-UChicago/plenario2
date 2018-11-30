@@ -104,8 +104,7 @@ defmodule Plenario.Etl.Downloader do
         Logger.debug("num records in response: #{len}")
         encoded = Jason.encode!(decoded)
         IO.binwrite(fh, "#{encoded}\n")
-        # page_socrata(query, client, fh, offset + @socrata_page)
-        File.close(fh)
+        page_socrata(query, client, fh, offset + @socrata_page)
     end
   end
 
