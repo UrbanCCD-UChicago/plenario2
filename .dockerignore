@@ -4,6 +4,7 @@
 /.hex
 /.mix
 /assets/node_modules
+/cover
 /deps
 /priv/static
 /test
